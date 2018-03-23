@@ -1,0 +1,76 @@
+000100030410/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200030410/*PARMS                                                                       */
+000300030410/*PARMS                                                                       */
+000400030410/*PARMS                                                                       */
+000500030410/*PARMS                                                                       */
+000600030410             PGM        PARM(&USERNAME &OUTQ &FORMTYPE &USRDTA &JOB +
+000700030410                          &MBROPT &MSGID)
+000800030410
+000900030410/*********************************************************************/
+001000030415/*                                                                   */
+001100030415/*  Descrizione parametri:                                           */
+001200030415/*                                                                   */
+001300030415/*  ---------- ---------------------------------- ----------         */
+001400030415/*                                                Valori             */
+001500030415/*  Nome       Descrizione                        speciali           */
+001600030415/*  ---------- ---------------------------------- ----------         */
+001700030415/*  USERNAME   User name                          *ALL               */
+001800030415/*                                                *CURRENT           */
+001900030415/*  OUTQ       Qualified output queue name        *ALL               */
+002000030415/*  FORMTYPE   Form type                          *ALL               */
+002100030415/*                                                *STD               */
+002200030415/*  USRDTA     User-specified data                *ALL               */
+002300030415/*  JOB        Qualified job name                 *                  */
+002400030415/*  MBROPT     Add o Replace                                         */
+002500030415/*  MSGID      Identificativo messaggio di errore                    */
+002600030415/*                                                                   */
+002700030414/*-------------------------------------------------------------------*/
+002800030415/* Esempi di chiamata:                                               */
+002900030415/*                                                                   */
+003000030415/* 1) Tutti gli spool generati dal lavoro corrente:                  */
+003100030415/*                                                                   */
+003200030415/* C                   CALL      'TRULSPLF0'                         */
+003300030415/* C                   PARM      *BLANK        UserName              */
+003400030415/* C                   PARM      *BLANK        OutQ                  */
+003500030415/* C                   PARM      *BLANK        FormType              */
+003600030415/* C                   PARM      *BLANK        UsrDta                */
+003700030415/* C                   PARM      '*'           Job                   */
+003800030415/* C                   PARM      'R'           MbrOpt                */
+003900030415/* C                   PARM      *BLANK        MsgID                 */
+004000030415/*                                                                   */
+004100030415/* 2) Tutti gli spool presenti nel sistema:                          */
+004200030415/*                                                                   */
+004300030415/* C                   CALL      'TRULSPLF0'                         */
+004400030415/* C                   PARM      '*ALL'        UserName              */
+004500030415/* C                   PARM      '*ALL'        OutQ                  */
+004600030415/* C                   PARM      '*ALL'        FormType              */
+004700030415/* C                   PARM      '*ALL'        UsrDta                */
+004800030415/* C                   PARM      *BLANK        Job                   */
+004900030415/* C                   PARM      'R'           MbrOpt                */
+005000030415/* C                   PARM      *BLANK        MsgID                 */
+005100030410/*********************************************************************/
+005200030409
+005300030409             DCL        VAR(&USERNAME) TYPE(*CHAR) LEN(10)
+005400030409             DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(20)
+005500030409             DCL        VAR(&FORMTYPE) TYPE(*CHAR) LEN(10)
+005600030409             DCL        VAR(&USRDTA) TYPE(*CHAR) LEN(10)
+005700030409             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+005800030410             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(1)
+005900030409             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+006000030409             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+006100030410
+006200030410             CHKOBJ     OBJ(QTEMP/LSPLF00F) OBJTYPE(*FILE)
+006300030410             MONMSG     MSGID(CPF9801) EXEC(DO)
+006400030409             RTVOBJD    OBJ(LSPLF00F) OBJTYPE(*FILE) RTNLIB(&FROMLIB)
+006500030409             CRTDUPOBJ  OBJ(LSPLF00F) FROMLIB(&FROMLIB) +
+006600030409                          OBJTYPE(*FILE) TOLIB(QTEMP)
+006700030409             ENDDO
+006800030410
+006900030410             IF         COND(&MBROPT *EQ 'R') THEN(DO)
+007000030410             CLRPFM     FILE(QTEMP/LSPLF00F)
+007100030410             ENDDO
+007200030409
+007300030409             CALL       PGM(TRULSPLF1) PARM(&USERNAME &OUTQ +
+007400030409                          &FORMTYPE &USRDTA &JOB &MSGID)
+007500030409
+007600030409 ENDPGM:     ENDPGM

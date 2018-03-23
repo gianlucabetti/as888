@@ -1,0 +1,58 @@
+000100950529 FNLRF0C:    PGM        PARM(&KPJBA)
+000200891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000201060929             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000300030722 /* Imposto la richiesta delle stampanti */
+000400030722             DCL        VAR(&TRUL90DS) TYPE(*CHAR)  LEN(177) VALUE('S')
+000500030722             DCL        VAR(&D90F3)    TYPE(*CHAR)  LEN(1)   VALUE(' ')
+000600030722             DCL        VAR(&D90MDE)   TYPE(*CHAR)  LEN(10)
+000700030722             DCL        VAR(&D90PRE)   TYPE(*CHAR)  LEN(10)
+000800030722             DCL        VAR(&D90PSD)   TYPE(*CHAR)  LEN(10)
+000801060929             RTVJOBA    JOB(&DSP)
+000900950529
+001000030722/* Richiamo il pgm scelta stampanti */
+001100030722             CALL       PGM(TRUL90R)   PARM(&KPJBA &TRUL90DS)
+001200950529
+001300030722             CHGVAR     VAR(&D90F3)    VALUE(%SST(&TRUL90DS 85   1))
+001400950529
+001500030722/* F3-Fine lavoro */
+001600030722             IF         COND(&D90F3 *EQ '1') THEN(GOTO CMDLBL(ENDF))
+001700950529
+001800030722             CHGVAR     VAR(&D90MDE) VALUE(%SST(&TRUL90DS  5 10))
+001900030722             CHGVAR     VAR(&D90PRE) VALUE(%SST(&TRUL90DS 55 10))
+002000030722             CHGVAR     VAR(&D90PSD) VALUE(%SST(&TRUL90DS 86 10))
+002100941212
+002200030722/* Override al file di stampa */
+002300070322             OVRPRTF    FILE(FNLV22P) OUTQ(&D90PRE) +
+002400070322                          FORMTYPE(&D90MDE) USRDTA('Etic.Padr') +
+002500070322                          OVRSCOPE(*CALLLVL) SHARE(*YES)
+002600900925
+002700030722/* imposto il nome del pgm di stampa etichette distinta tra i parms */
+002800030722             CHGVAR     VAR(%SST(&KPJBA 493 10)) VALUE(&D90PSD)
+002801060929/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+002802060929/* procedura/programma fosse finita in maniera anomala occorre */
+002803060929/* parare il colpo riducendo il male al male minore ossia      */
+002804060929/* con un rollback chiudere le precedenti transazioni fatte a  */
+002805060929/* metà piuttosto che confermarle. E ripartendo da una         */
+002806060929/* situazione pulita.                                          */
+002807070928             STRCMTCTL  LCKLVL(*CHG)
+002808060929             MONMSG     MSGID(CPF8351) EXEC(DO)
+002811070928             ROLLBACK
+002812070928             ENDCMTCTL
+002814070928             STRCMTCTL  LCKLVL(*CHG)
+002815060929             ENDDO
+002900950908
+003000061222             CALL       PGM(FIDG01R) PARM(&KPJBA)
+003001060929             MONMSG     MSGID(CPF0000) EXEC(DO)
+003002060929             ROLLBACK
+003003061222             SNDBRKMSG  MSG('ERRORE La Gestione fogli distinte di +
+003004061222                          consegna è terminata in modo anomalo. +
+003005061222                          Segnalare il problema alla persona +
+003006061222                          responsabile della manutenzione del +
+003007061222                          programma.') TOMSGQ(&DSP)
+003009060929             ENDDO
+003010060929
+003011060929             ENDCMTCTL
+003100950529
+003200900924             RCLRSC     LVL(*CALLER)
+003300070322             DLTOVR     FILE(*ALL)
+003400910305ENDF:        ENDPGM

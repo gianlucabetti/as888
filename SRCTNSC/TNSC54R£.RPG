@@ -1,0 +1,482 @@
+000100960910     H              J
+000200960910?     *--------------------------------------------------------------*
+000300960910      * TNSC54R                                                      *
+000400960910      *       *-----------------------------------------*            *
+000500960910      *        STAMPA CONTRASSEGNI X STATO ELABORAZIONE              *
+000600960910      *       *-----------------------------------------*            *
+000700960910      *                                                              *
+000800960910?     *--------------------------------------------------------------*
+000900960911     FTNCSBSWKIP  E           K        DISK
+001000960910?    F*---------
+001100960910     FTABEL00FIF  E           K        DISK
+001200960910?    F*---------
+001300960910     FAZORG01LIF  F    5000  2PI     4 DISK
+001400960910?    F*---------
+001500960910     FTNSC54P O   E             01     PRINTER
+001600960910?    E*--------------------------------------------------------------*
+001700960910     E*  SCHIERE
+001800960910?    E*--------------------------------------------------------------*
+001900960910      *  Schiere per caricamento dati valute
+002000960910     E                    CCV       100  3               CODICI DIVISA
+002100000110     E                    DVA       100  1               FLAG DIVISA ITALIA
+002200000110     E                    CMB       100  9 3             CAMBIO DIVISA ITA.
+002300960910?    I*--------------------------------------------------------------*
+002400960910     I*  ROTTURE DI LIVELLO FILE PRIMARIO
+002500960910?    I*--------------------------------------------------------------*
+002600960910     ITNCSBS00
+002700960910     I                                              CSBKE1L1
+002800960910      *----------------------------------------------------------------
+002900960910     IAZORG01LAA
+003000960910     I                                    P   4   50ORGFIL
+003100960910     I                                       14  33 ORGDES
+003200960910?     *--------------------------------------------------------------*
+003300960910?     *  DS                                                          *
+003400960910?     *--------------------------------------------------------------*
+003500010619     IYEURDS    E DSYEURCODS
+003600960910     IKPJBA     E DS
+003700960910      *
+003800960910     IDSCV      E DS
+003900000110     IDSBS02    E DSTIBS02DS
+004000000110     IDGED      E DS
+004100960910     ITNSC52    E DSTNSC52DS
+004200960910      *
+004300960910     IUT§DSE    E DSUT§DSE0F
+004400960910     ICNCR80    E DS
+004500960910     IWLBDA8      DS
+004600960910     I                                        1   80G02DAT
+004700960910     I                                        9  160G02INV
+004800960910     I                                       17  17 G02ERR
+004900960910     I                                       18  220G02TGI
+005000960910     I           SDS
+005100960910     I                                        1  10 NOMPGM
+005200960910      *---------------------------------------------------------------*
+005300960910      *   C I C L O      P R I N C I P A L E                          *
+005400960910      *---------------------------------------------------------------*
+005500960910     C*  Imposto dati per azzeramanto totali stampa
+005600960910     C   L1                EXSR INZFIL
+005700960910     C*  Incremento totali filiale
+005800960910     C                     EXSR AGGTOT
+005900960910     C*  Se devo stampare dettaglio lo faccio
+006000960910     C           D52DET    IFEQ 'SI'
+006100960910     C                     EXSR STPDET
+006200960910     C                     END
+006300960910     C*  Stampo totali filiale
+006400960910     CL1                   EXSR TOTLIN
+006500960910     C*  stampo totali finali
+006600960910     CLR                   EXSR TOTGEN
+006700960910      *---------------------------------------------------------------*
+006800960910      *  INZFIL: Inizio filiale
+006900960910      *---------------------------------------------------------------*
+007000960910     C           INZFIL    BEGSR
+007100960910     C*
+007200960910     C*  Eseguo decodifica
+007300960910     C                     MOVEL*BLANKS   ORGDES
+007400960910     C                     Z-ADDCSBKE1    ORGFIL
+007500960910     C           ORGFIL    CHAINAZORG01L             31
+007600960910     C                     MOVELORGDES    DFIL
+007700960910     C                     Z-ADDORGFIL    FIL
+007800960910     C*  Azzero totali filiale
+007900960910     C                     Z-ADD0         TOBLIT
+008000960910     C                     Z-ADD0         NUBLIT
+008100960910     C                     Z-ADD0         NUMLIT
+008200960910     C                     Z-ADD0         TOMLIT
+008300000110     C                     Z-ADD0         TOBEUR
+008400000110     C                     Z-ADD0         NUBEUR
+008500000110     C                     Z-ADD0         NUMEUR
+008600000110     C                     Z-ADD0         TOMEUR
+008700960910     C                     Z-ADD0         NUBDIV
+008800960910     C                     Z-ADD0         TOBVAL
+008900960910     C                     Z-ADD0         NUMDIV
+009000960910     C                     Z-ADD0         TOMVAL
+009100960910     C*  Se richiesto accendo Overflow
+009200960910     C           D52PAG    IFEQ 'SI'
+009300960910     C                     SETON                     01
+009400960910     C                     END
+009500960910     C*
+009600960910     C                     ENDSR
+009700960910      *---------------------------------------------------------------*
+009800960910      *  AGGTOT: Aggiorno totali filiale
+009900960910      *---------------------------------------------------------------*
+010000960910     C           AGGTOT    BEGSR
+010100960910     C*
+010200960910     C*  Aggiorno totali filiale
+010300960910     C           CSBVCA    IFNE *BLANKS
+010400960910     C                     Z-ADD1         XX
+010500960910     C           CSBVCA    LOKUPCCV,XX                   32
+010600960910     C                     END
+010700960910     C* Somma nel totale corretto
+010800960910     C           CSBVCA    IFEQ *BLANKS
+010900010619     C           CSBVCA    OREQ §GEDCR
+011000960910     C*
+011100960910     C           CSBTPI    IFEQ ' '
+011200960910     C                     ADD  CSBCAS    TOBLIT
+011300960910     C                     ADD  1         NUBLIT
+011400960910     C                     ELSE
+011500960910     C                     ADD  CSBCAS    TOMLIT
+011600960910     C                     ADD  1         NUMLIT
+011700960910     C                     END
+011800960910     C*
+011900960910     C                     ELSE
+012000000110     C* EURO
+012100000110     C           DVA,XX    IFEQ 'S'
+012200000110     C           *IN32     ANDEQ'1'
+012300000110     C*
+012400000110     C           CSBTPI    IFEQ ' '
+012500000110     C                     ADD  CSBCAS    TOBEUR
+012600000110     C                     ADD  1         NUBEUR
+012700000110     C                     ELSE
+012800000110     C                     ADD  CSBCAS    TOMEUR
+012900000110     C                     ADD  1         NUMEUR
+013000000110     C                     END
+013100000110     C*
+013200000110     C                     ELSE
+013300010619     C*
+013400010619     C* Per convertire gli importi in valute estere utilizzo
+013500010619     C* la routine YEURCO in quanto il cambio indicato sul
+013600010619     C* file dei C/assegni di filiale non è affidabile
+013700010619     C                     CLEARYEURDS
+013800010619     C                     MOVELCSBVCA    YECDVI
+013900010619     C                     Z-ADDCSBCAS    YECIMI
+014000010619     C                     MOVEL§GEDCR    YECDVO
+014100010619     C* passo al pgm io il nr. dei decimali della divisa corrente
+014200010619     C* in base a quanto memorizzato sulla tabella CV
+014300010619     C                     MOVE NRDEC     YECDCO
+014400010619     C                     MOVEL'H'       YECTAR
+014500010619     C                     CALL 'YEURCO'
+014600010619     C                     PARM           YEURDS
+014700010619     C                     Z-ADDYECIMO    IMPV   153
+014800960910     C*
+014900010619     C***                  Z-ADDCMB,XX    CAMBIO
+015000010619     C***        CSBCMB    IFNE 0
+015100010619     C***                  Z-ADDCSBCMB    CAMBIO  94
+015200010619     C***                  END
+015300010619     C***        CSBCMP    IFNE 0
+015400010619     C***                  Z-ADDCSBCMP    CAMBIO
+015500010619     C***                  END
+015600010619     C***        CAMBIO    MULT CSBCAS    LIRINT 196H
+015700010619     C***
+015800010619     C           CSBTPI    IFEQ ' '
+015900010619     C                     ADD  1         NUBDIV
+016000010619     C                     ADD  IMPV      TOBVAL
+016100010619     C***
+016200010619     C***                  SELEC
+016300010619     C***        NRDEC     WHEQ 2
+016400010619     C***        CAMBIO    MULT CSBCAS    IMPV2  122H
+016500010619     C***                  Z-ADDIMPV2     LIRINT
+016600010619     C***        NRDEC     WHEQ 1
+016700010619     C***        CAMBIO    MULT CSBCAS    IMPV1  111H
+016800010619     C***                  Z-ADDIMPV1     LIRINT
+016900010619     C***        NRDEC     WHEQ 0
+017000010619     C***        CAMBIO    MULT CSBCAS    IMPV0  100H
+017100010619     C***                  Z-ADDIMPV0     LIRINT
+017200010619     C***                  OTHER
+017300010619     C***        CAMBIO    MULT CSBCAS    LIRINT
+017400010619     C***                  ENDSL
+017500010619     C***
+017600010619     C***                  ADD  LIRINT    TOBVAL
+017700010619     C                     ELSE
+017800010619     C                     ADD  1         NUMDIV
+017900000110      *
+018000010619     C***                  SELEC
+018100010619     C***        NRDEC     WHEQ 2
+018200010619     C***        CAMBIO    MULT CSBCAS    IMPV2  122H
+018300010619     C***                  Z-ADDIMPV2     LIRINT
+018400010619     C***        NRDEC     WHEQ 1
+018500010619     C***        CAMBIO    MULT CSBCAS    IMPV1  111H
+018600010619     C***                  Z-ADDIMPV1     LIRINT
+018700010619     C***        NRDEC     WHEQ 0
+018800010619     C***        CAMBIO    MULT CSBCAS    IMPV0  100H
+018900010619     C***                  Z-ADDIMPV0     LIRINT
+019000010619     C***                  OTHER
+019100010619     C***        CAMBIO    MULT CSBCAS    LIRINT
+019200010619     C***                  ENDSL
+019300000110     C*
+019400010619     C***                  ADD  LIRINT    TOMVAL
+019500010619     C                     ADD  IMPV      TOMVAL
+019600010619     C                     END
+019700960910     C*
+019800960910     C                     END
+019900000110     C                     END
+020000960910     C*
+020100960910     C                     ENDSR
+020200960910      *---------------------------------------------------------------*
+020300960910      *  STPDET: Stampa dettaglio se richiesto
+020400960910      *---------------------------------------------------------------*
+020500960910     C           STPDET    BEGSR
+020600960910     C*
+020700960910     C                     Z-ADDCSBLNA    LNA
+020800960910     C                     Z-ADDCSBLNP    LNP
+020900960910     C                     Z-ADDCSBNRS    NRS
+021000960910     C                     Z-ADDCSBNSP    NSP
+021100960910     C                     MOVELCSBMGS    WMM     20
+021200960910     C                     MOVE CSBMGS    WGG     20
+021300960910     C                     MOVELWGG       WGGMM   40
+021400960910     C                     MOVE WMM       WGGMM
+021500960910     C                     MOVELWGGMM     DSP
+021600960910     C                     MOVE CSBAAS    DSP
+021700960910     C           CSBCDI    IFNE 0
+021800960910     C                     Z-ADDCSBCDI    CDM
+021900960910     C                     ELSE
+022000960910     C                     Z-ADDCSBCDI    CDM
+022100960910     C                     END
+022200960910     C                     MOVELCSBRSM    RGM
+022300960910     C                     MOVELCSBPRM    PRM
+022400960910     C                     Z-ADDCSBRMN    RMN
+022500960910     C                     MOVELCSBRSD    RGD
+022600960910     C                     MOVELCSBPRD    PRD
+022700960910     C                     MOVELCSBTPI    TPI
+022800960910     C                     MOVELCSBCAS    IMP
+022900960910     C                     MOVELCSBVCA    VCA
+023000960910     C           *IN02     IFEQ '1'
+023100960910     C                     Z-ADDCSBFGC    FGC
+023200960910     C                     Z-ADDCSBNGC    NGC
+023300960910     C                     Z-ADDCSBDGC    G02INV
+023400960910     C                     Z-ADD0         G02DAT
+023500960911     C                     MOVEL'3'       G02ERR
+023600960910     C                     CALL 'XSRDA8'
+023700960910     C                     PARM           WLBDA8
+023800960910     C                     Z-ADDG02DAT    DGC
+023900960910     C                     END
+024000960910     C*  Controllo se devo stampare prima pagina
+024100960910     C           WPRIMA    IFEQ ' '
+024200960910     C           *IN01     OREQ '1'
+024300960910     C                     WRITETES00
+024400960910     C                     SETOF                     01
+024500960910     C                     MOVEL'N'       WPRIMA  1
+024600960910     C                     END
+024700960910     C                     WRITEDET00
+024800960910     C*
+024900960910     C                     ENDSR
+025000960910      *---------------------------------------------------------------*
+025100960910      *  TOTLIN: Totale filiale
+025200960910      *---------------------------------------------------------------*
+025300960910     C           TOTLIN    BEGSR
+025400960910     C*
+025500960910     C*  Controllo se devo stampare totali lire
+025600960910     C           NUBLIT    IFNE 0
+025700960910     C           NUMLIT    ORNE 0
+025800960910     C*  Controllo se devo stampare prima pagina
+025900960910     C           WPRIMA    IFEQ ' '
+026000960910     C           *IN01     OREQ '1'
+026100960910     C                     WRITETES00
+026200960910     C                     MOVEL'N'       WPRIMA
+026300960910     C                     SETOF                     01
+026400960910     C                     END
+026500960910     C                     WRITETOTFIL
+026600960910     C                     END
+026700000110     C*  Controllo se devo stampare totali EURO
+026800000110     C           NUBEUR    IFNE 0
+026900000110     C           NUMEUR    ORNE 0
+027000000110     C*  Controllo se devo stampare prima pagina
+027100000110     C           WPRIMA    IFEQ ' '
+027200000110     C           *IN01     OREQ '1'
+027300000110     C                     WRITETES00
+027400000110     C                     MOVEL'N'       WPRIMA
+027500000110     C                     SETOF                     01
+027600000110     C                     END
+027700000110     C                     WRITETOTFIE
+027800000110     C                     END
+027900960910     C*  Controllo se devo stampare totali valuta
+028000960910     C           NUBDIV    IFNE 0
+028100960910     C           NUMDIV    ORNE 0
+028200960910     C*  Controllo se devo stampare prima pagina
+028300960910     C           WPRIMA    IFEQ ' '
+028400960910     C           *IN01     OREQ '1'
+028500960910     C                     WRITETES00
+028600960910     C                     MOVEL'N'       WPRIMA
+028700960910     C                     SETOF                     01
+028800960910     C                     END
+028900960910     C                     WRITETOTFIV
+029000960910     C                     END
+029100960910     C*  Aggiorno totali generali
+029200960910     C                     ADD  TOBLIT    TOT
+029300960910     C                     ADD  NUBLIT    NUGLIT
+029400960910     C                     ADD  TOMLIT    TOM
+029500960910     C                     ADD  NUMLIT    NUGMIT
+029600000110     C                     ADD  TOBEUR    TOTE
+029700000110     C                     ADD  NUBEUR    NUGEUR
+029800000110     C                     ADD  TOMEUR    TOME
+029900000110     C                     ADD  NUMEUR    NUGMEU
+030000960910     C                     ADD  NUBDIV    NUGVAL
+030100960910     C                     ADD  TOBVAL    TOTV
+030200960910     C                     ADD  NUMDIV    NUGMD
+030300960910     C                     ADD  TOMVAL    TOMV
+030400960910     C*
+030500960910     C                     ENDSR
+030600960910      *---------------------------------------------------------------*
+030700960910      *  TOTGEN: Totali generali
+030800960910      *---------------------------------------------------------------*
+030900960910     C           TOTGEN    BEGSR
+031000960910     C*
+031100960910     C*  Controllo se devo stampare totali lire
+031200960910     C           NUGLIT    IFNE 0
+031300960910     C           NUGMIT    ORNE 0
+031400960910     C*  Controllo se devo stampare prima pagina
+031500960910     C           WPRIMA    IFEQ ' '
+031600960910     C           *IN01     OREQ '1'
+031700960910     C                     WRITETES00
+031800960910     C                     MOVEL'N'       WPRIMA
+031900960910     C                     SETOF                     01
+032000960910     C                     END
+032100960910     C                     WRITETOT00
+032200960910     C                     END
+032300000110     C*  Controllo se devo stampare totali lire
+032400000110     C           NUGEUR    IFNE 0
+032500000110     C           NUGMEU    ORNE 0
+032600000110     C*  Controllo se devo stampare prima pagina
+032700000110     C           WPRIMA    IFEQ ' '
+032800000110     C           *IN01     OREQ '1'
+032900000110     C                     WRITETES00
+033000000110     C                     MOVEL'N'       WPRIMA
+033100000110     C                     SETOF                     01
+033200000110     C                     END
+033300000110     C                     WRITETOTE0
+033400000110     C                     END
+033500960910     C*  Controllo se devo stampare totali valuta
+033600960910     C           NUGVAL    IFNE 0
+033700960910     C           NUGMD     ORNE 0
+033800960910     C*  Controllo se devo stampare prima pagina
+033900960910     C           WPRIMA    IFEQ ' '
+034000960910     C           *IN01     OREQ '1'
+034100960910     C                     WRITETES00
+034200960910     C                     MOVEL'N'       WPRIMA
+034300960910     C                     SETOF                     01
+034400960910     C                     END
+034500960910     C                     WRITETOTV0
+034600960910     C                     END
+034700960910     C*
+034800960910     C                     ENDSR
+034900960910      *---------------------------------------------------------------*
+035000960910      *  *INZSR: Operazioni iniziali
+035100960910      *---------------------------------------------------------------*
+035200960910     C           *INZSR    BEGSR
+035300960910     C*
+035400960910     C           *ENTRY    PLIST
+035500960910     C                     PARM           KPJBA
+035600960910     C                     MOVELKPJBU     TNSC52
+035700960910     C* Richiamo XPARUT
+035800960910     C                     Z-ADD1         CODUT
+035900960910     C                     CALL 'X§PARUT'
+036000960910     C                     PARM           UT§DSE
+036100960911     C                     MOVELRAGUT     RSUT
+036200960910     C*  Definizione chiavi
+036300960910     C           KTAB      KLIST
+036400960910     C                     KFLD           KKUT
+036500960910     C                     KFLD           KCOD
+036600960910     C*  Definizione variabili
+036700960910     C           *LIKE     DEFN TBLKUT    KKUT
+036800960910     C           *LIKE     DEFN TBLCOD    KCOD
+036900000110     C*----------------------------------------------------*
+037000000110     C*  RECUPERO DIVISA MONETA CORRENTE
+037100000110     C                     CLEARDGED
+037200000110     C                     CLEARDSBS02
+037300000110     C                     MOVEL'C'       T02MOD
+037400000110     C                     MOVELKNSIF     T02SIF
+037500000110     C                     MOVEL'GED'     T02COD
+037600000110     C                     MOVEL'1'       T02KE1
+037700000110     C                     CALL 'TIBS02R'
+037800000110     C                     PARM           KPJBA
+037900000110     C                     PARM           DSBS02
+038000000110     C*
+038100000110    3C           T02ERR    IFEQ ' '
+038200000110     C                     MOVELT02UNI    DGED
+038300010619     C                     MOVEL§GEDCR    DIVCO1
+038400010619     C                     MOVEL§GEDCR    DIVCO2
+038500010619     C                     MOVEL§GEDCR    DIVCO3
+038600010619     C                     MOVEL§GEDCR    DIVCO4
+038700000110    3C                     ENDIF
+038800000110     C*----------------------------------------------------*
+038900000110     C* Carico tabella cambi/divise
+039000000110     C                     Z-ADD0         XX      30
+039100000110     C                     Z-ADD1         KKUT
+039200000110     C                     MOVEL'CV'      KCOD
+039300000110     C           KTAB      CHAINTABEL                31
+039400000110     C           *IN31     DOWEQ'0'
+039500000110     C           XX        ANDLT100
+039600000110     C                     MOVELTBLKEY    WDIV    3
+039700000110     C           TBLFLG    IFEQ ' '
+039800000110     C                     ADD  1         XX
+039900000110     C                     MOVELTBLKEY    CCV,XX
+040000000110     C                     MOVELTBLUNI    DSCV
+040100000110     C                     MOVEL§CVDVA    DVA,XX
+040200000110     C                     MOVEL§CVCMB    CMB,XX
+040300000110     C           §CVDVA    IFEQ 'S'
+040400010619     C           WDIV      ANDNE§GEDCR
+040500000110     C                     MOVELWDIV      DIVAL1
+040600000110     C                     MOVELWDIV      DIVAL2
+040700000110     C                     MOVELWDIV      DIVAL3
+040800000110     C                     MOVELWDIV      DIVAL4
+040900000110     C                     END
+041000000110     C* Memorizzo nr. decimali della divisa corrente
+041100010619     C           WDIV      IFEQ §GEDCR
+041200000110     C                     Z-ADD§CVDEC    NRDEC   20
+041300000110     C                     END
+041400000110     C                     END
+041500000110     C           KTAB      READETABEL                    31
+041600000110     C                     END
+041700960910      *
+041800960910      *  Verifico stampa scelta
+041900960911     C                     SETOF                     020506
+042000960911     C                     SETOF                     070809
+042100010109     C                     SETOF                     03
+042200960910     C                     SELEC
+042300960910     C           D52SCE    WHEQ '1'                        Giacenti
+042400960910     C                     MOVEL'1'       S54SC1
+042500960910     C                     SETON                     02
+042600960910     C           D52SCE    WHEQ '2'                        Sospesi
+042700960910     C                     MOVEL'1'       S54SC2
+042800960910     C                     SETON                     05
+042900960910     C           D52SCE    WHEQ '3'                        Storno Asse.
+043000960910     C                     MOVEL'1'       S54SC3
+043100960910     C                     SETON                     06
+043200960910     C           D52SCE    WHEQ '4'                        Errata inte.
+043300960910     C                     MOVEL'1'       S54SC4
+043400960910     C                     SETON                     07
+043500960910     C           D52SCE    WHEQ '5'                        Inc.in sede
+043600960910     C                     MOVEL'1'       S54SC5
+043700960910     C                     SETON                     08
+043800960910     C           D52SCE    WHEQ '6'                        Annullati
+043900960910     C                     MOVEL'1'       S54SC6
+044000960910     C                     SETON                     09
+044100010109     C           D52SCE    WHEQ '7'                        OMESSI
+044200010109     C                     MOVEL'1'       S54SC7
+044300010109     C                     SETON                     03
+044400960910     C                     ENDSL
+044500960910     C*
+044600960910     C*  Eseguo stampa prima pagina
+044700960910     C                     MOVELD52DET    S54DET
+044800960910     C                     MOVELD52ORD    S54ORD
+044900960910     C                     MOVELD52PAG    S54PAG
+045000960910     C                     Z-ADDD52LN1    S54FL1
+045100960910     C                     Z-ADDD52LN2    S54FL2
+045200960910     C                     Z-ADDD52DDS    G02INV
+045300960910     C                     Z-ADD0         G02DAT
+045400960910     C                     MOVEL'3'       G02ERR
+045500960910     C                     CALL 'XSRDA8'
+045600960910     C                     PARM           WLBDA8
+045700960910     C                     Z-ADDG02DAT    S54DDS
+045800960910     C                     Z-ADDD52ADS    G02INV
+045900960910     C                     Z-ADD0         G02DAT
+046000960910     C                     MOVEL'3'       G02ERR
+046100960910     C                     CALL 'XSRDA8'
+046200960910     C                     PARM           WLBDA8
+046300960910     C                     Z-ADDG02DAT    S54ADS
+046400960910     C                     WRITEPAG00
+046500960910     C*  Azzero totali gen.
+046600960910     C                     Z-ADD0         NUGLIT
+046700960910     C                     Z-ADD0         TOT
+046800960910     C                     Z-ADD0         NUGMIT
+046900960910     C                     Z-ADD0         TOM
+047000000110     C                     Z-ADD0         NUGEUR
+047100000110     C                     Z-ADD0         TOTE
+047200000110     C                     Z-ADD0         NUGMEU
+047300000110     C                     Z-ADD0         TOME
+047400960910     C                     Z-ADD0         TOTV
+047500960910     C                     Z-ADD0         TOMV
+047600960910     C                     Z-ADD0         NUGVAL
+047700960910     C                     Z-ADD0         NUGMD
+047800960911     C*
+047900960911     C                     MOVEL*ALL'-'   CMP198
+048000960911     C                     MOVEL*ALL'-'   CM1198
+048100960910     C*
+048200960910     C                     ENDSR

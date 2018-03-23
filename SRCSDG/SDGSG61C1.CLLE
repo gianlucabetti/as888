@@ -1,0 +1,57 @@
+000100070907/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER )                                   */
+000200070907/*-------------------------------------------------------------------*/
+000300130904/* Comunicazione Operazioni Iva - Spesometro                         */
+000400070907/*-------------------------------------------------------------------*/
+000500070907             PGM        PARM(&FILE &LIBRF &TPDIS &DATADIS &DESFILEI +
+000600070907                          &DESFILEO &ERR)
+000700070907
+000800070907/* Parametri passati                                          */
+000900070907/* Libreria/file  da creare                                   */
+001000100727             DCL        VAR(&FILE)     TYPE(*CHAR) LEN(10)
+001100100727             DCL        VAR(&LIBRF)    TYPE(*CHAR) LEN(10)
+001200100727             DCL        VAR(&TPDIS)    TYPE(*CHAR) LEN(2)
+001300100727             DCL        VAR(&DATADIS)  TYPE(*CHAR) LEN(10)
+001400070907             DCL        VAR(&DESFILEI) TYPE(*CHAR) LEN(8)
+001500110811             DCL        VAR(&DESFILEO) TYPE(*CHAR) LEN(50)
+001600100727             DCL        VAR(&ERR)      TYPE(*CHAR) LEN(1)
+001700100727/* Libreria file                                              */
+001800100727             DCL        VAR(&LIBRIMW)  TYPE(*CHAR) LEN(10)
+001900070907
+002000100727             DCL        VAR(&DDTR)     TYPE(*CHAR) LEN(10)
+002100100727
+002200070907             CVTDAT     DATE(&DATADIS) TOVAR(&DDTR) FROMFMT(*YYMD) +
+002300070907                          TOFMT(*DMYY) TOSEP(/)
+002400070907
+002500130904             DLTOVR     FILE(SDGETE00F)
+002600100824             MONMSG     MSGID(CPF0000)
+002700100824
+002800070907/*- Cerco file per scarico                                           */
+002900070907             CHKOBJ     OBJ(&LIBRF/&FILE) OBJTYPE(*FILE)
+003000070907             MONMSG     MSGID(CPF0000)
+003100070907
+003200070907             DLTF       FILE(&LIBRF/&FILE)
+003300070907             MONMSG     MSGID(CPF0000)
+003400070907
+003500070907
+003600100727/*- Se il file non esiste  lo creo a immagine di                     */
+003700130904             RTVMBRD    FILE(SDGETE00F) RTNLIB(&LIBRIMW)
+003800130904             CRTDUPOBJ  OBJ(SDGETE00F) FROMLIB(&LIBRIMW) +
+003900070907                          OBJTYPE(*FILE) TOLIB(&LIBRF) +
+004000070907                          NEWOBJ(&FILE) DATA(*NO)
+004100070907/*- Se  errore  vado a fine                                    */
+004200070907             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300070907             CHGVAR     VAR(&ERR) VALUE('1')
+004400070907             GOTO       CMDLBL(FINE)
+004500070907             ENDDO
+004600070907
+004700070907/*- Modifica descrizione file                                        */
+004800070907             CHGOBJD    OBJ(&LIBRF/&FILE) OBJTYPE(*FILE) +
+004900070907                          TEXT(&DESFILEO)
+005000070907             MONMSG     MSGID(CPF0000)
+005100070907
+005200070907
+005300070907/*- Ovr per file scarico                                            */
+005400130904             OVRDBF     FILE(SDGETE00F) TOFILE(&LIBRF/&FILE) +
+005500070907                          OVRSCOPE(*JOB)
+005600070907
+005700070907 FINE:       ENDPGM

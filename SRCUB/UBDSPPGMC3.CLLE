@@ -1,0 +1,64 @@
+000100140120/* per compilare questo pgm bisogna creare il file QTEMP/WFTITTMP mediante: */
+000200140120/*           DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE)         */
+000300140120/*                        OUTFILE(QTEMP/WFTITTMP)                           */
+000400140120/* dando una libreria/file qualunque (non interessano i dati ma la struttura  */
+000500140120/* e poi cancellare il file */
+000600140625             PGM        PARM(&L &F &M +
+000700140625                          &SELTXT &ESITO)
+000800941110
+000900980324/* Parametri in ingresso:                                                                         */
+001000980324/*              &L - Libreria                                                                     */
+001100980324/*              &F - File sorgente                                                                */
+001200140625/*              &M - Membro sorgente                                                              */
+001300140116/*              &SELTXT - per selezione su descrizione */
+001400140116/*              &ESITO - esito */
+001500980326
+001600140117             DCLF       FILE(QTEMP/WFTITTMP)
+001700140116             DCL        VAR(&L) TYPE(*CHAR) LEN(10)
+001800941110             DCL        VAR(&F) TYPE(*CHAR) LEN(10)
+001900140625             DCL        VAR(&M) TYPE(*CHAR) LEN(10)
+002000140116             DCL        VAR(&SELTXT) TYPE(*CHAR) LEN(50)
+002100140116             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+002200140312
+002300140312/* Creo il file con tutti i membri presenti nel source file in input  */
+002400140312             DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+002500140312                          OUTFILE(QTEMP/WFTITTMP)
+002600140116
+002700140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+002800140116             CHGVAR     VAR(&Esito) VALUE(1)
+002900140116             GOTO       CMDLBL(FINE)
+003000140116             ENDDO
+003100140116
+003200140116 RCVF:       RCVF       RCDFMT(QWHFDML)
+003300140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+003400140117/* non c'è un esito particolare perché dà errore anche a fine file */
+003500140116             GOTO       CMDLBL(FINE)
+003600140116             ENDDO
+003700140116
+003800140116/* la diagnostica deve essere fatta girare solo per RPGLE e/o SQLRPGLE */
+003900140116/* gli altri test li faccio nel pgm chiamato */
+004000140116             IF         COND((&MLSEU2 *EQ 'RPGLE') *OR (&MLSEU2 *EQ +
+004100140116                          'SQLRPGLE')) THEN(DO)
+004200140625
+004300140625/* se è stato indicato un nome membro, la diagnostica deve girare solo per questo */
+004400140625             IF         COND((&M *NE ' ') *AND (&MLNAME *NE &M)) +
+004500140625                          THEN(GOTO CMDLBL(RCVF))
+004600140116
+004700140116/* OVRDBF per programma RPG                                                                       */
+004800140116             OVRDBF     FILE(INPUTBND) TOFILE(&L/&F) MBR(&MLNAME) +
+004900140116                          OVRSCOPE(*JOB)
+005000140116
+005100140116/* Richiamo programma diagnostico                                                                 */
+005200140625             CALL       PGM(UBPPLTITR2) PARM(&L &F &M +
+005300140625                          &SELTXT &MLNAME +
+005400140116                          &MLMTXT &ESITO)
+005500140116
+005600140116/* Elimino le sostituzioni file attive e il membro dal file in QTEMP                              */
+005700140117             DLTOVR     FILE(INPUTBND) LVL(*JOB)
+005800140116
+005900140116             ENDDO
+006000140116
+006100140116             GOTO       CMDLBL(RCVF)
+006200140116ENDRCVF:
+006300980325
+006400140116 FINE:       ENDPGM

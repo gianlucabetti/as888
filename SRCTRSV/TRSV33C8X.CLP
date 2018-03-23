@@ -1,0 +1,65 @@
+000100040421 TRSV33C8:   PGM        PARM(&DEV)
+000101040109             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+000200980911             DCL        VAR(&DEV) TYPE(*CHAR) LEN(10)
+000300990823             DCL        VAR(&DEVSAV) TYPE(*CHAR) LEN(22)
+000400990823             DCL        VAR(&DEVSA1) TYPE(*CHAR) LEN(9) +
+000500990823                          VALUE('QSYS.LIB/')
+000600990823             DCL        VAR(&DEVSA2) TYPE(*CHAR) LEN(5)
+000700990823             DCL        VAR(&DEVSA3) TYPE(*CHAR) LEN(5) VALUE('.DEVD')
+000800900406             DCL        VAR(&RISP) TYPE(*CHAR) LEN(2)
+000900900406             DCLF       FILE(QSYS/QADSPOBJ)
+001000931223             DCL        VAR(&MODULO) TYPE(*CHAR) LEN(9) +
+001100011224                          VALUE('SV33_GGMM')
+001200931223             DCL        VAR(&MM) TYPE(*CHAR) LEN(2)
+001300931223             DCL        VAR(&GG) TYPE(*CHAR) LEN(2)
+001301040109
+001302040109             RTVNETA    SYSNAME(&SYSNAME)
+001400931223/* IMPOSTA NOME MODULO LOG SALVATAGGIO   */
+001500931223             RTVSYSVAL  SYSVAL(QDAY) RTNVAR(&GG)
+001600931223             RTVSYSVAL  SYSVAL(QMONTH) RTNVAR(&MM)
+001700931223             CHGVAR     VAR(%SST(&MODULO 6 2)) VALUE(&GG)
+001800931223             CHGVAR     VAR(%SST(&MODULO 8 2)) VALUE(&MM)
+001900931223
+002000990823             CHGVAR     VAR(&DEVSA2) VALUE(%SST(&DEV 1 5))
+002100990823             CHGVAR     VAR(&DEVSAV) VALUE(&DEVSA1 *CAT &DEVSA2 *CAT +
+002200990823                          &DEVSA3)
+002300900406
+002400030315             SNDUSRMSG  MSG('Montare nastro per Salvataggi "SAVSYS e +
+002500030315                          Librerie con salvataggio NON a routine +
+002600030315                          (DEDICATO e IFS)". Quindi rispondere: OK  +
+002700030315                          (Alla fine del salvataggio controllare il +
+002800030315                          salvataggio con il comando DSPLOG ...     +
+002900030315                          ..... Se non si vuole eseguire il +
+003000030315                          salvataggio rispondere: NO.') VALUES(OK +
+003100030315                          NO) DFT(OK) TOMSGQ(QSYSOPR) MSGRPY(&RISP)
+003200900406
+003300900406             IF         COND(&RISP *NE 'OK') THEN(GOTO CMDLBL(ENDF))
+003400900403
+003500980911             IF         COND((&DEV) *EQ ('          ')) THEN(CHGVAR +
+003600980911                          VAR(&DEV) VALUE('TAP09     '))
+003700990730
+004000030315
+004100990730             /*           SALVATAGGIO IFS    */
+004200011231             SAV        DEV(&DEVSAV) OBJ(('/*') ('/QSYS.LIB' *OMIT) +
+004300011231                          ('/QDLS' *OMIT) ('/LIBAS400.LIB' *OMIT) +
+004400011231                          ('/STRATEGI' *OMIT)) SAVACT(*YES) +
+004500011231                          ENDOPT(*LEAVE)
+007200931223
+007300931223 ENDF:
+007301040421
+007302040421             SAVDLO     DLO(*ALL) DEV(&DEV) ENDOPT(*LEAVE)
+007303040421
+007400980911/* RIAVVOLGE IL NASTRO                                        */
+007500980911             CHKTAP     DEV(&DEV) ENDOPT(*UNLOAD)
+007600980911             MONMSG     MSGID(CPF0000)
+007700931223/* STAMPA LOG DEL JOB DI SALVATAGGIO                          */
+007801040109             /* CODA DIVERSA A SECONDA DELL'AS */
+007802040109             IF         COND(&SYSNAME *EQ 'AS777MI') THEN(OVRPRTF +
+007803040109                          FILE(QPJOBLOG) OUTQ(LOGSAVXBO) +
+007804040109                          FORMTYPE(&MODULO) USRDTA(&SYSNAME))
+007805040109             IF         COND(&SYSNAME *NE 'AS777MI') THEN(OVRPRTF +
+007806040109                          FILE(QPJOBLOG) OUTQ(LOGSAVXMI) +
+007807040109                          FORMTYPE(&MODULO) USRDTA(&SYSNAME))
+008000931223             DSPJOBLOG  OUTPUT(*PRINT)
+008400900403
+008500931223             ENDPGM

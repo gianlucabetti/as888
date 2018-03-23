@@ -1,0 +1,50 @@
+000100060609/*?******************************************************************/
+000200060809/*?  RICEVE ED ELABORA O.R.M.  DPD   "CRDATA02"   da UPLOAD         */
+000300060609/*?  Ricezione in Sede tramite server FTP cliente "0DPD00IN"        */
+000400060609/*?******************************************************************/
+000500060613
+000600060613             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000700060609
+000800060613             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+000900060613             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001000060613             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001100060613             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001200060620             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001300060613
+001400060620             CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))
+001500060613/* ?-----------------------------------------------------------------  */
+001600060613/* ? Lista di librerie per reperire correttamente i programmi          */
+001700060613/* ?-----------------------------------------------------------------  */
+001800060614
+001900060614             ADDLIBLE   LIB(FILTRAGRU) POSITION(*AFTER UNITRAGRU)
+002000060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002100060614
+002200060614             ADDLIBLE   LIB(FILTRA201) POSITION(*AFTER FILTRAGRU)
+002300060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002400060620
+002500060620             IF         COND(&TEST *NE ' ') THEN(DO)
+002600060620             ADDLIBLE   LIB(EDPDPDTST)
+002700060620             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002800060620             ENDDO
+002900060613
+003000050413/* ?-----------------------------------------------------------------  */
+003100050413/* ?  Parte Nuova di trascodifica senza uso delle trasmissioni         */
+003200050413/* ?-----------------------------------------------------------------  */
+003300060809             CALL       PGM(FIEU40R1) PARM(&ESITO)
+003400060710             MONMSG     MSGID(CPF0000) EXEC(DO)
+003500060710    /*       CHGVAR     VAR(&ESITO) VALUE('2')        */
+003600060710             ENDDO
+003700060614
+003800060808             RMVLIBLE   LIB(FILTRAGRU)
+003900060614             MONMSG     MSGID(CPF0000)
+004000060808             RMVLIBLE   LIB(FILTRA201)
+004100060614             MONMSG     MSGID(CPF0000)
+004200060620
+004300060620             IF         COND(&TEST *NE ' ') THEN(DO)
+004400060620             RMVLIBLE   LIB(EDPDPDTST)
+004500060620             MONMSG     MSGID(CPF0000)
+004600060620             ENDDO
+004700060614
+004800050413/* ?-----------------------------------------------------------------  */
+004900050413FINE:
+005000020911             ENDPGM

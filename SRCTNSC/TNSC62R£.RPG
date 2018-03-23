@@ -1,0 +1,385 @@
+000100940307     H              J
+000200940307?     *--------------------------------------------------------------*
+000300950203      * TNSC62R                                                      *
+000400940307      *       *-----------------------------------------*            *
+000500940307      *           STAMPA/PULIZIA CONTRASSEGNI DI SEDE                *
+000600940307      *                  ESEGUE STAMPA DATI C/A                      *
+000700940307      *       *-----------------------------------------*            *
+000800940307      *                                                              *
+000900940307?     *--------------------------------------------------------------*
+001000950203     FTNCPB01LIF  E           K        DISK
+001100940307?     *----------
+001200950203     FTNCPV01LIF  E           K        DISK
+001300940307?     *----------
+001400940307     FTABEL00FIF  E           K        DISK                           UC
+001500940307?     *----------
+001600950203     FTNSC62P O   E             01     PRINTER
+001700940307?     *--------------------------------------------------------------*
+001800940307?     *  SCHIERE                                                     *
+001900940307?     *--------------------------------------------------------------*
+002000940307     E                    CAU        20  4               Causa.Variaz.C/A
+002100950215     E                    DES        20 18               Descr.Variaz.C/A
+002200940307     E                    TPV        20  1               Flag tipo variaz.
+002300940307     E                    STP        20  1               Stampa variaz.
+002400940307?     *--------------------------------------------------------------*
+002500940307?     *  DS                                                          *
+002600940307?     *--------------------------------------------------------------*
+002700940307     IKPJBA     E DS
+002800940307      *
+002900950203     ITNSC60    E DSTNSC60DS
+003000940307      *
+003100940307     IPARUT     E DSUT§DSE0F
+003200940307     ICNCR80    E DS
+003300940307      *
+003400940307     IDS4V      E DS
+003500940308     I*
+003600950215     IWLBDAT      DS
+003700950216     I                                        1   60G02DAT
+003800950216     I                                        7  120G02INV
+003900950216     I                                       13  13 G02ERR
+004000950216     I                                       14  180G02TGI
+004100940308     I           SDS
+004200940308     I                                        1  10 NOMPGM
+004300940307      *---------------------------------------------------------------*
+004400940307      *  Costanti                                                     *
+004500940307      *---------------------------------------------------------------*
+004600940307     I              'CONTANTE'            C         COST1
+004700940310     I              'ANNULLATO'           C         COST2
+004800940307      *---------------------------------------------------------------*
+004900940307      *   C I C L O      P R I N C I P A L E                          *
+005000940307      *---------------------------------------------------------------*
+005100940307      *  Posizionamento iniziale per data limite spedizione inferiore
+005200950215     C           KEYCPB    SETLLTNCPB01L
+005300950215     C                     READ TNCPB01L                 80
+005400940307     C*
+005500950215     C           *IN80     IFEQ '0'
+005600950215     C                     Z-ADDCPBMGS    WDSP    80
+005700950215     C                     MOVELCPBAAS    WDSP    80
+005800000421     C                     Z-ADD0         WAAMM
+005900000421     C                     Z-ADD0         WAAMMS
+006000000822     C                     MOVELWDSP      WAAMM   80
+006100000822     C                     MOVELWDSP      WAAMMS  80
+006200940307     C* Loop di letture fino a fine file
+006300950215     C           WDSP      DOWLED60SDA
+006400940307     C           *IN80     ANDEQ'0'
+006500940307     C                     EXSR STPBOL
+006600950215     C                     READ TNCPB01L                 80
+006700950215     C           *IN80     IFEQ '0'
+006800950215     C                     Z-ADDCPBMGS    WDSP    80
+006900950215     C                     MOVELCPBAAS    WDSP    80
+007000000421     C                     MOVELWDSP      WAAMM
+007100000822     C* A rottura di GIORNO/mese/anno spedizione gestisco salto pagina
+007200000421     C           WAAMM     IFNE WAAMMS
+007300000421     C                     SETON                     01
+007301000822     C                     Z-ADD0         PAGE
+007400000421     C                     MOVE WAAMM     WAAMMS
+007500940307     C                     END
+007600000421     C                     END
+007700950215     C*
+007800950215     C                     END
+007900950215     C                     END
+008000940307     C* Fine pgm.
+008100940307     C                     SETON                     LR
+008200940307      *---------------------------------------------------------------*
+008300940307      *   STPBOL: Stampa dati bolla                                   *
+008400940307      *---------------------------------------------------------------*
+008500940307     C           STPBOL    BEGSR
+008600940307     C*
+008700950215     C                     Z-ADDWDSP      G02INV
+008800950215     C                     MOVEL'3'       G02ERR
+008900950215     C                     CALL 'XSRDAT'
+009000950215     C                     PARM           WLBDAT
+009100950215     C                     MOVELG02DAT    DSP
+009200940307     C                     Z-ADDCPBLNP    LNP
+009300940307     C                     Z-ADDCPBNRS    NRS
+009400940307     C                     Z-ADDCPBNSP    NSP
+009500940307     C                     Z-ADDCPBLNA    LNA
+009600940308     C                     Z-ADDCPBRMN    RNM
+009700940308     C                     MOVELCPBRSD    RGD
+009800940310     C                     MOVELCPBRSM    RGM
+009900940308     C                     MOVELCPBPAR    LOC
+010000940308     C                     MOVELCPBPRO    PRV
+010100950216     C                     MOVE CPBCAS    COM     30
+010200950215     C           COM       IFEQ 0
+010300950215     C                     SETON                     02
+010400950215     C                     Z-ADDCPBCAS    IMP1
+010500950215     C                     ELSE
+010600950215     C                     SETOF                     02
+010700950215     C                     Z-ADDCPBCAS    IMP2
+010800950215     C                     END
+010900950215     C                     MOVELCPBVCA    VCA
+011000950215     C                     Z-ADDCPBDTE    G02INV
+011100950215     C                     MOVEL'3'       G02ERR
+011200950215     C                     CALL 'XSRDAT'
+011300950215     C                     PARM           WLBDAT
+011400950215     C                     MOVELG02DAT    DDC
+011500950215     C                     Z-ADDCPBDDC    G02INV
+011600950215     C                     MOVEL'3'       G02ERR
+011700950215     C                     CALL 'XSRDAT'
+011800950215     C                     PARM           WLBDAT
+011900950215     C                     MOVELG02DAT    DDT
+012000940307     C                     Z-ADDCPBNDT    NDT
+012100940307     C                     MOVELCPBNRA    NDC
+012200940516     C           CPBTPA    IFEQ ' '
+012300940310     C           DDT       ANDNE*ZERO
+012400940516     C                     MOVEL*BLANKS   NDC
+012500940516     C                     MOVELCOST1     NDC
+012600940307     C                     END
+012700940307     C                     Z-ADDCPBABI    ABI
+012800940307     C                     Z-ADDCPBCAB    CAB
+012900950215     C                     Z-ADDCPBDDP    G02INV
+013000950215     C                     MOVEL'3'       G02ERR
+013100950215     C                     CALL 'XSRDAT'
+013200950215     C                     PARM           WLBDAT
+013300950215     C                     MOVELG02DAT    DDP
+013400940308     C                     Z-ADDCPBNDP    NDP
+013500950215     C                     Z-ADDCPBLAA    AASL
+013600950215     C                     Z-ADDCPBLLP    LNPL
+013700950215     C                     Z-ADDCPBLNS    NRSL
+013800950215     C                     Z-ADDCPBLSP    NSPL
+013900940516     C                     Z-ADD0         BAN
+014000940516     C           CPBBNA    IFNE 9999999
+014100940516     C           CPBBNA    ANDNE*ZEROS
+014200940516     C                     Z-ADDCPBBNA    BAN
+014300940516     C                     END
+014400940516     C                     MOVEL'   '     TPP
+014500940307     C*  Tipo Documento
+014600940307     C           CPBFPC    IFEQ '2'
+014700940307     C                     MOVE 'BON'     TPP
+014800940307     C                     ELSE
+014900940516     C           CPBBNA    IFEQ 9999999
+015000940307     C                     MOVE 'LET'     TPP
+015100940307     C                     ELSE
+015200940307     C                     MOVE 'ASS'     TPP
+015300940307     C                     END
+015400940307     C                     END
+015500940307     C*
+015600940307     C* Controllo se è cambiato l'anno se si accendo indicatore
+015700000824     C* di Salto pagina
+015800940307     C           CPBAAS    IFNE ANNSPE
+015900000822     C                     Z-ADDCPBAAS    ANNSPE  40
+016000940307     C                     SETON                     01
+016001000824     C                     Z-ADD0         PAGE
+016100940307     C                     END
+016200950215     C*
+016300950215     C* Controllo se ci sono variazioni
+016400950215     C                     Z-ADDCPBAAS    CPWAAS
+016500950215     C                     Z-ADDCPBLNP    CPWLNP
+016600950215     C                     Z-ADDCPBNRS    CPWNRS
+016700950215     C                     Z-ADDCPBNSP    CPWNSP
+016800950215     C           KEYCPV    CHAINTNCPV01L             70
+016900940307     C* Test Overflow
+017000940307     C           *IN01     IFEQ '1'
+017001000822      *
+017002000822      * INVERTO DATA SPEDIZIONE DA STAMPARE IN TESTATA
+017003000822     C                     MOVE CPBAAS    WDUE    20
+017004000822     C                     MOVELWDUE      G02INV
+017005000822     C                     MOVE CPBMGS    G02INV
+017006000822     C                     MOVEL'3'       G02ERR
+017007000822     C                     CALL 'XSRDAT'
+017008000822     C                     PARM           WLBDAT
+017009000822     C                     MOVELG02DAT    DATSPE  60
+017100940307     C                     WRITETES00
+017200940307     C                     SETOF                     01
+017300940307     C                     END
+017301000822      *
+017400950215     C           CPBSTA    COMP 9                        99
+017500950215     C                     WRITEDET00
+017600950215     C           CPBSTA    IFEQ 9
+017700950215     C           NSPL      ANDNE0
+017800950215     C                     WRITELEGAN
+017900950215     C                     END
+018000940310     C* Scrivo i riferimenti di incassp se esistono
+018100940310     C           DDT       IFNE *ZERO
+018200940310     C                     WRITEDETIN
+018300950215     C           NSPL      IFNE 0
+018400950215     C                     WRITELEGIN
+018500950215     C                     END
+018600950215     C                     END
+018700940307     C*
+018800940307     C* Controllo se ci sono variazioni da stampare
+018900940307     C                     EXSR STPVAR
+019000940307     C*
+019100940307     C                     ENDSR
+019200940307      *---------------------------------------------------------------*
+019300940307      *   STPVAR: Stampa dati variazione                              *
+019400940307      *---------------------------------------------------------------*
+019500940307     C           STPVAR    BEGSR
+019600940307     C*
+019700950215     C           *IN70     IFEQ '0'
+019800940307     C* Posizionamento iniziale
+019900940310     C           *IN70     DOWEQ'0'
+020000940307     C                     SETOF                     070809
+020100940310     C                     SETON                     10
+020200940310     C                     SETOF                     4011
+020300940307     C* Cerco decodifica da stampare
+020400940516     C                     Z-ADD1         X       30
+020500940308     C           CPVCAV    LOKUPCAU,X                    40
+020600940310     C           *IN40     IFEQ '1'
+020700940307     C           STP,X     ANDEQ'S'
+020800940307     C                     MOVELDES,X     DESV
+020900950216     C                     Z-ADDCPVDTV    G02INV
+021000950215     C                     MOVEL'3'       G02ERR
+021100950215     C                     CALL 'XSRDAT'
+021200950215     C                     PARM           WLBDAT
+021300950215     C                     MOVELG02DAT    DTV
+021400940307     C                     Z-ADDCPVFEV    LNV
+021500940307     C*  Annullamento !!!
+021600940516     C*
+021700940308     C           TPV,X     IFEQ 'A'
+021800940516     C           TPV,X     OREQ 'V'
+021900950215     C           CPVCAS    ANDEQCPBCAS
+022000950215     C           CPVVCA    ANDEQCPBVCA
+022100940516     C           CPBSTA    ANDEQ9
+022200940516     C           TPV,X     IFEQ 'V'
+022300940516     C                     MOVEL*BLANKS   DESV
+022400940516     C                     MOVEL'ANNULLAM'DES16  16
+022500940516     C                     MOVE 'ENTO C/A'DES16  16
+022600940516     C                     MOVELDES16     DESV
+022700940516     C                     END
+022800940516     C*
+022900940310     C           AASL      IFNE 0
+023000940310     C           LNPL      ORNE 0
+023100940310     C           NRSL      ORNE 0
+023200940310     C           NSPL      ORNE 0
+023300940310     C                     SETON                     11
+023400940310     C                     END
+023500940310     C                     SETON                     09
+023600940307     C                     ELSE
+023700940307     C*  Apertura giacenza !!!
+023800940308     C           TPV,X     IFEQ 'G'
+023900940307     C                     SETON                     08
+024000940314     C                     Z-ADDCPBNGC    NGC
+024100940307     C*  Variazione C/A
+024200940307     C                     ELSE
+024300940308     C           TPV,X     IFEQ 'V'
+024400940307     C                     SETON                     07
+024500950216     C                     MOVE CPVCAS    COM
+024600950215     C           COM       IFEQ 0
+024700950215     C                     SETON                     02
+024800950215     C                     Z-ADDCPVCAS    PIMP1
+024900950215     C                     ELSE
+025000950215     C                     SETOF                     02
+025100950215     C                     Z-ADDCPVCAS    PIMP2
+025200950215     C                     END
+025300940307     C                     END
+025400940307     C                     END
+025500940307     C                     END
+025600940307     C*
+025700940516     C*  se leggo varizione importo C/A e l'importo è uguale
+025800940516     C*  a quello della bolla non stampo nulla
+025900940516     C           TPV,X     IFNE 'V'
+026000950215     C           CPVCAS    ORNE CPBCAS
+026100950215     C           CPVVCA    ORNE CPBVCA
+026200940516     C           CPBSTA    OREQ 9
+026300940516     C*
+026400940516     C           *IN01     IFEQ '1'
+026500940307     C                     WRITETES00
+026600940307     C                     SETOF                     01
+026700940307     C                     END
+026800940307     C                     WRITEDETEV
+026900940307     C                     END
+027000940516     C*
+027100940516     C                     END
+027200940307     C*  Lettura successivo
+027300950215     C           KEYCPV    READETNCPV01L                 70
+027400940307     C                     END
+027500940310     C*  Se contrassegno annullato stampo dati annullam.
+027600940310     C                     ELSE
+027700940310     C                     SETOF                     1011
+027800940310     C                     SETOF                     070809
+027900940310     C           CPBSTA    IFEQ 9
+028000940310     C                     MOVELCOST2     DESV
+028100940310     C           *IN01     IFEQ '1'
+028200940310     C                     WRITETES00
+028300940310     C                     SETOF                     01
+028400940310     C                     END
+028500940310     C                     WRITEDETEV
+028600940310     C                     END
+028700940310     C                     END
+028800940307     C*
+028900940307     C                     ENDSR
+029000940307      *---------------------------------------------------------------*
+029100940307      *   *INZSR: Operazioni iniziali                                 *
+029200940307      *---------------------------------------------------------------*
+029300940307     C           *INZSR    BEGSR
+029400940307     C*
+029500940307     C           *ENTRY    PLIST
+029600940307     C                     PARM           KPJBA
+029700950215     C                     MOVELKPJBU     TNSC60
+029800940307     C*----------------------------------------------------*
+029900940307     C* Call a XPARUT
+030000940307     C                     Z-ADD1         CODUT
+030100940307     C                     CALL 'X§PARUT'
+030200940307     C                     PARM           PARUT
+030300940307     C*
+030400940307     C                     MOVELRAGUT     RSUT   20
+030500940307     C                     MOVELREC80     CNCR80
+030600940307     C                     MOVELKNMUS     §SEI    6
+030700940307     C*----------------------------------------------------*
+030800940307     C* Definizione chiavi
+030900940307     C           KEYCPB    KLIST
+031000950215     C                     KFLD           CPWAAS
+031100950215     C                     KFLD           CPWMGS
+031200940307     C*
+031300940307     C           KEYCPV    KLIST
+031400940307     C                     KFLD           CPWLNP
+031500940307     C                     KFLD           CPWAAS
+031600940307     C                     KFLD           CPWNRS
+031700940307     C                     KFLD           CPWNSP
+031800940307     C*
+031900940307     C           KEYTAB    KLIST
+032000940307     C                     KFLD           TBWKUT
+032100940308     C                     KFLD           TBWCOD
+032200940307     C*----------------------------------------------------*
+032300940307     C* Definizione chiavi
+032400950215     C           *LIKE     DEFN CPBMGS    CPWMGS
+032500940307     C           *LIKE     DEFN CPBAAS    CPWAAS
+032600940307     C           *LIKE     DEFN CPBLNP    CPWLNP
+032700940307     C           *LIKE     DEFN CPBNRS    CPWNRS
+032800940307     C           *LIKE     DEFN CPBNSP    CPWNSP
+032900940307     C           *LIKE     DEFN TBLKUT    TBWKUT
+033000940308     C           *LIKE     DEFN TBLCOD    TBWCOD
+033100940307     C*----------------------------------------------------*
+033200940307     C* Inizializzazione variabili
+033300950215     C                     Z-ADDD60SDD    CPWMGS
+033400950215     C                     MOVELD60SDD    CPWAAS
+033500940307     C                     Z-ADD1         TBWKUT
+033600940307     C*----------------------------------------------------*
+033700940307     C* Caricamento dati tabella 4V
+033800940308     C                     MOVE '4V'      TBWCOD
+033900940307     C                     Z-ADD0         X
+034000940307     C                     OPEN TABEL00F
+034100940307     C           KEYTAB    CHAINTABEL00F             81
+034200940307     C           *IN81     DOWEQ'0'
+034300940307     C           X         ANDLT20
+034400940307     C                     MOVELTBLUNI    DS4V
+034500940307     C                     ADD  1         X
+034600940308     C                     MOVELTBLKEY    CAU,X
+034700940307     C                     MOVEL§4VDES    DES,X
+034800940307     C                     MOVEL§4VTIP    TPV,X
+034900940307     C                     MOVEL§4VSTP    STP,X
+035000940307     C           KEYTAB    READETABEL00F                 81
+035100940307     C                     END
+035200940307     C                     CLOSETABEL00F
+035300940307     C*----------------------------------------------------*
+035400940308     C* Stampo date limiti spedizioni
+035500950215     C                     Z-ADDD60SDD    G02INV
+035600950215     C                     MOVEL'3'       G02ERR
+035700950215     C                     CALL 'XSRDAT'
+035800950215     C                     PARM           WLBDAT
+035900950215     C                     MOVELG02DAT    DATSP1
+036000950215     C                     Z-ADDD60SDA    G02INV
+036100950215     C                     MOVEL'3'       G02ERR
+036200950215     C                     CALL 'XSRDAT'
+036300950215     C                     PARM           WLBDAT
+036400950215     C                     MOVELG02DAT    DATSP2
+036500940308     C*
+036600950215     C                     Z-ADDDATSP1    S62DT1
+036700950215     C                     Z-ADDDATSP2    S62DT2
+036800950215     C                     MOVELD60PUL    S62PUL
+036900950215     C                     MOVELD60STA    S62STA
+037000000822     C  N01 01             WRITEPAG00
+037100940308     C*----------------------------------------------------*
+037200940308     C                     ENDSR
+037300940307     C*----------------------------------------------------*

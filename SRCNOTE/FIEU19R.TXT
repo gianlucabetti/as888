@@ -1,0 +1,71 @@
+000100160118 =====================================================================
+000200160118 |Aut.|Data Mod.| Descrizione Modifica                               |
+000300160118 =====================================================================
+000400160118 : ND :06/04/00 :*Per trasmettere data arrivo all HUB e Scan fittizio
+000500160118 :    :         : con numero distinta utilizzo, se spunta entrata con
+000600160118 :    :         : pistola 88, la data consegna e non la data partenza
+000700160118 :    :         : ultimo collo o la data arrivo merce. Questo per
+000800160118 :    :         : evitare problemi per le aree di PE,NA...
+000900160118 :    :         :*Considero la data consegna solo se il codice consegna
+001000160118 :    :         : anomala è diverso da "5".
+001100160118 : AB :19/09/02 : x AS Unico  la procedura non è più lanciata con il profilo
+001200160118 :    :         : generico EDPCED ma deve essere EDPCED043 per poter capire
+001300160118 :    :         : se il terminal ha in gestione la DPD. questo avviene con il
+001400160118 :    :         : il TRUL06R (aggiunto) per prendere tutti le linee gestite dal
+001500160118 :    :         : terminal fra le quali capire se c'è un PO con la DPD.
+001600160118 :    :         : Se il terminal non gestisce la DPD il pgm va a fine.
+001700160118 : AB :16/10/03 : x AS Unico  sostituito TRUL06R con TIBS36R
+001800160118 | AB |25/11/03 | Introduzione della scrittura del record di Delivery
+001900160118 |    |         | di consegna al posto del vecchio 03 comunque ancora attivo.
+002000160118 | AB |13/04/04 | Non deve mandare il MIC se la merce è stata resa CCA ='2'.
+002100160118 | AB |07/09/04 | Non Deve inviare lo SCAN se la data rilevata è superiore
+002200160118 |    |         | ossia futura rispetto alla data di invio dello SCAN stesso
+002300160118 |    |         | poichè sarebbe rifiutato dal sistema DPD.
+002400160118 | AB |09/03/06 | Aggiunto il test dove CCA<>'5' deve anche essere CCA<>'7'
+002500160118 |    |         | anche x merce non affidata.
+002600160118 | AB |25/10/06 | Aggiunto il test dove CCA<>'5' e CCA<>'7' anche x lo SCAN 2
+002700160118 |    |         | "Arrivo in filiale".
+002800160118 | AB | 4/06/08 | X gestire l'esito degli ORM Italy Domestic compreso il "03"
+002900160118 |    |         | MIC che non doveva essere + gestito x le consegne.
+003000160118 | AB |26/03/09 | Non si deve dare x consegnata la bolla con Reso x Avaria
+003100160118 |    |         | CCA = '6'  su richiesta della Villa.
+003200160118 _    _         _
+003300160118 + AB +10/09/13 + x ASUnico modifiche per richiamare la procedura una volta sola
+003400160118 |    |         | e smettere di lanciarla per terminal.
+003500160118 |    |         | Aggiunti altri campi che si aggiornano prima su ARB che su BLP
+003600160118 |    |         | quindi ARB lo agganciamo sempre e non più solo in LOCALE come
+003700160118 |    |         | faceva prima con gli AS separati .
+003800160118 _    _         _
+003900160118 | mm | 28/07/14| Asteriscate data consegna merce e ora che venivano impostate
+004000160118                  da ARB contrassegnate con *m chiesto da Elisa
+004100160118 _    _         _
+004200160118 + AB +28/08/14 + Memorizzo sullo SCAN 02 di arrivato al Depot di consegna se
+004300160118 |    |         | la spedizione è fatta x un'ISOLA.
+004400160118 |    |         | Se però il campo DP3CEV non è vuoto NON scrive "ISL"
+004500160118 + AB +09/07/15 + Aggiunto il controllo dei CCA 5 e 7 sull'invio dello SCAN 10
+004600160118 |    |         | assieme al BLPDSE che comunque viene generato anche se la
+004700160118 |    |         | merce non è mai stata affidata (completando lo SCAN che poi
+004800160118 |    |         | va a DPD come se avessimo ricevuto correttamente la Merce)
+004900160118 + ES +18/01/16 + il pgm fieu19r sostituisce il vecchio fieu13r di cui ho copiat
+005000160118                  o le note
+005100160518 + AB +18/05/16 + X poter Gestire l'invio dell'ALERT SCAN 18 E25/S25 come chiede
+005200160518 |    |         | DPD ossia con la stessa DATA del MIC o della CONSEGNA  occorre
+005300160518 |    |         | avere scritto dei records SCAN 18 con una data evento FUTURA
+005400160518 |    |         | fittizia e qui, come nel programma del MIC, aggiornarla con la
+005500160518 |    |         | la stessa data del giorno in cui si vuole mostrare sul T&T DPD
+005600160518 |    |         | l'alert assieme al MIC (SCAN 03) e/o la Consegna (SCAN 13)
+005700160518 |    |         | Con la spedizione si chiama il FIEU17R1 che in presenza dello
+005800160518 |    |         | SCAN 18 dell'alert si occuperà di aggiornare la data evento.
+005900160518 |    |         | il FIEU16R con una data corretta e, NON futura, manderà via lo
+006000160518 |    |         | SCAN 18 a DPD.
+006100160906 + ES +06/09/16 + Aggiungo 5 minuti alla data di consegna se presa dall'evento
+006200160906                  MIC per distinta fittizia
+006300161007 + AB +07/10/16 + Se c'è stato un dirottamento la filiale dello SCAN di CONSEGNA
+006400161007 |    |         | NON deve essere quella originale bensì quella della FIGLIA in
+006500161007 |    |         | consegna altrimenti NON viene pagato nel CLEARING il dirotta-
+006600161007 |    |         | mento.
+006700161007 |    |         | Occorre prevedere nella catena dei legami il RESO come ultimo
+006800161007 |    |         | passo che avrà nella LNA una linea DPD in tal caso NON innesca
+006900161007 |    |         | la modifica..... tanto nel Clearing lo SCAN 13 su reso NON è
+007000161007 |    |         | comunque pagato.
+007100161007 |    |         | Se invece c'è una catena di dirottamenti prende l'ultimo fatto

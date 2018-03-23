@@ -1,0 +1,303 @@
+000100000000     F* TAAJRNAR - Convert journal attributes - called by TAAJRNAC
+000200000000     FTEMP132 IF  F     132            DISK
+000300000000     FJRNFILP O   E                    DISK                           UC
+000400000000     FJRNACPP O   E                    DISK                           UC
+000500000000     FJRNRCVP O   E                    DISK
+000600000000     E                    DTA       132  1
+000700000000     ITEMP132 AA  01
+000800000000     I                                        1 132 DTA
+000900000000     IDATE        DS
+001000000000     I                                        1   2 MM
+001100000000     I                                        3   4 DD
+001200000000     I                                        5   6 YY
+001300000000     C           *ENTRY    PLIST                           Parm list
+001400000000     C                     PARM           SYSNAM  8        System name
+001500000000     C                     PARM           ONLYRC  4        Only RCVR
+001600000000     C                     PARM           RTNCDE  8        Rtn cde
+001700000000     C* Open up JRNRCVP and JRNFILP if ONLYRC is not *YES
+001800000000     C           '*YES'    IFNE ONLYRC                     Open all
+001900000000     C                     OPEN JRNFILP                    Files jrneld
+002000000000     C                     OPEN JRNACPP                    Acc pth jrnl
+002100000000     C                     END                             Open all
+002200000000     C* Initialize
+002300000000     C                     TIME           FULTIM 120       Full time
+002400000000     C                     MOVELFULTIM    TIME    60       Time
+002500000000     C                     MOVE FULTIM    CVTDAT  6        Todays date
+002600000000     C                     MOVE TIME      CVTTIM  6        Make char
+002700000000     C* Get journal and and journal library name
+002800000000     C           HDGTG1    TAG                             FILTG1 tag
+002900000000     C                     READ TEMP132                  H1 Read file
+003000000000     C   H1                GOTO BADEND                     Goto BADEND
+003100000000     C                     MOVEADTA,2     TST8    8        Title
+003200960113     C                     MOVEADTA,69    TST7    7        Title
+003300921113     C           TST8      IFEQ 'Giornale'                 Not journal
+003400921113     C           TST7      ANDEQ'Libreri'                  Not library
+003500000000     C                     GOTO MOVJRN                     Goto HDGTG1
+003600000000     C                     END                             Not journal
+003700921113     C           TST8      IFEQ 'GIORNAL '                 Not journal
+003800921113     C           TST7      ANDEQ'LIBRERI'                  Not library
+003900000000     C                     GOTO MOVJRN                     Goto HDGTG1
+004000000000     C                     END                             Not journal
+004100960304     C                     MOVEADTA,39    TST8             Rcvr nbr
+004200960304     C           TST8      CABEQ'* * * * 'ENDPGM           If blank
+004300000000     C                     GOTO HDGTG1                     Loop back
+004400000000     C           MOVJRN    TAG                             Move journal
+004500000000     C* Move journal and library
+004600960113     C                     MOVEADTA,40    JRN    10        Journal
+004700960113     C                     MOVEADTA,107   JRNLIB 10        Library
+004800000000     C* Processing of files being journaled
+004900000000     C           FILTG1    TAG                             FILTG1 tag
+005000000000     C                     READ TEMP132                  H2 Read file
+005100000000     C   H2                GOTO BADEND                     Goto BADEND
+005200960115     C                     MOVEADTA,39    TST8             Rcvr nbr
+005300960115     C           TST8      CABEQ'* * * * 'ENDPGM           If blank
+005400000000     C* If only RCVR output is needed, bypass until receiver title
+005500000000     C           ONLYRC    IFEQ '*YES'                     Only RCVR
+005600000000     C                     MOVEADTA,2     TST6             Title
+005700000000     C                     MOVEADTA,16    TST8             Title
+005800921113     C*          TST6      IFEQ 'Total '                   If Total
+005900921113     C*          TST8      ANDEQ'receiver'                 If receiver
+006000000000     C                     GOTO RCVTG1                     Goto RCVTG1
+006100921113     C*                    END                             If Total
+006200000000     C           TST6      IFEQ 'TOTAL '                   If Total
+006300000000     C           TST8      ANDEQ'RECEIVER'                 If receiver
+006400000000     C                     GOTO RCVTG1                     Goto RCVTG1
+006500000000     C                     END                             If Total
+006600000000     C                     GOTO FILTG1                     Loop back
+006700000000     C                     END                             Only RCVR
+006800000000     C* If title is access paths, goto access path processing
+006900000000     C                     MOVEADTA,2     TST6    6        Title
+007000000000     C                     MOVEADTA,37    TST5    5        Title
+007100000000     C           TST6      IFEQ 'Number'                   Not Number
+007200000000     C           TST5      ANDEQ'paths'                    Not journald
+007300000000     C                     GOTO ACPTG1                     Access path
+007400000000     C                     END                             Not Number
+007500000000     C           TST6      IFEQ 'NUMBER'                   Not Number
+007600000000     C           TST5      ANDEQ'PATHS'                    Not journald
+007700000000     C                     GOTO ACPTG1                     Access path
+007800000000     C                     END                             Not Number
+007900000000     C*    Check for 'Access' in title also
+008000000000     C                     MOVEADTA,50    TST6             Title
+008100000000     C           TST6      CABEQ'Access'  ACPTG1           Access path
+008200000000     C           TST6      CABEQ'ACCESS'  ACPTG1           Access path
+008300000000     C* Check for col head for files being journaled
+008400000000     C                     MOVEADTA,2     TST4    4        Title
+008500000000     C                     MOVEADTA,13    TST7    7        Title
+008600000000     C           TST4      IFEQ 'File'                     Not file
+008700000000     C           TST7      ANDEQ'Library'                  Not library
+008800000000     C                     GOTO FILTG2                     Goto FILTG1
+008900000000     C                     END                             Not file
+009000000000     C           TST4      IFEQ 'FILE'                     Not file
+009100000000     C           TST7      ANDEQ'LIBRARY'                  Not library
+009200000000     C                     GOTO FILTG2                     Goto FILTG1
+009300000000     C                     END                             Not file
+009400000000     C                     GOTO FILTG1                     Loop back
+009500000000     C* Check for files being journaled
+009600000000     C           FILTG2    TAG                             FILTG2 tag
+009700000000     C                     READ TEMP132                  H3 Read file
+009800000000     C   H3                GOTO BADEND                     Goto BADEND
+009900960115     C                     MOVEADTA,39    TST8             Rcvr nbr
+010000960115     C           TST8      CABEQ'* * * * 'ENDPGM           If blank
+010100000000     C* If no files being journaled, check for access paths
+010200000000     C                     MOVEADTA,4     TST7             Title
+010300000000     C                     MOVEADTA,18    TST8    8        Title
+010400000000     C           TST7      IFEQ '(No jou'                  Not Number
+010500000000     C           TST8      ANDEQ'files)  '                 Not journale
+010600000000     C                     MOVE 'NONJRNLD'RTNCDE           None jrnld
+010700000000     C                     GOTO ACPTG1                     Goto ACPTG1
+010800000000     C                     END                             Not Number
+010900000000     C           TST7      IFEQ '(NO JOU'                  Not Number
+011000000000     C           TST8      ANDEQ'FILES)  '                 Not journale
+011100000000     C                     MOVE 'NONJRNLD'RTNCDE           None jrnld
+011200000000     C                     GOTO ACPTG1                     Goto ACPTG1
+011300000000     C                     END                             Not Number
+011400980827     C* If pos 2-5 is 5769, it is overflow
+011500960113     C                     MOVEADTA,1     TST4    4        Title
+011600980827     C           TST4      CABEQ'5769'    FILTG1           If title
+011700960115     C                     MOVE *BLANK    TST4
+011800960115     C                     MOVEADTA,121   TST4             PAG
+011900960115     C           TST4      CABEQ'Pag.'    FILTG1           If title
+012000000000     C* If pos 12 is non-blank, it is end of files
+012100000000     C                     MOVEADTA,12    TST1    1        Title
+012200000000     C           TST1      CABNE*BLANK    FILTG1           If not title
+012300000000     C* Extract file names in subroutine
+012400000000     C                     EXSR MOVFIL                     Exsr MOVFIL
+012500000000     C                     GOTO FILTG2                     Goto FILTG2
+012600000000     C* Processing in access paths
+012700000000     C           ACPTG1    TAG                             ACPTG1 tag
+012800000000     C                     READ TEMP132                  H4 Read file
+012900000000     C   H4                GOTO BADEND                     Goto BADEND
+013000000000     C* If title is receivers, goto receiver processing
+013100000000     C                     MOVEADTA,2     TST6             Title
+013200000000     C                     MOVEADTA,16    TST8             Title
+013300000000     C           TST6      IFEQ 'Total '                   If Total
+013400000000     C           TST8      ANDEQ'receiver'                 If receiver
+013500000000     C                     GOTO RCVTG1                     Goto RCVTG1
+013600000000     C                     END                             If Total
+013700000000     C           TST6      IFEQ 'TOTAL '                   If Total
+013800000000     C           TST8      ANDEQ'RECEIVER'                 If receiver
+013900000000     C                     GOTO RCVTG1                     Goto RCVTG1
+014000000000     C                     END                             If Total
+014100000000     C* Check for col head of access paths being journaled
+014200000000     C                     MOVEADTA,2     TST4    4        Title
+014300000000     C                     MOVEADTA,13    TST7    7        Title
+014400000000     C           TST4      IFEQ 'File'                     Not file
+014500000000     C           TST7      ANDEQ'Library'                  Not library
+014600000000     C                     GOTO ACPTG2                     Goto ACPTG1
+014700000000     C                     END                             Not file
+014800000000     C           TST4      IFEQ 'FILE'                     Not file
+014900000000     C           TST7      ANDEQ'LIBRARY'                  Not library
+015000000000     C                     GOTO ACPTG2                     Goto ACPTG1
+015100000000     C                     END                             Not file
+015200000000     C                     GOTO ACPTG1                     Loop back
+015300000000     C* Check for access paths being journaled
+015400000000     C           ACPTG2    TAG                             ACPTG2 tag
+015500000000     C                     READ TEMP132                  H5 Read file
+015600000000     C   H5                GOTO BADEND                     Goto BADEND
+015700000000     C* If no access paths being journaled, goto receiver processing
+015800000000     C                     MOVEADTA,4     TST7             Title
+015900000000     C                     MOVEADTA,25    TST8             Title
+016000000000     C           TST7      IFEQ '(No jou'                  Not Number
+016100000000     C           TST8      ANDEQ'paths)  '                 Not journald
+016200000000     C                     GOTO RCVTG1                     Goto RCVTG1
+016300000000     C                     END                             Not Number
+016400000000     C           TST7      IFEQ '(NO JOU'                  Not Number
+016500000000     C           TST8      ANDEQ'PATHS)  '                 Not journald
+016600000000     C                     GOTO RCVTG1                     Goto RCVTG1
+016700000000     C                     END                             Not Number
+016800000000     C* If pos 12 is non-blank, it is end of files or overflow
+016900000000     C                     MOVEADTA,12    TST1             Title
+017000000000     C           TST1      CABNE*BLANK    ACPTG1           If title
+017100000000     C                     SETON                     51    Access path
+017200000000     C* Extract file names in subroutine
+017300000000     C                     EXSR MOVFIL                     Exsr MOVFIL
+017400000000     C                     GOTO ACPTG2                     Goto ACPTG2
+017500000000     C* Check for column heading for receivers
+017600000000     C           RCVTG1    TAG                             RCVTG1 tag
+017700000000     C                     READ TEMP132                  H6 Read file
+017800000000     C   H6                GOTO BADEND                     Goto BADEND
+017900960115     C                     MOVEADTA,39    TST8             Rcvr nbr
+018000960115     C           TST8      CABEQ'* * * * 'ENDPGM           If blank
+018100960113     C                     MOVEADTA,2     TST6             Title
+018200960113     C                     MOVEADTA,13    TST8             Title
+018300921113     C           TST6      IFEQ 'Numero'                   Not Number
+018400921113     C           TST8      ANDEQ'Ricevito'                 Not Receiver
+018500000000     C                     GOTO RCVTG2                     Goto RCVTG1
+018600000000     C                     END                             Not Number
+018700921113     C           TST6      IFEQ 'NUMERO'                   Not Number
+018800921113     C           TST8      ANDEQ'RICEVITO'                 Not Receiver
+018900000000     C                     GOTO RCVTG2                     Goto RCVTG1
+019000000000     C                     END                             Not Number
+019100000000     C                     GOTO RCVTG1                     Loop back
+019200000000     C* Check for receivers
+019300000000     C           RCVTG2    TAG                             RCVTG2 tag
+019400000000     C                     READ TEMP132                  H7 Read file
+019500000000     C   H7                GOTO BADEND                     Goto BADEND
+019600960113     C                     MOVEADTA,39    TST8             Rcvr nbr
+019700000000     C           TST8      CABEQ'* * * * 'ENDPGM           If blank
+019800960113     C                     MOVEADTA,1     TST4    4        Title
+019900980827     C           TST4      CABEQ'5769'    RCVTG1           If title
+020000960115     C                     MOVE *BLANK    TST4
+020100960115     C                     MOVEADTA,121   TST4             PAG
+020200960115     C           TST4      CABEQ'Pag.'    RCVTG1           If title
+020300980828     C                     MOVEADTA,2     JRRCVN           Rcvr nbr
+020400980828     C           JRRCVN    IFLE *ZERO
+020500980828     C                     GOTO RCVTG1
+020600980828     C                     ENDIF
+020700000000     C* Must be a journal receiver, move the fields
+020800960111     C                     MOVEADTA,2     JRRCVN           Rcvr nbr
+020900960111     C                     MOVEADTA,13    JRRCV            Receiver
+021000960111     C                     MOVEADTA,28    JRRCVL           Library
+021100960111     C                     MOVEADTA,43    MM               MM
+021200960111     C                     MOVEADTA,46    DD               DD
+021300960111     C                     MOVEADTA,49    YY               YY
+021400000000     C                     MOVE DATE      JRATTD           Attach date
+021500960111     C                     MOVEADTA,56    MM               MM
+021600960111     C                     MOVEADTA,59    DD               DD
+021700960111     C                     MOVEADTA,62    YY               YY
+021800000000     C                     MOVE DATE      JRSAVD           Save date
+021900960111     C                     MOVEADTA,69    JRSTS            Status
+022000960111     C                     MOVEADTA,92    TST10  10        Size
+022100000000     C                     MOVE TST10     JRSIZE           Size
+022200000000     C                     MOVE SYSNAM    JRSYS            System name
+022300000000     C                     MOVE JRN       JRJRN            Journal
+022400000000     C                     MOVE JRNLIB    JRJRNL           Journal lib
+022500000000     C                     MOVE CVTDAT    JRCVTD           Convert date
+022600000000     C                     MOVE CVTTIM    JRCVTT           Convert time
+022700000000     C                     WRITEJRNRCVR                    Write rcvr
+022800000000     C                     GOTO RCVTG2                     Goto RCVTG2
+022900000000     C* End of program routine
+023000000000     C           ENDPGM    TAG                             END tag
+023100000000     C           RTNCDE    IFEQ *BLANK                     If blank
+023200000000     C                     MOVE 'GOOD    'RTNCDE           Set good
+023300000000     C                     END                             If blank
+023400000000     C                     SETON                     LR    Set LR
+023500000000     C           BADEND    TAG                             BADEND tag
+023600000000     C                     RETRN                           Return
+023700000000     C* Process file information (5 records per print line)
+023800000000     C           MOVFIL    BEGSR                           MOVFIL subr
+023900000000     C                     MOVEADTA,2     TST10            Move name
+024000000000     C           TST10     IFNE *BLANK                     File 1 exsts
+024100000000     C                     MOVE TST10     FILE   10        Move file
+024200000000     C                     MOVEADTA,13    FILELB 10        Move lib
+024300000000     C                     EXSR OUTPUT                     Exsr OUTPUT
+024400000000     C                     END                             File 1 exsts
+024500000000     C                     MOVEADTA,27    TST10            Move name
+024600000000     C           TST10     IFNE *BLANK                     File 2 exsts
+024700000000     C                     MOVE TST10     FILE             Move file
+024800000000     C                     MOVEADTA,38    FILELB           Move lib
+024900000000     C                     EXSR OUTPUT                     Exsr OUTPUT
+025000000000     C                     END                             File 2 exsts
+025100000000     C                     MOVEADTA,52    TST10            Move name
+025200000000     C           TST10     IFNE *BLANK                     File 3 exsts
+025300000000     C                     MOVE TST10     FILE             Move file
+025400000000     C                     MOVEADTA,63    FILELB           Move lib
+025500000000     C                     EXSR OUTPUT                     Exsr OUTUPT
+025600000000     C                     END                             File 3 exsts
+025700000000     C                     MOVEADTA,77    TST10            Move name
+025800000000     C           TST10     IFNE *BLANK                     File 4 exsts
+025900000000     C                     MOVE TST10     FILE             Move file
+026000000000     C                     MOVEADTA,88    FILELB           Move lib
+026100000000     C                     EXSR OUTPUT                     Exsr OUTPUT
+026200000000     C                     END                             File 4 exsts
+026300000000     C                     MOVEADTA,102   TST10            Move name
+026400000000     C           TST10     IFNE *BLANK                     File 5 exsts
+026500000000     C                     MOVE TST10     FILE             Move file
+026600000000     C                     MOVEADTA,113   FILELB           Move lib
+026700000000     C                     EXSR OUTPUT                     Exsr OUTPUT
+026800000000     C                     END                             File 5 exsts
+026900000000     C                     ENDSR                           MOVFIL subr
+027000000000     C           OUTPUT    BEGSR                           OUTPUT subr
+027100000000     C  N51                DO                              File output
+027200000000     C* Call TAAJRNC4 to access information from DSPFD using RTVPFA
+027300000000     C                     MOVEL'TAAJRNAC'PGMNAM 10        Pgm name
+027400000000     C                     MOVE '4 '      PGMNAM           Pgm name
+027500000000     C                     CALL PGMNAM                     Call
+027600000000     C                     PARM           FILE             File
+027700000000     C                     PARM           FILELB           Library
+027800000000     C                     PARM           JFIMG            Images
+027900000000     C                     PARM           JFOMTE           Omit entries
+028000000000     C                     PARM           JRNDAT  6        Jrn str date
+028100000000     C                     PARM           JFJRNT           Jrn str time
+028200000000     C                     MOVELJRNDAT    JFJRND           Make numeric
+028300000000     C* Add a record per file
+028400000000     C                     MOVE SYSNAM    JFSYS            System name
+028500000000     C                     MOVE JRN       JFJRN            Journal
+028600000000     C                     MOVE JRNLIB    JFJRNL           Journal lib
+028700000000     C                     MOVE CVTDAT    JFCVTD           Convert date
+028800000000     C                     MOVE CVTTIM    JFCVTT           Convert time
+028900000000     C                     MOVE FILE      JFFIL            File
+029000000000     C                     MOVE FILELB    JFFILL           File library
+029100000000     C                     WRITEJRNFILR                    Write record
+029200000000     C                     END                             File output
+029300000000     C   51                DO                              Acc pth out
+029400000000     C                     MOVE SYSNAM    JASYS            System name
+029500000000     C                     MOVE JRN       JAJRN            Journal
+029600000000     C                     MOVE JRNLIB    JAJRNL           Journal lib
+029700000000     C                     MOVE CVTDAT    JACVTD           Convert date
+029800000000     C                     MOVE CVTTIM    JACVTT           Convert time
+029900000000     C                     MOVE FILE      JAFIL            File
+030000000000     C                     MOVE FILELB    JAFILL           File library
+030100000000     C                     WRITEJRNACPR                    Write record
+030200000000     C                     END                             Acc pth out
+030300000000     C                     ENDSR                           OUTPUT subr

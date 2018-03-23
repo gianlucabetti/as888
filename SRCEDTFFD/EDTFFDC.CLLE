@@ -1,0 +1,256 @@
+000100000308/*PARMS DFTACTGRP(*YES)                                              */
+000200000000  /*----------------------------------------------------------------*/
+000300000000  /* Utility: Edit File Field Description:                          */
+000400000000  /*          Edit Column Heading and Text of the field without     */
+000500000000  /*          recreating a database file.                           */
+000600000000  /* Author     :   Ira Shapiro                                     */
+000700000000  /* CPP for EDTFFD command.                                        */
+000800000000  /* Source file:   QCLSRC                                          */
+000900000000  /* Source member: EDTFFDC                                         */
+001000000000  /* Source type:   CLP                                             */
+001100000000  /* Creation command line:                                         */
+001200000000  /* CRTCLPGM   PGM(Library_Name/EDTFFDC)    +                      */
+001300000000  /*            SRCFIL(Library_Name/QCLSRC)  +                      */
+001400000000  /*            TEXT('Edit Field Description: COLHDG or/and TEXT')  */
+001500000000  /*================================================================*/
+001600000000
+001700000000    PGM PARM(                                                       +
+001800000000               &file                                                +
+001900000000               &field                                               +
+002000000000               &descrtype                                           +
+002100000000               &colhdg1                                             +
+002200000000               &colhdg2                                             +
+002300000000               &colhdg3                                             +
+002400000000               &text                                                +
+002500000000             )
+002600000000  /*================================================================*/
+002700000000  /* Declare Variables                                              */
+002800000000  /*================================================================*/
+002900000000  /* Variables from passed parameters */
+003000000000    DCL VAR(&file)      TYPE(*CHAR) LEN(20)
+003100000000    DCL VAR(&field)     TYPE(*CHAR) LEN(10)
+003200000000    DCL VAR(&descrtype) TYPE(*CHAR) LEN(6)
+003300000000    DCL VAR(&colhdg1)   TYPE(*CHAR) LEN(20)
+003400000000    DCL VAR(&colhdg2)   TYPE(*CHAR) LEN(20)
+003500000000    DCL VAR(&colhdg3)   TYPE(*CHAR) LEN(20)
+003600000000    DCL VAR(&text)      TYPE(*CHAR) LEN(50)
+003700000000
+003800000000  /* Variables definded in this program */
+003900000000    DCL VAR(&filename)  TYPE(*CHAR) LEN(10)
+004000000000    DCL VAR(&filelib)   TYPE(*CHAR) LEN(10)
+004100000000    DCL VAR(&qualname)  TYPE(*CHAR) LEN(21)
+004200000000    DCL VAR(&colhdg55)  TYPE(*CHAR) LEN(55)
+004300000000    DCL VAR(&colhdg5)   TYPE(*CHAR) LEN(5)
+004400000000    DCL VAR(&q)         TYPE(*CHAR) LEN(1)  VALUE('''')
+004500000000    DCL VAR(&reply)     TYPE(*CHAR) LEN(1)
+004600000000
+004700000000 /* Variables for standart error handling routine */
+004800000000    DCL VAR(&errorsw)   TYPE(*LGL)
+004900000000    DCL VAR(&msgid)     TYPE(*CHAR) LEN(7)
+005000000000    DCL VAR(&msgdta)    TYPE(*CHAR) LEN(512)
+005100000000    DCL VAR(&msgf)      TYPE(*CHAR) LEN(10)
+005200000000    DCL VAR(&msgflib)   TYPE(*CHAR) LEN(10)
+005300000000    DCL VAR(&keyvar)    TYPE(*CHAR) LEN(4)
+005400000000
+005500000000    DCLF QSYS/QADSPFFD         /* Outfile from command DSPFFD */
+005600000000
+005700000000    MONMSG  MSGID(CPF0000 QWM0000) EXEC(GOTO CMDLBL(STDERR1))
+005800000000
+005900000000    CHGVAR &filename  %SST(&file  1 10)
+006000000000    CHGVAR &filelib   %SST(&file 11 10)
+006100000000  /*================================================================*/
+006200000000  /* Validity check                                                 */
+006300000000  /*================================================================*/
+006400000000  /*  Check &file existence and *ALL authority */
+006500000000    CHKOBJ  &filelib/&filename OBJTYPE(*FILE) AUT(*ALL)
+006600000000    MONMSG MSGID(CPF9800) EXEC(GOTO STDERR1) /*Not found/Not auothor.*/
+006700000000
+006800000000 /* Delocate &file in case if this program was last time terminated  +
+006900000000     (SysReq-2 or so) b e f o r e  DLCOBJ command at the end of pgm. +
+007000000000     I.e. do not accumulate "locks".....at least not by this program */
+007100000000    DLCOBJ OBJ((&filelib/&filename *FILE *EXCL))
+007200000000    MONMSG (CPF1005) /* Object is not deallocated */
+007300000000
+007400000000 /* Allocate &file */
+007500000000    ALCOBJ OBJ((&filelib/&filename *FILE *EXCL))
+007600000000    MONMSG  MSGID(CPF1002)  EXEC(DO)  /* Can not alocate object */
+007700000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('File' +
+007800000308                          *BCAT &FILENAME *BCAT 'in library' *BCAT +
+007900000308                          &FILELIB *BCAT 'or one of its +
+008000000308                          dependencies (LF) IN USE') MSGTYPE(*DIAG)
+008100000000      GOTO ENDPGM
+008200000000    ENDDO /* Can not allocate object */
+008300000000
+008400000000 /* Does &field exist in a &file ? */
+008500000000    DSPFFD  FILE(&filelib/&filename) OUTPUT(*OUTFILE) +
+008600000000            OUTFILE(QTEMP/QADSPFFD)
+008700000000    OVRDBF  FILE(QADSPFFD) TOFILE(QTEMP/QADSPFFD)
+008800000000
+008900000000READ:
+009000000000    RCVF /* Read a record from an *OUTFILE of the DSPFFD command */
+009100000000    MONMSG CPF0864  EXEC(GOTO NOTFOUND)
+009200000000
+009300000000          /* Check right type of the file.                         */
+009400000000          IF ((&WHFTYP *ne 'P') *AND  /* Type of File  P= Physical */ +
+009500000000              (&WHSQLT *ne 'T') *AND  /* SQL Type File T= Table    */ +
+009600000000              (&WHSQLT *ne 'V')) DO   /* SQL Type File V= View     */
+009700000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('File' +
+009800000308                          *BCAT &FILENAME *BCAT 'in library' *BCAT +
+009900000308                          &FILELIB *BCAT 'is NOT a Physical file, +
+010000000308                          SQL Table or View') MSGTYPE(*DIAG)
+010100000000              GOTO ENDPGM
+010200000000          ENDDO  /* Not a PF */
+010300000000
+010400000000          IF (&field = &WHFLDE) GOTO QUALNAME  /* Field is in a File */
+010500000000
+010600000000     GOTO  READ      /*  Loop back to read QADSPFFD file */
+010700000000
+010800000000NOTFOUND:
+010900000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Field' +
+011000000308                          *BCAT &FIELD *BCAT 'is not in a' *BCAT +
+011100000308                          &FILELIB *BCAT '/' *BCAT &FILENAME *BCAT +
+011200000308                          'file') MSGTYPE(*DIAG)
+011300000000      GOTO ENDPGM
+011400000000
+011500000000  /*================================================================*/
+011600000000  /*  Get qualified file name string  'Library_Name/File_Name'      */
+011700000000  /*================================================================*/
+011800000000QUALNAME:
+011900000308             CHGVAR     VAR(&QUALNAME) VALUE(&FILELIB *BCAT '/' *CAT +
+012000000308                          &FILENAME)
+012100000000    /* *QMQRY does NOT accept front "*" in a qualified file name.   */
+012200000000    IF  (&filelib = '*LIBL') THEN(CHGVAR &qualname  &filename)
+012300000000
+012400000000  /*================================================================*/
+012500000000  /* Change a C o l u m n   H e a d i n g                           */
+012600000000  /*================================================================*/
+012700000000    IF ((&descrtype = 'COLHDG') *OR             +
+012800000000        (&descrtype = 'BOTH'))   DO
+012900000308             CHGVAR     VAR(&COLHDG55) VALUE(&COLHDG1 *CAT &COLHDG2 +
+013000000308                          *CAT %SST(&COLHDG3 1 15))
+013100000000        CHGVAR  &colhdg5  VALUE(%SST(&colhdg3 16 5))
+013200000000
+013300000000       /* If column heading fields are not equal blanks -
+013400000000        use EDTCOLHDG *QMQRY */
+013500000000       IF ((&colhdg1 > ' ')  *OR                +
+013600000000           (&colhdg2 > ' ')  *OR                +
+013700000000           (&colhdg3 > ' '))  DO
+013800000000       /* U p d a t e Column heading.                                */
+013900000000           STRQMQRY   QMQRY(EDTCOLHDG)               +
+014000000000                      SETVAR((FILE   &qualname)      +
+014100000000                             (FIELD  &field)         +
+014200000000                             (Q      &q)             +
+014300000000                             (COLHDG55 &colhdg55)    +
+014400000000                             (COLHDG5 &colhdg5))
+014500000000           /* Check sintax errors */
+014600000000           MONMSG MSGID(QWM2701) EXEC(DO)
+014700000000              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGTYPE(*DIAG) +
+014800000000              MSGDTA('Odd pairs of apostrophes where entered')
+014900000000              GOTO ENDPGM
+015000000000           ENDDO      /* MONMSG QWM2701 */
+015100000000
+015200000000       ENDDO    /* Column Heding > blank */
+015300000000
+015400000000
+015500000000       /* If Column Heading fields equal blanks -
+015600000000        use RMVCOLHDG *QMQRY. Than name of the field will be appeared -
+015700000000        as a Column Heading in DFU, QRY/400, SQL/400  e.t.c. */
+015800000000       IF ((&colhdg1 = ' ')  *AND                                     +
+015900000000           (&colhdg2 = ' ')  *AND                                     +
+016000000000           (&colhdg3 = ' '))  DO
+016100000000             SNDUSRMSG MSG('Column Heading was left  b l a n k. +
+016200000000                            Update anywhere (Y/N)?')                  +
+016300000000                       VALUES('Y' 'N')                                +
+016400000000                       DFT('N')                                       +
+016500000000                       MSGTYPE(*INQ)                                  +
+016600000000                       TOUSR(*REQUESTER)                              +
+016700000000                       MSGRPY(&reply)
+016800000000             IF (&reply = 'N')  GOTO TEXT
+016900000000
+017000000000       /* U p d a t e Column heading.                                */
+017100000000           STRQMQRY   QMQRY(RMVCOLHDG)               +
+017200000000                      SETVAR((FILE   &qualname)      +
+017300000000                             (FIELD  &field))
+017400000000       ENDDO    /* Column Heading = blank */
+017500000000
+017600000000
+017700000000       /* Send completion message */
+017800000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Column +
+017900000308                          heading for a' *BCAT &FIELD *BCAT 'field +
+018000000308                          in a' *BCAT &QUALNAME *BCAT 'file has +
+018100000308                          been updated') MSGTYPE(*COMP)
+018200000000
+018300000000
+018400000000    ENDDO        /* &descrtype = 'COLHDG' */
+018500000000
+018600000000  /*================================================================*/
+018700000000  /* Change a T e x t                                              */
+018800000000  /*================================================================*/
+018900000000TEXT:
+019000000000    IF ((&descrtype = 'TEXT') *OR  +
+019100000000        (&descrtype = 'BOTH')) DO
+019200000000       IF  (&text = ' ')  DO
+019300000000             SNDUSRMSG MSG('T e x t  was left  b l a n k. +
+019400000000                            Update anywhere (Y/N)?')                  +
+019500000000                       VALUES('Y' 'N')                                +
+019600000000                       DFT('N')                                       +
+019700000000                       MSGTYPE(*INQ)                                  +
+019800000000                       TOUSR(*REQUESTER)                              +
+019900000000                       MSGRPY(&reply)
+020000000000             IF (&reply = 'N')  GOTO ENDPGM
+020100000000       ENDDO  /* &text = ' ' */
+020200000000
+020300000000       /* U p d a t e  Text                                         */
+020400000000        STRQMQRY   QMQRY(EDTTEXT)             +
+020500000000                   SETVAR((FILE   &qualname)  +
+020600000000                          (FIELD  &field)     +
+020700000000                          (Q    '''')         +
+020800000000                          (TEXT   &text))
+020900000000        /* Check sintax errors */
+021000000000        MONMSG MSGID(QWM2701) EXEC(DO)
+021100000000        SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGTYPE(*DIAG)     +
+021200000000              MSGDTA('Odd pairs of apostrophes where entered')
+021300000000        GOTO ENDPGM
+021400000000        ENDDO      /* MONMSG QWM2701 */
+021500000000
+021600000000       /* Send completion message */
+021700000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Text +
+021800000308                          for a' *BCAT &FIELD *BCAT 'field in a' +
+021900000308                          *BCAT &QUALNAME *BCAT 'file has been +
+022000000308                          updated') MSGTYPE(*COMP)
+022100000000
+022200000000    ENDDO        /* &descrtype = 'TEXT  ' */
+022300000000
+022400000000  GOTO ENDPGM
+022500000000
+022600000000/*=================================================================*/
+022700000000/*     Standart error handling routine                             */
+022800000000/*=================================================================*/
+022900000000STDERR1:
+023000000000     IF COND(&errorsw) THEN(DO)
+023100000000     SNDPGMMSG MSGID(CPF9999) MSGF(QCPFMSG) MSGTYPE(*DIAG)
+023200000000     GOTO CMDLBL(ENDPGM)
+023300000000     ENDDO
+023400000000     CHGVAR VAR(&errorsw) VALUE('1')
+023500000000STDERR2: +
+023600000000     RCVMSG MSGTYPE(*DIAG) RMV(*NO) KEYVAR(&keyvar) MSGDTA(&msgdta) -
+023700000000     MSGID(&msgid) MSGF(&msgf) SNDMSGFLIB(&msgflib)
+023800000000     IF COND(&keyvar *EQ '     ') THEN(GOTO CMDLBL(STDERR3))
+023900000000     RCVMSG MSGKEY(&keyvar)
+024000000000     SNDPGMMSG MSGID(&msgid) MSGF(&msgflib/&msgf) MSGDTA(&msgdta) -
+024100000000     MSGTYPE(*DIAG)
+024200000000GOTO CMDLBL(STDERR2) /* Loop back for additional diagnostics      */
+024300000000STDERR3: +
+024400000000     RCVMSG MSGTYPE(*EXCP) MSGDTA(&msgdta) MSGID(&msgid) MSGF(&msgf) -
+024500000000     SNDMSGFLIB(&msgflib)
+024600000000     SNDPGMMSG MSGID(&msgid) MSGF(&msgflib/&msgf) MSGDTA(&msgdta) -
+024700000000     MSGTYPE(*DIAG)
+024800000000     GOTO ENDPGM
+024900000000
+025000000000/*=================================================================*/
+025100000000/*     End of the program procedure.                               */
+025200000000/*=================================================================*/
+025300000000ENDPGM:
+025400000000     DLCOBJ OBJ((&filelib/&filename *FILE *EXCL))
+025500000000     MONMSG (CPF1005) /* Object is not deallocated */
+025600000000ENDPGM

@@ -1,0 +1,43 @@
+000100990607 TNSYC1C:    PGM
+000200990605
+000300921127             DCL        VAR(&RISP) TYPE(*CHAR) LEN(2)
+000400930903             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+000500930902             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000600940527             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(8)
+000700990605
+000800990605             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+000900990605             DCL        VAR(&RDET5) TYPE(*CHAR) LEN(198)
+001000990605
+001100990605             RTVJOBA    JOB(&DSP) USER(&USER)
+001200990605             RTVNETA    SYSNAME(&SYSTEM)
+001300990605
+001400990605             IF         COND(%SST(&USER 1 3) *EQ 'EDP') THEN(GOTO +
+001500990605                          CMDLBL(OK)) /* Profili EDP... */
+001600990605
+001700990605             CHGVAR     VAR(%SST(&POSTATES 1 23)) VALUE('UTILIZZO +
+001800990605                          SQL          ')
+001900940527
+002000990605
+002100990605             CHGVAR     VAR(&RDET5) VALUE('Utente:')
+002200990605             CHGVAR     VAR(%SST(&RDET5 9 10)) VALUE(&USER)
+002300990605             CHGVAR     VAR(%SST(&RDET5 19 6)) VALUE('Video:')
+002400990605             CHGVAR     VAR(%SST(&RDET5 26 10)) VALUE(&DSP)
+002500990605
+002600990605             CALL       PGM(TNSYC0C) PARM(&USER &DSP &SYSTEM +
+002700990605                          &POSTATES &RDET5)
+002800990605GOTO ADESSONO
+002900940527             SNDBRKMSG  MSG('Non sei autorizzato a collegarti con +
+003000940527                          altri AS: questo terminale ritorna alla +
+003100940527                          videata di collegamento dopo aver +
+003200940527                          risposto ok + invio al presente +
+003300940527                          messaggio.') TOMSGQ(&DSP) MSGTYPE(*INQ) +
+003400940527                          RPYMSGQ(&DSP)
+003500930902
+003600930902             SIGNOFF
+003700990605ADESSONO:
+003800940527OK:
+003900990605
+004000990607            ?QSYS/STRSQL
+004100921102             GOTO       CMDLBL(FINE)
+004200921104
+004300921103 FINE:       ENDPGM

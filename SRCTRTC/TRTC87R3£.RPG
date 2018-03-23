@@ -1,0 +1,195 @@
+000100961009     H              J
+000200961009     H*---------------------------------------------------------------------*
+000300961009     H*  Ritorno date arrivo ai partner  - E.D.I. - Estero -                *
+000400961009     F*---------------------------------------------------------------------*
+000500961009     F*  DATA BASE                                                          *
+000600961009     F*---------------------------------------------------------------------*
+000700961009     FEDSUM01LUF  E           K        DISK
+000800961009     F*---------
+000900980326     FEDSUM04LUF  E           K        DISK
+001000980326     F            EDSUM000                          KRENAMEEDSUM004
+001100980326     F*---------
+001200961009     FEDBRV01LUF  E           K        DISK
+001300980326     F*---------
+001400980326     FEDBRV04LUF  E           K        DISK
+001500980326     F            EDBRV000                          KRENAMEEDBRV004
+001600961009     F*---------
+001700961010     FTRTC87D CF  E                    WORKSTN
+001800961010     F                                        NRR3  KSFILE TC87S03
+001900961009     I*---------------------------------------------------------------------*
+002000961009     I* DS
+002100961009     I*---------------------------------------------------------------------*
+002200961009     IKPJBA     E DS
+002300961009     IUT§DSE    E DSUT§DSE0F
+002400961009     ICNCR80    E DS
+002500961009     ITRTC87    E DSTRTC87DS
+002600961009     C*---------------------------------------------------------------------*
+002700961009     C* Ciclo principale
+002800961009     C*---------------------------------------------------------------------*
+002900961009      *  Scrivo errori da EDSUM - EDBRV in file Work
+003000961010     C                     Z-ADD1         NRR3    40
+003100961009     C                     READCTC87S03                  29
+003200961010     C           *IN29     DOWEQ'0'                        Dow READC
+003300961009      *
+003400961009      *  Dati da EDBRV
+003500961010     C           V3CLAB    IFNE *ZEROS                     Dati BRV
+003600961009     C           V3CNPS    ORNE *ZEROS
+003700961009      *  Aggiorno BRV solo se ho dato il record per annullato
+003800961025     C           V3CFGB    IFEQ 'A'                        BRV annull.
+003900961009     C                     Z-ADDD87CCM    KCCM
+004000961009     C                     Z-ADDD87NFE    KNFE
+004100961009     C                     Z-ADDV3CAAS    KAAS
+004200961029     C                     Z-ADDV3CFLS    KFLS
+004300961029     C                     Z-ADDV3CLNP    KLNP
+004400961009     C                     Z-ADDV3CNRS    KNRS
+004500961009     C                     Z-ADDV3CNSP    KNSP
+004600961009     C                     Z-ADDV3CNSC    KNSC
+004700961009     C                     MOVELV3CERB    KSTS
+004800980326     C           D87LNP    IFEQ 0
+004900961009     C           KBRV      CHAINEDBRV01L             31
+005000961015     C*  Se record di eccedenza cancello proprio la bolla
+005100961111     C  N31      V3CERB    IFEQ '002'
+005200961015     C                     DELETEDBRV000
+005300961015     C                     ELSE
+005400961009     C                     MOVEL'*'       BRVFLG
+005500961015     C                     EXCPTANNBRV
+005600961015     C                     END
+005700980326     C*
+005800980326     C                     ELSE
+005900980326     C           KBRV1     CHAINEDBRV04L             31
+006000980326     C*  Se record di eccedenza cancello proprio la bolla
+006100980326     C  N31      V3CERB    IFEQ '002'
+006200980326     C                     DELETEDBRV004
+006300980326     C                     ELSE
+006400980326     C                     MOVEL'*'       BRVFLG
+006500980326     C                     EXCPTANBRV4
+006600980326     C                     END
+006700980326     C*
+006800980326     C                     END                             D87LNP=0
+006900980326     C*
+007000961010     C                     END                             BRV annull
+007100961010     C                     END                             Dati BRV
+007200961009      *
+007300961009      *  Dati da EDSUM
+007400961010     C           V3CLAS    IFNE *ZEROS                     Dati SUM
+007500961025     C           V3CFGS    ANDNE'E'
+007600961009      *  Aggiorno SUM se non ho escluso record --> su altro
+007700961009      *  foglio
+007800961011     C                     MOVEL*BLANKS   KFLG
+007900961009     C                     Z-ADDD87CCM    KCCM
+008000961009     C                     Z-ADD0         KNFE1
+008100961009     C                     Z-ADDV3CAAS    KAAS
+008200961029     C                     Z-ADDV3CFLS    KFLS
+008300961009     C                     Z-ADDV3CLNP    KLNP
+008400961009     C                     Z-ADDV3CNRS    KNRS
+008500961009     C                     Z-ADDV3CNSP    KNSP
+008600961009     C                     Z-ADDV3CNSC    KNSC
+008700961009     C                     MOVELV3CERS    KSTS
+008800980326     C           D87LNP    IFEQ 0
+008900961009     C           KSUM      CHAINEDSUM01L             31
+009000961025     C           V3CFGS    IFEQ 'A'                        SUM annull.
+009100961011     C           SUMFLG    ORNE ' '                        SUM annull.
+009200961009     C                     DELETEDSUM000
+009300961010     C                     ELSE                            SUM annull
+009400961009     C                     Z-ADDD87NFE    SUMNFE
+009500961009     C                     MOVEL' '       SUMFLG
+009600961009     C                     EXCPTAGGSUM
+009700961010     C                     END                             SUM annull
+009800980326     C*
+009900980326     C                     ELSE
+010000980326     C           KSUM1     CHAINEDSUM04L             31
+010100980326     C           V3CFGS    IFEQ 'A'                        SUM annull.
+010200980326     C           SUMFLG    ORNE ' '                        SUM annull.
+010300980326     C                     DELETEDSUM004
+010400980326     C                     ELSE                            SUM annull
+010500980326     C                     Z-ADDD87NFE    SUMNFE
+010600980326     C                     MOVEL' '       SUMFLG
+010700980326     C                     EXCPTAGSUM4
+010800980326     C                     END                             SUM annull
+010900980326     C*
+011000980326     C                     END
+011100980326     C*
+011200961010     C                     END                             Dati SUM
+011300961009      *
+011400961009      *  Leggo record successivo
+011500961009     C                     READCTC87S03                  29
+011600961010     C                     END                             Dow READC
+011700961009      *
+011800961009      *  Fine lavoro
+011900961009     C                     SETON                     LR
+012000961009     C*------------------------------------------------------------*
+012100961009     C* OPERAZIONI INIZIALI
+012200961009     C*------------------------------------------------------------*
+012300961009     C           *INZSR    BEGSR
+012400961009     C*
+012500961009     C           *ENTRY    PLIST
+012600961009     C                     PARM           KPJBA
+012700961009     C                     MOVELKPJBU     TRTC87
+012800961009     C*  Definizione chiavi
+012900961009     C           KBRV      KLIST
+013000961009     C                     KFLD           KCCM
+013100961009     C                     KFLD           KNFE
+013200961029     C                     KFLD           KFLS
+013300961009     C                     KFLD           KNRS
+013400961015     C                     KFLD           KNSC
+013500961015     C                     KFLD           KAAS
+013600961029     C                     KFLD           KLNP
+013700961015     C                     KFLD           KNSP
+013800980402     C***                  KFLD           KSTS
+013900961009     C           KSUM      KLIST
+014000961009     C                     KFLD           KCCM
+014100961009     C                     KFLD           KNFE1
+014200961011     C                     KFLD           KFLG
+014300961029     C                     KFLD           KFLS
+014400961009     C                     KFLD           KNRS
+014500961015     C                     KFLD           KNSC
+014600961015     C                     KFLD           KAAS
+014700961029     C                     KFLD           KLNP
+014800961009     C                     KFLD           KNSP
+014900980402     C                     KFLD           KSTS
+015000980326     C           KBRV1     KLIST
+015100980326     C                     KFLD           KLNP
+015200980326     C                     KFLD           KNFE
+015300980326     C                     KFLD           KFLS
+015400980326     C                     KFLD           KNRS
+015500980326     C                     KFLD           KNSC
+015600980326     C                     KFLD           KAAS
+015700980326     C                     KFLD           KNSP
+015800980402     C***                  KFLD           KSTS
+015900980326     C           KSUM1     KLIST
+016000980326     C                     KFLD           KLNP
+016100980326     C                     KFLD           KNFE1
+016200980326     C                     KFLD           KFLG
+016300980326     C                     KFLD           KFLS
+016400980326     C                     KFLD           KNRS
+016500980326     C                     KFLD           KNSC
+016600980326     C                     KFLD           KAAS
+016700980326     C                     KFLD           KNSP
+016800961009     C*  Definizione variabili
+016900961009     C           *LIKE     DEFN BRVCCM    KCCM
+017000961009     C           *LIKE     DEFN BRVNFE    KNFE
+017100961009     C           *LIKE     DEFN BRVAAS    KAAS
+017200961009     C           *LIKE     DEFN BRVLNP    KLNP
+017300961029     C           *LIKE     DEFN BRVFLS    KFLS
+017400961009     C           *LIKE     DEFN BRVNRS    KNRS
+017500961009     C           *LIKE     DEFN BRVNSP    KNSP
+017600961009     C           *LIKE     DEFN BRVNSC    KNSC
+017700961009     C           *LIKE     DEFN BRVSTS    KSTS
+017800961009     C           *LIKE     DEFN SUMNFE    KNFE1
+017900961011     C           *LIKE     DEFN SUMFLG    KFLG
+018000961010     C*
+018100961010     C                     SETON                     01
+018200961010     C   01N01             EXFMTTC87C03
+018300961009     C*
+018400961009     C                     ENDSR
+018500961009     O*-------------------------------------------------------------*
+018600961015     OEDBRV000E                ANNBRV
+018700961009     O                         BRVFLG
+018800961009     OEDSUM000E                AGGSUM
+018900961009     O                         SUMNFE
+019000961031     O                         SUMFLG
+019100980326     OEDBRV004E                ANBRV4
+019200980326     O                         BRVFLG
+019300980326     OEDSUM004E                AGSUM4
+019400980326     O                         SUMNFE
+019500980326     O                         SUMFLG

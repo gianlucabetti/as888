@@ -1,0 +1,31 @@
+000100051109             pgm        parm(&INV &LIB)
+000200051109
+000300051109             dcl        var(&INV)            type(*char) len(10)
+000400051109             dcl        var(&LIB)            type(*char) len(10)
+000800051109
+000900051109             dcl        var(&PF)             type(*char) len(10)      +
+001000051109                                             value('FIAR800F  ')
+001100051109             dcl        var(&LF1)            type(*char) len(10)      +
+001200051109                                             value('FIAR801L  ')
+001201051110             dcl        var(&PFO)            type(*char) len(10)      +
+001202051110                                             value('FIAR800F_O')
+002400051109
+002500051109    /* Ridenomina il "vecchio" PF (pieno) */
+002600051109             rnmobj     obj(&LIB/&PF)        objtype(*file)  +
+002700051110                                             newobj(&PFO)
+002900051109
+003000051109    /* Cancella i "vecchi" LF */
+003100051109             dltf       file(&LIB/&LF1)
+003300051109
+003400051109    /* Copia il nuovo PF (vuoto) e le relative VL dalla INVxxxxxx  */
+003500051109    /*   alla libreria in esame                                    */
+003600051110             CRTDUPOBJ  OBJ(FIAR8*) FROMLIB(&INV) OBJTYPE(*FILE) +
+003700051110                          TOLIB(&LIB)
+004100051109
+004200051109    /* Richiama il pgm. di conversione */
+004201051113             OVRDBF     FILE(&PF) TOFILE(&LIB/&PF)
+004202051113             OVRDBF     FILE(&PFO) TOFILE(&LIB/&PFO)
+004300051110             call       pgm(EDPWKSE/CNVFIAR8R)
+004900051109
+005000051109    Fine:
+005800051109             endpgm

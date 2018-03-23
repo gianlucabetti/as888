@@ -1,0 +1,122 @@
+000100960213 FNLG17C:    PGM        PARM(&KPJBA)
+000200050321
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400941007             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+000500971203             DCL        VAR(&PRTFAX)   TYPE(*CHAR)  LEN(10)
+000600020719             DCL        VAR(&LIVPO)    TYPE(*CHAR)  LEN(1)
+000700050401             DCL        VAR(&error)    TYPE(*CHAR)  LEN(1)
+000800020719             DCL        VAR(&UT§DSE) TYPE(*CHAR) LEN(1591)
+000900960212             DCLF       FILE(FNLG74DS)
+001000020719
+001100020719             /* CHIAMO X§PARUT X REPERIRE IL LIVELLO DEL P.O.*/
+001200020719             CALL       PGM(X§PARUT) PARM(&UT§DSE)
+001300020719             CHGVAR     VAR(&LIVPO) VALUE(%SST(&UT§DSE 1512 1))
+001400020719
+001500960202/* Controllo il tipo di stampa richiesto                    */
+001600960213             CHGVAR     VAR(&D74RIS) VALUE(%SST(&KPJBA 270 1))
+001700971203             CHGVAR     VAR(&PRTFAX) VALUE(%SST(&KPJBA 275 10))
+001800050321/* Esegue lo start del commit                  */
+001900050321
+002000050321             STRCMTCTL  LCKLVL(*CHG)
+002100050321             MONMSG     MSGID(CPF8351)
+002200941007
+002300960202/* Se non sono in ristampa, sono una primo livello, e devo stampare  */
+002400960202/*              gli invii via FAX eseguo OVRPRTF                     */
+002500020719             IF         COND((&D74RIS *NE 'R') *AND (&LIVPO *NE +
+002600020719                          '2')) THEN(DO)
+002700041028
+002800960213                                   CHGVAR VAR(%SST(&KPJBA 271 1)) VALUE('F')
+002900971203                                   OVRPRTF    FILE(LETGIC) OUTQ(&PRTFAX)
+003000960213                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+003100050401
+003200050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+003300050401             CHGVAR     VAR(&error) VALUE('S')
+003400050401             GOTO       CMDLBL(ERRORE)
+003500050401             ENDDO
+003600050401
+003700120116             DLTOVR     FILE(LETGIC) LVL(*JOB)
+003701120117             MONMSG     MSGID(CPF0000)
+003800041028
+003900960213                                   CHGVAR VAR(%SST(&KPJBA 271 1)) VALUE('N')
+003901120207             OVRPRTF    FILE(LETGIC) OUTQ(POSTASEDE) FORMTYPE(*STD)
+004000960213                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+004100050401
+004200050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300050401             CHGVAR     VAR(&error) VALUE('S')
+004400050401             GOTO       CMDLBL(ERRORE)
+004401120116             ENDDO
+004402120116
+004403120116
+004404120116                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE(' ')
+004406120207             OVRPRTF    FILE(LETGIC) OUTQ(POSTASEDE) FORMTYPE(*STD)
+004408120116                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+004409120116
+004410120116             MONMSG     MSGID(CPF0000) EXEC(DO)
+004411120116             CHGVAR     VAR(&error) VALUE('S')
+004412120116             GOTO       CMDLBL(ERRORE)
+004500050401             ENDDO
+004600041028
+004601120116          ENDDO
+004800960202
+004900960213             ELSE       CMD(DO)
+005000041028
+005100041028/* SE SECONDO LIVELLO                                                  */
+005200020719             IF         COND(&LIVPO *EQ '2') THEN(DO)
+005300041028
+005400960213                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('N')
+005500960213                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+005600050401
+005700050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+005800050401             CHGVAR     VAR(&error) VALUE('S')
+005900050401             GOTO       CMDLBL(ERRORE)
+006000050401             ENDDO
+006100050401
+006200960213                                   ENDDO
+006300041028
+006400041028/* SE PRIMO LIVELLO                                                  */
+006500041028             ELSE       CMD(DO)
+006600041028
+006700960213                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('E')
+006800960213                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+006900050401
+007000050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+007100050401             CHGVAR     VAR(&error) VALUE('S')
+007200050401             GOTO       CMDLBL(ERRORE)
+007300050401             ENDDO
+007400050401
+007500960202                                   ENDDO
+007600960202
+007700960213             ENDDO
+007800041028
+007900041028/* SE NON SONO IN RISTAMPA E DEVO INDIRIZZARE VIA E-MAIL                  */
+008000041028/*               L'OVRPRTF     VERRÀ COMUNQUE   ESEGUITA SULL'RPG         */
+008100041028             IF         COND(&D74RIS *NE 'R') THEN(DO)
+008200041028                                   CHGVAR VAR(%SST(&KPJBA 271 1)) VALUE('M')
+008300041029                                   CALL     PGM(FNLG17R) PARM(&KPJBA)
+008400050401
+008500050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+008600050401             CHGVAR     VAR(&error) VALUE('S')
+008700050401             GOTO       CMDLBL(ERRORE)
+008800050401             ENDDO
+008900050401
+009000041028             ENDDO
+009100050401
+009200050401ERRORE:
+009300050401             IF         COND(&error *EQ 'S') then(do)
+009400050401             ROLLBACK
+009500050502             SNDPGMMSG  MSG('ERRORE il programma è terminato in modo +
+009600050502                          anomalo. Segnalare il problema alla +
+009700050502                          persona responsabile della manutenzione +
+009800050502                          del programma. Verificare che non ci sia +
+009900050502                          un lavoro bloccato in KPBATCH') +
+010000050502                          TOMSGQ(*SYSOPR) MSGTYPE(*INFO)
+010100050401             RCLRSC     LVL(*CALLER)
+010200050401             enddo
+010300050401
+010400041028
+010500050401FINE:
+010600050321/* fine controllo sincronia     */
+010700050321             ENDCMTCTL
+010800050321             MONMSG     MSGID(CPF8356)
+010900050401
+011000050401             ENDPGM

@@ -1,0 +1,41 @@
+000100990323/*PARMS DFTACTGRP(*NO) ACTGRP(QILE)                */
+000200990323
+000300950605/* GUIDA DEL PROGRAMMA DI STAMPA GI0RNALE BOLLATO                         */
+000400950315
+000500950127             PGM        PARM(&KPJBA)
+000600950508             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700950605             DCL        VAR(&STD) TYPE(*CHAR) LEN(1)
+000800950605             DCL        VAR(&CTS) TYPE(*CHAR) LEN(1)
+000900950315             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+001000950614             DCL        VAR(&SOC) TYPE(*CHAR) LEN(3)
+001100990323             DCL        VAR(&MOD) TYPE(*CHAR) LEN(10) +
+001200990323                          VALUE('GIOBOL    ')
+001300041012             DCL        VAR(&DTI) TYPE(*CHAR) LEN(10)
+001400041012             DCL        VAR(&DTF) TYPE(*CHAR) LEN(10)
+001500950605
+001600990323             CHGVAR     VAR(&STD) VALUE(%SST(&KPJBA 281 1))
+001700990323             CHGVAR     VAR(&CTS) VALUE(%SST(&KPJBA 282 1))
+001800950614             CHGVAR     VAR(&SOC) VALUE(%SST(&KPJBA 248 3))
+001900990323             CHGVAR     VAR(%SST(&MOD 7 3)) VALUE(&SOC)
+002000041012             CHGVAR     VAR(&DTI) VALUE(%SST(&KPJBA 261 10))
+002100041012             CHGVAR     VAR(&DTF) VALUE(%SST(&KPJBA 271 10))
+002200950605
+002300950605/* Stampa controllo squadrature                                  */
+002400950605/* Se richiesta                                                  */
+002500990323             IF         COND(&CTS *EQ '1') THEN(DO)
+002600950605             CALL       PGM(NDC104R) PARM(&KPJBA)
+002700950605             ENDDO
+002800950131
+002900950605/* Stampa giornale bollato                                       */
+003000950615/* Se tutto ok e se richiesta la definitva                       */
+003100950615/* Sempre se richiesta provvisoria                               */
+003200990323             CHGVAR     VAR(&ERR) VALUE(%SST(&KPJBA 247 1))
+003300990323             IF         COND(&ERR *EQ '0' *OR &STD *EQ '0') THEN(DO)
+003400950605             CALL       PGM(NDC105R) PARM(&KPJBA)
+003500990323             ENDDO
+003600950130
+003700041012/* Creo file per archiviazione ottica -------------------------------*/
+003800041012             CALL       PGM(YCO1611R) PARM(&SOC &STD &DTI &DTF +
+003900041012                          '*                         ' 'G' ' ')
+004000041012
+004100950127             ENDPGM

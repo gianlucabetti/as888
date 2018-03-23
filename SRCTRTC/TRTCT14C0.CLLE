@@ -1,0 +1,91 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200090225/*?******************************************************************/
+000300111213/*?  RICEVE ED ELABORA IFTSTA FUORI STANDARD      da UPLOAD         */
+000400111213/*?  Ricezione in Sede tramite UPLOAD     IFTSTA D96A               */
+000500090225/*?******************************************************************/
+000600090225
+000700111214
+000800111223/*? Se il programma è richiamato INDIPENDENTEMENTE                 */
+000900111223/*?    OCCORRE utilizzare  questo CL altrimenti il TRTCT14C        */
+001000111223/*?    all'interno del flusso generale.                            */
+001100111223
+001200111214             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+001300111214
+001400090225
+001500111214             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+001600111214             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001700111214             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001800090225             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001900101025             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+002000100723
+002100100723             DCL        VAR(&FLD5) TYPE(*CHAR) LEN(1)
+002200100723             DCL        VAR(&STARTCMT) TYPE(*CHAR) LEN(1) VALUE(' ')
+002300100723
+002400100723             DCL        VAR(&ACTMSG) TYPE(*CHAR) LEN(1) VALUE(' ')
+002500100723             DCL        VAR(&MSGD01) TYPE(*CHAR) LEN(1) VALUE(' ')
+002600100723             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+002700100723             DCL        VAR(&ORMI) TYPE(*CHAR) LEN(4) VALUE('0000')
+002800100723
+002900100723             DCL        VAR(&TIPO784) TYPE(*CHAR) LEN(1) VALUE(' ')
+003000100723             DCL        VAR(&TIPO781) TYPE(*CHAR) LEN(1) VALUE(' ')
+003100100723             DCL        VAR(&DUEVOLTE) TYPE(*CHAR) LEN(1) VALUE(' ')
+003200100723             DCL        VAR(&TIPFILE) TYPE(*CHAR) LEN(10) VALUE(' ')
+003300100723             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+003400100723             DCL        VAR(&SIGLA) TYPE(*CHAR) LEN(2) VALUE(' ')
+003500100723             DCL        VAR(&NAMSYS) TYPE(*CHAR) LEN(10) VALUE('          ')
+003600100723
+003700100723             RTVNETA    SYSNAME(&NAMSYS)
+003800100723             IF         COND(&NAMSYS *EQ 'AS888') THEN(DO)
+003900100723/* ambiente di TEST inesistente x EDI .... comunque ....              */
+004000100723             CHGVAR     VAR(&TEST) VALUE('P')
+004100100723             ENDDO
+004200100723
+004300100723/* SYSINFO DI PROVA   */
+004400100723             IF         COND(&TEST *NE ' ') THEN(DO)
+004500100723             ENDDO
+004600111214
+004700111214/* Aggiunge le librerie di Filiale su cui tradurre i dati      */
+004800111214
+004900111214             ADDLIBLE   LIB(FILTRAGRU) POSITION(*AFTER UNITRAGRU)
+005000111214             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+005100111214
+005200111214             ADDLIBLE   LIB(FILTRA201) POSITION(*AFTER FILTRAGRU)
+005300111214             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+005400111214
+005500111214/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+005600111214/* procedura/programma fosse finita in maniera anomala occorre */
+005700111214/* parare il colpo riducendo il male al male minore ossia      */
+005800111214/* con un rollback chiudere le precedenti transazioni fatte a  */
+005900111214/* metà piuttosto che confermarle. E ripartendo da una         */
+006000111214/* situazione pulita.                                          */
+006100111214             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+006200111214/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+006300111214             MONMSG     MSGID(CPF8351) EXEC(DO)
+006400111214             ENDCMTCTL
+006500111214             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+006600111214             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+006700111214             ENDDO
+006800111214
+006900111214/*-------------------------------------------------------------*/
+007000100723
+007100111223             CALL       PGM(TRTCT14C) PARM(&TIVLRDS &ESITO &PRMLIT +
+007200111223                          &PRMFIR)
+007300111223             MONMSG     MSGID(CPF0000)
+007400111214
+007500111214 /*--------------------------------------------------------------*/
+007600111214 /* se per qualsiasi motivo il programma si è interrotto in modo */
+007700111214 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+007800111214 /* in modo pulito senza lasciare transazioni a metà.            */
+007900111214 /*                                                              */
+008000111214             ENDCMTCTL
+008100111214             MONMSG     MSGID(CPF0000)
+008200111214 /*                                                             */
+008300111214 /*-------------------------------------------------------------*/
+008400111214
+008500111214             rmvLIBLE   LIB(FILTRAGRU)
+008600111214             MONMSG     MSGID(CPF0000)
+008700111214             rmvLIBLE   LIB(FILTRA201)
+008800111214             MONMSG     MSGID(CPF0000)
+008900111214
+009000090216
+009100090212             ENDPGM

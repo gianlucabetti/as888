@@ -1,0 +1,127 @@
+000100080418/*? ************************************************************** ?*/
+000200080418/*?      TRASCODIFICA STATO DELLE CONSEGNE BOLLE IMPORT            ?*/
+000300080926/*?      RICHIAMATO DAL TRTC50R e DAL FNLSI1R                      ?*/
+000400080418/*? ************************************************************** ?*/
+000500080418             PGM        PARM(&CLIENTE &TFILE &TSCARICO)
+000600880609
+000700930507/* DICHIARAZIONE PARAMETRI IN INPUT                            */
+000800080418             DCL        VAR(&CLIENTE) TYPE(*CHAR) LEN(8)
+000900080418             DCL        VAR(&TFILE)   TYPE(*CHAR) LEN(2)
+001000080418             DCL        VAR(&TSCARICO) TYPE(*CHAR) LEN(2)
+001100110630             DCL        VAR(&ESITO)   TYPE(*CHAR) LEN(1)
+001200080418
+001300080418/* DICHIARAZIONE PARAMETRI x PGM da richiamare                 */
+001400041221             DCL        VAR(&CODFILE) TYPE(*CHAR) LEN(3) VALUE('784')
+001500050207             DCL        VAR(&DAPROGR) TYPE(*CHAR) LEN(5) VALUE('     ')
+001600041221             DCL        VAR(&FILSTA) TYPE(*CHAR) LEN(10) +
+001700041221                          VALUE('IFTSTA')
+001800041221             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+001900041221             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1) VALUE(' ')
+002000080418             DCL        VAR(&RIGHE_DETT) TYPE(*CHAR) LEN(1) VALUE('N')
+002100050826             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+002200041220
+002300110701             DCL        VAR(&INDIRIZZI) TYPE(*CHAR) LEN(253)
+002400110701             DCL        VAR(&OGGETTO) TYPE(*CHAR) LEN(44)
+002500110701             DCL        VAR(&MESSAGGIO) TYPE(*CHAR) LEN(5000)
+002600110701
+002700041220/*-----------------------------------------------------------------------*/
+002800110617/*? serve per i file del progressivo TIVIR                              ?*/
+002900110617/*-----------------------------------------------------------------------*/
+003000110701
+003100110701/*?    solo per ambiente di TEST  -                                     ?*/
+003200110701             ADDLIBLE   LIB(GAITRAGRPS) POSITION(*LAST)
+003300110701             MONMSG     MSGID(CPF0000)
+003400110701
+003500110701             ADDLIBLE   LIB(GAITRAGRU) POSITION(*LAST)
+003600110701             MONMSG     MSGID(CPF0000)
+003700110617
+003800110617/*-----------------------------------------------------------------------*/
+003900080418/*? Crea in Qtemp il file per la trascodifica dei dati in formato FLAT  ?*/
+004000080418/*? prendendo l'immagine dal EDIFTSTA                                   ?*/
+004100041220/*-----------------------------------------------------------------------*/
+004200080418             DLTF       FILE(QTEMP/EDIFTSTA)
+004300080418             MONMSG     MSGID(CPF0000)
+004400120830
+004500080418             CRTDUPOBJ  OBJ(EDIFTSTA) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004600080418                          TOLIB(QTEMP)
+004700110331
+004800110331             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004900110331             MONMSG     MSGID(CPF8351)
+005000110331
+005100041220
+005200080418/*? ******************************************************************** ?*/
+005300080418/*?  Con il Cliente --> tab.PT per creare EDI in QTEMP                   ?*/
+005400080418/*? ******************************************************************** ?*/
+005500080418             OVRDBF     FILE(EDIFTSTA) TOFILE(QTEMP/EDIFTSTA)
+005600080418
+005700110318/*? ******************************************************************** ?*/
+005800110701/*?  Se Non funziona il nuovo programma manda un messaggio               ?*/
+005900110318/*? ******************************************************************** ?*/
+006000110630             CALL       PGM(TRTCT81R) PARM(&CLIENTE &TFILE &TSCARICO +
+006100110630                          &RIGHE_DETT &ESITO) /* Se ci sono +
+006200110630                          problemi con la chiamata al nuovo +
+006300110630                          programma, allora esegue il vecchio giro! */
+006400110701
+006500110701             MONMSG     MSGID(CPF0000) EXEC(DO)
+006600110701/*?  Se Non funziona manda un messaggio                                  ?*/
+006700110701
+006800110701             CHGVAR     VAR(&INDIRIZZI) VALUE('CEDALERT@BARTOLINI.IT;')
+006900110701             CHGVAR     VAR(&OGGETTO) VALUE('Invio Anomalo IFTSTA a +
+007000110701                          :' *CAT &CLIENTE)
+007100110701             CHGVAR     VAR(&MESSAGGIO) VALUE('Durante la +
+007200110701                          generazione del file IFTSTA da inviare al +
+007300110701                          cliente si sono verificati problemi sulla +
+007400110701                          lettura dei records del VAC per il +
+007500110701                          cliente. La composizione del messaggio +
+007600110701                          IFTSTA non è andata a buon fine. +
+007700110701                          Verificare lo stato dell''invio del +
+007800110701                          messaggio ed i records letti.')
+007900110701
+008000110701/*?    Manda il messaggio                                                 ?*/
+008100110701             CALL       PGM(TRTCT00R2) PARM(&INDIRIZZI &OGGETTO +
+008200110701                          &MESSAGGIO)
+008300110701             MONMSG     MSGID(CPF0000)
+008400110701
+008500110701
+008600110701             ENDDO
+008700110701
+008800110331
+008900110331             ENDCMTCTL
+009000110331
+009100110705
+009200110705
+009300110705
+009400110705                                           /*----*/              /*----*/
+009500110705             IF         COND(&RIGHE_DETT *EQ 'N') THEN(GOTO CMDLBL(FINE))
+009600110705                                           /*----*/              /*----*/
+009700110705
+009800110705             CPYF       FROMFILE(QTEMP/EDIFTSTA) TOFILE(SNDIFTSTA) +
+009900110705                          MBROPT(*ADD) FMTOPT(*NOCHK)
+010000110705
+010100110705/* ?Reperisce lo User a cui inviare msg di avviso                      */
+010200110705             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+010300110705             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+010400110705             MONMSG     MSGID(CPF0000)
+010500110705             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+010600110705
+010700110705/* ---------------------------------------------------------------------*/
+010800110705/*?  Esegue l'invio del messaggio sul SERVER x traduzione INTESA.      ?*/
+010900110705/* ---------------------------------------------------------------------*/
+011000110705             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+011100110705             MONMSG     MSGID(CPF8351)
+011200110705             CHGVAR     VAR(&CODFILE) VALUE('784')
+011300110705             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSTA +
+011400110705                          &CODFILE &DAPROGR)
+011500110705             ENDCMTCTL
+011600110705
+011700110705
+011800110705
+011900110705
+012000080418
+012100080418   FINE:
+012200041221             DLTOVR     FILE(*ALL)
+012300120830
+012400120830             DLTF       FILE(QTEMP/EDIFTSTA)
+012500120830             MONMSG     MSGID(CPF0000)
+012600880609
+012700080418             ENDPGM

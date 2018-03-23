@@ -1,0 +1,639 @@
+000100970627     H*------------------------------------------------------------------------*
+000200990209     H* REPERIMENTO DATI INSTRADAMENTI E STAMPA SEGNACOLLI                     *
+000300990209     H* NB: Ricordarsi di non modificare mai il TISI57R ma di creare sempre un *
+000400990209     H*     TISI57RNEW perchè i clienti scaricano e utilizzano il sorgente     *
+000500990408     H* NB: Compilare con la versione più vecchia                              *
+000600990209     H*------------------------------------------------------------------------*
+000700970424     H              J
+000800970424     F*------------------------------------------------------------------------*
+000900970424     F* DATA BASE
+001000970424     F*------------------------------------------------------------------------*
+001100100111     FTABEL00FIF  E           K        DISK
+001200970917     FAZCPF01LIF  E           K        DISK
+001300990114     FPRTFBAR O   F     198     OF     PRINTER
+001400970424     E*------------------------------------------------------------------------*
+001500970424     E* SCHIERE
+001600970424     E*------------------------------------------------------------------------*
+001700970424     E*-------------------
+001800970424     E* MESSAGGI
+001900970424     E*-------------------
+002000970917     E                    MSG     1  30 78
+002100990114     E*-------------------
+002200990114     E* DECODIFICHE
+002300990114     E*-------------------
+002400990114     E                    DEC     1  10 66
+002500990113     E*-------------------
+002600990113     E* RIGHE DI STAMPA
+002700990113     E*-------------------
+002800990113     E                    STA     1  15 66
+002900970424     I*------------------------------------------------------------------------*
+003000970424     I* INPUT
+003100970424     I*------------------------------------------------------------------------*
+003200970917     I*-------------------
+003300970917     I* DS PARAMETRI IN INPUT
+003400970917     ITISI57    E DSTISI57DS
+003500970424     I*-------------------
+003600970917     I* DS PGM TISI95R (RICERCA INSTRADAMENTI DA CAP)
+003700970917     IDSSI95    E DSTISI95DS
+003800970917     I*------------------
+003900970917     I* DS "FNLV55R" - REPERIMENTO TERMINALs
+004000970917     IDSLV55    E DSFNLV55DS
+004100100111     I*------------------
+004200100111     I* DS TABELLA "T5"
+004300100111     IDST5      E DS
+004400970918     I*------------------
+004500970918     I* DS PROGRAMMI STAMPA SEGNACOLLI
+004600970918     IDSBLD     E DS
+004700971215     IDSBLDE    E DS
+004800970424     I*-------------------
+004900970424     I* DS PER MESSAGGI
+005000970424     I*-------------------
+005100970409     I            DS
+005200970409     I                                        1  78 DSMSG
+005300970409     I                                       75  78 DSERR
+005400970516     I*-------------------
+005500970516     I* DS SCOMPOSIZIONE DATA IN ANNO/MESE/GIONRO
+005600970516     I*-------------------
+005700970516     IDS§DAT      DS
+005800970516     I                                        1   20DSSEC
+005900970516     I                                        3   40DSANN
+006000970516     I                                        1   40DSAAS
+006100970516     I                                        5   60DSMES
+006200970516     I                                        7   80DSGIO
+006300970516     I                                        5   80DSMGS
+006400970516     I                                        3   80DSDAT6
+006500970516     I                                        1   80DSDAT8
+006600970516     IDS§TIM      DS
+006700970516     I                                        1   20DTORA
+006800970516     I                                        3   40DTMIN
+006900970516     I                                        5   60DTSCN
+007000970516     I                                        7   80DTGIO
+007100970516     I                                        9  100DTMES
+007200970516     I                                       11  120DTSEC
+007300970516     I                                       13  140DTANN
+007400970516     I                                        1   60DTORA6
+007500970516     I                                        1  140DTTIME
+007600970424     I*-------------------
+007700970424     I* ARCHITETTURA
+007800970424     I*-------------------
+007900971127     I***KPJBA     E DS
+008000970424     C*------------------------------------------------------------------------*
+008100970424     C* MAIN LINE
+008200970424     C*------------------------------------------------------------------------*
+008300970516     C*
+008400970424     C* OPERAZIONI INIZIALI
+008500930304     C                     EXSR RUTINZ
+008600930602     C*
+008700970424     C* SE LANCIATO CON TIPO LANCIO='C' -CHIUDE FILE-, VA A FINE PROGRAMMA
+008800970918IF  1C           I57TLA    IFNE 'C'
+008900970917     C*
+009000970917     C* CONTROLLI DI TIPO GENERALE
+009100970918     C           $ERR      IFEQ 'N'
+009200970917     C                     EXSR CHKGEN
+009300970918     C                     ENDIF
+009400970917     C*
+009500970918     C* RECUPERA IL TERMINAL PARTENZA
+009600970918     C           $ERR      IFEQ 'N'
+009700970918     C                     EXSR RECTFP
+009800970918     C                     ENDIF
+009900970917     C*
+010000970918     C* RECUPERA LINEA DI ARRIVO E ZONA CONSEGNA
+010100970918     C           $ERR      IFEQ 'N'
+010200970918     C                     EXSR RECLZC
+010300970918     C                     ENDIF
+010400970917     C*
+010500970918     C* RECUPERA IL TERMINAL DI ARRIVO
+010600970918     C           $ERR      IFEQ 'N'
+010700970918     C                     EXSR RECTFA
+010800970918     C                     ENDIF
+010900970917     C*
+011000970917     C* RECUPERA DESCRIZIONE P.O. PARTENZA
+011100970918     C           $ERR      IFEQ 'N'
+011200970918     C                     EXSR DESLNP
+011300970918     C                     ENDIF
+011400970917     C*
+011500970917     C* RECUPERA DESCRIZIONE P.O. ARRIVO
+011600970918     C           $ERR      IFEQ 'N'
+011700970918     C                     EXSR DESLNA
+011800970918     C                     ENDIF
+011900970918     C*
+012000970918     C* SE RICHIESTO STAMPA SEGNACOLLO
+012100970918     C           $ERR      IFEQ 'N'
+012200970918     C           I57TST    ANDNE*BLANKS
+012300970918     C                     EXSR STAMPA
+012400970918     C                     ENDIF
+012500970516     C*
+012600970424E   1C                     ENDIF
+012700930323     C*
+012800970424     C* OPERAZIONI DI CHIUSURA
+012900980210     C           I57TLA    IFEQ 'C'
+013000970917     C                     CLEARDSSI95                     *CONTROLLA CAP
+013100970917     C                     MOVEL'C'       I95TLA
+013200970917     C                     CALL 'TISI95R'
+013300970917     C                     PARM           DSSI95
+013400970918     C                     CLEARDSLV55
+013500970917     C                     MOVEL'C'       D55TLA
+013600970917     C                     CALL 'FNLV55R'
+013700970917     C                     PARM           DSLV55
+013800930323     C                     SETON                     LR
+013900970516     C                     ELSE
+014000930324     C                     SETON                     RT
+014100970516     C                     ENDIF
+014200970918     C*------------------------------------------------------------------------*
+014300970918     C* RECTFP - RECUPERA TERMINAL DI PARTENZA
+014400970918     C*------------------------------------------------------------------------*
+014500970918     C           RECTFP    BEGSR
+014600970918     C*
+014700970918     C* DALLA LINEA DI PARTENZA RECUPERA IL TERMINAL PARTENZA
+014800970918     C                     CLEARDSLV55
+014900970918     C                     MOVEL*BLANKS   D55TLA           *TIPO LANCIO
+015000970918     C                     MOVEL'P'       D55TPT           *ECCEZIONE ARRIVO
+015100970918     C                     Z-ADDI57LNP    D55LIN           *LINEA
+015200970918     C                     Z-ADDW57DAT    D55DRF           *DATA RIFERIMENTO
+015300970918     C                     CALL 'FNLV55R'
+015400970918     C                     PARM           DSLV55
+015500970918IF  1C           D55ERR    IFNE *BLANKS                    *NON TROVATO
+015600970918     C                     MOVELD55MSG    $MSG
+015700970918     C                     EXSR ERRORE
+015800970918X   1C                     ELSE                            *TROVATO
+015900970918     C                     Z-ADDD55TFP    W57TFP           *TERMINAL ARRIVO
+016000970918E   1C                     ENDIF
+016100970918     C*
+016200970918     C                     ENDSR
+016300970918     C*------------------------------------------------------------------------*
+016400970918     C* RECLZC - RECUPERA LINEA ARRIVO E ZONA CONSEGNA
+016500970918     C*------------------------------------------------------------------------*
+016600970918     C           RECLZC    BEGSR
+016700970918     C*
+016800970918     C* CONTROLLO FLAG RICERCA LINRA ARR./ZONA CONSEGNA
+016900970918IF  1C           I57RLZ    IFEQ 'N'
+017000970918     C* LINEA ARRIVO / ZONA CONSEGNA PASSATI IN INPUT
+017100970918     C                     Z-ADDI57LNA    O57LNA           *LINEA ARRIVO
+017200970918     C                     Z-ADDI57ZSC    O57ZSC           *ZONA CONSEGNA
+017300970918X   1C                     ELSE
+017400970918     C* RECUPERA LINEA ARRIVO / ZONA CONSEGNA
+017500970918     C                     CLEARDSSI95
+017600970918     C                     MOVEL*BLANKS   I95TLA           *TIPO LANCIO
+017700970918     C                     MOVEL'7'       I95TCN           *CONTROLLO ESISTENZA
+017800970918     C                     MOVELI57NAD    I95NAR           *NAZIONE
+017900970918     C                     MOVELI57CAD    I95CAP           *CAP
+018000970918     C                     MOVELI57LOD    I95LOC           *LOCALITA
+018100970918     C                     MOVELI57PRD    I95PRV           *PROVINCIA
+018200970918     C                     Z-ADDW57TFP    I95TFP           *TERMINAL PARTENZA
+018300970918     C                     Z-ADDW57DAT    I95DAT           *DATA RIFERIMENTO
+018400971219     C                     Z-ADDI57PKG    I95LKG           *PESO
+018500971219     C                     Z-ADDI57VOL    I95LMC           *METRI CUBI
+018600980115     C                     MOVELI57FFD    I95FFD           *FERMO DEPOSITO
+018700980602     C                     MOVELI57TSP    I95TSP           *TIPO SERVIZIO
+018800980602     C                     MOVEL'S'       I95FRE           *RICH.CONTR.ECCEZIONI
+018900971127     C                     SELEC
+019000971127     C           I57FCA    WHEQ 'S'                        *CONTRASS.
+019100971127     C                     MOVEL'S'       I95FCA
+019200971127     C           I57FCA    WHEQ 'A'                        *ASSEGN.
+019300971127     C                     MOVEL'A'       I95TPO
+019400971127     C           I57FCA    WHEQ 'X'                        *CONTRASS.+ASSEGN.
+019500971127     C                     MOVEL'S'       I95FCA
+019600971127     C                     MOVEL'A'       I95TPO
+019700971127     C                     ENDSL
+019800970918     C                     CALL 'TISI95R'
+019900970918     C                     PARM           DSSI95
+020000970918IF  2C           O95ERR    IFNE *BLANKS                    *NON TROVATO
+020100990115IF  3C           I57TLA    IFEQ 'S'                        *SE LANCIATO IN STAMPA
+020200990115     C           I57TLA    OREQ 'D'                        *SE LANCIATO IN DEBUG
+020300990114     C                     EXSR STADBG                     *STAMPA ERRORE
+020400990115E   3C                     ENDIF
+020500970918     C                     MOVELO95MSG    $MSG
+020600970918     C                     EXSR ERRORE
+020700970918X   2C                     ELSE                            *TROVATO
+020800100111     C*
+020900100111     C* VERIFICA X TIPO SERVIZIO "H"
+021000100111     C           $MSG      IFEQ *BLANKS
+021100100111     C           I57TSP    IFEQ 'H'
+021200100111     C           O95TTC    ANDLT1000
+021300100111     C                     MOVELMSG,23    $MSG             *TSP "H" NON PREVISTO
+021400100111     C                     MOVEL$MSG      O57MSG
+021500100111     C                     MOVE $MSG      O57ERR
+021600100111     C                     ENDIF
+021700100111     C                     ENDIF
+021800100111     C*
+021900100111     C* VERIFICA PARAMETRI X TISI57
+022000100111     C           $MSG      IFEQ *BLANKS
+022100100111     C                     MOVEL'1'       TBLKUT
+022200100111     C                     MOVEL'T5'      TBLCOD
+022300100111     C                     MOVELI57TSP    TBLKEY
+022400100111     C           KTAB      CHAINTABEL00F             99
+022500100111     C           *IN99     IFEQ *OFF                       *TROVATO
+022600100111     C                     MOVELTBLUNI    DST5
+022700100111     C           I57NC2    IFGT §T5NCL
+022800100111     C           I57PKG    ORGT §T5PKG
+022900100111     C           I57VOL    ORGT §T5VLM
+023000100111     C                     MOVELMSG,24    $MSG             *NO TSP SE PESO/VOLUME/COLLI OVER
+023100100111     C                     MOVEL$MSG      O57MSG
+023200100111     C                     MOVE $MSG      O57ERR
+023300100111     C                     ENDIF
+023400100111     C                     ENDIF
+023500100111     C                     ENDIF
+023600100112     C*
+023700100112     C* VERIFICA X TIPO SERVIZIO E/H <=> ESTERO
+023800100112     C           I57TSP    IFEQ 'H'
+023900100112     C           I57TSP    OREQ 'E'
+024000100112     C           I57NAD    IFNE *BLANKS
+024100100115     C                     MOVELMSG,26    $MSG             *TSP "H/E" NON PREVISTO X ESTERO
+024200100112     C                     MOVEL$MSG      O57MSG
+024300100112     C                     MOVE $MSG      O57ERR
+024400100112     C                     ENDIF
+024500100112     C                     ENDIF
+024600100115     C*
+024700100115     C* VERIFICA NETWORK <=> ESTERO
+024800100115     C           O95LNA    IFEQ *ZEROS
+024900100115     C           O95ZNC    ANDEQ*ZEROS
+025000100115     C           I57NAD    IFNE *BLANKS
+025100100115     C                     MOVELMSG,27    $MSG
+025200100115     C                     EXSR ERRORE
+025300100115     C                     ENDIF
+025400100115     C                     ENDIF
+025500100108     C*
+025600990113IF  3C           I57TLA    IFEQ 'D'                        *SE LANCIATO IN DBG
+025700990113     C                     EXSR STADBG                     *STAMPA BOLLA
+025800990113E   3C                     ENDIF
+025900970918     C                     Z-ADDO95LNA    O57LNA           *LINEA ARRIVO
+026000970918     C                     Z-ADDO95ZNC    O57ZSC           *ZONA CONSEGNA
+026100970918E   2C                     ENDIF
+026200970918E   1C                     ENDIF
+026300970918     C*
+026400970918     C                     ENDSR
+026500990113     C*------------------------------------------------------------------------*
+026600990113     C* STADBG - STAMPA DEBUG
+026700990113     C*------------------------------------------------------------------------*
+026800990113     C           STADBG    BEGSR
+026900990113     C*
+027000990114     C* REIMPOSTA LE VARIABILI DI STAMPA
+027100990114     C                     MOVEL*BLANKS   STMFCA 11
+027200990114     C                     MOVEL*BLANKS   STMMSG 47
+027300990114     C                     MOVEL*BLANKS   STMLIA 10
+027400990114     C*
+027500990114IF  1C           I57FCA    IFEQ 'S'
+027600990114     C                     MOVELDEC,1     STMFCA           *C/ASSEGNO
+027700990114E   1C                     ENDIF
+027800990114IF  1C           I57FCA    IFEQ 'A'
+027900990114     C                     MOVELDEC,2     STMFCA           *C/ASSEGNO
+028000990114E   1C                     ENDIF
+028100990114IF  1C           I57FCA    IFEQ 'X'
+028200990114     C                     MOVELDEC,3     STMFCA           *C/ASSEGNO
+028300990114E   1C                     ENDIF
+028400990114     C*
+028500990114     C                     MOVELO95MSG    STMMSG           *MESSAGGIO
+028600990114     C*
+028700990114IF  1C           O95LIA    IFEQ '0'
+028800990114     C                     MOVELDEC,5     STMLIA           *LIV AFFIDABILITA'
+028900990114E   1C                     ENDIF
+029000990114IF  1C           O95LIA    IFEQ '1'
+029100990114     C                     MOVELDEC,6     STMLIA           *LIV AFFIDABILITA'
+029200990114E   1C                     ENDIF
+029300990114IF  1C           O95LIA    IFEQ '2'
+029400990114     C                     MOVELDEC,7     STMLIA           *LIV AFFIDABILITA'
+029500990114E   1C                     ENDIF
+029600990114IF  1C           O95LIA    IFEQ '3'
+029700990114     C                     MOVELDEC,8     STMLIA           *LIV AFFIDABILITA'
+029800990114E   1C                     ENDIF
+029900990114IF  1C           O95ERR    IFNE *BLANKS
+030000990114     C                     MOVELDEC,9     STMLIA           *LIV AFFIDABILITA'
+030100990114E   1C                     ENDIF
+030200990114     C* STAMPA
+030300990114IF  1C           *INOF     IFEQ *ON
+030400990114     C                     EXCPTTES                        *TESTATA
+030500990114     C                     SETOF                     OF
+030600990114E   1C                     ENDIF
+030700990114     C                     EXCPTDET                        *DETTAGLIO
+030800990114     C*
+030900990113     C                     ENDSR
+031000970918     C*------------------------------------------------------------------------*
+031100970918     C* RECTFA - RECUPERA TERMINAL DI ARRIVO
+031200970918     C*------------------------------------------------------------------------*
+031300970918     C           RECTFA    BEGSR
+031400970918     C*
+031500970918     C                     CLEARDSLV55
+031600970918     C                     MOVEL*BLANKS   D55TLA           *TIPO LANCIO
+031700970918     C                     MOVEL'A'       D55TPT           *ECCEZIONE ARRIVO
+031800970918     C                     Z-ADDO57LNA    D55LIN           *LINEA
+031900970918     C                     Z-ADDW57DAT    D55DRF           *DATA RIFERIMENTO
+032000970919     C                     Z-ADDI57LNP    D55LNP           *LINEA PARTENZA
+032100970918     C                     CALL 'FNLV55R'
+032200970918     C                     PARM           DSLV55
+032300970918IF  1C           D55ERR    IFNE *BLANKS                    *NON TROVATO
+032400970918     C                     MOVELD55MSG    $MSG
+032500970918     C                     EXSR ERRORE
+032600970918X   1C                     ELSE                            *TROVATO
+032700970918     C                     Z-ADDD55TFA    O57TNA           *TERMINAL ARRIVO
+032800970918E   1C                     ENDIF
+032900970918     C*
+033000970918     C                     ENDSR
+033100970918     C*------------------------------------------------------------------------*
+033200970918     C* DESLNP - RECUPERA DESCRIZIONE LINEA PARTENZA
+033300970918     C*------------------------------------------------------------------------*
+033400970918     C           DESLNP    BEGSR
+033500970918     C*
+033600970919     C                     Z-ADDI57LNP    CPFFIL
+033700970918     C           KCPF      CHAINAZCPF01L             99
+033800970918IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+033900970918     C                     MOVEL*ALL'*'   O57DLP           *DESCR.
+034000970918X   1C                     ELSE                            *TROVATA
+034100970918     C                     MOVELCPFDES    O57DLP           *DESCR.
+034200970918E   1C                     ENDIF
+034300970918     C*
+034400970918     C                     ENDSR
+034500970918     C*------------------------------------------------------------------------*
+034600970918     C* DESLNA - RECUPERA DESCRIZIONE LINEA ARRIVO
+034700970918     C*------------------------------------------------------------------------*
+034800970918     C           DESLNA    BEGSR
+034900970918     C*
+035000970918     C                     Z-ADDO57LNA    CPFFIL
+035100970918     C           KCPF      CHAINAZCPF01L             99
+035200970918IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+035300970918     C                     MOVEL*ALL'*'   O57DLA           *P.O. ARRIVO
+035400970918X   1C                     ELSE                            *TROVATA
+035500970918     C                     MOVELCPFDES    O57DLA           *P.O. ARRIVO
+035600970918E   1C                     ENDIF
+035700970918     C*
+035800970918     C                     ENDSR
+035900970516     C*------------------------------------------------------------------------*
+036000970516     C* CHKGEN - CONTROLLI DI TIPO GENERALE
+036100970516     C*------------------------------------------------------------------------*
+036200970516     C           CHKGEN    BEGSR
+036300970630     C*
+036400970917     C* SE LANCIATO CON RLZ='N' (RICERCA PO.ARR./ZONA) CAMPI LINEA ARR. E
+036500970917     C* ZONA CONSEGNA SONO OBBLIGATORI
+036600970917     C           I57RLZ    IFEQ 'N'
+036700970917     C           I57LNA    IFEQ *ZEROS
+036800971222     C********** I57ZSC    OREQ *ZEROS
+036900970917     C                     MOVELMSG,21    $MSG             *LNA/ZSC OBBIGAT.
+037000970917     C                     EXSR ERRORE
+037100970630     C                     ENDIF
+037200970917     C                     ENDIF
+037300970516     C*
+037400970917     C* SE DATA SPEDIZIONE = 0, USO DATA DI OGGI ALTRIMENTI DATA PASSATA INPUT
+037500970917     C           $ERR      IFEQ 'N'
+037600970917     C           I57AAS    IFEQ *ZEROS
+037700970917     C           I57MGS    OREQ *ZEROS
+037800970516     C                     TIME           DTTIME
+037900970516     C                     Z-ADDDTANN     DSANN
+038000970516     C                     Z-ADDDTMES     DSMES
+038100970516     C                     Z-ADDDTGIO     DSGIO
+038200970516     C                     Z-ADDDTSEC     DSSEC
+038300970917     C                     Z-ADDDSDAT8    W57DAT
+038400970917     C                     ELSE
+038500971003     C                     Z-ADDI57AAS    DSAAS
+038600970917     C                     Z-ADDI57MGS    DSMGS
+038700970917     C                     Z-ADDDSDAT8    W57DAT
+038800970516     C                     ENDIF
+038900970917     C                     ENDIF
+039000970516     C*
+039100970516     C                     ENDSR
+039200970918     C*------------------------------------------------------------------------*
+039300970918     C* STAMPA - STAMPA SEGNACOLLO
+039400970918     C*------------------------------------------------------------------------*
+039500970918     C           STAMPA    BEGSR
+039600970918     C*
+039700970918     C                     CLEARDSBLD
+039800970918     C                     Z-ADDI57LNP    §LDLNP           *LINEA PART.
+039900970918     C                     MOVELO57DLP    §LDDLP           *DES. LNP
+040000970918     C                     MOVELI57CDP    §LDCDP           *COD.PRODOTTO
+040100970918     C                     Z-ADDI57NRS    §LDNRS           *N.SERIE SEGNAC.
+040200970918     C                     Z-ADDI57NCD    §LDNCD           *N.SEGNACOLLO
+040300970918     C                     Z-ADDO57LNA    §LDLNA           *LINEA ARR.
+040400970918     C                     MOVELO57DLA    §LDDLA           *DES. LINEA ARR.
+040500970918     C                     Z-ADDO57TNA    §LDTNA           *TERM. ARR.
+040600970918     C                     MOVELI57TSP    §LDTSP           *TIPO SERV.
+040700970918     C                     Z-ADDO57ZSC    §LDZSC           *ZONA CONS.
+040800970919     C                     MOVELO57DLP    §LDDLP           *DES. LNP
+040900970918     C                     Z-ADDI57NC1    §LDNC1           *N.SEGNAC. DI..
+041000970918     C                     Z-ADDI57NC2    §LDNC2           *TOT.SEGNAC.
+041100970918     C                     MOVELI57RSM    §LDRSM           *RAG.SOC.MITT.
+041200970918     C                     MOVELI57PRM    §LDPRM           *PROV.MITT.
+041300970918     C                     MOVELI57RSD    §LDRSD           *RAG.SOC.DEST.
+041400970918     C                     MOVELI57CAD    §LDCAD           *CAP DEST.
+041500970918     C                     MOVELI57IND    §LDIND           *IND.DEST.
+041600970918     C                     MOVELI57LOD    §LDLOD           *LOC.DEST.
+041700970919     C                     MOVELI57PRD    §LDPRD           *PROV. DEST.
+041800970919     C                     Z-ADD*ZEROS    §LDCPD           *COD.PADRONCINO
+041900970919     C                     Z-ADD*ZEROS    §LDNCP           *PRIMO N.SEGNAC.PADR.
+042000970919     C                     Z-ADD*ZEROS    §LDNCU           *ULT.N.SEGNAC.PADR.
+042100970919     C                     MOVELI57RST    §LDRST           *RISTAMPA
+042200970919     C                     Z-ADDI57VOL    §LDVOL           *VOLUME
+042300970919     C                     Z-ADDI57PKG    §LDPKG           *PESO
+042400970919     C                     MOVELI57FVR    §LDFVR           *FLAG.VOL.BOLL.
+042500970919     C                     Z-ADDI57AAS    §LDAAS           *ANNO
+042600970919     C                     Z-ADDI57MGS    §LDMGS           *MESE/GIORNO
+042700971215     C                     CLEARDSBLDE
+042800971215     C                     MOVEL'ITA'     §DETST           *ST.SOLO ETICH.ITALIANA
+042900970918     C                     SELEC
+043000971002     C           I57TST    WHEQ 'TX340'
+043100970918     C                     CALL 'FNLV22R'
+043200970918     C                     PARM           DSBLD
+043300971215     C                     PARM           DSBLDE
+043400970918     C           I57TST    WHEQ 'QB440'
+043500970918     C                     CALL 'FNLV22RQ'
+043600970918     C                     PARM           DSBLD
+043700971215     C                     PARM           DSBLDE
+043800970918     C           I57TST    WHEQ 'ITA830'
+043900970918     C                     CALL 'FNLVI2R'
+044000970918     C                     PARM           DSBLD
+044100971215     C                     PARM           DSBLDE
+044200971127     C           I57TST    WHEQ 'ZEB6D'
+044300971201     C                     CALL 'FNLV22RX'
+044400971127     C                     PARM           DSBLD
+044500971215     C                     PARM           DSBLDE
+044600971127     C           I57TST    WHEQ 'ZEB8D'
+044700971201     C                     CALL 'FNLV22RZ'
+044800971127     C                     PARM           DSBLD
+044900971215     C                     PARM           DSBLDE
+045000011205     C           I57TST    WHEQ 'TX340P'
+045100011205     C                     CALL 'FNLV2RTS'
+045200011205     C                     PARM           DSBLD
+045300011205     C                     PARM           DSBLDE
+045400011205     C           I57TST    WHEQ 'QB440P'
+045500011205     C                     CALL 'FNLV2RQS'
+045600011205     C                     PARM           DSBLD
+045700011205     C                     PARM           DSBLDE
+045800011205     C           I57TST    WHEQ 'ITA830P'
+045900011205     C                     CALL 'FNLV2RIS'
+046000011205     C                     PARM           DSBLD
+046100011205     C                     PARM           DSBLDE
+046200011205     C           I57TST    WHEQ 'ZEB8DP'
+046300011205     C                     CALL 'FNLV2RZS'
+046400011205     C                     PARM           DSBLD
+046500011205     C                     PARM           DSBLDE
+046600970918     C                     OTHER
+046700970919     C                     MOVELMSG,22    $MSG             *TIPO STAMPANTE NON TROV.
+046800970918     C                     EXSR ERRORE
+046900970918     C                     ENDSL
+047000970918     C*
+047100970918     C                     ENDSR
+047200970519     C*------------------------------------------------------------------------*
+047300970519     C*   AZZERA - AZZERA O ABBLENCA(?) TUTTI I CAMPI IN OUTPUT DELLA ROUTINE
+047400970519     C*------------------------------------------------------------------------*
+047500970519     C           AZZERA    BEGSR
+047600970918     C                     CLEARO57ERR
+047700970918     C                     CLEARO57MSG
+047800970918     C                     CLEARO57DLP
+047900970918     C                     CLEARO57TNA
+048000970918     C                     CLEARO57LNA
+048100970918     C                     CLEARO57DLA
+048200970918     C                     CLEARO57ZSC
+048300970519     C                     ENDSR
+048400970516     C*------------------------------------------------------------------------*
+048500970409     C*   ERRORE - ROUTINE GESTIONE ERRORI
+048600970516     C*------------------------------------------------------------------------*
+048700970409     C           ERRORE    BEGSR
+048800970408     C*
+048900970409     C                     MOVEL'S'       $ERR
+049000970604     C                     EXSR AZZERA                     *AZZ.TUTTI CAMPI OUT
+049100970918     C                     MOVEL$MSG      O57MSG
+049200970918     C                     MOVE $MSG      O57ERR
+049300970408     C*
+049400970408     C                     ENDSR
+049500970516     C*------------------------------------------------------------------------*
+049600930414     C*   RUTINZ - ROUTINE INIZIALE
+049700970516     C*------------------------------------------------------------------------*
+049800930414     C           RUTINZ    BEGSR
+049900930414     C*
+050000930414     C* PARAMETRI IN INPUT ALLA ROUTINE
+050100930414     C           *ENTRY    PLIST
+050200970918     C                     PARM           TISI57
+050300970523     C*
+050400970918     C* CHIAVE LETTURA AZCPF01L - COMPLETA
+050500970918     C           KCPF      KLIST
+050600970918     C                     KFLD           CPFFIL
+050700100111     C*
+050800100111     C* CHIAVE LETTURA TABEL00F - COMPLETA
+050900100111     C           KTAB      KLIST
+051000100111     C                     KFLD           TBLKUT
+051100100111     C                     KFLD           TBLCOD
+051200100111     C                     KFLD           TBLKEY
+051300970919     C*
+051400970919     C* DEFINISCO CAMPI
+051500970919     C           *LIKE     DEFN O57TNA    W57TFP
+051600970918     C*
+051700970918     C* AZZERAMENTI
+051800970519     C                     MOVEL'N'       $ERR    1
+051900970409     C                     MOVEL*BLANKS   $MSG   78
+052000970919     C                     Z-ADD*ZEROS    W57DAT  80
+052100990114     C*
+052200990114     C* OPERAZIONI SOLO UNA VOLTA SOLA
+052300990114IF  1C           $VOLTA    IFEQ ' '                        *1^VOLTA
+052400990114     C                     MOVEL'N'       $VOLTA  1
+052500990114     C                     MOVEL'1'       *INOF            *OVERFLOW
+052600990114E   1C                     ENDIF
+052700930414     C*
+052800930414     C* AZZERO I CAMPI IN OUTPUT DEL PGM
+052900970521     C                     EXSR AZZERA
+053000930414     C*
+053100930414     C                     ENDSR
+053200970516     O*------------------------------------------------------------------------*
+053300990113     O* RIGHE DI STAMPA
+053400990113     O*------------------------------------------------------------------------*
+053500990113     OPRTFBAR E   02           TES
+053600990113     O                         STA,1    132
+053700990113     O                                    7 'TISI57R'
+053800990114     O                         UDATE    160 '  /  /  '
+053900990114     O                                  191 'Pag'
+054000990113     O                         PAGE  Z  198
+054100990114     O        E 1              TES
+054200990114     O                         STA,2     66
+054300990114     O                         STA,2    132
+054400990114     O                         STA,2    198
+054500990113     O        E 1              TES
+054600990114     O                         STA,3     66
+054700990114     O                         STA,6    132
+054800990114     O                         STA,9    198
+054900990113     O        E 1              TES
+055000990114     O                         STA,4     66
+055100990114     O                         STA,7    132
+055200990114     O                         STA,10   198
+055300990114     O        E 11             TES
+055400990114     O                         STA,2     66
+055500990114     O                         STA,2    132
+055600990114     O                         STA,2    198
+055700990113     O*------------------------
+055800990113     O        E  1             DET
+055900990113     O                         I57AAS     4
+056000990114     O                         I57MGS    10 '  /  '
+056100990113     O                         I57NAD    14
+056200990113     O                         I57CAD    24
+056300990113     O                         I57LOD    60
+056400990113     O                         I57PRD    63
+056500990113     O                         I57LNP    67
+056600990113     O                         I57TSP    70
+056700990113     O                         I57FFD    73
+056800990113     O                         I57NRS    77
+056900990113     O                         I57NCD    85
+057000990113     O                         I57NC1    89
+057100990114     O                         I57NC2    94
+057200990114     O                         I57VOL4  101
+057300990114     O                         I57PKG4  110
+057400990114     O                         I57FCA   112
+057500990114     O                         STMFCA   124
+057600990114     O                         O95ERR   126
+057700990114     O                         STMMSG   174
+057800990114     O                         O95LNA   180
+057900990114     O                         O95ZNC   185
+058000990114     O                         STMLIA   198
+058100990114     O*------------------------------------------------------------------------*
+058200970516** MSG - MESSAGGI
+058300970917TISI57R- TISI95R                                                             1 1
+058400970917TISI57R- TISI95R                                                             2 2
+058500970917TISI57R- TISI95R                                                             3 3
+058600970917TISI57R- TISI95R                                                             4 4
+058700970917TISI57R- TISI95R                                                             5 5
+058800970917TISI57R- TISI95R                                                             6 6
+058900970917TISI57R- TISI95R                                                             7 7
+059000970917TISI57R- TISI95R                                                             8 8
+059100970917TISI57R- TISI95R                                                             9 9
+059200970917TISI57R- TISI95R                                                             A10
+059300970917TISI57R- TISI95R                                                             B11
+059400970917TISI57R- TISI95R                                                             C12
+059500970917TISI57R- TISI95R                                                             D13
+059600970917TISI57R- TISI95R                                                             E14
+059700970917TISI57R- TISI95R                                                             F15
+059800970917TISI57R- TISI95R                                                             G16
+059900970917TISI57R- TISI95R                                                             H17
+060000970917TISI57R- TISI95R                                                             I18
+060100970917TISI57R- TISI95R                                                             L19
+060200970917TISI57R- TISI95R                                                             M20
+060300970919TISI57R- Con flag ric.p.o.arr=N i campi P.O.ARR./ZONA CONS. sono obbligatori.N21
+060400970919TISI57R- Tipo stampante non trovato.                                         O22
+060500100108TISI57R- Tipo servizio H non disponibile per la destinazione indicata.       P23
+060600100111TISI57R- Tipo servizio non disponibile per peso/volume/colli indicati.       Q24
+060700100115TISI57R- 25                                                                  R25
+060800100115TISI57R- Tipo servizio non disponibile per nazione indicata.                 S26
+060900100115TISI57R- Nazione di destinazione non servita.                                T27
+061000970917TISI57R- 28                                                                  U28
+061100970917TISI57R- 29                                                                  V29
+061200970917TISI57R- 30                                                                  W30
+061300990114** DEC - Decodifiche
+061400990114C/ASSEGNO                                                         1
+061500990114ASSEGNATO                                                         2
+061600990114C/ASS+ASSEG                                                       3
+0617009901144
+061800990114NON AFFID.                                                        5
+061900990114ECCEZ.LOC.                                                        6
+062000990114AFFIDAB.                                                          7
+062100990114MOLTO AFF.                                                        8
+062200990114*-ERRORE-*                                                        9
+06230099011410
+062400990114** STA - Righe di stampa
+062500990113    *** Reperimento dati instradamento e stampa segnacolli ***    1
+062600990114------------------------------------------------------------------2
+062700990114INPUT                                                           li3
+062800990114Anno mm/gg naz cap       località                            pv pa4
+0629009901149999 99/99 XXX XXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX XX 995
+063000990114n        s e g n a c o l l o                               OUTPUT 6
+063100990114r ser fd ser numero prg  tot volume  peso    c/assegno     errore 7
+0632009901149  X  X  99 9999999 999  999 99,999 999999,9 x xxxxxxxxxxx x xxxxx8
+063300990114                                           instradamento  livello 9
+063400990114                                             lna   zc   affidab.tà10
+063500990114xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   999   99   xxxxxxxxxx11
+06360099011412
+06370099011413
+06380099011414
+06390099011415

@@ -1,0 +1,7 @@
+000100170720     D TIS7000031      PR                  extpgm('TIS7000031')
+000200170720     D DataRif                             like(DataRif)
+000300170720     D getTempiI                           likeds(getTempiI)
+000400170720     D getTempiO                           likeds(getTempiO)
+000500170720     D getTempiO2                          likeds(getTempiO2)
+000600170720     D errori                              likeds(errori)
+000700170720     D esito                               like(esito)

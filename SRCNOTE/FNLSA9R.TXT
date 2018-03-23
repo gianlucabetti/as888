@@ -1,0 +1,263 @@
+000100961204 =====================================================================
+000200961204 |Aut.|Data Mod.| Descrizione Modifica                               |
+000300961204 =====================================================================
+000400961204 : RE :04/12/96 : Invio la data giacenza al cliente solo se ho già   :
+000500961204 :    :         : confermato l'apertura giacenza in partenza         :
+000600970123 : RE :22-23/01-: Attivata gestione trasmissione mot.mancata consegna:
+000700970123 :    :1997     : al cliente:                                        :
+000800970123 :    :         : - Se il flag di invio dei motivi mancata consegna  :
+000900970123 :    :         :   al cliente è impostato a 'S' bisogna testare se  :
+001000970123 :    :         :   la data consegna è maggiore di 0 o no. Nel primo :
+001100970123 :    :         :   caso si deve scrivere solo il file FNVAC.        :
+001200970123 :    :         :   Nel secondo caso bisogna invece vedere se esisto-:
+001300970123 :    :         :   no dei record di BL4 non ancora trasmessi al     :
+001400970123 :    :         :   cliente: onsegna è maggiore di 0 o no. Nel primo :
+001500970123 :    :         :   - se non ne esistono non si scrive ne VAC ne VAG :
+001600970123 :    :         :     e non si flegga ancora FT3 (vuol dire che un   :
+001700970123 :    :         :     evento ha sfleggato la bolla ma non è ancora   :
+001800970123 :    :         :     arrivato BL4).                                 :
+001900970123 :    :         :   - se esistono dei record da trasmettere mi posi- :
+002000970123 :    :         :     ziono sul file degli eventi e cerco l'ultimo   :
+002100970123 :    :         :     evento immesso con tipo mancata consegna = al  :
+002200970123 :    :         :     tipo mancata consegna dell'estensione bolla.   :
+002300970123 :    :         :     -  Se non lo trovo non faccio nulla.           :
+002400970123 :    :         :     -  Se lo trovo scrivo FNVAC,fleggo BLPDT3/FT3, :
+002500970123 :    :         :        scrivo FNVAG andando a impostare la data di :
+002600970123 :    :         :        apertura giacenza dalla data evento e fleggo:
+002700970123 :    :         :        BL4FTR = 'C' (cliente) BL4DTR = UDate       :
+002800970123 :    :         :   -  Nel caso ci siano + eventi di mancata consegna:
+002900970123 :    :         :      da trasmettere scrivo un record di FNVAC e +  :
+003000970123 :    :         :      record di FNVAG (tanti quanti sono gli eventi).
+003100970123 :    :         : Gestito a tal fine il caricamento in schiera dei   :
+003200970123 :    :         : tipi record estensione bolla + tipo mancate cons.  :
+003300970123 :    :         : realtive, caricamento codici eventi e relativi tp. :
+003400970123 :    :         : mancate consegne. Prevista a pgm apertura/chiusura :
+003500970123 :    :         : vari menbri file FNVAG.                            :
+003600970321 : RE :05/03/97 : Scrivo descrizione estesa nella decodifica del cod.:
+003700970321 :    :         : mancata consegna                                   :
+003800970321 : RE :18/03/97 : Se la decodifica del codice mancata consegna supera:
+003900970321 :    :         : i 50 caratteri occupo anche la descrizione aggiunti:
+004000970321 :    :         : va. In caso di note relatrive a motivi generici    :
+004100970321 :    :         : compatto le due righe di descrizioni immesse       :
+004200971126 : RE :20/11/97 : Per sapere se la lnp della giacenza è estero testo :
+004300971126 :    :         : campo ORGFL1 del record di azorg corrispondente non:
+004400971126 :    :         : controllo più che questa sia >=300                 :
+004500980318 : RE :18/03/98 : Attivata gestione trasmissione evento spedizione   :
+004600980318 :              : messa in consegna                                  :
+004700980318 :    :         : - Se sulla bolla non c'è la data di consegna e     :
+004800980318 :    :         :   non devo inviare un motivo di mancata consegna   :
+004900980318 :    :         :   (VAG+VAC) controllo se l'ultimo evento immesso x :
+005000980318 :    :         :   quella spedizione è di messa in consegna (MIC)   :
+005100980318 :    :         :   scrivo un record di FNVAC impostando come data   :
+005200980318 :    :         :   consegna la data dell'evento + il codice consegna:
+005300980318 :    :         :   anomala = 'C'. Se dopo il MIC viene immesso un   :
+005400980318 :    :         :   evento di giacenza anche se quest'ultima non è   :
+005500980318 :    :         :   ancora stata aperta vuol dire che la bolla è già :
+005600980318 :    :         :   stata tolta dalla consegna. Se ho aperto giacenza:
+005700980318 :    :         :   e ho messo subito la spedizione in consegna non  :
+005800980318 :    :         :   informo neanche il cliente dell'avvenuta apertura:
+005900980318 :    :         :   della pratica (potrei risolverla in breve tempo) :
+006000980408 : RE :08/04/98 : Elaboro separatamente la trasmissione delle date   :
+006100980408 :              : di consegna per EDI/Europolitan da quelle dei clienti
+006200980409 : RE :09/04/98 :*Se devo elaborare EDI richiamo pgm TRTC00C altrimenti
+006300980409 :    :         : TRTC00C1
+006400981210 :wnls:10/12/98 :*inserite DLTOVR
+006500990602 : RE :02/06/99 : Trasmetto le date di consegna solo per le bolle non:
+006600990602 :    :         : figlie (la data consegna viene trasmessa già dalla :
+006700990602 :    :         : mamma: prima trasmettevo i dati doppi).            :
+006800990602 :    :         : Se il cliente vuole che gli siano inviate le conse-:
+006900990602 :    :         : gne anomale, per ogni spedizione verifico che non  :
+007000990602 :    :         : ci siano delle pratiche C.A. aperte. Se ne trovo   :
+007100990602 :    :         : più di una mi memorizzo la data di apertura più    :
+007200990602 :    :         : alta.                                              :
+007300990602 :    :         : Se la bolla non è consegnata ma è già stata messa  :
+007400990602 :    :         : in consegna controllo qual'è la data più alta fra  :
+007500990602 :    :         : la messa in consegna e l'apertura della C.A.       :
+007600990602 :    :         : Se è più alta la data di apertura C.A. imposto tale:
+007700990602 :    :         : in quella di consegna, imposto l'ora a 12:00 e il  :
+007800990602 :    :         : codice consegna anomala ad 'A'. In caso contrario  :
+007900990602 :    :         : imposto la data e l'ora dell'evento di messa in    :
+008000990602 :    :         : consegna nella data e nell'ora di consegna.        :
+008100990602 :    :         : Se la bolla è già stata consegnate invio al cliente:
+008200990602 :    :         : la data più alta fra la consegna e la data apertura:
+008300990602 :    :         : C.A.                                               :
+008400990602 :    :         : Se la bolla non è stata consegnata ne messa in con-:
+008500990602 :    :         : segna trasmetto al cliente la data di apertura della
+008600990602 :    :         : C.A.                                               :
+008700990604 : RE : 04/06/99: Se ho appena scritto un record di FNVAC x l'apertura
+008800990604 :    :         : della C.A. (tipo consegna anomala 'A'), la bolla è :
+008900990604 :    :         : stata consegnata parzialmente, e il codice cliente :
+009000990604 :    :         : mittente è un patner scrivo un altro record di VAC :
+009100990604 :    :         : senza il flag di consegna anomala e la data per    :
+009200990604 :    :         : assicurarmi di inviare al partnere anche la conegna:
+009300990604 :    :         : parziale nel caso non l'avessi ancora inviata      :
+009400990618 : RE : 18/06/99: Se impostata la data consegna prevale sia sul MIC  :
+009500990618 :    :         : che sulla C.A. indipendentemente che sia inferiore :
+009600990618 :    :         : o superiore. Per l'estero scrivo sempre 2 record.  :
+009700990618 :    :         : Uno per il MIC/data consegna parziale/Totale + uno :
+009800990618 :    :         : per l'apertura C.A.                                :
+009900990719 : RE :19/07/99 :*Sostituito file FNGCP con nuovo file FIGCP
+010000990719                  (modifiche tracciati Euro/Anno 2000)
+010100990810 : WB :10/08/99 :*Sostituito file FLEVB con nuovo file FNEVB
+010200000308 : WB :08/03/00 :*Asteriscato DAPPERTUTTO     il movel 19 nella data
+010300000308                  di aprtura C.A.
+010400000525 : WB :25/05/00 :*Inserita schiera con le filiali POSTE per effettuare
+010500000526 :    :         : operazioni particolari per le spediz. poste:
+010600000526 :    :         :-se sped. chiusa con cons. anomala devo trasmettere
+010700000526 :    :         : il C/ass. anche se è stato annullato
+010800000526 :    :         :-l'importo da assicurare è stato memorizzato in FNBL4-J
+010900000526 :    :         :-nella data di giacenza mettiamo la data dell'evento di
+011000000526 :    :         : tipo giacenza in quanto le giac. non sono gestite e i
+011100000526 :    :         : motivi di non consegna sono: rifiuto o ind.sconosciuto
+011200000616 : WB :16/06/00 :*Aggiunto richiamo a pgm TRTC00CP  per creare in qtemp
+011300000616 :    :         : una dtaara che permette di ricnoscere che si è in sede
+011400000616 :    :         : ma si fanno prove di filiale  nel TRTC00C1
+011500000619 : WB :19/06/00 :*Forzata libr. di prova
+011600000629 : WB :29/06/00 :*Non impostava l'importo del C/ass per le poste
+011700000921 : WB :21/09/00 :*Se poste metto il "nr. segnacollo da"  nel vacdcr
+011800001031 : MM :31/10/00 :*Aggiunta gestione scrittura fnvag per consegne parziali
+011900001031                  pilotato da flag nella 3K §3KCQ6
+012000001031                  legge il dettaglio colli e conta i consegnati scrive
+012100001031                  una riga di fnvag
+012200010202 : AB :02/02/01 :*Aggiunta il flag per la gestione EDI in sede.
+012300010927 : mm : 27/09/01  :- Aggiunta gestione nuovo file di join fnblp62j
+012400010927 :    :           :  x gestione invio dati a cliente con codice cliente
+012500010927 :    :           :  inserito nel campo note del record BL4 Del join
+012600010927 :    :           :  campo BL4NOT.
+012700010927 :    :           :  E' stato aggiunto un nuovo loop su questo file al
+012800010927 :    :           :  termine dei due precedenti.                       in
+012900011002 :    :           :  VARIA L' AGGIORNAMENTO DI BLP sulla V.L.          in
+013000010927 :    :           :  fnblp01l                                          in
+013100011002 :    :           :  Nella lettura delle estensioni viene acceso l'ind 68
+013200011002 :    :           :  che serve per forzare la scrittura del codice cliente
+013300011002 :    :           :  presente nell'estensione e per non eseguire le
+013400011002 :    :           :  routine di scrittura del VAG (tstnmc e parzia)
+013500020717: AB :17/07/02  : In vista dell'AS Unico all'organigramma si è allineato
+013600020717:    :          : il modo di reperire le vecchie informazioni con il network
+013700020905: mm : 05/09/02   :Sostituita call di trtc00c1 con trtc00c3
+013800030924: AB : 24/09/03 : aggiunta Kpjba come PARM al TRTC00C
+013900030925: AB : 25/09/03 : Tolta la chiamata al TRTC00C e sostituita con TRTC51R
+014000030925:    :          : direttamente.
+014100040319| AB | 19/03/04 | Scrittura del FNVAC e del FNVAG implementate ossia si scrive
+014200040319|    |          | l'FNVAC anche se si tratta di bolla figlia ITALIA a seguito di
+014300060921|    |          | dirottamento o reso a mittente della figlia
+014400060921|    |          | (attenzione questo non vale x l'Estero).
+014500060921|    |          | > L'importante far sapere al cliente se sulla figlia è stato
+014600060921|    |          | fatto il reso o il dirottamento. <
+014700060921|    |          | Inoltre si scrive l'FNVAC x dare la data apertura
+014800040319|    |          | danno C.A. anche x bolla consegnata con DCM > 0 (le specifiche
+014900040319|    |          | erano state asteriscate e sono state riattivate)
+015000040319|    |          | La scrittura dell'FNVAG è stata attivata anche x una mancata
+015100040319|    |          | consegna con reso e quindi con la data consegna DCM > 0.
+015200040409| AB | 09/04/04 | Non deve essere fatta se Estero la scrittura del VAC x CA con
+015300040409|    |          | DCM > 0 (le specifiche un tempo asteriscate non comprendevano
+015400040409|    |          | differrenze fra Italia ed Estero)
+015500040422| AB | 22/04/04 | Corretto x far scrivere il VAC e flaggare il BLP in quanto
+015600040422|    |          | entrando, dopo la modifica di scrittura del VAG anche x la
+015700040422|    |          | data consegna > 0, nella routine resettava i flags e non
+015800040422|    |          | riusciva areimpostarli.
+015900040504| AB | 04/05/04 | Aggiunto un bel CHIODO per ricondurre i codici eventi A16 e
+016000040504|    |          | A23 ai vecchi codici 016 e 023 altrimenti sballa la scrittura
+016100040504|    |          | del VAG non riconoscendo correttamente i codici che hanno
+016200040504|    |          | generato tale situazione.
+016300040715| AB | 15/07/04 | Sostituito il controllo di C.A. Attive aperte con il pgm
+016400040715|    |          | FIDN12R al posto della lettura sul file FNDCT02L e prende
+016500040715|    |          | la data dell'ultima C.A. aperta se ve ne sono più di una.
+016600040902| SM | 02/09/04 | Progetto 500 - SDITRA101                           |
+016700040902|    |          | - Sostituito test su S.I. "SDITRAP"                |
+016800040902|    |          |          con test su S.I. "FILTRAP".               |
+016900041125| AB | 25/11/04 | Se una giacenza viene riaperta occorre passare la data
+017000041125|    |          | riapertura assieme allo STATUS e non sempre la data della
+017100041125|    |          | spedizione.
+017200050309: mm :09/03/05  :Progetto 538
+017300050606: mm :06/06/05  :Progetto 538 2° step
+017400050606                 sostituito file FNVAG00T con nuovo file generico TIVGD
+017500050701: mm :01/07/05  :Corretto codice cliente da §3kgks a §3kcks per scrittura
+017600050701                 fnvag perchè informazione legata alla consegna (LB docet)
+017700050901: ba :01/09/05  :Progetto 588
+017800050901                 sostituito file FNVAC00T con nuovo file generico TIVGD
+017900051115 | mm |15/11/05 |-Prg. 561 Sostituito file fnBL9 con nuovo fiar9
+018000060214 | mm |14/02/06 |-Prg. 561 Sostituito file fnBL4 con nuovo fiar4
+018100060214 |    |         |e nuovo file di join fnblp62j con fnblp67j
+018200060912 | mm |12/09/06 |-Inserito come per il MIC l'invio del ripristino eventi
+018300060912 |    |         | RIP RDC
+018400060921| AB | 21/09/06 | Dovendo inviare l'informazione del Contrassegno sulla bolla
+018500060921|    |          | madre, occorre percorrere la catena di tutte le bolle figlie,
+018600060921|    |          | escludendo le bolle locali sulle quali non può esserci il
+018700060921|    |          | contrassegno. La routine percorre la catena memorizzandosi
+018800060921|    |          | la chiave della bolla sulla quale occorre verificare la
+018900060921|    |          | presenza del contrassegno.
+019000080403| AB |  3/04/08 | nel TIVGD il VGDDTA è diventato VARYing quindi per impostare
+019100080403|    |          | il campo occorre eseguire un Eval con il %TrimR(dei dati da
+019200080403|    |          | caricare nel campo stesso)
+019300080410| AB | 10/04/08 | Se il cliente è Abilitato all'invio del VAC x ogni Variazione
+019400080410|    |          | fatta alla bolla --> §3KCQ8 = "S" , il programma è stato
+019500080410|    |          | modificato in modo che venga sempre inviata l'immagine del VAC
+019600080410|    |          | qualora il record letto sia stato abilitato alla trasmissione.
+019700080410|    |          | Ciò significa che il pgm di Variazione Bolla abiliterà alla
+019800080410|    |          | trasmissione qualsiasi Bolla variata.
+019900080417| AB | 17/04/08 | Portata la scrittura del VAC sul TIVGD x eliminare in Filiale
+020000080417|    |          | il vecchio file FNVAC00T multimembro.
+020100080417|    |          | Durante questa fase asteriscate/eliminate tutti i test di
+020200080417|    |          | vecchi tipi trasmissione non più attivi nell'ottica di
+020300080417|    |          | snellire il sorgente (in un secondo momento le spec asteriscat
+020400080417|    |          | verranno cancellate).
+020500080421|    |          | Sostituito il vecchio TRTC51R con il TRTC50R.
+020600080721| AB | 21/07/08 | Problema invio se modificata Data Consegna Richiesta anche se
+020700080721|    |          | il cliente era abilitato sulla 3K.
+020800080721|    |          | Non superava il secondo test x scrivere il VAC.
+020900080729| mm |12/09/06  |-Corretto errore modifica precedente non impostava il flag di
+021000080729|    |          | trasmissione e inviava la bolla più volte
+021100080930| AB | 30/09/08 | Rilascio del TIVGD comunque x qualsiasi tipo di errore.
+021200090223| AB | 23/02/09 | Eliminato il NON inviare il VAC se richiesto il VAG ....adesso
+021300090223|    |          | verrà inviato sempre.
+021400090303| mm |03/03/09  | Prg. 561 sostituito fnblt con nuovo tracciato unico FIART00F
+021500090303|    |          | per colli consegnati
+021600090304|    |          | implementato controllo KNSIF di prova con 'PUP ' prova bolle
+021700090527| AB | 27/05/09 | Le bolle dirottate senza un successivo evento, rimanevano
+021800090527|    |          | sflaggate. Occorreva flaggare le bolle con situazione di
+021900090527|    |          | Anomalia per non inviare continuamente la stessa immagine del
+022000090527|    |          | FNVAC ad ogni ora in cui FNLSA9 è schedulato fino a che un
+022100090527|    |          | qualche evento cambi l'immagine e riflagghi il record bolla.
+022200090529| AB | 29/05/09 | Aggiunta scrittura del FIAR5 per memorizzare sempre l'ultimo
+022300090603|    |          | invio (per i soli clienti abilitati sulla 3K che non vogliono
+022400090603|    |          | riceve consecutivamente immagini del VAC identiche).
+022500090529|    |          | Questo permette di NON inviare sempre gli stessi record se
+022600090603|    |          | i valori dei campi significativi descritti nella DS FNVAChgDs
+022700090603|    |          | NON sono cambiati.
+022800090529|    |          | Verranno mandati solo se ci sono delle novità da comunicare.
+022900090529|    |          | (Vedi ARVATO MICROSOFT)
+023000091116| AB | 16/11/09 | Deve inviare i dati solo se codificato nella 3K il tipo di
+023100091116|    |          | invio dei dati sia per quel che riguarda il VAC sia x il VAG.
+023200110419| AB | 19/04/11 | Sostituito il vecchio TRTC50R con il nuovo TRTCT80R più veloce
+023300110419|    |          | poichè ottimizza le letture della tabella 3K dei soli "EW" e
+023400110419|    |          | lancia una sola volta i codici cli.unificanti da elaborare.
+023500110721| AB | 21/07/11 | Ad ogni scrittura del VAC si impone la flaggatura dle BLPDT3
+023600110721|    |          | come record già trasmesso al cliente.
+023700110721|    |          | Non avendo generato il VAG rimandava più volte la stessa
+023800110721|    |          | immagine del VAC poichè non flaggava il BLPDT3
+023900121023| AB | 23/10/12 | Un parametro del TRUL47R su richiesta di Gurrieri deve essere
+024000121023|    |          | impostato a "S" anzichè ad "N" come era prima.
+024100121106| AB | 06/11/12 | Differenziato il Nome programma da riportare sul TIVGD FNLSA9§
+024200121106|    |          | se richiamato per l'estero.
+024300131014| ES | 14/10/13 | sostituita lf FIARBF1C  con FIARBF2C
+024400131113| AB | 13/11/13 | Sostituite le letture dell'EVB in base alle nuove regole del
+024500131113|    |          | PDA con più eventi giornalieri da scaricare e mostrare.
+024600131119|    |          | Se si tratta di Italia li elabora tutti e li deve mostrare
+024700131119|    |          | tutti. Al contrario, invece, x quanto riguarda l'estero si
+024800131119|    |          | vuole mostrare solo e sempre l'ultimo.  Per fare questo esiste
+024900131113|    |          | il flag progressivo §NOTPRG che può contenere 3 valori:
+025000131113|    |          | vuoto = Blank, 'U'=Ultimo e P='Primo
+025100131119|    |          | Quindi per l'estero deve leggere l'"U" o il blank  poichè al
+025200131113|    |          | massimo di eventi ce ne possono essere al massimo 2 sul PDA o
+025300131113|    |          | uno unico che sarà blk.
+025400131119|    | 19/11/13 | Per la MANCATA CONSEGNA la bolla sia per l'Italia che per
+025500131119|    |          | l'Estero viene aggiornata con L'ultimo evento del PDA.
+025600131119|    |          | Questo è il motivo per cui QUI in entrambe i casi occorre
+025700131119|    |          | ragionare allo stesso modo prendendo sempre l'Ultimo evento.
+025800170309| LC | 01/03/17 | Invece che leggere tramite ciclo di READ tutta la tab.3K
+025900170309                | questa viene letta mediante SQL ordinandola prima per cliente
+026000170309                | unificante, in modo da avere le bolle che si completano un
+026100170320                | cliente alla volta (solo relativamente a 'VC')
+026200170324 | FG |24/03/17 | Modifica per "nuova modalità download"
+026300170511 | FG |11/05/17 | Aggiunte altre causali manutenzione bolla per "slegggatura"

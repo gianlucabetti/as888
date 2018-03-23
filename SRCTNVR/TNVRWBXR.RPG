@@ -1,0 +1,157 @@
+000100000000     H              J
+000200991216     F*          *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400991216     F* - SISTEMA I BB                                               *
+000500000000     F*--------------------------------------------------------------*
+000700991216     FTNCSB01LUF  E           K        DISK
+000900930927     FTABEL00FIF  E           K        DISK                           UC
+001000991021     FTNTBE01LIF  E           K        DISK                           UC
+001001991216     FQSYSPRT O   F     132            PRINTER
+001100900604     E*
+001200951019     E                    BB        200  7 0             COD.CLI. ABILIT.BB
+001700941019     IWLBDA8      DS
+001800941019     I                                        1   80G08DAT
+001900941019     I                                        9  160G08INV
+002000941019     I                                       17  17 G08ERR
+002100941019     I                                       18  220G08TGI
+002200991021     IDGED      E DS
+002300991021     IDSTM      E DS
+002400950327     IDSCV      E DS
+002900900604     C*---------------------------------------------------------------*
+002901991216     C                     MOVEL'M'       KTPI    1
+002902991216     C           KTPI      SETLLTNCSB01L
+003000991216     C                     READ TNCSB01L                 80
+003100941019     C           *IN80     DOWEQ'0'
+003200911111     C*
+003500991216     C*
+003601991216     C           CSBDTA    IFEQ 0
+003602991216     C           CSBDDC    ANDGT0
+003603991216     C           CSBTPI    ANDEQ'M'
+004400941019      *
+004600900604     C* SE TUTTO BENE AGGIORNO
+004700900604     C                     EXSR AGGIOR
+005000941019     C                     ENDIF                           <- *IN21
+005100941019      *
+005200991216     C                     READ TNCSB01L                 80
+005300941019     C                     ENDDO
+006800900604     C*
+006900900605     C           STOP      TAG
+007000900605     C                     SETON                     LR
+007100900605     C*
+007200900604     C/SPACE 005
+007300900604     C*----------------------------------------------
+007400941019     C* AGGIORNO FILE TNCSB00F ----------------------
+007500900604     C*----------------------------------------------
+007600900604     C           AGGIOR    BEGSR
+007601991216     C                     SETOF                         30
+009800930927     C*
+009900950327     C* CONTROLLO SE CONTRASSEGNO ESTERO
+010000930927     C* SE E'DIRETTO CONTROLLO SE IL CLIENTE è ABILITATO ALL'INCASSO "BB"
+010100930927     C* IN QUESTO CASO TOLGO IN TPI IL FLAG=M , QUINDI RISULTA INCASSATO
+010200930927     C* CON ASSEGNO BARTOLINI CON DISTINTA DA CONFERMARE  (VECCHIA MANIERA)
+010300991021     C           CSBVCA    IFEQ *BLANKS
+010400991021     C           CSBVCA    OREQ §GEDCN
+010500991021     C           CSBVCA    OREQ DIVALT
+010600930927     C                     Z-ADD1         X
+010700930927     C           CSBCDI    LOKUPBB,X                     30
+010800930927     C   30                MOVEL*BLANK    CSBTPI
+010900950127     C   30                MOVEL*BLANK    CSBFUS
+011000950327     C                     END
+011100930927     C*
+011101991216     C   30                EXCPTSTAMPA
+011700991216     C   99 30             EXCPTAGGIO
+011900900604     C           ENDAGG    ENDSR
+012000900604     C/SPACE
+018600941019     C*---------------------------------------------------------------*
+018700941019     C           *INZSR    BEGSR
+018800941019     C*---------------------------------------------------------------*
+018900941019     C           *ENTRY    PLIST
+019000991216     C                     PARM           AGG     2
+019001991216     C           AGG       IFEQ 'SI'
+019002991216     C                     SETON                     99
+019003991216     C                     ENDIF
+019700991216     C**
+019800941019     C                     TIME           WHHUDT 140
+019900941019     C                     MOVELWHHUDT    ORA     60
+020000941019     C                     MOVE WHHUDT    G08DAT
+020100941019     C                     MOVE *ZEROS    G08INV
+020200941019     C                     MOVEL*BLANK    G08ERR
+020300941019     C                     CALL 'XSRDA8'
+020400941019     C                     PARM           WLBDA8
+020500941019     C                     Z-ADDG08INV    AMGUDT  80
+020600941019      *
+020700941019      * CARICO TUTTI I CLIENTI ABILITATI ALL' INCASSO 'BB'
+020800941019      * CON AUTORIZZ. A VERSARE ASSEGNI INT. MITTENTE
+020900941019      * PER TRASFORMARLI IN ASS.BARTOLINI
+021000941019     C                     OPEN TABEL00F
+021100991021     C                     OPEN TNTBE01L
+021101991215     C                     Z-ADD1         CODUT
+021200941019     C                     MOVEL'TM'      TBLCOD
+021300941019     C                     MOVE *BLANKS   TBLKEY
+021400941019     C                     MOVE *ZEROS    X       30
+021500941019     C           KTAB      SETLLTABEL00F
+021600941019     C           *IN21     DOUEQ'1'
+021700941019     C           KCOD      READETABEL00F                 21
+021800941019     C  N21                MOVELTBLUNI    DSTM
+021900941019     C  N21      §TMFBB    IFEQ 'S'
+022000941019     C           §TMFVE    ANDNE'N'                         AUT.VERS.MITT
+022100941019     C                     ADD  1         X
+022200941019     C                     MOVELTBLKEY    BB,X
+022300941019     C                     ENDIF
+022400941019     C                     ENDDO
+022500991021     C* CARICO DIVISA MONETA DI CONTO
+022600991021     C                     MOVEL'GED'     TBECOD
+022700991021     C                     MOVEL*BLANKS   TBEKE1
+022800991021     C                     MOVEL'1'       TBEKE1
+022900991021     C           KTBE      CHAINTNTBE01L             21
+023000991021     C  N21                MOVELTBEUNI    DGED
+023100991021     C* ... E MONETA ALTERNATIVA
+023200950327     C                     MOVE *BLANKS   TBLKEY
+023300950327     C                     MOVE *ZEROS    X       30
+023400950327     C           KTAB      SETLLTABEL00F
+023500950327     C           *IN21     DOUEQ'1'
+023600950327     C           KCOD      READETABEL00F                 21
+023700950327     C           *IN21     IFEQ '0'
+023800950327     C           TBLFLG    ANDEQ*BLANKS
+023900950327     C                     MOVELTBLUNI    DSCV
+024000991021     C                     MOVELTBLKEY    WDIV    3
+024100991021     C           §CVDVA    IFEQ 'S'
+024200991021     C           WDIV      ANDNE§GEDCN
+024300991021     C                     MOVELWDIV      DIVALT  3
+024400991021     C                     END
+024500950327     C                     ENDIF
+024600950327     C                     ENDDO
+024700941019     C                     CLOSETABEL00F
+024800991021     C                     CLOSETNTBE01L
+024900941019     C*---------------------------------------------------------------*
+025400941019     C*---------------------------------------------------------------*
+025500941019     C* DEFINIZIONE CHIAVI
+026200941019     C*
+026300941019     C           KTAB      KLIST
+026400991021     C                     KFLD           CODUT   10
+026500941019     C                     KFLD           TBLCOD
+026600941019     C                     KFLD           TBLKEY
+026700941019     C*
+026800941019     C           KCOD      KLIST
+026900941019     C                     KFLD           CODUT
+027000991021     C                     KFLD           TBLCOD
+027100991021     C           KTBE      KLIST
+027200991021     C                     KFLD           TBECOD
+027300991021     C                     KFLD           TBEKE1
+027400941019      *
+027700941019     C                     ENDSR
+027701991216     OTNCSB000E                AGGIO
+027702991216     O                         CSBTPI
+027703991216     O                         CSBFUS
+027800991216     OQSYSPRT E 1              STAMPA
+027900991216     O                         CSBAAS  +  1
+028000991216     O                         CSBLNP  +  1
+028100991216     O                         CSBNRS  +  1
+028200991216     O                         CSBNSP  +  1
+028201991216     O                                 +  1 'LNA'
+028202991216     O                         CSBLNA  +  1
+028203991216     O                                 +  1 'DISTINTA'
+028300991216     O                         CSBNDTZ +  1
+028400991216     O                         CSBDDC  +  1
+028500991216     O                         CSBTPI  +  1
+028600991216     O                         CSBCAS2 +  1

@@ -1,0 +1,40 @@
+000100171205             PGM        PARM(&FNLV36 &FIAPDB &FIAPDA &FIAP4B &FIAP4A)
+000101171205       /* definite lunghezze di fiapd00f e fiapd40f  */
+000102171205       /* commento ad uso eventuale scansione per cambio tracciato */
+000200171205             DCL        VAR(&fnlv36)   TYPE(*CHAR)  LEN(113)
+000201171205             DCL        VAR(&fiapdb)   TYPE(*CHAR)  LEN(188)
+000202171205             DCL        VAR(&fiapda)   TYPE(*CHAR)  LEN(188)
+000203171205             DCL        VAR(&fiap4b)   TYPE(*CHAR)  LEN(59)
+000204171205             DCL        VAR(&fiap4a)   TYPE(*CHAR)  LEN(59)
+000205171205             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000206171205             RTVJOBA    JOB(&DSP)
+003500950524
+003600030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003700030722/* procedura/programma fosse finita in maniera anomala occorre */
+003800030722/* parare il colpo riducendo il male al male minore ossia      */
+003900030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+004000030722/* metà piuttosto che confermarle. E ripartendo da una         */
+004100030722/* situazione pulita.                                          */
+004101171206             STRCMTCTL  LCKLVL(*all)
+004102070928             MONMSG     MSGID(CPF8351) EXEC(DO)
+004103070928             ROLLBACK
+004104070928             ENDCMTCTL
+004105171206             STRCMTCTL  LCKLVL(*all)
+004700030722             ENDDO
+004800030708
+004900070115        /*   Eseguo CALL Gestione anagrafica autotrasp/cooperative */
+005000171205             CALL       PGM(FNLV36R) PARM(&FNLV36 &FIAPDB &FIAPDA +
+005001171205                          &FIAP4B &FIAP4A)
+005100030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+005200030708             ROLLBACK
+005300171205             SNDBRKMSG  MSG('ERRORE L''aggiornamento del  +
+005400171205                          monitor variazioni è terminato in modo anomalo. +
+005500030722                          Segnalare il +
+005600030722                          problema alla persona responsabile della +
+005700030722                          manutenzione del programma.') TOMSGQ(&DSP)
+005800030728             RCLRSC     LVL(*CALLER)
+005900030708             ENDDO
+006000030722
+006100030722             ENDCMTCTL
+006900950911
+007000950524             ENDPGM

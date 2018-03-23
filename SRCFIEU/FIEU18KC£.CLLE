@@ -1,0 +1,76 @@
+000100971127/*----------------------------------------------------------------------------*/
+000200160630/* Imposta la KPJBA     x i programmi che girano fuori architettura           */
+000300160630/*           e chiamano altri programmi sotto architettura                    */
+000400160630/*   può servire come SEDE o FILIALE    SEDFIL='S' -> Sede/'F'-> Filiale      */
+000500160630/*   RESTITUISCE la KPJBA                                                     */
+000600971127/*----------------------------------------------------------------------------*/
+000700160630             PGM        PARM(&SEDFIL &KPJBA)
+000800160630
+000900160630             DCL        VAR(&kpjba) TYPE(*CHAR) LEN(502)
+001000160630             DCL        VAR(&SEDFIL) TYPE(*CHAR) LEN(1)
+001100160630             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+001200160630             DCL        VAR(&SYS5) TYPE(*CHAR) LEN(5)
+001300160630             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001400160630             DCL        VAR(&KNMEB) TYPE(*CHAR) LEN(10)
+001500160630             DCL        VAR(&KNMUS) TYPE(*CHAR) LEN(10)
+001600160630             DCL        VAR(&KNRJO) TYPE(*CHAR) LEN(6)
+001700160630             DCL        VAR(&KQOPR) TYPE(*CHAR) LEN(10)
+001800160630             DCL        VAR(&KDTJB) TYPE(*CHAR) LEN(6)
+001900111114
+002000160630             RTVNETA    SYSNAME(&SYSNAME)
+002100160630             CHGVAR     VAR(&SYS5) VALUE(%SST(&SYSNAME 1 5))
+002200160630
+002300160630             RTVJOBA    JOB(&KNMEB) USER(&KNMUS) NBR(&KNRJO) +
+002400160630                           OUTQ(&KQOPR) DATE(&KDTJB)
+002500160630
+002600160630             IF         COND(&SYS5   *EQ 'AS888') THEN(do)
+002700160630             IF         COND(&SEDFIL *EQ 'S') THEN(do)
+002800160630             CHGVAR     VAR(&KNSIF) VALUE('GAITRAPSP ')
+002900160630             ENDDO
+003000160630             ENDDO
+003100160630
+003200160630             IF         COND(&SYS5   *EQ 'AS888') THEN(do)
+003300160630             IF         COND(&SEDFIL *NE 'S') THEN(do)
+003400160630             CHGVAR     VAR(&KNSIF) VALUE('FILTRAPFP ')
+003500160630             ENDDO
+003600160630             ENDDO
+003700160630
+003800160630             IF         COND(&SYS5   *NE 'AS888') THEN(do)
+003900160630             IF         COND(&SEDFIL *EQ 'S') THEN(do)
+004000160630             CHGVAR     VAR(&KNSIF) VALUE('GAITRA201 ')
+004100160630             ENDDO
+004200160630             ENDDO
+004300160630
+004400160630             IF         COND(&SYS5   *NE 'AS888') THEN(do)
+004500160630             IF         COND(&SEDFIL *NE 'S') THEN(do)
+004600160630             CHGVAR     VAR(&KNSIF) VALUE('FILTRA201 ')
+004700160630             ENDDO
+004800160630             ENDDO
+004900160630
+005000160630/* Cambio Sistema info                                          */
+005100160630             CALL       PGM(TRUL07C) PARM(&KNSIF)
+005200160630
+005300160630    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE(&KNMUS)             /*KNMUS*/
+005400160630    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                   /*KNRAZ*/
+005500160909    CHGVAR VAR(%SST(&KPJBA 20 10)) VALUE(' ')                 /*KNMTD*/
+005600160630    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                   /*KNRVJ*/
+005700160630    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(&KNRJO)              /*KNRJO*/
+005800160630    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                 /*KSTJO*/
+005900160630    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                   /*KTMIN*/
+006000160630    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                 /*KTPAZ*/
+006100160630    CHGVAR VAR(%SST(&KPJBA 77  10)) VALUE(&KNMEB)             /*KNMEB*/
+006200160630    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                   /*KNMSB*/
+006300160630    CHGVAR VAR(%SST(&KPJBA 92 10)) VALUE(&KNSIF)         /*KNSIF*/
+006400160630    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                   /*KKEYF*/
+006500160630    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                   /*KRCDS*/
+006600160630    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                 /*KEXCN*/
+006700160630    CHGVAR VAR(%SST(&KPJBA 135 4)) VALUE(' ')               /*KCOAZ*/
+006800160630    CHGVAR VAR(%SST(&KPJBA 140 10)) VALUE(&KQOPR)            /*KQOPR*/
+006900160630    CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('  ')                /*KCOJB*/
+007000160630    CHGVAR VAR(%SST(&KPJBA 156 7)) VALUE('     ')           /*KQEBI*/
+007100160630    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')                 /*KCANC*/
+007200160630    CHGVAR VAR(%SST(&KPJBA 493 10)) VALUE(' ')              /*MEMBRO*/
+007300160630    CHGVAR VAR(%SST(&KPJBA 483 10)) VALUE(' ')              /*TRA   */
+007400160630
+007500111007 FINE:
+007600111007             ENDPGM

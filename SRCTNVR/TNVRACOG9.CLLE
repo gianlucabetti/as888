@@ -1,0 +1,100 @@
+000100020515/*********************************************************************/
+000200020515/*                                                                   */
+000300020516/* Questo programma controlla che la fusione sia terminata bene.     */
+000400020515/*                                                                   */
+000500020515/*********************************************************************/
+000600020515
+000700020514             PGM
+000800020514
+000900020516             DCL        VAR(&LIB101) TYPE(*CHAR) LEN(10) +
+001000020516                          VALUE('SDITRA101')
+001100020516             DCL        VAR(&LIB201) TYPE(*CHAR) LEN(10) +
+001200020516                          VALUE('GAITRA201')
+001300020516             DCL        VAR(&LIBGRU) TYPE(*CHAR) LEN(10) +
+001400020516                          VALUE('GAITRAGRU')
+001500020516             DCL        VAR(&FLGSDITRA) TYPE(*CHAR) LEN(1) VALUE('1')
+001600020516             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001700020516             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+001800020516             DCL        VAR(&POSTADET) TYPE(*CHAR) LEN(198)
+001900020516
+002000020516/*-------------------------------------------------------------------*/
+002100020516/* Controllo esistenza libreria SDITRA101.                           */
+002200020516/*                                                                   */
+002300020516             CHKOBJ     OBJ(QSYS/&LIB101) OBJTYPE(*LIB)
+002400020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+002500020516             CHGVAR     VAR(&FLGSDITRA) VALUE('0')
+002600020516             ENDDO
+002700020516/*                                                                   */
+002800020516/*-------------------------------------------------------------------*/
+002900020516
+003000020516/*-------------------------------------------------------------------*/
+003100020516/* Nella libreria GRU devono esistere i file.                        */
+003200020516/*                                                                   */
+003300020516             CHKOBJ     OBJ(&LIBGRU/CNACO00F) OBJTYPE(*FILE)
+003400020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+003500020516             CHGVAR     VAR(&ESITO) VALUE('1')
+003600020516             ENDDO
+003700020515
+003800020516             CHKOBJ     OBJ(&LIBGRU/CNIND00F) OBJTYPE(*FILE)
+003900020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+004000020516             CHGVAR     VAR(&ESITO) VALUE('1')
+004100020516             ENDDO
+004200020516
+004300020516             CHKOBJ     OBJ(&LIBGRU/CNCLP00F) OBJTYPE(*FILE)
+004400020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+004500020516             CHGVAR     VAR(&ESITO) VALUE('1')
+004600020516             ENDDO
+004700020516
+004800020516             CHKOBJ     OBJ(&LIBGRU/FNCLS00F) OBJTYPE(*FILE)
+004900020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+005000020516             CHGVAR     VAR(&ESITO) VALUE('1')
+005100020516             ENDDO
+005200020516/*                                                                   */
+005300020516/*-------------------------------------------------------------------*/
+005400020514
+005500020516/*-------------------------------------------------------------------*/
+005600020516/* Solo se la libreria SDITRA101 esiste.                             */
+005700020516/* Controllo che esistano i file di saòvataggio.                     */
+005800020516/*                                                                   */
+005900020516             IF         COND(&FLGSDITRA *EQ '1') THEN(DO)
+006000020516
+006100020516             CHKOBJ     OBJ(&LIB101/CNACO101) OBJTYPE(*FILE)
+006200020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+006300020516             CHGVAR     VAR(&ESITO) VALUE('1')
+006400020516             ENDDO
+006500020516
+006600020516             CHKOBJ     OBJ(&LIB101/CNIND101) OBJTYPE(*FILE)
+006700020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+006800020516             CHGVAR     VAR(&ESITO) VALUE('1')
+006900020516             ENDDO
+007000020516
+007100020516             CHKOBJ     OBJ(&LIB101/CNCLP101) OBJTYPE(*FILE)
+007200020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+007300020516             CHGVAR     VAR(&ESITO) VALUE('1')
+007400020516             ENDDO
+007500020516
+007600020516             CHKOBJ     OBJ(&LIB101/FNCLS101) OBJTYPE(*FILE)
+007700020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+007800020516             CHGVAR     VAR(&ESITO) VALUE('1')
+007900020516             ENDDO
+008000020516
+008100020516             ENDDO
+008200020516/*                                                                   */
+008300020516/*-------------------------------------------------------------------*/
+008400020516
+008500020516/*-------------------------------------------------------------------*/
+008600020516/*                                                                   */
+008700020516 ERRORE:     IF         COND(&ESITO *EQ '1') THEN(DO)
+008800020516
+008900020516             CHGVAR     VAR(&POSTATES) VALUE('ERRORE Fusione +
+009000020516                          CNACO00F in GRU.')
+009100020516             CHGVAR     VAR(&POSTADET) VALUE('La fusione di CNACO00F +
+009200020516                          in GRU è terminata in modo anomalo.')
+009300020516             CALL       PGM(GAITRAOBJ/TNSYM0C) PARM(&POSTATES +
+009400020516                          &POSTADET)
+009500020514
+009600020516             ENDDO
+009700020516/*                                                                   */
+009800020516/*-------------------------------------------------------------------*/
+009900020516
+010000020514 ENDPGM:     ENDPGM

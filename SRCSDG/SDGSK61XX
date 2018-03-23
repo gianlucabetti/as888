@@ -1,0 +1,3261 @@
+000100000000     H*PARMS DFTACTGRP(*NO) BNDDIR(PJXBND PJCBND) ACTGRP(*CALLER)
+000200000000     H*PARMS OPTION(*NOXREF *NODEBUGIO) CVTOPT(*DATETIME)
+000300000000     H DECEDIT('0,') DATEDIT(*DMY.)
+000400000000      ********************************************************************
+000500000000      *
+000600000000      *         ------------------------------------------------
+000700000000      *                            CU 2015
+000800000000      *                   Creazione file telematico
+000900000000      *         ------------------------------------------------
+001000000000      *
+001100000000     F*----------------------------------------------------------------
+001200000000R172 X****FND77007L  IF   E           K DISK
+001300000000R172 FND77007L  UF   E           K DISK
+001400000000     F*----------------
+001500000000     F* File contenente i dati da trasmettere all'agenzia
+001600000000     FSDGCUW00F UF A E             DISK    UsrOpn
+001700000000     F                                     InfDs(INFO00)
+001800000000     F*-------------
+001900000000     F* Dati anagrafici aggiuntivi
+002000000000     F* Key: Sogg/DtFiVl/Sys/NrAsInt      UNIQUE
+002100000000     FSDGSO301L IF   E           K DISK
+002200000000     F*-------------
+002300000000     FANSIF01L  IF   E           K DISK
+002400000000     D*-------------
+002500000000     D* Prototipo per la procedura Euro
+002600000000     D/COPY *LIBL/SRCCPY,PJX002PR
+002700000000     D*----------------
+002800000000     D* Parametro di base
+002900000000     D XPAOUT          DS          2000
+003000000000     D*----------------
+003100000000     D* PARAMETRI ESTERNI
+003200000000     D KPJBA         E DS
+003300000000     D*----------------
+003400000000     D* Valori assunti
+003500000000     D XMPEDS        E DS                  INZ
+003600000000     D XMPEDS1       E DS                  INZ
+003700000000     D DSInterm        DS                  INZ
+003800000000     D $IdProd                       16A
+003900000000     D $FisInt                       16A
+004000000000     D $ImpTrs                        1A
+004100000000     D $FirInt                       30A
+004200000000     D $ImpDta                       10A
+004300000000     D $FisSog                       16A
+004400000000     D $CarSog                        2A
+004500000000     D $CogSog                       24A
+004600000000     D $NomSog                       20A
+004700000000     D $FisDic                       11A
+004800000000     D $DtFirDic                     10A
+004900000000     D $FirDic                       30A
+005000000000     D*-------------
+005100000000     D DSInterm2       DS                  INZ
+005200000000     D $Telefon                      12A
+005300000000     D $Email                        69A
+005400000000     D*----------------
+005500000000     D* Parametri ricevuti
+005600000000     D SDGSK61DS     E DS
+005700000000     D*-------------
+005800000000     D* Dati di ambiente ottenuti da SDGSOCDR
+005900000000     D SOC001        E DS                  EXTNAME(SDGSOCDS )
+006000000000     D*-------------
+006100000000     D* DS Interna per dati di output di SDGSOCDR
+006200000000     D XSOCDS          S           1000
+006300000000     D*----------------
+006400000000     D* Reperimento nome PGM
+006500000000     D STATUS         SDS           333
+006600000000     D  DSPGM            *PROC
+006700000000     D*----------------
+006800000000     D* Richiamo a SDGTABDR
+006900000000     D SDGTABDS      E DS                  inz
+007000000000     D*----------------
+007100000000     D* tabelle delle nature giuridiche
+007200000000     D ANGG16DS      E DS                  INZ
+007300000000     D*------------
+007400000000     D* Immagine SDGCUW00F
+007500000000     D SDGCUWDS      E DS                  ExtName(SDGCUW00F)
+007600000000     D*------------
+007700000000     D* Ds tracciati appoggio
+007800000000     D SDGSK61DSA    E DS
+007900000000     D SDGSK61DSB    E DS
+008000000000     D SDGSK61DSD    E DS
+008100000000     D SDGSK61DSH    E DS
+008200000000     D SDGSK61DSZ    E DS
+008300000000     D*-------------
+008400000000     D Info00          DS           512
+008500000000     D  NrrCuw               397    400B 0
+008600000000     D*----------------
+008700000000R172 X**** Cnt_Righe       S              7S 0 Inz(*Zero)
+008800000000R172 D Cnt_Righe       S              7S 0 Inz(1)
+008900000000     D*
+009000000000     D Cnt_D           S              7S 0 Inz(*Zero)
+009100000000     D CntDA           S              7S 0 Inz(*Zero)
+009200000000     D Prog_DA         S              3S 0 Inz(*Zero)
+009300000000     D*
+009400000000     D Cnt_H           S              7S 0 Inz(*Zero)
+009500000000     D CntAU           S              7S 0 Inz(*Zero)
+009600000000     D Prog_AU         S              3S 0 Inz(*Zero)
+009700000000     D*----------------
+009800000000     D* Salvataggio KEY
+009900000000     D SavKey          DS
+010000000000     D SavCdf                              Like(N77Cdf    )
+010100000000     D SavCde                              Like(N77Cde    )
+010200000000     D SavC77                              Like(N77C77    )
+010300000000R211 D SavOSCDF1                           Like(N77OSCDF1 )
+010400000000R211 D SavOSCDF2                           Like(N77OSCDF2 )
+010500000000R211 D SavOSCDF3                           Like(N77OSCDF3 )
+010600000000     D
+010700000000     D* Nuova       KEY
+010800000000     D NewKey          DS
+010900000000     D N77Cdf
+011000000000     D N77Cde
+011100000000     D N77C77
+011200000000R211 D N77OSCDF1
+011300000000R211 D N77OSCDF2
+011400000000R211 D N77OSCDF3
+011500000000     D*----------------
+011600000000     D* campi di lavoro
+011700000000     D $NrRecTot       S              9S 0 Inz(*Zero)
+011800000000     D SavNrrCuw       S              9S 0 Inz(*Zero)
+011900000000R172 D SavProtCea      S                   Like(N77ProtCea)
+012000000000     D*----------------
+012100000000     D WImp004         S             19S 3
+012200000000     D WImp005         S             19S 3
+012300000000R169 D WImp0051        S             19S 3
+012400000000     D WImp006         S             19S 3
+012500000000     D WImp007         S             19S 3
+012600000000R169 D WImp0071        S             19S 3
+012700000000     D WImp008         S             19S 3
+012800000000     D WImp009         S             19S 3
+012900000000     D WImp010         S             19S 3
+013000000000     D WImp011         S             19S 3
+013100000000     D WImp012         S             19S 3
+013200000000     D WImp013         S             19S 3
+013300000000     D WImp014         S             19S 3
+013400000000     D WImp015         S             19S 3
+013500000000     D WImp016         S             19S 3
+013600000000     D WImp017         S             19S 3
+013700000000     D WImp018         S             19S 3
+013800000000     D WImp019         S             19S 3
+013900000000     D WImp020         S             19S 3
+014000000000     D WImp021         S             19S 3
+014100000000     D WImp022         S             19S 3
+014200000000     D WImp023         S             19S 3
+014300000000R211 D WImp034         S             19S 3
+014400000000  "  D WImp035         S             19S 3
+014500000000  "  D WImp037         S             19S 3
+014600000000  "  D WImp038         S             19S 3
+014700000000  "  D WImp039         S             19S 3
+014800000000  "  D WImp041         S             19S 3
+014900000000  "  D WImp042         S             19S 3
+015000000000  "  D WImp053         S             19S 3
+015100000000  "  D WImp054         S             19S 3
+015200000000  "  D WImp055         S             19S 3
+015300000000  "  D WImp056         S             19S 3
+015400000000  "  D WImp057         S             19S 3
+015500000000  "  D WImp058         S             19S 3
+015600000000  "  D WImp059         S             19S 3
+015700000000  "  D WImp060         S             19S 3
+015800000000  "  D WImp061         S             19S 3
+015900000000  "  D WImp062         S             19S 3
+016000000000  "  D WImp102         S             19S 3
+016100000000  "  D WImp103         S             19S 3
+016200000000  "  D WImp106         S             19S 3
+016300000000  "  D WImp107         S             19S 3
+016400000000  "  D WImp131         S             19S 3
+016500000000  "  D WImp132         S             19S 3
+016600000000  "  D WImp133         S             19S 3
+016700000000  "  D WImp134         S             19S 3
+016800000000  "  D WImp135         S             19S 3
+016900000000  "  D WImp136         S             19S 3
+017000000000  "  D WImp137         S             19S 3
+017100000000  "  D WImp138         S             19S 3
+017200000000  "  D*----------------
+017300000000  "  D* Campi alfabetici da salvare
+017400000000  "  D*  Dati previdenziali
+017500000000  "  D WDpCdf          S                   Like(N77DpCdf)
+017600000000  "  D WDpDen          S                   Like(N77DpDen)
+017700000000  "  D WDpCenP         S                   Like(N77DpCenP)
+017800000000  "  D WDpCazi         S                   Like(N77DpCazi)
+017900000000  "  D WDpCate         S                   Like(N77DpCate)
+018000000000  "  D*  Altri contributi
+018100000000  "  D WDpAcon         S                   Like(N77DpAcon)
+018200000000  "  D*  Redditi erogati da altri soggetti
+018300000000  "  D WAsCdf          S                   Like(N77AsCdf)
+018400000000  "  D*  Casi particolari operazioni straordinarie
+018500000000  "  D WOsCdf1         S                   Like(N77OsCdf1)
+018600000000  "  D WOsCdf2         S                   Like(N77OsCdf2)
+018700000000  "  D WOsCdf3         S                   Like(N77OsCdf3)
+018800000000  "  D*  Somme liquidate a seguito di pignoramento presso terzi
+018900000000  "  D WF2Cdf          S                   Like(N77F2Cdf)
+019000000000  "  D WF2Rino         S                   Like(N77F2Rino)
+019100000000  "  D WF2Cdf2         S                   Like(N77F2Cdf2)
+019200000000R211 D WF2Rino2        S                   Like(N77F2Rino2)
+019300000000     D*----------------
+019400000000     D WImporto        S             19S 3
+019500000000     D Importo16_0     S             16S 0
+019600000000     D Importo16_2     S             16S 2
+019700000000     D Importo16A      S             16A
+019800000000     D $FlgNeg         S              1A   Inz('0')
+019900000000R172 D $RcdOk          S              1A
+020000000000     D*-------------
+020100000000     D CampoWrk        DS
+020200000000     D CampoInt                1     14
+020300000000     D CampoDec               15     16
+020400000000     D*
+020500000000     D CampoIntero     DS
+020600000000     D  Int                    1     13
+020700000000     D  virgola               14     14
+020800000000     D  Dec                   15     16
+020900000000     D*-------------
+021000000000     D SavCodice       S                   Like(N77Codice )
+021100000000     D UDateISO        S               D
+021200000000     D $TpErrore       S              2A
+021300000000     D SoloPrimaVolta  S              1A   Inz('1')
+021400000000     D $Errori         S              1A   Inz('0')
+021500000000     D $Fine770        S              1A   Inz('0')
+021600000000     D $FlDatiAna      S              1A   Inz('0')
+021700000000     D $FlDatiImp      S              1A   Inz('0')
+021800000000     D*-------------
+021900000000     D $CdFiscSog      S                   Like(SO3CdFisc )
+022000000000     D $CdIVASog       S                   Like(SO3PartIva )
+022100000000     D $CogRagSog      S                   Like(SO3CogRag)
+022200000000     D $NomeSog        S                   Like(SO3Nome )
+022300000000     D $DtNascSog      S                   Like(SO3DtNasc)
+022400000000     D $LocNascSog     S                   Like(SO3LocNasc)
+022500000000     D $PrvNascSog     S                   Like(SO3PrvNasc)
+022600000000     D $StatoSog       S                   Like(SO3Stato   )
+022700000000     D $StaFedSog      S                   Like(SO3StaFed  )
+022800000000     D $LocalitSog     S                   Like(SO3Localit)
+022900000000     D $IndirESog      S                   Like(SO3IndirE  )
+023000000000     D $SexSog         S              1A
+023100000000     D*------
+023200000000     D $CdFisc         S                   Like(SO3CdFisc)
+023300000000     D $PartIVA        S                   Like(SO3PartIva)
+023400000000     D WrKNatGiu       S              2A
+023500000000     D WSavQuaD        S              2A
+023600000000     D WSavQuaH        S              2A
+023700000000     D*----------------
+023800000000     D* Ds flag ansif
+023900000000     D                 DS
+024000000000     D  SocSogg               31     38
+024100000000     D  WrkFlgOpe              1     50
+024200000000     D*----------------
+024300000000     D* Ds per nome file
+024400000000     D                 DS
+024500000000     D  WAnno                  3      6  0
+024600000000     D  WPer                   7      8
+024700000000     D  WPrgInvio              9     10  0
+024800000000     D  WNumero                1     10
+024900000000     D*--
+025000000000     D* ogni elemento della tabella Skiera è costituito da:
+025100000000     D* - 1 campo-codice di 8 caratteri;
+025200000000     D* - 1 campo-valore di 16 caratteri.
+025300000000     D*
+025400000000     D                 DS
+025500000000     D  Cod_Elenco             1      2
+025600000000     D  Cod_Rigo               3      5  0
+025700000000     D  Cod_Colo               6      8  0
+025800000000     D  Campo_Codice           1      8
+025900000000     D*
+026000000000     D                 DS
+026100000000     D  Campo                  1     16
+026200000000     D  C15I                  17     61
+026300000000     D    C15                        15    Dim(03) Overlay(C15I)
+026400000000     D  C60                    1     61
+026500000000     D*-------------
+026600000000     D* Elementi della variabile CAMPO
+026700000000     D Conta_Rigo      S              3S 0 Inz(*Zero)
+026800000000     D Conta_Colo      S              3S 0 Inz(*Zero)
+026900000000     D*-------------
+027000000000     D* tabella per i dati NON posizionali del record D
+027100000000     D Max$I           C                   CONST(100)
+027200000000     D Skiera          S             24    DIM(Max$I)
+027300000000     D $I              S              3S 0
+027400000000     D*-------------
+027500000000     D* tabella per i dati NON posizionali del record H
+027600000000     D Max$H           C                   CONST(100)
+027700000000     D SkieraH         S             24    DIM(Max$H)
+027800000000     D $H              S              3S 0
+027900000000     D*--
+028000000000     D Sk_Campo        S              1    DIM(Max$X)
+028100000000     D Max$X           C                   CONST(61)
+028200000000     D $X              S              3S 0
+028300000000     D*----------------
+028400000000     D* questa schiera serve per togliere gli zeri non significativi
+028500000000     D* alle caselle che contengono degli importi dei campi posizionali
+028600000000     D Max$Z           C                   CONST(16)
+028700000000     D $Z              S              3S 0
+028800000000     D*
+028900000000     D Sk_Importo      S              1    DIM(Max$Z)
+029000000000     D*---------------------------------------------------
+029100000000     D* Elemento tabella Skiera :
+029200000000     D* campo 16 caratteri (valore)
+029300000000     D                 DS
+029400000000     D  Campo_Valore           1     16
+029500000000     D  Caratt_45             17     61
+029600000000     D*-------------
+029700000000     D* variabili per invio multiplo
+029800000000     D $MultiInvio     S              1A   Inz(*Off)
+029900000000     D $NrInvii        S              5S 0 Inz(0)
+030000000000     D $ProgrInvio     S              5S 0 Inz(0)
+030100000000     D*-------------
+030200000000     D WImpInp         S                   Like(ImporD0202)
+030300000000     D WImpOut         S                   Like(ImporD0202)
+030400000000     D*-------------
+030500000000     D DtAMG           DS
+030600000000     D  AMGAnno                1      4
+030700000000     D  T1                     5      5
+030800000000     D  AMGMese                6      7
+030900000000     D  T2                     8      8
+031000000000     D  AMGGiorno              9     10
+031100000000     D*-------------
+031200000000     D DtGMA           DS
+031300000000     D  GMAGiorno              1      2  0
+031400000000     D  GMAMese                3      4  0
+031500000000     D  GMAAnno                5      8  0
+031600000000     D*-------------
+031700000000     D WrkDt           S              8A
+031800000000     D*---------------------------------------------------------------*
+031900000000     D DatMin          C                   CONST('0001-01-01')
+032000000000     D CostFile        C                   CONST('Certificaz. Unica')
+032100000000     C******************************************************
+032200000000     C*                MAIN LINE PROGRAM
+032300000000     C******************************************************
+032400000000     C*
+032500000000     C                   EXSR      INZVAR
+032600000000     C*
+032700000000     C* Dati Rappresentante
+032800000000     C                   EXSR      RepDatInter
+032900000000     C                   Exsr      RepDatInter2
+033000000000     C*
+033100000000     C* Azzeramento
+033200000000     C                   EXSR      AzzeraProg
+033300000000     C*
+033400000000     C*-----------------------------------------------
+033500000000     C* LETTURA DATI
+033600000000     C*
+033700000000     C* Elaborazione dati per preparazione invio
+033800000000     C                   EXSR      ElaboraDati
+033900000000     C*
+034000000000     C* Determino nr invii
+034100000000     C                   EXSR      RepNrInvii
+034200000000     C*
+034300000000     C                   if        $NrInvii      > 1
+034400000000     C                   Eval      $MultiInvio    = *On
+034500000000     C                   else
+034600000000     C                   Eval      $MultiInvio    = *Off
+034700000000     C                   endif
+034800000000     C*
+034900000000     C*-----------------------------------------------
+035000000000     C*
+035100000000     C* ELABORAZIONE DATI per SCRITTURA TELEMATICO ---
+035200000000     C*
+035300000000     C*
+035400000000     C* Se ho record allora continuo
+035500000000     C                   if        $NrRecTot     > 0
+035600000000     C*
+035700000000     C* Azzeramento
+035800000000     C                   EXSR      AzzeraProg
+035900000000     C*
+036000000000     C* Unico invio  o multi invio
+036100000000     C                   if        $MultiInvio    = *Off
+036200000000     C                   Z-Add     1             $ProgrInvio
+036300000000     C                   EXSR      GesSingInv
+036400000000     C                   else
+036500000000     C                   EXSR      GesMultInv
+036600000000     C                   endif
+036700000000     C*
+036800000000     C                   endif
+036900000000     C*
+037000000000     C                   EXSR      ENDPGM
+037100000000     C*
+037200000000     C/EJECT
+037300000000     C************************************************************
+037400000000     C* FINE PROGRAMMA
+037500000000     C************************************************************
+037600000000     C     ENDPGM        BEGSR
+037700000000     C*
+037800000000     C                   if        $Errori     = *On
+037900000000     C                   Eval      ERRK61      = '1'
+038000000000     C                   endif
+038100000000     C*
+038200000000     C                   MoveL     SDGSK61DS     KPJBU
+038300000000     C                   SETON                                        LR
+038400000000     C*
+038500000000     C                   RETURN
+038600000000     C*
+038700000000     C                   ENDSR
+038800000000     C/EJECT
+038900000000     C************************************************************
+039000000000     C* Reperimento dati Intermediario
+039100000000     C************************************************************
+039200000000     C     RepDatInter   BEGSR
+039300000000     C*
+039400000000     C* preparo i parametri di chiamata al driver
+039500000000     C                   Clear                   XMPEDS
+039600000000     C                   EVAL      TpChiamata = '01'
+039700000000     C                   EVAL      NChiavi = 5
+039800000000     C                   EVAL      VLogica = 2
+039900000000     C*
+040000000000     C* preparo le chiavi per la chiamata al driver
+040100000000     C                   Clear                   XMPEDS1
+040200000000     C                   MoveL     XSCSOC        DSMPESOC
+040300000000     C                   MoveL     'SDGSK60R R'  DSMPEPGM
+040400000000     C                   MoveL     *Blanks       DSMPEPRF
+040500000000     C* Si reperiscono i dati di default a seconda delle modalità con
+040600000000     C* cui il pgm è usato
+040700000000     C* MPETIP = 'PX'  pgm richiamato come lista (CMD4)
+040800000000     C* MPETIP = 'PV'  pgm richiamato da menù
+040900000000     C* MPETIP = 'PB'  x lancio Batch
+041000000000     C                   MoveL     'PB'          DSMPETIP
+041100000000     C*
+041200000000     C                   CALLB     'XMPE'
+041300000000     C                   PARM                    XMPEDS
+041400000000     C                   PARM                    XMPEDS1
+041500000000     C*
+041600000000     C     Risultato     IfEq      '0'
+041700000000     C                   MoveL     DSMPEPAR      DSInterm
+041800000000     C                   endif
+041900000000     C*
+042000000000     C                   ENDSR
+042100000000     C/EJECT
+042200000000     C************************************************************
+042300000000     C* Reperimento dati Intermediario
+042400000000     C************************************************************
+042500000000     C     RepDatInter2  BEGSR
+042600000000     C*
+042700000000     C* preparo i parametri di chiamata al driver
+042800000000     C                   Clear                   XMPEDS
+042900000000     C                   EVAL      TpChiamata = '01'
+043000000000     C                   EVAL      NChiavi = 5
+043100000000     C                   EVAL      VLogica = 2
+043200000000     C*
+043300000000     C* preparo le chiavi per la chiamata al driver
+043400000000     C                   Clear                   XMPEDS1
+043500000000     C                   MoveL     XSCSOC        DSMPESOC
+043600000000     C                   MoveL     'SDGSK60R S'  DSMPEPGM
+043700000000     C                   Move      'S'           DSMPEPGM
+043800000000     C                   MoveL     *blanks       DSMPEPRF
+043900000000     C* Si reperiscono i dati di default a seconda delle modalità con
+044000000000     C* cui il pgm è usato
+044100000000     C* MPETIP = 'PX'  pgm richiamato come lista (CMD4)
+044200000000     C* MPETIP = 'PV'  pgm richiamato da menù
+044300000000     C* MPETIP = 'PB'  x lancio Batch
+044400000000     C                   MoveL     'PB'          DSMPETIP
+044500000000     C*
+044600000000     C                   CALLB     'XMPE'
+044700000000     C                   PARM                    XMPEDS
+044800000000     C                   PARM                    XMPEDS1
+044900000000     C*
+045000000000     C     Risultato     IfEq      '0'
+045100000000     C                   MoveL     DSMPEPAR      DSInterm2
+045200000000     C                   EndIf
+045300000000     C*
+045400000000     C                   EndSR
+045500000000     C************************************************************
+045600000000     C* Azzeramento progressivi
+045700000000     C************************************************************
+045800000000     C     AzzeraProg    BEGSR
+045900000000     C*
+046000000000     C                   Z-Add     0             Cnt_D
+046100000000     C                   Z-Add     0             Cnt_H
+046200000000     C*
+046300000000     C                   Z-Add     0             CntDA
+046400000000     C                   Z-Add     0             CntAU
+046500000000     C*
+046600000000     C                   Z-Add     0             Prog_DA
+046700000000     C                   Z-Add     0             Prog_AU
+046800000000     C*
+046900000000     C                   Z-Add     0             $NrRecTot
+047000000000     C*
+047100000000     C                   ENDSR
+047200000000     C/EJECT
+047300000000     C******************************************************
+047400000000     C* Elaboro dati di invio per contare il numero di record
+047500000000     C******************************************************
+047600000000     C     ElaboraDati   BEGSR
+047700000000     C*
+047800000000     C                   EXSR      Inz770
+047900000000     C                   EXSR      Set770
+048000000000     C*
+048100000000     C* Conto quanti record per calcolare il numero di invii
+048200000000     C                   DOW       $Fine770    = *Off
+048300000000     C                   EXSR      Lettura770
+048400000000     C*
+048500000000     C                   if        N77Escludi <> '1'
+048600000000R172 C                             and
+048700000000 "   C                             (ProtocK61  =  0 and
+048800000000 "   C                              ProtoDK61  =  0 or
+048900000000R172 C                              $RcdOk = *on)
+049000000000R172 C                             or $Fine770  = *On
+049100000000     C****                         and N77Cde  =  *blank
+049200000000     C****                         and N77Num  =  *blank
+049300000000     C                   if        SoloPrimaVolta = *On
+049400000000     C                   EXSR      ElaboraKey
+049500000000     C                   endif
+049600000000     C*
+049700000000     C                   if        SavKey   <> NewKey  or
+049800000000     C                             $Fine770  = *On
+049900000000     C                   Add       1             $NrRecTot
+050000000000     C                   Add       1             CntDA
+050100000000     C                   Add       1             CntAU
+050200000000     C                   EXSR      ElaboraKey
+050300000000     C                   endif
+050400000000     C                   endif
+050500000000     C*
+050600000000     C                   endDo
+050700000000     C*
+050800000000     C                   ENDSR
+050900000000     C/EJECT
+051000000000     C******************************************************
+051100000000     C* Inizializzo campi
+051200000000     C******************************************************
+051300000000     C     Inz770        BEGSR
+051400000000     C*
+051500000000     C                   Eval      $Fine770    = *Off
+051600000000     C                   Clear                   NewKey
+051700000000     C*
+051800000000     C                   Eval      WImp004    =  0
+051900000000     C                   Eval      WImp005    =  0
+052000000000R169 C                   Eval      WImp0051   =  0
+052100000000     C                   Eval      WImp006    =  0
+052200000000     C                   Eval      WImp007    =  0
+052300000000R169 C                   Eval      WImp0071   =  0
+052400000000     C                   Eval      WImp008    =  0
+052500000000     C                   Eval      WImp009    =  0
+052600000000     C                   Eval      WImp010    =  0
+052700000000     C                   Eval      WImp011    =  0
+052800000000     C                   Eval      WImp012    =  0
+052900000000     C                   Eval      WImp013    =  0
+053000000000     C                   Eval      WImp014    =  0
+053100000000     C                   Eval      WImp015    =  0
+053200000000     C                   Eval      WImp016    =  0
+053300000000     C                   Eval      WImp017    =  0
+053400000000     C                   Eval      WImp018    =  0
+053500000000     C                   Eval      WImp019    =  0
+053600000000     C                   Eval      WImp020    =  0
+053700000000     C                   Eval      WImp021    =  0
+053800000000R211 X***                Eval      WImp022    =  0
+053900000000R211 X***                Eval      WImp023    =  0
+054000000000R211 C                   Eval      WImp034    =  0
+054100000000  "  C                   Eval      WImp035    =  0
+054200000000  "  C                   Eval      WImp037    =  0
+054300000000  "  C                   Eval      WImp038    =  0
+054400000000  "  C                   Eval      WImp039    =  0
+054500000000  "  C                   Eval      WImp041    =  0
+054600000000  "  C                   Eval      WImp042    =  0
+054700000000  "  C                   Eval      WImp053    =  0
+054800000000  "  C                   Eval      WImp054    =  0
+054900000000  "  C                   Eval      WImp055    =  0
+055000000000  "  C                   Eval      WImp056    =  0
+055100000000  "  C                   Eval      WImp057    =  0
+055200000000  "  C                   Eval      WImp058    =  0
+055300000000  "  C                   Eval      WImp059    =  0
+055400000000  "  C                   Eval      WImp060    =  0
+055500000000  "  C                   Eval      WImp061    =  0
+055600000000  "  C                   Eval      WImp062    =  0
+055700000000  "  C                   Eval      WImp102    =  0
+055800000000  "  C                   Eval      WImp103    =  0
+055900000000  "  C                   Eval      WImp106    =  0
+056000000000  "  C                   Eval      WImp107    =  0
+056100000000  "  C                   Eval      WImp131    =  0
+056200000000  "  C                   Eval      WImp132    =  0
+056300000000  "  C                   Eval      WImp133    =  0
+056400000000  "  C                   Eval      WImp134    =  0
+056500000000  "  C                   Eval      WImp135    =  0
+056600000000  "  C                   Eval      WImp136    =  0
+056700000000  "  C                   Eval      WImp137    =  0
+056800000000  "  C                   Eval      WImp138    =  0
+056900000000  "  C*
+057000000000  "  C                   Clear                   WDpCdf
+057100000000  "  C                   Clear                   WDpDen
+057200000000  "  C                   Clear                   WDpCenP
+057300000000  "  C                   Clear                   WDpCazi
+057400000000  "  C                   Clear                   WDpCate
+057500000000  "  C                   Clear                   WDpAcon
+057600000000  "  C                   Clear                   WAsCdf
+057700000000  "  C                   Clear                   WOsCdf1
+057800000000  "  C                   Clear                   WOsCdf2
+057900000000  "  C                   Clear                   WOsCdf3
+058000000000  "  C                   Clear                   WF2Cdf
+058100000000  "  C                   Clear                   WF2Rino
+058200000000  "  C                   Clear                   WF2Cdf2
+058300000000R211 C                   Clear                   WF2Rino2
+058400000000     C*
+058500000000     C                   ENDSR
+058600000000     C/EJECT
+058700000000     C************************************************************
+058800000000     C* inz ds
+058900000000     C************************************************************
+059000000000     C     Set770        BEGSR
+059100000000     C*
+059200000000     C                   Eval      SoloPrimaVolta = *On
+059300000000     C*
+059400000000     C                   Eval      N77Societa  = SocietaK61
+059500000000     C                   Eval      N77Acf      = AnnoK61
+059600000000     C     K0277007      setll     Nd77007l
+059700000000     C*
+059800000000     C                   ENDSR
+059900000000     C/EJECT
+060000000000     C******************************************************
+060100000000     C* Ciclo dei dati estratti
+060200000000     C******************************************************
+060300000000     C     Lettura770    BEGSR
+060400000000     C*
+060500000000     C     K0277007      reade     Nd77007l
+060600000000     C                   if        %eof(Nd77007l)
+060700000000     C                   eval      $Fine770  = *On
+060800000000     C                   endif
+060900000000R172 C*
+061000000000R172 C                   exsr      Sel770
+061100000000     C*
+061200000000     C                   ENDSR
+061300000000     C/EJECT
+061400000000R172 C******************************************************
+061500000000 "   C* Selezione dei record
+061600000000R172 C******************************************************
+061700000000     C     Sel770        BEGSR
+061800000000     C*
+061900000000     C                   eval      $RcdOk = *on
+062000000000     C*
+062100000000     C                   if        ProtocK61  <> 0 and
+062200000000     C                             ProtoDK61  =  0 and
+062300000000     C                             N77Protoc  <> ProtocK61
+062400000000     C                   eval      $RcdOk      = *off
+062500000000     C                   endif
+062600000000     C*
+062700000000     C                   if        ProtocK61  <> 0          and
+062800000000     C                             ProtoDK61  <> 0          and
+062900000000     C                             (N77Protoc  <> ProtocK61 or
+063000000000     C                              N77ProtCea <> ProtoDK61)
+063100000000     C                   eval      $RcdOk      = *off
+063200000000     C                   endif
+063300000000     C*
+063400000000R172 C                   ENDSR
+063500000000R172 C/EJECT
+063600000000R172 C******************************************************
+063700000000 "   C* Aggiorna record 770 con progressivo certificazione
+063800000000R172 C******************************************************
+063900000000     C     Aggiorna770   BEGSR
+064000000000     C*
+064100000000     C                   if        $Fine770  = *Off
+064200000000     C                   z-add     Cnt_Righe     N77ProtCei
+064300000000     C                   update    Nd770000
+064400000000     C                   endif
+064500000000     C*
+064600000000R172 C                   ENDSR
+064700000000R172 C/EJECT
+064800000000     C******************************************************
+064900000000     C* Salvataggio chiavi
+065000000000     C******************************************************
+065100000000     C     ElaboraKey    BEGSR
+065200000000     C*
+065300000000     C                   eval      SavCdf      = N77Cdf
+065400000000     C                   eval      SavCde      = N77Cde
+065500000000     C                   eval      SavC77      = N77C77
+065600000000R211 C                   eval      SavOSCDF1   = N77OSCDF1
+065700000000R211 C                   eval      SavOSCDF2   = N77OSCDF2
+065800000000R211 C                   eval      SavOSCDF3   = N77OSCDF3
+065900000000     C                   eval      SavCodice   = N77Codice
+066000000000R172 C                   eval      SavProtCea  = N77ProtCea
+066100000000     C*
+066200000000     C                   Eval      SoloPrimaVolta = *Off
+066300000000     C*
+066400000000     C                   ENDSR
+066500000000     C/EJECT
+066600000000     C************************************************************
+066700000000     C* Reperimento numero max di invii
+066800000000     C************************************************************
+066900000000     C     RepNrInvii    BEGSR
+067000000000     C*
+067100000000     C                   if        $NrRecTot   > 0
+067200000000     C                   Z-Add     $NrRecTot     WImpInp
+067300000000     C                   CallP     X0201MultC(WImpInp: 1: MaxRecK61:
+067400000000     C                                        '+': '0': 0: WImpOut)
+067500000000     C                   Z-Add     WImpOut       $NrInvii
+067600000000     C                   endif
+067700000000     C*
+067800000000     C                   ENDSR
+067900000000     C/EJECT
+068000000000     C******************************************************
+068100000000     C* Gestione singolo invio
+068200000000     C******************************************************
+068300000000     C     GesSingInv    BEGSR
+068400000000     C*
+068500000000     C                   EXSR      RepNomeF
+068600000000     C                   EXSR      GesFilTel
+068700000000     C*
+068800000000     C                   OPEN      SDGCUW00F
+068900000000     C*
+069000000000     C* Record A  testata della fornitura
+069100000000     C                   EXSR      WrtTpRecA
+069200000000     C*
+069300000000     C* Record B  testata della fornitura
+069400000000     C                   EXSR      WrtTpRecB
+069500000000     C*
+069600000000     C                   EXSR      Inz770
+069700000000     C                   EXSR      Set770
+069800000000     C*
+069900000000     C                   DOW       $Fine770    = *Off
+070000000000     C                   EXSR      Lettura770
+070100000000     C*
+070200000000     C                   if        N77Escludi <> '1'
+070300000000R172 C                             and
+070400000000 "   C                             (ProtocK61  =  0 and
+070500000000 "   C                              ProtoDK61  =  0 or
+070600000000 "   C                              $RcdOk = *on)
+070700000000R172 C                             or $Fine770  = *On
+070800000000     C****                         and N77Cde  =  *blank
+070900000000     C****                         and N77Num  =  *blank
+071000000000     C                   if        SoloPrimaVolta = *On
+071100000000     C                   EXSR      ElaboraKey
+071200000000     C                   endif
+071300000000     C*
+071400000000     C                   if        SavKey        <> NewKey  or
+071500000000     C                             $Fine770  = *On
+071600000000     C                   if        $I         <> 0
+071700000000     C*
+071800000000     C                   EXSR      WrtTpRecD
+071900000000     C                   EXSR      InzSkieraD
+072000000000     C*
+072100000000R172 C                   if        TipInvK61 <> 2
+072200000000     C                   EXSR      WrtTpRecH
+072300000000     C                   EXSR      InzSkieraH
+072400000000R172 C                   endif
+072500000000     C*
+072600000000     C                   Add       1             $NrRecTot
+072700000000     C                   Add       1             CntDA
+072800000000     C                   Add       1             CntAU
+072900000000     C                   EXSR      ElaboraKey
+073000000000     C                   endif
+073100000000     C                   endif
+073200000000     C*
+073300000000     C                   EXSR      ElaboraRecD
+073400000000     C*
+073500000000R172 C                   if        TipInvK61 <> 2
+073600000000     C                   EXSR      ElaboraRecH
+073700000000R172 C                   endif
+073800000000R172 C*
+073900000000R172 C                   EXSR      Aggiorna770
+074000000000     C                   endif
+074100000000     C*
+074200000000     C                   enddo
+074300000000     C*
+074400000000     C* Aggiorna record B con totale comunicazioni relative
+074500000000     C* a certificazioni lavoro autonomo
+074600000000     C                   EXSR      UpdTpRecB
+074700000000     C*
+074800000000     C* Record Z di coda della fornitura
+074900000000     C                   EXSR      WrtTpRecZ
+075000000000     C*
+075100000000     C                   EXSR      IscrCatF
+075200000000     C*
+075300000000     C                   CLOSE     SDGCUW00F
+075400000000     C*
+075500000000     C                   ENDSR
+075600000000     C/EJECT
+075700000000     C************************************************************
+075800000000     C* Reperimento nome file
+075900000000     C************************************************************
+076000000000     C     RepNomeF      BEGSR
+076100000000     C*
+076200000000     C                   Eval      WNumero     = *All'0'
+076300000000     C                   Z-Add     AnnoK61       WAnno
+076400000000     C                   Z-Add     $ProgrInvio   WPrgInvio
+076500000000     C                   Move      WNumero       $Numero
+076600000000     C*
+076700000000     C                   CALL      'X35NOMFR'
+076800000000     C                   PARM                    SocietaK61
+076900000000     C                   PARM      *Blank        $Unita            8
+077000000000     C                   PARM      'CU'          $CdScarico        2
+077100000000     C                   PARM                    $Numero           9
+077200000000     C                   PARM                    $File            10
+077300000000     C                   PARM                    $Libreria        10
+077400000000     C                   PARM                    $Errore           1
+077500000000     C*
+077600000000     C                   if        $Errore    <> '0'
+077700000000     C                   Eval      $TpErrore   = '10'
+077800000000     C                   EXSR      StpErrore
+077900000000     C                   EXSR      ENDPGM
+078000000000     C                   endif
+078100000000     C*
+078200000000     C                   ENDSR
+078300000000     C/EJECT
+078400000000     C************************************************************
+078500000000     C* Gestione file per invio telematico
+078600000000     C************************************************************
+078700000000     C     GesFilTel     BEGSR
+078800000000     C*
+078900000000     C* Creo già la descrizione del file
+079000000000     C                   Clear                   $DesFileO
+079100000000     C*
+079200000000     C                   Move      AnnoK61       AnnoA             4
+079300000000     C                   MoveL     AnnoA         $DesFileO
+079400000000     C*
+079500000000     C                   Cat       CostFile:1    $DesFileO
+079600000000     C                   Cat       XScSoc :1     $DesFileO
+079700000000     C*
+079800000000     C                   Move      UDateIso      $DtAlfa
+079900000000     C*
+080000000000     C                   Eval      $Libreria   = LibK61
+080100000000     C                   Eval      $Errore     = *Off
+080200000000     C*
+080300000000     C                   CALL      'SDGSK61C1'
+080400000000     C                   PARM                    $File
+080500000000     C                   PARM                    $Libreria
+080600000000     C                   PARM                    WTpDist           2
+080700000000     C                   PARM                    $DtAlfa          10
+080800000000     C                   PARM                    $DesFileI         8
+080900000000     C                   PARM                    $DesFileO        50
+081000000000     C                   PARM                    $Errore           1
+081100000000     C*
+081200000000     C                   if        $Errore    <> '0'
+081300000000     C                   Eval      $TpErrore   = '11'
+081400000000     C                   EXSR      StpErrore
+081500000000     C                   EXSR      ENDPGM
+081600000000     C                   endif
+081700000000     C*
+081800000000     C                   ENDSR
+081900000000     C/EJECT
+082000000000     C******************************************************
+082100000000     C* Riempimento dati per t.r. A
+082200000000     C******************************************************
+082300000000     C     WrtTpRecA     BEGSR
+082400000000     C*
+082500000000     C                   Clear                   SDGCUW000
+082600000000     C                   Clear                   SDGSK61DSA
+082700000000     C*
+082800000000     C*-----------------------------------
+082900000000     C* DATI IDENTIFICATIVI DELLA FORNITURA
+083000000000     C*
+083100000000     C*-
+083200000000     C* Tipo record
+083300000000     C                   MoveL     'A'           K61ATR
+083400000000     C*-
+083500000000     C* Codice identificativo della fornitura
+083600000000R211 X****               MoveL     'CUR15'       K61AFOR
+083700000000R211 C                   MoveL     'CUR16'       K61AFOR
+083800000000     C*-
+083900000000     C* Tipo fornitore
+084000000000     C*      "01" Soggetti che inviano la propria
+084100000000     C*      "10" Intermediari
+084200000000     C                   MoveL     '01'          K61ATFO
+084300000000     C                   if        $FisInt       <> *Blanks
+084400000000     C                   MoveL     '10'          K61ATFO
+084500000000     C                   endif
+084600000000     C*-
+084700000000     C* Codice fiscale del contribuente
+084800000000     C                   MoveL     XScCdF        K61ACFI
+084900000000     C                   if        $FisInt       <> *Blanks
+085000000000     C                   Move      $FisInt       K61ACFI
+085100000000     C                   endif
+085200000000     C*
+085300000000     C*-----------------------------------
+085400000000     C*-
+085500000000     C* Carattere di controllo
+085600000000     C                   MoveL     'A'           K61AK1
+085700000000     C*-
+085800000000     C* Elementi di fine riga
+085900000000     C* Impostare i valori esadecimali '0D' e '0A'
+086000000000     C* (caratteri ASCI 'CR' ed 'LF')
+086100000000     C*
+086200000000     C                   Eval      K61AK2  = *Blanks
+086300000000     C                   Eval      K61AK2  = X'0D25'
+086400000000     C*
+086500000000     C                   MoveL     SDGSK61DSA    CUWREC
+086600000000     C                   write     SDGCUW000
+086700000000     C                   feod      SDGCUW00F
+086800000000     C*
+086900000000     C                   ENDSR
+087000000000     C/EJECT
+087100000000     C******************************************************
+087200000000     C* Riempimento dati per t.r. B
+087300000000     C******************************************************
+087400000000     C     WrtTpRecB     BEGSR
+087500000000     C*
+087600000000     C                   Clear                   SDGCUW000
+087700000000     C                   Clear                   SDGSK61DSB
+087800000000     C*
+087900000000     C* Tipo record
+088000000000     C                   MoveL     'B'           K61BTR
+088100000000     C*-
+088200000000     C* Codice fiscale del contribuente
+088300000000     C                   MoveL     XScCdF        K61BCFI
+088400000000     C* Progressivo modulo
+088500000000     C                   Z-Add     1             K61BPRGMOD
+088600000000     C*-
+088700000000     C* Identificativo produttore software
+088800000000     C                   MoveL     $IdProd       K61BIPS
+088900000000     C*-
+089000000000     C* Tipo Comunicazione
+089100000000     C                   Move      '0'           K61BCSOS
+089200000000     C                   Move      '0'           K61BCANN
+089300000000     C*-
+089400000000     C                   Select
+089500000000     C**                 When      TIPINVK61     = 0
+089600000000     C**                 Move      '1'           K61BCORD
+089700000000     C* comunicazione da sostituire
+089800000000     C                   When      TIPINVK61     = 1
+089900000000     C                   Move      '1'           K61BCSOS
+090000000000     C* comunicazione da annullare
+090100000000     C                   When      TIPINVK61     = 2
+090200000000     C                   Move      '1'           K61BCANN
+090300000000     C                   EndSl
+090400000000     C*
+090500000000     C*
+090600000000     C* DATI IDENTIFICATIVI DEL CONTRIBUENTE
+090700000000     C* reperisco la natura giuridica del contribuente
+090800000000     C                   MoveL     XScNCR        WrkNatGiu
+090900000000     C                   EXSR      RepNatGiu
+091000000000     C*
+091100000000     C                   Select
+091200000000     C*-
+091300000000     C*-----------------------
+091400000000     C* PERSONA FISICA
+091500000000     C* da impostare solo nel caso di persona fisica
+091600000000     C                   When      TPNG16      = '1'
+091700000000     C*
+091800000000     C                   EXSR      RepPersFis
+091900000000     C*-
+092000000000     C* Cognome
+092100000000     C                   MoveL     $CogRagSog    K61BCOGNO
+092200000000     C*-
+092300000000     C* Nome
+092400000000     C                   MoveL     $NomeSog      K61BNOME
+092500000000     C*-----------------------
+092600000000     C* PERSONA GIURIDICA
+092700000000     C* da impostare solo nel caso di persona non fisica
+092800000000     C                   When      TPNG16      = '2'  or
+092900000000     C                             TPNG16      = '3'
+093000000000     C*-
+093100000000     C* Denominazione
+093200000000     C                   MoveL     XSCRGS        K61BDENOMI
+093300000000     C*
+093400000000     C                   EndSl
+093500000000     C*
+093600000000     C* e-mail
+093700000000     C                   MoveL     $Email        K61BEMAIL
+093800000000     C*
+093900000000     C* Telefono
+094000000000     C                   if        $Telefon <> *blank
+094100000000     C                   move      $Telefon      K61Btel
+094200000000     C                   endif
+094300000000     C*
+094400000000     C*-----------------------------------
+094500000000     C* DATI SOGGETTO CHE SI IMPEGNA ALLA TRASMISSIONE
+094600000000     C* (soggetto che effettua la comunicazione, se diverso dal soggetto
+094700000000     C*  a cui si riferisce la comunicazione)
+094800000000     C*
+094900000000     C                   Move      *Blanks       K61BCDFIS1
+095000000000     C                   Move      *zeros        K61BCDFIS2
+095100000000     C* Se significativo
+095200000000     C                   if        $FisSog       <> *Blanks
+095300000000     C* Cod.Fiscale del rappresentante
+095400000000     C                   Move      $FisSog       K61BCDFIS1
+095500000000     C* Cod.Carica
+095600000000     C                   Move      $CarSog       K61BCARR1
+095700000000     C* Persona Fisica
+095800000000     c                   if        $COGSOG       <> *Blanks
+095900000000     C                   Eval      K61BCOGNO1   = $CogSOG
+096000000000     C                   Eval      K61BNOME1    = $NomSOG
+096100000000     C                   endif
+096200000000     C*
+096300000000     C* Cod.Fiscale società dichiarante
+096400000000     C                   if        $FisDic <> *blank
+096500000000     C                   Movel     $FisDic       K61BCDFIS2
+096600000000     C                   endif
+096700000000     C*-
+096800000000     C                   endif
+096900000000     C*-----------------------------------
+097000000000     C*
+097100000000R211 X***                z-add     0             K61BNrDip
+097200000000     C                   z-add     0             K61BNrAut
+097300000000     C                   Move      '0'           K61BQuaCT
+097400000000     C*
+097500000000     C* Firma del dichiarante
+097600000000     C                   if        $FirDic    <> *blank
+097700000000     C                   Eval      K61BFirma   = '1'
+097800000000     C                   endif
+097900000000     C*
+098000000000     C*-----------------------------------
+098100000000     C* DATI SOGGETTO CHE SI IMPEGNA ALLA TRASMISSIONE (Intermediario)
+098200000000     C*
+098300000000     C* Cod.Fisc.Intermediario
+098400000000     C                   Move      *Blanks       K61BCFINT
+098500000000     C* Impegno alla presentazione
+098600000000     C                   Z-Add     0             K61BIMPE
+098700000000     C* Data dell'Impegno alla presentazione
+098800000000     C                   Move      *All'0'       K61BDTIMPE
+098900000000     C* Firma
+099000000000     C                   move      '0'           K61BFIRINT
+099100000000     C*
+099200000000     C* Se significativo
+099300000000     C                   if        $FisInt       <> *Blanks
+099400000000     C* Cod.Fisc.Intermediario
+099500000000     C                   Move      $FisInt       K61BCFINT
+099600000000     C* Impegno alla presentazione
+099700000000     C                   Move      $ImpTrs       K61BIMPE
+099800000000     C* Data dell'Impegno alla presentazione
+099900000000     C                   Move      $ImpDta       DtAMG
+100000000000     C                   EXSR      ValorizDTA
+100100000000     C                   Eval      K61BDTIMPE   = WrkDt
+100200000000     C* Firma dell'intemediario
+100300000000     C                   if        $FirInt    <> *blank
+100400000000     C                   Eval      K61BFirInt  = '1'
+100500000000     C                   endif
+100600000000     C                   endif
+100700000000     C*-
+100800000000     C*-----------------------------------
+100900000000     C*-
+101000000000     C* Carattere di controllo
+101100000000     C                   MoveL     'A'           K61BK1
+101200000000     C*-
+101300000000     C* Elementi di fine riga
+101400000000     C* Impostare i valori esadecimali '0D' e '0A'
+101500000000     C* (caratteri ASCI 'CR' ed 'LF')
+101600000000     C*
+101700000000     C                   Eval      K61BK2 =  *Blanks
+101800000000     C                   Eval      K61BK2 =  X'0D25'
+101900000000     C*
+102000000000     C                   MoveL     SDGSK61DSB    CUWREC
+102100000000     C                   write     SDGCUW000
+102200000000     C                   feod      SDGCUW00F
+102300000000     C                   z-add     NrrCuw        SavNrrCuw
+102400000000     C*
+102500000000     C                   ENDSR
+102600000000     C/EJECT
+102700000000     C******************************************************
+102800000000     C* Aggiorno record B
+102900000000     C******************************************************
+103000000000     C     UpdTpRecB     BEGSR
+103100000000     C*
+103200000000     C     2             chain     SdgCuw00f
+103300000000     C                   if        %found(SdgCuw00f)
+103400000000     C                   movel     CuwRec        SdgSk61DsB
+103500000000     C*
+103600000000R172 X****               z-add     Cnt_Righe     K61BNrAut
+103700000000R172 C                   z-add     Cnt_D         K61BNrAut
+103800000000     C*
+103900000000     C                   movel     SdgSk61DsB    CuwRec
+104000000000     C                   update    SdgCuw000
+104100000000     C                   endif
+104200000000     C*
+104300000000     C                   ENDSR
+104400000000     C/EJECT
+104500000000     C******************************************************
+104600000000     C* Reperimento della natura giuridica
+104700000000     C******************************************************
+104800000000     C     RepNatGiu     BEGSR
+104900000000     C*
+105000000000     C                   Reset                   SDGTABDS
+105100000000     C*
+105200000000     C                   MOVE      '1'           XTBRIC
+105300000000     C                   MOVE      SocietaK61    XTBAZI
+105400000000     C                   MOVE      *ZERO         XTBKEY
+105500000000     C                   MOVE      'G16'         XTBCOD
+105600000000     C                   MOVE      WrkNatGiu     XTBKEY
+105700000000     C                   CALL      'SDGTABDR'
+105800000000     C                   PARM                    SDGTABDS
+105900000000     C                   if        XTBERR      = *Off
+106000000000     C                   MoveL     XTBUNI        ANGG16DS
+106100000000     C                   endif
+106200000000     C*
+106300000000     C                   ENDSR
+106400000000     C/EJECT
+106500000000     C************************************************************
+106600000000     C* Reperisci dati persona fisica attraverso soggetto
+106700000000     C************************************************************
+106800000000     C     RepPersFis    BEGSR
+106900000000     C*
+107000000000     C                   Clear                   $CdFiscSog
+107100000000     C                   Clear                   $CdIVASog
+107200000000     C                   Clear                   $CogRagSog
+107300000000     C                   Clear                   $NomeSog
+107400000000     C                   Clear                   $DtNascSog
+107500000000     C                   Clear                   $LocNascSog
+107600000000     C                   Clear                   $PrvNascSog
+107700000000     C                   Clear                   $StatoSog
+107800000000     C                   Clear                   $StaFedSog
+107900000000     C                   Clear                   $LocalitSog
+108000000000     C                   Clear                   $IndirESog
+108100000000     C                   Clear                   $SexSog
+108200000000     C*
+108300000000     C                   Eval      SO3Sogg     = SocSogg
+108400000000     C                   Eval      SO3DtFiVl   = DatMin
+108500000000     C                   Eval      SO3Sys      = 0
+108600000000     C                   Eval      SO3NrAsInt  = 0
+108700000000     C*
+108800000000     C     K04SO301      CHAIN     SDGSO301L                          21
+108900000000     C                   if        *In21       = *Off
+109000000000     C                   MoveL(P)  SO3CdFisc     $CdFiscSog
+109100000000     C                   MoveL(P)  SO3PartIva    $CdIVASog
+109200000000     C                   MoveL(P)  SO3CogRag     $CogRagSog
+109300000000     C                   MoveL(P)  SO3Nome       $NomeSog
+109400000000     C                   Move      SO3DtNasc     $DtNascSog
+109500000000     C                   MoveL(P)  SO3LocNasc    $LocNascSog
+109600000000     C                   MoveL(P)  SO3PrvNasc    $PrvNascSog
+109700000000     C                   MoveL(P)  SO3Stato      $StatoSog
+109800000000     C                   MoveL(P)  SO3StaFed     $StaFedSog
+109900000000     C                   MoveL(P)  SO3Localit    $LocalitSog
+110000000000     C                   MoveL(P)  SO3IndirE     $IndirESog
+110100000000     C                   MoveL     SO3Sex        $SexSog
+110200000000     C                   endif
+110300000000     C*
+110400000000     C                   ENDSR
+110500000000     C/EJECT
+110600000000     C******************************************************
+110700000000     C* Valorizzazione data per telematico
+110800000000     C******************************************************
+110900000000     C     ValorizDTA    BEGSR
+111000000000     C*
+111100000000     C                   Clear                   WrkDt
+111200000000     C*
+111300000000     C                   Move      AMGAnno       GMAAnno
+111400000000     C                   Move      AMGMese       GMAMese
+111500000000     C                   Move      AMGGiorno     GMAGiorno
+111600000000     C*
+111700000000     C                   Eval      WrkDt        = DtGMA
+111800000000     C*
+111900000000     C                   ENDSR
+112000000000     C******************************************************
+112100000000     C* Scrittura t.r. D
+112200000000     C******************************************************
+112300000000     C     WrtTpRecD     BEGSR
+112400000000     C*
+112500000000R172 X****               add       1             Cnt_Righe
+112600000000     C*
+112700000000     C                   Clear                   SDGSK61DSD
+112800000000     C* Tipo Record
+112900000000     C                   Eval      K61DTR       = 'D'
+113000000000     C*
+113100000000     C* Cod.Fiscale
+113200000000     C                   Eval      K61DCFI      = XScCdF
+113300000000     C*
+113400000000     C* Progressivo modulo
+113500000000     C                   Eval      K61DPRGMOD   = 1
+113600000000     C*
+113700000000     C* Cod.Fiscale Percipiente
+113800000000     C                   Eval      K61DCFP      = SavCdf
+113900000000     C*
+114000000000     C* Progressivo Certificazione
+114100000000     C                   Eval      K61DPrgCer   = Cnt_Righe
+114200000000     C*
+114300000000     C* Protocollo
+114400000000     C                   Eval      K61DProt     = ProtocK61
+114500000000R172 C                   if        TIPINVK61     = 1 or
+114600000000R172 C                             TIPINVK61     = 2
+114700000000R172 C                   if        ProtodK61   <> 0
+114800000000     C                   Eval      K61DProtD    = ProtodK61
+114900000000R172 C                   else
+115000000000 "   C                   Eval      K61DProtD    = SavProtCea
+115100000000 "   C                   endif
+115200000000R172 C                   endif
+115300000000     C*
+115400000000     C* Tipo operazione
+115500000000     C                   Select
+115600000000     C* Sostituzione
+115700000000     C                   When      TIPINVK61     = 1
+115800000000     C                   Move      'S'           K61DAnnSos
+115900000000     C* Annullamento
+116000000000     C                   When      TIPINVK61     = 2
+116100000000     C                   Move      'A'           K61DAnnSos
+116200000000     C                   EndSl
+116300000000     C*
+116400000000     C* Singola certificazione confermata
+116500000000     C                   Move      '0'           K61DSCConf
+116600000000     C*
+116700000000     C                   MoveA     Skiera        K61DDATI
+116800000000     C*
+116900000000     C* Carattere di controllo
+117000000000     C                   MoveL     'A'           K61DK1
+117100000000     C*-
+117200000000     C* Elementi di fine riga
+117300000000     C* Impostare i valori esadecimali '0D' e '0A'
+117400000000     C* (caratteri ASCI 'CR' ed 'LF')
+117500000000     C*
+117600000000     C                   Eval      K61DK2  = *Blanks
+117700000000     C                   Eval      K61DK2  = X'0D25'
+117800000000     C*
+117900000000     C                   Add       1             Cnt_D
+118000000000     C                   Clear                   SDGCUW000
+118100000000     C                   Movel     SDGSK61DSD    CUWREC
+118200000000?    C                   write     SDGCUW000
+118300000000     C                   feod      SDGCUW00F
+118400000000R172 C*
+118500000000R172 C                   add       1             Cnt_Righe
+118600000000     C*
+118700000000     C                   ENDSR
+118800000000     C/EJECT
+118900000000     C******************************************************
+119000000000     C* Inizializzo campi per la gestione della tabella
+119100000000     C******************************************************
+119200000000     C     InzSkieraD    BEGSR
+119300000000     C*
+119400000000     C                   reset                   Skiera
+119500000000     C                   z-add     0             $I
+119600000000     C*
+119700000000     C                   move      *Off          $FlDatiAna
+119800000000     C*
+119900000000     C                   ENDSR
+120000000000     C/EJECT
+120100000000     C******************************************************
+120200000000     C* Dati anagrafici del percipiente
+120300000000     C******************************************************
+120400000000     C     ElaboraRecD   BEGSR
+120500000000     C*
+120600000000     C                   Eval      WSavQuaD  ='DA'
+120700000000     C*
+120800000000     C                   if        $Fine770  = *Off
+120900000000     C*
+121000000000     C                   Z-Add     1             Prog_DA
+121100000000     C*
+121200000000     C                   if        $FlDatiAna    = *Off
+121300000000     C*
+121400000000     C* ---------------------------------------------------------------------------------
+121500000000     C* Dati relativi al datore di lavoro, ente pensionistico o altro sostituto d'imposta
+121600000000     C* ---------------------------------------------------------------------------------
+121700000000     C* DA001
+121800000000     C*
+121900000000     C* 1) Cod.Fiscale
+122000000000     C                   Z-Add     Prog_DA       Conta_Rigo
+122100000000     C                   Z-Add     1             Conta_Colo
+122200000000     C                   MoveL     XscCdf        Campo_Valore
+122300000000     C                   MoveL     XscCdf        C60
+122400000000     C                   if        Campo_Valore <> *Blanks
+122500000000     C                   EXSR      RieSkieraAlf
+122600000000     C                   endif
+122700000000     C*
+122800000000     C                   Select
+122900000000     C*-----------------------
+123000000000     C* PERSONA FISICA
+123100000000     C                   When      TPNG16      = '1'
+123200000000     C*
+123300000000     C* 2) Cognome
+123400000000     C                   if        $CogRagSog    <> *Blanks
+123500000000     C                   Z-Add     Prog_DA       Conta_Rigo
+123600000000     C                   Z-Add     2             Conta_Colo
+123700000000     C                   MoveL     $CogRagSog    Campo_Valore
+123800000000     C                   MoveL     $CogRagSog    C60
+123900000000     C                   if        Campo_Valore <> *Blanks
+124000000000     C                   EXSR      RieSkieraAlf
+124100000000     C                   endif
+124200000000     C                   endif
+124300000000     C*
+124400000000     C* 3) Nome
+124500000000     C                   if        $NomeSog      <> *Blanks
+124600000000     C                   Z-Add     Prog_DA       Conta_Rigo
+124700000000     C                   Z-Add     3             Conta_Colo
+124800000000     C                   Clear                   Campo_Valore
+124900000000     C                   MoveL     $NomeSog      Campo_Valore
+125000000000     C                   MoveL     $NomeSog      C60
+125100000000     C                   if        Campo_Valore <> *Blanks
+125200000000     C                   EXSR      RieSkieraAlf
+125300000000     C                   endif
+125400000000     C                   endif
+125500000000     C*
+125600000000     C* 4) Comune di residenza
+125700000000     C                   if        $LocalitSog   <> *Blanks
+125800000000     C                   Z-Add     Prog_DA       Conta_Rigo
+125900000000     C                   Z-Add     4             Conta_Colo
+126000000000     C                   Clear                   Campo_Valore
+126100000000     C                   MoveL     $LocalitSog   Campo_Valore
+126200000000     C                   MoveL     $LocalitSog   C60
+126300000000     C                   if        Campo_Valore <> *Blanks
+126400000000     C                   EXSR      RieSkieraAlf
+126500000000     C                   endif
+126600000000     C                   endif
+126700000000     C*
+126800000000     C* 5) Provincia di residenza - CONTROLLARE
+126900000000     C**                 if        Provincia     <> *Blanks
+127000000000     C**                 Z-Add     Prog_DA       Conta_Rigo
+127100000000     C**                 Z-Add     5             Conta_Colo
+127200000000     C**                 Clear                   Campo_Valore
+127300000000     C**                 MoveL     N77Prv        Campo_Valore
+127400000000     C**                 MoveL     N77Prv        C60
+127500000000     C**                 if        Campo_Valore <> *Blanks
+127600000000     C**                 EXSR      RieSkieraAlf
+127700000000     C**                 endif
+127800000000     C**                 endif
+127900000000     C*-----------------------
+128000000000     C* PERSONA GIURIDICA
+128100000000     C* da impostare solo nel caso di persona non fisica
+128200000000     C                   When      TPNG16      = '2'  or
+128300000000     C                             TPNG16      = '3'
+128400000000     C*
+128500000000     C* 2) Denominazione
+128600000000     C                   if        XscRgs        <> *Blanks
+128700000000     C                   Z-Add     Prog_DA       Conta_Rigo
+128800000000     C                   Z-Add     2             Conta_Colo
+128900000000     C                   MoveL     XscRgs        Campo_Valore
+129000000000     C                   MoveL     XscRgs        C60
+129100000000     C                   if        Campo_Valore <> *Blanks
+129200000000     C                   EXSR      RieSkieraAlf
+129300000000     C                   endif
+129400000000     C                   endif
+129500000000R172 C*
+129600000000 "   C* 4) Comune di Residenza
+129700000000 "   C                   if        XscCit        <> *Blanks
+129800000000 "   C                   Z-Add     Prog_DA       Conta_Rigo
+129900000000 "   C                   Z-Add     4             Conta_Colo
+130000000000 "   C                   MoveL     XscCit        Campo_Valore
+130100000000 "   C                   MoveL     XscCit        C60
+130200000000 "   C                   if        Campo_Valore <> *Blanks
+130300000000 "   C                   EXSR      RieSkieraAlf
+130400000000 "   C                   endif
+130500000000 "   C                   endif
+130600000000 "   C*
+130700000000 "   C* 5) Provincia
+130800000000 "   C                   if        XscPrv        <> *Blanks
+130900000000 "   C                   Z-Add     Prog_DA       Conta_Rigo
+131000000000 "   C                   Z-Add     5             Conta_Colo
+131100000000 "   C                   MoveL     XscPrv        Campo_Valore
+131200000000 "   C                   MoveL     XscPrv        C60
+131300000000 "   C                   if        Campo_Valore <> *Blanks
+131400000000 "   C                   EXSR      RieSkieraAlf
+131500000000 "   C                   endif
+131600000000 "   C                   endif
+131700000000 "   C*
+131800000000 "   C* 6) CAP
+131900000000 "   C                   if        XscCAP        <> *Blanks
+132000000000 "   C                   Z-Add     Prog_DA       Conta_Rigo
+132100000000 "   C                   Z-Add     6             Conta_Colo
+132200000000 "   C                   MoveL     XscCAP        Campo_Valore
+132300000000 "   C                   MoveL     XscCAP        C60
+132400000000 "   C                   if        Campo_Valore <> *Blanks
+132500000000 "   C                   EXSR      RieSkieraAlf
+132600000000 "   C                   endif
+132700000000 "   C                   endif
+132800000000 "   C*
+132900000000 "   C* 7) Indirizzo
+133000000000 "   C                   if        XscVia        <> *Blanks
+133100000000 "   C                   Z-Add     Prog_DA       Conta_Rigo
+133200000000 "   C                   Z-Add     7             Conta_Colo
+133300000000 "   C                   MoveL     XscVia        Campo_Valore
+133400000000 "   C                   MoveL     XscVia        C60
+133500000000 "   C                   if        Campo_Valore <> *Blanks
+133600000000 "   C                   EXSR      RieSkieraAlf
+133700000000 "   C                   endif
+133800000000R172 C                   endif
+133900000000     C*
+134000000000     C                   EndSl
+134100000000     C*
+134200000000     C*
+134300000000     C* 8) Telefono
+134400000000     C                   if        $Telefon      <> *Blanks
+134500000000     C                   Z-Add     Prog_DA       Conta_Rigo
+134600000000     C                   Z-Add     8             Conta_Colo
+134700000000     C                   Clear                   Campo_Valore
+134800000000     C                   MoveL     $Telefon      Campo_Valore
+134900000000     C                   MoveL     $Telefon      C60
+135000000000     C                   if        Campo_Valore <> *Blanks
+135100000000     C                   EXSR      RieSkieraAlf
+135200000000     C                   endif
+135300000000     C                   endif
+135400000000     C*
+135500000000     C* 9) E-mail
+135600000000     C                   if        $Email        <> *Blanks
+135700000000     C                   Z-Add     Prog_DA       Conta_Rigo
+135800000000     C                   Z-Add     9             Conta_Colo
+135900000000     C                   Clear                   Campo_Valore
+136000000000     C                   MoveL     $Email        Campo_Valore
+136100000000     C                   MoveL     $Email        C60
+136200000000     C                   if        Campo_Valore <> *Blanks
+136300000000     C                   EXSR      RieSkieraAlf
+136400000000     C                   endif
+136500000000     C                   endif
+136600000000     C*
+136700000000     C* 10) Codice attività
+136800000000     C                   if        XscAtt        <> *Blanks
+136900000000     C                   Z-Add     Prog_DA       Conta_Rigo
+137000000000     C                   Z-Add     10            Conta_Colo
+137100000000     C                   Clear                   Campo_Valore
+137200000000     C                   MoveL     XscAtt        Campo_Valore
+137300000000     C                   MoveL     XscAtt        C60
+137400000000     C                   if        Campo_Valore <> *Blanks
+137500000000     C                   EXSR      RieSkieraAlf
+137600000000     C                   endif
+137700000000     C                   endif
+137800000000     C*
+137900000000     C* DA002
+138000000000     C* Dati relativi al dipendente, pensionato o altro percettore delle somme
+138100000000     C* ----------------------------------------------------------------------
+138200000000     C                   Add       1             Prog_DA
+138300000000     C*
+138400000000     C* 1) Cod.Fiscale
+138500000000     C                   if        N77Cdf        <> *Blanks
+138600000000     C                   Z-Add     Prog_DA       Conta_Rigo
+138700000000     C                   Z-Add     1             Conta_Colo
+138800000000     C                   Clear                   Campo_Valore
+138900000000     C                   MoveL     N77Cdf        Campo_Valore
+139000000000     C                   MoveL     N77Cdf        C60
+139100000000     C                   if        Campo_Valore <> *Blanks
+139200000000     C                   EXSR      RieSkieraAlf
+139300000000     C                   endif
+139400000000     C                   endif
+139500000000     C*
+139600000000     C* 2) Cognome
+139700000000     C                   if        N77Cog        <> *Blanks
+139800000000     C                   Z-Add     Prog_DA       Conta_Rigo
+139900000000     C                   Z-Add     2             Conta_Colo
+140000000000     C                   Clear                   Campo_Valore
+140100000000     C                   MoveL     N77Cog        Campo_Valore
+140200000000     C                   MoveL     N77Cog        C60
+140300000000     C                   if        Campo_Valore <> *Blanks
+140400000000     C                   EXSR      RieSkieraAlf
+140500000000     C                   endif
+140600000000     C                   endif
+140700000000     C*
+140800000000     C* 3) Nome
+140900000000     C                   if        N77Nom        <> *Blanks
+141000000000     C                   Z-Add     Prog_DA       Conta_Rigo
+141100000000     C                   Z-Add     3             Conta_Colo
+141200000000     C                   Clear                   Campo_Valore
+141300000000     C                   MoveL     N77Nom        Campo_Valore
+141400000000     C                   MoveL     N77Nom        C60
+141500000000     C                   if        Campo_Valore <> *Blanks
+141600000000     C                   EXSR      RieSkieraAlf
+141700000000     C                   endif
+141800000000     C                   endif
+141900000000     C*
+142000000000     C* 4) Sesso
+142100000000     C                   if        N77Ses        <> *Blanks
+142200000000     C                   Z-Add     Prog_DA       Conta_Rigo
+142300000000     C                   Z-Add     4             Conta_Colo
+142400000000     C                   Clear                   Campo_Valore
+142500000000     C                   MoveL     N77Ses        Campo_Valore
+142600000000     C                   MoveL     N77Ses        C60
+142700000000     C                   if        Campo_Valore <> *Blanks
+142800000000     C                   EXSR      RieSkieraAlf
+142900000000     C                   endif
+143000000000     C                   endif
+143100000000     C*
+143200000000     C* 5) Data di nascita
+143300000000     C                   if        N77Dnc        <> Datmin
+143400000000     C                   Move      N77Dnc        DtAMG
+143500000000     C                   Move      AMGAnno       GMAAnno
+143600000000     C                   Move      AMGMese       GMAMese
+143700000000     C                   Move      AMGGiorno     GMAGiorno
+143800000000     C                   Z-Add     Prog_DA       Conta_Rigo
+143900000000     C                   Z-Add     5             Conta_Colo
+144000000000     C                   Clear                   Campo_Valore
+144100000000     C                   Move      DtGMA         Campo_Valore
+144200000000     C                   if        Campo_Valore <> *Blanks
+144300000000     C                   EXSR      RieSkiera
+144400000000     C                   endif
+144500000000     C                   endif
+144600000000     C*
+144700000000     C* 6) Comune o Stato estero di nascita
+144800000000     C                   if        N77Lnc        <> *Blanks
+144900000000     C                   Z-Add     Prog_DA       Conta_Rigo
+145000000000     C                   Z-Add     6             Conta_Colo
+145100000000     C                   Clear                   Campo_Valore
+145200000000     C                   MoveL     N77Lnc        Campo_Valore
+145300000000     C                   MoveL     N77Lnc        C60
+145400000000     C                   if        Campo_Valore <> *Blanks
+145500000000     C                   EXSR      RieSkieraAlf
+145600000000     C                   endif
+145700000000     C                   endif
+145800000000     C*
+145900000000     C* 7) Provincia di nascita
+146000000000     C                   if        N77Pnc        <> *Blanks
+146100000000     C                   Z-Add     Prog_DA       Conta_Rigo
+146200000000     C                   Z-Add     7             Conta_Colo
+146300000000     C                   Clear                   Campo_Valore
+146400000000     C                   MoveL     N77Pnc        Campo_Valore
+146500000000     C                   if        Campo_Valore <> *Blanks
+146600000000     C                   EXSR      RieSkiera
+146700000000     C                   endif
+146800000000     C                   endif
+146900000000     C*
+147000000000     C* 8) Categorie particolari
+147100000000R172 C                   if        N77CtgPrt     <> *Blanks
+147200000000 "   C                   Z-Add     Prog_DA       Conta_Rigo
+147300000000 "   C                   Z-Add     8             Conta_Colo
+147400000000 "   C                   Clear                   Campo_Valore
+147500000000 "   C                   MoveL     N77CtgPrt     Campo_Valore
+147600000000 "   C                   if        Campo_Valore <> *Blanks
+147700000000 "   C                   EXSR      RieSkiera
+147800000000 "   C                   endif
+147900000000R172 C                   endif
+148000000000     C* 9) Eventi eccezionali
+148100000000     C* 10) Casi di esclusione dalla precompilata
+148200000000     C*
+148300000000     C* DA002020
+148400000000     C*
+148500000000R211 X*** Domicilio fiscale al 1/1/2014
+148600000000R211 C* Domicilio fiscale anno precedente
+148700000000     C* -----------------------------
+148800000000     C                   if        %subst(N77C77:1:1) = 'N'
+148900000000     C* 20) Comune
+149000000000R211 X***                if        N77Cit        <> *Blanks
+149100000000R211 C                   if        N77CitAp      <> *Blanks
+149200000000     C                   Z-Add     Prog_DA       Conta_Rigo
+149300000000     C                   Z-Add     20            Conta_Colo
+149400000000     C                   Clear                   Campo_Valore
+149500000000R211 X***                MoveL     N77Cit        Campo_Valore
+149600000000R211 X***                MoveL     N77Cit        C60
+149700000000R211 C                   MoveL     N77CitAP      Campo_Valore
+149800000000R211 C                   MoveL     N77CitAP      C60
+149900000000     C                   if        Campo_Valore <> *Blanks
+150000000000     C                   EXSR      RieSkieraAlf
+150100000000     C                   endif
+150200000000     C                   endif
+150300000000     C*
+150400000000     C* 21) Provincia
+150500000000R211 X***                if        N77Prv        <> *Blanks
+150600000000R211 C                   if        N77PrvAP      <> *Blanks
+150700000000     C                   Z-Add     Prog_DA       Conta_Rigo
+150800000000     C                   Z-Add     21            Conta_Colo
+150900000000     C                   Clear                   Campo_Valore
+151000000000R211 X***                MoveL     N77Prv        Campo_Valore
+151100000000R211 X***                MoveL     N77Prv        C60
+151200000000R211 C                   MoveL     N77PrvAP      Campo_Valore
+151300000000R211 C                   MoveL     N77PrvAP      C60
+151400000000     C                   if        Campo_Valore <> *Blanks
+151500000000     C                   EXSR      RieSkiera
+151600000000     C                   endif
+151700000000     C                   endif
+151800000000     C*
+151900000000     C* 22) Codice comune
+152000000000R211 X***                if        N77Com        <> *Blanks
+152100000000R211 C                   if        N77Com        <> *Blanks
+152200000000     C                   Z-Add     Prog_DA       Conta_Rigo
+152300000000     C                   Z-Add     22            Conta_Colo
+152400000000     C                   Clear                   Campo_Valore
+152500000000R211 X***                MoveL     N77Com        Campo_Valore
+152600000000R211 X***                MoveL     N77Com        C60
+152700000000R211 C                   MoveL     N77ComAP      Campo_Valore
+152800000000R211 C                   MoveL     N77ComAP      C60
+152900000000     C                   if        Campo_Valore <> *Blanks
+153000000000     C                   EXSR      RieSkieraAlf
+153100000000     C                   endif
+153200000000     C                   endif
+153300000000     C*
+153400000000R211 X***                endif
+153500000000     C* DA002023
+153600000000     C*
+153700000000R211 X*** Domicilio fiscale al 1/1/2015
+153800000000R211 C* Domicilio fiscale anno corrente
+153900000000     C* -----------------------------
+154000000000     C* 23) Comune
+154100000000     C                   if        N77Cit        <> *Blanks
+154200000000     C                   Z-Add     Prog_DA       Conta_Rigo
+154300000000     C                   Z-Add     23            Conta_Colo
+154400000000     C                   Clear                   Campo_Valore
+154500000000     C                   MoveL     N77Cit        Campo_Valore
+154600000000     C                   MoveL     N77Cit        C60
+154700000000     C                   if        Campo_Valore <> *Blanks
+154800000000     C                   EXSR      RieSkieraAlf
+154900000000     C                   endif
+155000000000     C                   endif
+155100000000     C*
+155200000000     C* 24) Provincia
+155300000000     C                   if        N77Prv        <> *Blanks
+155400000000     C                   Z-Add     Prog_DA       Conta_Rigo
+155500000000     C                   Z-Add     24            Conta_Colo
+155600000000     C                   Clear                   Campo_Valore
+155700000000     C                   MoveL     N77Prv        Campo_Valore
+155800000000     C                   MoveL     N77Prv        C60
+155900000000     C                   if        Campo_Valore <> *Blanks
+156000000000     C                   EXSR      RieSkieraAlf
+156100000000     C                   endif
+156200000000     C                   endif
+156300000000     C*
+156400000000     C* 25) Codice comune
+156500000000     C                   if        N77Com        <> *Blanks
+156600000000     C                   Z-Add     Prog_DA       Conta_Rigo
+156700000000     C                   Z-Add     25            Conta_Colo
+156800000000     C                   Clear                   Campo_Valore
+156900000000     C                   MoveL     N77Com        Campo_Valore
+157000000000     C                   MoveL     N77Com        C60
+157100000000     C                   if        Campo_Valore <> *Blanks
+157200000000     C                   EXSR      RieSkiera
+157300000000     C                   endif
+157400000000     C                   endif
+157500000000R211 C*
+157600000000R211 C                   endif
+157700000000     C*
+157800000000     C* Dati relativi al rappresentante
+157900000000     C* -------------------------------
+158000000000     C* DA002030
+158100000000     C*
+158200000000     C* 30) Cod.Fiscale
+158300000000     C***                if        K61BCdFis1    <> *Blanks
+158400000000     C***                Z-Add     Prog_DA       Conta_Rigo
+158500000000     C***                Z-Add     30            Conta_Colo
+158600000000     C***                Clear                   Campo_Valore
+158700000000     C***                MoveL     K61BCdFis1    Campo_Valore
+158800000000     C***                MoveL     K61BCdFis1    C60
+158900000000     C***                if        Campo_Valore <> *Blanks
+159000000000     C***                EXSR      RieSkieraAlf
+159100000000     C***                endif
+159200000000     C***                endif
+159300000000     C*
+159400000000     C* Riservato ai percipienti esteri
+159500000000     C* -------------------------------
+159600000000     C* DA002040
+159700000000     C*
+159800000000     C* 40) Codice di identificazione fiscale estero
+159900000000     C                   if        N77Cde        <> *Blank
+160000000000     C                   Z-Add     Prog_DA       Conta_Rigo
+160100000000     C                   Z-Add     40            Conta_Colo
+160200000000     C                   Clear                   Campo_Valore
+160300000000     C                   Movel     N77Cde        Campo_Valore
+160400000000     C                   Movel     N77Cde        C60
+160500000000     C                   if        Campo_Valore <> *Blanks
+160600000000     C                   EXSR      RieSkieraAlf
+160700000000     C                   endif
+160800000000     C                   endif
+160900000000     C*
+161000000000     C* 41) Località di residenza estera
+161100000000     C                   if        N77RCit       <> *Blank
+161200000000     C                   Z-Add     Prog_DA       Conta_Rigo
+161300000000     C                   Z-Add     41            Conta_Colo
+161400000000     C                   Clear                   Campo_Valore
+161500000000     C                   Movel     N77RCit       Campo_Valore
+161600000000     C                   Movel     N77RCit       C60
+161700000000     C                   if        Campo_Valore <> *Blanks
+161800000000     C                   EXSR      RieSkieraAlf
+161900000000     C                   endif
+162000000000     C                   endif
+162100000000     C*
+162200000000     C* 42) Via e numero civico
+162300000000     C                   if        N77RVia       <> *Blank
+162400000000     C                   Z-Add     Prog_DA       Conta_Rigo
+162500000000     C                   Z-Add     42            Conta_Colo
+162600000000     C                   Clear                   Campo_Valore
+162700000000     C                   Movel     N77RVia       Campo_Valore
+162800000000     C                   Movel     N77RVia       C60
+162900000000     C                   if        Campo_Valore <> *Blanks
+163000000000     C                   EXSR      RieSkieraAlf
+163100000000     C                   endif
+163200000000     C                   endif
+163300000000     C*
+163400000000R211 C* 43) Non Residenti Shumacker
+163500000000  "  C                   if        N77NResS  <> *blank
+163600000000  "  C                   Z-Add     Prog_DA       Conta_Rigo
+163700000000  "  C                   Z-Add     43            Conta_Colo
+163800000000  "  C                   Clear                   Campo_Valore
+163900000000  "  C                   Move      '1'           Campo_Valore
+164000000000  "  C                   EXSR      Ablank
+164100000000  "  C                   if        Campo_Valore <> *Blanks
+164200000000  "  C                   EXSR      RieSkiera
+164300000000  "  C                   endif
+164400000000R211 C                   endif
+164500000000R211 X*** 43) Codice stato estero
+164600000000R211 C* 44) Codice stato estero
+164700000000     C                   if        N77Cse        <> *Blank
+164800000000R169 C                             and N77Ser <> *blank
+164900000000     C                   Z-Add     Prog_DA       Conta_Rigo
+165000000000R211 X**                 Z-Add     43            Conta_Colo
+165100000000R211 C                   Z-Add     44            Conta_Colo
+165200000000     C                   Clear                   Campo_Valore
+165300000000     C                   movel     N77Cse        Cse               9
+165400000000     C                   callb     'XALLINEA'
+165500000000     C                   parm                    Cse
+165600000000     C                   parm      9             Len2              5 0
+165700000000     C                   parm      '2'           Input             1
+165800000000     C                   move      Cse           Campo_Valore
+165900000000     C                   if        Campo_Valore <> *Blanks
+166000000000     C                   EXSR      RieSkiera
+166100000000     C                   endif
+166200000000     C                   endif
+166300000000     C*
+166400000000     C* Sezione firma certificazione unica
+166500000000     C* ----------------------------------
+166600000000     C* DA003001
+166700000000     C*
+166800000000     C                   Add       1             Prog_DA
+166900000000     C*
+167000000000     C* 1) Data Firma Sostituto d'imposta
+167100000000     C                   if        $DtFirDic    <> *blank
+167200000000     C                   Move      $DtFirDic     DtAMG
+167300000000     C                   Move      AMGAnno       GMAAnno
+167400000000     C                   Move      AMGMese       GMAMese
+167500000000     C                   Move      AMGGiorno     GMAGiorno
+167600000000     C                   Z-Add     Prog_DA       Conta_Rigo
+167700000000     C                   Z-Add     1             Conta_Colo
+167800000000     C                   Clear                   Campo_Valore
+167900000000     C                   Move      DtGMA         Campo_Valore
+168000000000     C                   if        Campo_Valore <> *Blanks
+168100000000     C                   EXSR      RieSkiera
+168200000000     C                   endif
+168300000000     C                   endif
+168400000000     C*
+168500000000     C* 2) Firma
+168600000000     C                   if        $FirDic    <> *blank
+168700000000     C                   Z-Add     Prog_DA       Conta_Rigo
+168800000000     C                   Z-Add     2             Conta_Colo
+168900000000     C                   Clear                   Campo_Valore
+169000000000     C                   Move      '1'           Campo_Valore
+169100000000     C                   EXSR      Ablank
+169200000000     C                   if        Campo_Valore <> *Blanks
+169300000000     C                   EXSR      RieSkiera
+169400000000     C                   endif
+169500000000     C                   endif
+169600000000     C*
+169700000000     C                   Move      *On           $FlDatiAna
+169800000000     C*
+169900000000     C                   endif
+170000000000     C*
+170100000000     C                   endif
+170200000000     C*
+170300000000     C                   ENDSR
+170400000000     C/EJECT
+170500000000     C******************************************************
+170600000000     C* Scrittura t.r. H
+170700000000     C******************************************************
+170800000000     C     WrtTpRecH     BEGSR
+170900000000     C*
+171000000000     C                   exsr      GesImporti
+171100000000R211 C* Dati aggiuntibi cu 2016
+171200000000R211 C                   exsr      GesAltriDati
+171300000000     C*
+171400000000     C                   Clear                   SDGSK61DSH
+171500000000     C* Tipo Record
+171600000000     C                   Eval      K61HTR       = 'H'
+171700000000     C*
+171800000000     C* Cod.Fiscale
+171900000000     C                   Eval      K61HCFI      = XScCdF
+172000000000     C*
+172100000000     C* Progressivo modulo
+172200000000     C                   Eval      K61HPRGMOD   = 1
+172300000000     C*
+172400000000     C* Cod.Fiscale Percipiente
+172500000000     C                   Eval      K61HCFP      = SavCdf
+172600000000     C*
+172700000000     C* Progressivo Certificazione
+172800000000     C                   Eval      K61HPrgCer   = K61DPrgCer
+172900000000     C*
+173000000000     C                   MoveA     SkieraH       K61HDATI
+173100000000     C*
+173200000000     C* Carattere di controllo
+173300000000     C                   MoveL     'A'           K61HK1
+173400000000     C*-
+173500000000     C* Elementi di fine riga
+173600000000     C* Impostare i valori esadecimali '0D' e '0A'
+173700000000     C* (caratteri ASCI 'CR' ed 'LF')
+173800000000     C*
+173900000000     C                   Eval      K61HK2  = *Blanks
+174000000000     C                   Eval      K61HK2  = X'0D25'
+174100000000     C*
+174200000000     C                   Add       1             Cnt_H
+174300000000     C                   Clear                   SDGCUW000
+174400000000     C                   Movel     SDGSK61DSH    CUWREC
+174500000000?    C                   write     SDGCUW000
+174600000000     C                   feod      SDGCUW00F
+174700000000     C*
+174800000000     C                   ENDSR
+174900000000     C/EJECT
+175000000000     C******************************************************
+175100000000     C* Inizializzo campi per la gestione della tabella
+175200000000     C******************************************************
+175300000000     C     InzSkieraH    BEGSR
+175400000000     C*
+175500000000     C                   Reset                   SkieraH
+175600000000     C                   z-add     0             $H
+175700000000     C*
+175800000000     C                   move      *Off          $FlDatiImp
+175900000000     C*
+176000000000     C                   Eval      WImp004    =  0
+176100000000     C                   Eval      WImp005    =  0
+176200000000R169 C                   Eval      WImp0051   =  0
+176300000000     C                   Eval      WImp006    =  0
+176400000000     C                   Eval      WImp007    =  0
+176500000000R169 C                   Eval      WImp0071   =  0
+176600000000     C                   Eval      WImp008    =  0
+176700000000     C                   Eval      WImp009    =  0
+176800000000     C                   Eval      WImp010    =  0
+176900000000     C                   Eval      WImp011    =  0
+177000000000     C                   Eval      WImp012    =  0
+177100000000     C                   Eval      WImp013    =  0
+177200000000     C                   Eval      WImp014    =  0
+177300000000     C                   Eval      WImp015    =  0
+177400000000     C                   Eval      WImp016    =  0
+177500000000     C                   Eval      WImp017    =  0
+177600000000     C                   Eval      WImp018    =  0
+177700000000     C                   Eval      WImp019    =  0
+177800000000     C                   Eval      WImp020    =  0
+177900000000     C                   Eval      WImp021    =  0
+178000000000R211 X***                Eval      WImp022    =  0
+178100000000R211 X***                Eval      WImp023    =  0
+178200000000R211 C                   Eval      WImp034    =  0
+178300000000  "  C                   Eval      WImp035    =  0
+178400000000  "  C                   Eval      WImp037    =  0
+178500000000  "  C                   Eval      WImp038    =  0
+178600000000  "  C                   Eval      WImp039    =  0
+178700000000  "  C                   Eval      WImp041    =  0
+178800000000  "  C                   Eval      WImp042    =  0
+178900000000  "  C                   Eval      WImp053    =  0
+179000000000  "  C                   Eval      WImp054    =  0
+179100000000  "  C                   Eval      WImp055    =  0
+179200000000  "  C                   Eval      WImp056    =  0
+179300000000  "  C                   Eval      WImp057    =  0
+179400000000  "  C                   Eval      WImp058    =  0
+179500000000  "  C                   Eval      WImp059    =  0
+179600000000  "  C                   Eval      WImp060    =  0
+179700000000  "  C                   Eval      WImp061    =  0
+179800000000  "  C                   Eval      WImp062    =  0
+179900000000  "  C                   Eval      WImp102    =  0
+180000000000  "  C                   Eval      WImp103    =  0
+180100000000  "  C                   Eval      WImp106    =  0
+180200000000  "  C                   Eval      WImp107    =  0
+180300000000  "  C                   Eval      WImp131    =  0
+180400000000  "  C                   Eval      WImp132    =  0
+180500000000  "  C                   Eval      WImp133    =  0
+180600000000  "  C                   Eval      WImp134    =  0
+180700000000  "  C                   Eval      WImp135    =  0
+180800000000  "  C                   Eval      WImp136    =  0
+180900000000  "  C                   Eval      WImp137    =  0
+181000000000  "  C                   Eval      WImp138    =  0
+181100000000  "  C*
+181200000000  "  C                   Clear                   WDpCdf
+181300000000  "  C                   Clear                   WDpDen
+181400000000  "  C                   Clear                   WDpCenP
+181500000000  "  C                   Clear                   WDpCazi
+181600000000  "  C                   Clear                   WDpCate
+181700000000  "  C                   Clear                   WDpAcon
+181800000000  "  C                   Clear                   WAsCdf
+181900000000  "  C                   Clear                   WOsCdf1
+182000000000  "  C                   Clear                   WOsCdf2
+182100000000  "  C                   Clear                   WOsCdf3
+182200000000  "  C                   Clear                   WF2Cdf
+182300000000  "  C                   Clear                   WF2Rino
+182400000000  "  C                   Clear                   WF2Cdf2
+182500000000R211 C                   Clear                   WF2Rino2
+182600000000     C*
+182700000000     C                   ENDSR
+182800000000     C/EJECT
+182900000000     C******************************************************
+183000000000     C* Dati relativi alle certificazioni
+183100000000     C******************************************************
+183200000000     C     ElaboraRecH   BEGSR
+183300000000     C*
+183400000000     C                   Eval      WSavQuaH  = 'AU'
+183500000000     C*
+183600000000     C                   if        $Fine770  = *Off
+183700000000     C*
+183800000000     C* AU001
+183900000000     C*
+184000000000     C                   Z-Add     1             Prog_AU
+184100000000     C*
+184200000000     C                   if        $FlDatiImp    = *Off
+184300000000     C*
+184400000000     C* 1) Causale
+184500000000     C                   if        N77C77        <> *Blanks
+184600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+184700000000     C                   Z-Add     1             Conta_Colo
+184800000000     C                   Clear                   Campo_Valore
+184900000000     C****               MoveL     N77C77        Campo_Valore
+185000000000     C                   eval      Campo_Valore = %subst(N77C77:1:2)
+185100000000     C                   if        Campo_Valore <> *Blanks
+185200000000     C                   EXSR      RieSkieraH
+185300000000     C                   endif
+185400000000     C                   endif
+185500000000     C*
+185600000000     C* 2) Anno
+185700000000R169 X****               if        N77Acf        <> 0
+185800000000R169 C                   if        N77Anno       <> 0
+185900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+186000000000     C                   Z-Add     2             Conta_Colo
+186100000000     C                   Clear                   Campo_Valore
+186200000000R169 X****               Move      N77Anno       Campo_Valore
+186300000000R169 X****               Move      N77Acf        Campo_Valore
+186400000000R169 C                   Move      N77Anno       Campo_Valore
+186500000000     C                   EXSR      Ablank
+186600000000     C                   if        Campo_Valore <> *Blanks
+186700000000     C                   EXSR      RieSkieraH
+186800000000     C                   endif
+186900000000     C                   endif
+187000000000     C*
+187100000000     C* 3) Anticipazione
+187200000000     C                   if        N77Tit    <> *blank
+187300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+187400000000     C                   Z-Add     3             Conta_Colo
+187500000000     C                   Clear                   Campo_Valore
+187600000000     C                   Move      '1'           Campo_Valore
+187700000000     C                   EXSR      Ablank
+187800000000     C                   if        Campo_Valore <> *Blanks
+187900000000     C                   EXSR      RieSkieraH
+188000000000     C                   endif
+188100000000     C                   endif
+188200000000     C*
+188300000000     C                   Move      *On           $FlDatiImp
+188400000000     C*
+188500000000     C                   endif
+188600000000     C*
+188700000000     C*-----------------------------------
+188800000000     C* MEMORIZZA IMPORTI
+188900000000     C*
+189000000000     C* 4) Ammontare lordo corrisposto
+189100000000     C                   add       N77Itc        WImp004
+189200000000     C*
+189300000000     C* 5) Somme non soggette a ritenuta per regime convenzionale
+189400000000     C                   setoff                                       202122
+189500000000     C     N77Num        comp      *blank                             2020
+189600000000     C   20N77Rac        comp      0                                      21
+189700000000     C   20N77Imn        comp      0                                  22
+189800000000     C*    Straniero senza ritenute e con imp. non soggetto
+189900000000     C   20
+190000000000     Can 21
+190100000000R169 Can 22N77Imn        add       N77SNS        WImp0051
+190200000000R169 X****an 22N77Imn        add       N77SNS        WImp005
+190300000000 "   C   20
+190400000000 "   Can 21
+190500000000R169 Can 22              add       WImp0051      WImp005
+190600000000     C*
+190700000000     C* 7) Altre somme non soggette a ritenute
+190800000000     C* Italia
+190900000000R169 X****  N20N77IMN        add       N77SNS        WImp007
+191000000000R169 C  N20N77IMN        add       N77SNS        WImp0071
+191100000000R169 C  N20              add       WImp0071      WImp007
+191200000000     C* Straniero senza ritenute senza imp. non soggetto
+191300000000     C   20
+191400000000     CAN 21
+191500000000R169 CANN22N77IMN        add       N77SNS        WImp0071
+191600000000R169 X****ANN22N77IMN        add       N77SNS        WImp007
+191700000000 "   C   20
+191800000000 "   CAN 21
+191900000000R169 CANN22              add       WImp0071      WImp007
+192000000000     C* STRANIERO CON RITENUTE
+192100000000     C   20
+192200000000R169 CANN21N77IMN        add       N77SNS        WImp0071
+192300000000R169 X****ANN21N77IMN        add       N77SNS        WImp007
+192400000000 "   C   20
+192500000000R169 CANN21              add       WImp0071      WImp007
+192600000000     C*
+192700000000     C* 8) Imponibile
+192800000000     C                   add       N77Ims        WImp008
+192900000000     C*
+193000000000     C* 9) Ritenute a titolo d'acconto
+193100000000     C                   add       N77Rac        WImp009
+193200000000     C*
+193300000000     C* 10) Ritenute a titolo di imposta
+193400000000     C                   add       N77Rim        WImp010
+193500000000     C*
+193600000000     C* 11) Ritenute sospese
+193700000000     C                   add       N77Net        WImp011
+193800000000     C*
+193900000000     C* 12) Addizionale regionale a titolo d'acconto
+194000000000     C                   add       N77Arg        WImp012
+194100000000     C*
+194200000000     C* 13) Addizionale regionale a titolo di imposta
+194300000000     C                   add       N77Ari        WImp013
+194400000000     C*
+194500000000     C* 14) Addizionale regionale sospesa
+194600000000     C                   add       N77Ars        WImp014
+194700000000     C*
+194800000000     C* 15) Addizionale comunale a titolo d'acconto
+194900000000     C                   add       N77Acta       WImp015
+195000000000     C*
+195100000000     C* 16) Addizionale comunale a titolo di imposta
+195200000000     C                   add       N77Acg        WImp016
+195300000000     C*
+195400000000     C* 17) Addizionale comunale sospesa
+195500000000     C                   add       N77Acs        WImp017
+195600000000     C*
+195700000000     C* 18) Imponibile anni precedenti
+195800000000     C                   add       N77Imsap      WImp018
+195900000000     C*
+196000000000     C* 19) Ritenute operate anni precedenti
+196100000000     C                   add       N77Racap      WImp019
+196200000000     C*
+196300000000R211 X**** 20) Contributi previdenziali a carico del soggetto erogante
+196400000000R211 X****               add       N77Ctbdl      WImp020
+196500000000     C*
+196600000000R211 X**** 21) Contributi previdenziali a carico del percipiente
+196700000000R211 X****               add       N77Ctblv      WImp021
+196800000000     C*
+196900000000R211 X**** 22) Spese rimborsate
+197000000000R211 X***                add       N77SpeRimb    WImp022
+197100000000     C*
+197200000000R211 X**** 23) Ritenute rimborsate
+197300000000R211 X****               add       N77RitRimb    WImp023
+197400000000     C*
+197500000000R211 C* 20) Spese rimborsate
+197600000000  "  C                   add       N77SpeRimb    WImp020
+197700000000  "  C*
+197800000000  "  C* 21) Ritenute rimborsate
+197900000000  "  C                   add       N77RitRimb    WImp021
+198000000000  "  C*
+198100000000  "  C* 34) Contributi previdenziali a carico del soggetto erogante
+198200000000  "  C                   add       N77Ctbdl      WImp034
+198300000000  "  C*
+198400000000  "  C* 35) Contributi previdenziali a carico del percipiente
+198500000000  "  C                   add       N77Ctblv      WImp035
+198600000000  "  C*
+198700000000  "  C* 37) Importo altri contributi
+198800000000  "  C                   add       N77DpImpa     WImp037
+198900000000  "  C*
+199000000000  "  C* 38) Contributi dovuti
+199100000000  "  C                   add       N77DpCodu     WImp038
+199200000000  "  C*
+199300000000  "  C* 39) Contributi versati
+199400000000  "  C                   add       N77DpCove     WImp039
+199500000000  "  C*
+199600000000  "  C* 41) Somme corrisposte prima del fallimento
+199700000000  "  C                   add       N77ImpPrFa    WImp041
+199800000000  "  C*
+199900000000  "  C* 42) Somme corrisposte dal curatore/commissario
+200000000000  "  C                   add       N77ImpCuCo    WImp038
+200100000000  "  C*
+200200000000  "  C* 53) Redditi da altri soggetti: Imponibile
+200300000000  "  C                   add       N77AsIms      WImp053
+200400000000  "  C*
+200500000000  "  C* 54) Redditi da altri soggetti: Ritenute a titolo di acconto
+200600000000  "  C                   add       N77AsRac      WImp054
+200700000000R211 C*
+200800000000R215 X*** ex r211 55) Redditi da altri soggetti: Ritenute sospese
+200900000000  "  X*** ex r211                 add       N77AsRso      WImp055
+201000000000  "  X*** ex r211
+201100000000  "  X*** ex r211 56) Redditi da altri soggetti: Addizionale regionale a titolo di acconto
+201200000000  "  X*** ex r211                 add       N77AsAra      WImp056
+201300000000  "  X*** ex r211
+201400000000  "  X*** ex r211 57) Redditi da altri soggetti: Addizionale regionale a titolo di imposta
+201500000000  "  X*** ex r211                 add       N77AsAri      WImp057
+201600000000  "  X*** ex r211
+201700000000  "  X*** ex r211
+201800000000  "  X*** ex r211 58) Redditi da altri soggetti: Addizionale regionale sospesa
+201900000000  "  X*** ex r211                add       N77AsArs      WImp058
+202000000000  "  X*** ex r211
+202100000000  "  X*** ex r211 59) Redditi da altri soggetti: Addizionale comunale a titolo di acconto
+202200000000  "  X*** ex r211                 add       N77AsAca      WImp059
+202300000000  "  X*** ex r211
+202400000000  "  X*** ex r211 60) Redditi da altri soggetti: Addizionale comunale a titolo di imposta
+202500000000  "  X*** ex r211                 add       N77AsAci      WImp060
+202600000000  "  X*** ex r211
+202700000000  "  X**** ex r211 61) Redditi da altri soggetti: Addizionale comunale sospesa
+202800000000R215 X**** ex r211             add       N77AsAcs      WImp061
+202900000000  "  C*
+203000000000  "  C* 55) Redditi da altri soggetti: Ritenute a titolo di imposta
+203100000000  "  C                   add       N77AsRim      WImp055
+203200000000  "  C*
+203300000000  "  C* 56) Redditi da altri soggetti: Ritenute sospese
+203400000000  "  C                   add       N77AsRso      WImp056
+203500000000  "  C*
+203600000000  "  C* 57) Redditi da altri soggetti: Addizionale regionale a titolo di acconto
+203700000000  "  C                   add       N77AsAra      WImp057
+203800000000  "  C*
+203900000000  "  C* 58) Redditi da altri soggetti: Addizionale regionale a titolo di imposta
+204000000000  "  C                   add       N77AsAri      WImp058
+204100000000  "  C*
+204200000000  "  C*
+204300000000  "  C* 59) Redditi da altri soggetti: Addizionale regionale sospesa
+204400000000  "  C                   add       N77AsArs      WImp059
+204500000000  "  C*
+204600000000  "  C* 60) Redditi da altri soggetti: Addizionale comunale a titolo di acconto
+204700000000  "  C                   add       N77AsAca      WImp060
+204800000000  "  C*
+204900000000  "  C* 61) Redditi da altri soggetti: Addizionale comunale a titolo di imposta
+205000000000  "  C                   add       N77AsAci      WImp061
+205100000000  "  C*
+205200000000  "  C* 62) Redditi da altri soggetti: Addizionale comunale sospesa
+205300000000R215 C                   add       N77AsAcs      WImp062
+205400000000R211 C* 102) Pignoramento verso terzi : Somme erogate
+205500000000  "  C                   add       N77F2Ime      WImp102
+205600000000  "  C*
+205700000000  "  C* 103) Pignoramento verso terzi : Ritenute operate
+205800000000  "  C                   add       N77F2Rio      WImp103
+205900000000  "  C*
+206000000000  "  C* 106) Pignoramento verso terzi : Somme erogate
+206100000000  "  C                   add       N77F2Ime2     WImp106
+206200000000  "  C*
+206300000000  "  C* 107) Pignoramento verso terzi : Ritenute operate
+206400000000  "  C                   add       N77F2Rio2     WImp107
+206500000000  "  C*
+206600000000  "  C* 131) Indennità di esproprio   : Somme corrisposte
+206700000000  "  C                   add       N77F3Ine      WImp131
+206800000000  "  C*
+206900000000  "  C* 132) Indennità di esproprio   : Ritenute operate
+207000000000  "  C                   add       N77F3Rie      WImp132
+207100000000  "  C*
+207200000000  "  C* 133) Altre indennità e interessi: Somme corrisposte
+207300000000  "  C                   add       N77F3Ain      WImp133
+207400000000  "  C*
+207500000000  "  C* 134) Indennità di esproprio   : Ritenute operate
+207600000000  "  C                   add       N77F3Ari      WImp134
+207700000000  "  C*
+207800000000  "  C* 135) Indennità di esproprio   : Somme corrisposte
+207900000000  "  C                   add       N77F3Ine2     WImp135
+208000000000  "  C*
+208100000000  "  C* 136) Indennità di esproprio   : Ritenute operate
+208200000000  "  C                   add       N77F3Rie2     WImp136
+208300000000  "  C*
+208400000000  "  C* 137) Altre indennità e interessi: Somme corrisposte
+208500000000  "  C                   add       N77F3Ain2     WImp137
+208600000000  "  C*
+208700000000  "  C* 138) Indennità di esproprio   : Ritenute operate
+208800000000  "  C                   add       N77F3Ari2     WImp138
+208900000000  "  C*
+209000000000  "  C* Memorizza campi alfabetici
+209100000000  "  C*
+209200000000  "  C*  29) Codice fiscale Ente previdenziale
+209300000000  "  C                   Eval      WDpCdf    =   N77DpCdf
+209400000000  "  C*  30) Denomimazione Ente previdenziale
+209500000000  "  C                   Eval      WDpDen    =   N77DpDen
+209600000000  "  C*  31) Codice Ente Previdenziale
+209700000000  "  C                   Eval      WDpCenP   =   N77DpCenP
+209800000000  "  C*  32) Codice Azienda
+209900000000  "  C                   Eval      WDpCazi   =   N77DpCazi
+210000000000  "  C*  33) Categoria
+210100000000  "  C                   Eval      WDpCate   =   N77DpCate
+210200000000  "  C*  36) Altri contributi
+210300000000  "  C                   Eval      WDpAcon   =   N77DpAcon
+210400000000  "  C*  52) Codice fiscale redditi erogati da altri soggetti
+210500000000  "  C                   Eval      WAsCdf    =   N77AsCdf
+210600000000  "  C*  71) Codice fiscale (sez. lavoro autonomo e redd. diversi)
+210700000000  "  C                   Eval      WOsCdf1  =   N77OsCdf1
+210800000000  "  C*  72) Codice fiscale (sez. pignoramento verso terzi)
+210900000000  "  C                   Eval      WOsCdf2  =   N77OsCdf2
+211000000000  "  C*  73) Codice fiscale (sez. indennità di esproprio)
+211100000000  "  C                   Eval      WOsCdf3  =   N77OsCdf3
+211200000000  "  C* 101) Codice fiscale debitore principale
+211300000000  "  C                   Eval      WF2Cdf   =   N77F2Cdf
+211400000000  "  C* 104) Ritenute non operate
+211500000000  "  C                   Eval      WF2Rino  =   N77F2Rino
+211600000000  "  C* 105) Codice fiscale debitore principale
+211700000000  "  C                   Eval      WF2Cdf2  =   N77F2Cdf2
+211800000000  "  C* 108) Ritenute non operate
+211900000000R211 C                   Eval      WF2Rino2 =   N77F2Rino2
+212000000000     C                   endif
+212100000000     C*
+212200000000     C                   ENDSR
+212300000000     C/EJECT
+212400000000     C******************************************************
+212500000000     C* Tratta campi alfanumerici
+212600000000     C******************************************************
+212700000000     C     RieSkieraAlf  BEGSR
+212800000000     C*
+212900000000     C                   Z-ADD     Conta_Rigo    Cod_Rigo
+213000000000     C                   Z-ADD     Conta_Colo    Cod_Colo
+213100000000     C*
+213200000000     C                   Add       1             $I
+213300000000     C                   MoveL     Campo_Codice  Skiera($I)
+213400000000     C                   MoveL     WSavQuaD      Skiera($I)
+213500000000     C                   Move      Campo_Valore  Skiera($I)
+213600000000     C                   Clear                   Campo_Valore
+213700000000     C*
+213800000000     C                   Clear                   Campo
+213900000000     C*
+214000000000     C* Controllo se ci sono dati dopo la 17° posizione
+214100000000     C                   Do        3             XY                1 0
+214200000000     C*
+214300000000     C                   if        C15(XY) <> *Blanks
+214400000000     C                   Add       1             $I
+214500000000     C                   MOVEL     '+'           C16              16
+214600000000     C                   MOVE      C15(XY)       C16
+214700000000     C                   MoveL     Campo_Codice  Skiera($I)
+214800000000     C                   MoveL     WSavQuaD      Skiera($I)
+214900000000     C                   Move      C16           Skiera($I)
+215000000000     C                   endif
+215100000000     C*
+215200000000     C                   endDo
+215300000000     C*
+215400000000     C                   Clear                   C60
+215500000000     C*
+215600000000     C                   ENDSR
+215700000000     C/EJECT
+215800000000     C******************************************************
+215900000000     C* Riempimento skiera per i dati non posizionali
+216000000000     C******************************************************
+216100000000     C     RieSkiera     BEGSR
+216200000000     C*
+216300000000     C                   Z-ADD     Conta_Rigo    Cod_Rigo
+216400000000     C                   Z-ADD     Conta_Colo    Cod_Colo
+216500000000     C*
+216600000000     C                   ADD       1             $I
+216700000000     C                   MoveL     Campo_Codice  Skiera($I)
+216800000000     C                   MoveL     WSavQuaD      Skiera($I)
+216900000000     C                   Move      Campo_Valore  Skiera($I)
+217000000000     C                   Clear                   Campo_Valore
+217100000000     C*
+217200000000     C                   ENDSR
+217300000000      /EJECT
+217400000000     C******************************************************
+217500000000     C* Tratta campi alfanumerici
+217600000000     C******************************************************
+217700000000     C     RieSkieraAlfH BEGSR
+217800000000     C*
+217900000000     C                   Z-ADD     Conta_Rigo    Cod_Rigo
+218000000000     C                   Z-ADD     Conta_Colo    Cod_Colo
+218100000000     C*
+218200000000     C                   Add       1             $H
+218300000000     C                   MoveL     Campo_Codice  SkieraH($H)
+218400000000     C                   MoveL     WSavQuaH      SkieraH($H)
+218500000000     C                   Move      Campo_Valore  SkieraH($H)
+218600000000     C                   Clear                   Campo_Valore
+218700000000     C*
+218800000000     C                   Clear                   Campo
+218900000000     C*
+219000000000     C* Controllo se ci sono dati dopo la 17° posizione
+219100000000     C                   Do        3             XY                1 0
+219200000000     C*
+219300000000     C                   if        C15(XY) <> *Blanks
+219400000000     C                   Add       1             $H
+219500000000     C                   MOVEL     '+'           C16              16
+219600000000     C                   MOVE      C15(XY)       C16
+219700000000     C                   MoveL     Campo_Codice  SkieraH($H)
+219800000000     C                   MoveL     WSavQuaH      SkieraH($H)
+219900000000     C                   Move      C16           SkieraH($H)
+220000000000     C                   endif
+220100000000     C*
+220200000000     C                   endDo
+220300000000     C*
+220400000000     C                   Clear                   C60
+220500000000     C*
+220600000000     C                   ENDSR
+220700000000     C/EJECT
+220800000000     C******************************************************
+220900000000     C* Riempimento skiera per i dati non posizionali
+221000000000     C******************************************************
+221100000000     C     RieSkieraH    BEGSR
+221200000000     C*
+221300000000     C                   Z-ADD     Conta_Rigo    Cod_Rigo
+221400000000     C                   Z-ADD     Conta_Colo    Cod_Colo
+221500000000     C*
+221600000000     C                   ADD       1             $H
+221700000000     C                   MoveL     Campo_Codice  SkieraH($H)
+221800000000     C                   MoveL     WSavQuaH      SkieraH($H)
+221900000000     C                   Move      Campo_Valore  SkieraH($H)
+222000000000     C                   Clear                   Campo_Valore
+222100000000     C*
+222200000000     C                   ENDSR
+222300000000      /EJECT
+222400000000     C******************************************************
+222500000000     C* Valorizzo i campi importi
+222600000000     C******************************************************
+222700000000     C     GesImporti    BEGSR
+222800000000     C*
+222900000000     C* AU001
+223000000000     C*
+223100000000     C* 4) Ammontare lordo corrisposto
+223200000000     C                   Eval      WImporto      = WImp004
+223300000000     C*
+223400000000     C                   if        WImporto      <> 0
+223500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+223600000000     C                   Z-Add     4             Conta_Colo
+223700000000     C                   EXSR      RieImportoH
+223800000000     C                   endif
+223900000000     C*
+224000000000     C* 5) Somme non soggette a ritenuta per regime convenzionale
+224100000000     C                   Eval      WImporto      = WImp005
+224200000000     C*
+224300000000     C                   if        WImporto      <> 0
+224400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+224500000000     C                   Z-Add     5             Conta_Colo
+224600000000     C                   EXSR      RieImportoH
+224700000000     C                   endif
+224800000000     C*
+224900000000     C* 6) Codice
+225000000000     C                   if        SavCodice <> *blank
+225100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+225200000000     C                   Z-Add     6             Conta_Colo
+225300000000     C                   Clear                   Campo_Valore
+225400000000     C                   Move      SavCodice     Campo_Valore
+225500000000     C                   EXSR      Ablank
+225600000000     C                   if        Campo_Valore <> *Blanks
+225700000000     C                   EXSR      RieSkieraH
+225800000000     C                   endif
+225900000000     C                   endif
+226000000000     C*
+226100000000     C* 7) Altre somme non soggette a ritenute
+226200000000     C                   Eval      WImporto      = WImp007
+226300000000     C*
+226400000000     C                   if        WImporto      <> 0
+226500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+226600000000     C                   Z-Add     7             Conta_Colo
+226700000000     C                   EXSR      RieImportoH
+226800000000     C                   endif
+226900000000     C*
+227000000000     C* 8) Imponibile
+227100000000     C                   Eval      WImporto      = WImp008
+227200000000     C*
+227300000000     C                   if        WImporto      <> 0
+227400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+227500000000     C                   Z-Add     8             Conta_Colo
+227600000000     C                   EXSR      RieImportoH
+227700000000     C                   endif
+227800000000     C*
+227900000000     C* 9) Ritenute a titolo d'acconto
+228000000000     C                   Eval      WImporto      = WImp009
+228100000000     C*
+228200000000     C                   if        WImporto      <> 0
+228300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+228400000000     C                   Z-Add     9             Conta_Colo
+228500000000     C                   EXSR      RieImportoH
+228600000000     C                   endif
+228700000000     C*
+228800000000     C* 10) Ritenute a titolo di imposta
+228900000000     C                   Eval      WImporto      = WImp010
+229000000000     C*
+229100000000     C                   if        WImporto      <> 0
+229200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+229300000000     C                   Z-Add     10            Conta_Colo
+229400000000     C                   EXSR      RieImportoH
+229500000000     C                   endif
+229600000000     C*
+229700000000     C* 11) Ritenute sospese
+229800000000     C                   Eval      WImporto      = WImp011
+229900000000     C*
+230000000000     C                   if        WImporto      <> 0
+230100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+230200000000     C                   Z-Add     11            Conta_Colo
+230300000000     C                   EXSR      RieImportoH
+230400000000     C                   endif
+230500000000     C*
+230600000000     C* 12) Addizionale regionale a titolo d'acconto
+230700000000     C                   Eval      WImporto      = WImp012
+230800000000     C*
+230900000000     C                   if        WImporto      <> 0
+231000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+231100000000     C                   Z-Add     12            Conta_Colo
+231200000000     C                   EXSR      RieImportoH
+231300000000     C                   endif
+231400000000     C*
+231500000000     C* 13) Addizionale regionale a titolo di imposta
+231600000000     C                   Eval      WImporto      = WImp013
+231700000000     C*
+231800000000     C                   if        WImporto      <> 0
+231900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+232000000000     C                   Z-Add     13            Conta_Colo
+232100000000     C                   EXSR      RieImportoH
+232200000000     C                   endif
+232300000000     C*
+232400000000     C* 14) Addizionale regionale sospesa
+232500000000     C                   Eval      WImporto      = WImp014
+232600000000     C*
+232700000000     C                   if        WImporto      <> 0
+232800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+232900000000     C                   Z-Add     14            Conta_Colo
+233000000000     C                   EXSR      RieImportoH
+233100000000     C                   endif
+233200000000     C*
+233300000000     C* 15) Addizionale comunale a titolo d'acconto
+233400000000     C                   Eval      WImporto      = WImp015
+233500000000     C*
+233600000000     C                   if        WImporto      <> 0
+233700000000     C                   Z-Add     Prog_AU       Conta_Rigo
+233800000000     C                   Z-Add     15            Conta_Colo
+233900000000     C                   EXSR      RieImportoH
+234000000000     C                   endif
+234100000000     C*
+234200000000     C* 16) Addizionale comunale a titolo di imposta
+234300000000     C                   Eval      WImporto      = WImp016
+234400000000     C*
+234500000000     C                   if        WImporto      <> 0
+234600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+234700000000     C                   Z-Add     16            Conta_Colo
+234800000000     C                   EXSR      RieImportoH
+234900000000     C                   endif
+235000000000     C*
+235100000000     C* 17) Addizionale comunale sospesa
+235200000000     C                   Eval      WImporto      = WImp017
+235300000000     C*
+235400000000     C                   if        WImporto      <> 0
+235500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+235600000000     C                   Z-Add     17            Conta_Colo
+235700000000     C                   EXSR      RieImportoH
+235800000000     C                   endif
+235900000000     C*
+236000000000     C* 18) Imponibile anni precedenti
+236100000000     C                   Eval      WImporto      = WImp018
+236200000000     C*
+236300000000     C                   if        WImporto      <> 0
+236400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+236500000000     C                   Z-Add     18            Conta_Colo
+236600000000     C                   EXSR      RieImportoH
+236700000000     C                   endif
+236800000000     C*
+236900000000     C* 19) Ritenute operate anni precedenti
+237000000000     C                   Eval      WImporto      = WImp019
+237100000000     C*
+237200000000     C                   if        WImporto      <> 0
+237300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+237400000000     C                   Z-Add     19            Conta_Colo
+237500000000     C                   EXSR      RieImportoH
+237600000000     C                   endif
+237700000000     C*
+237800000000R211 X**** 20) Contributi previdenziali a carico del soggetto erogante
+237900000000R211 C* 20) Spese rimporsate
+238000000000     C                   Eval      WImporto      = WImp020
+238100000000     C*
+238200000000     C                   if        WImporto      <> 0
+238300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+238400000000     C                   Z-Add     20            Conta_Colo
+238500000000     C                   EXSR      RieImportoH
+238600000000     C                   endif
+238700000000     C*
+238800000000R211 X**** 21) Contributi previdenziali a carico del percipiente
+238900000000R211 C* 21) Spese rimporsate
+239000000000     C                   Eval      WImporto      = WImp021
+239100000000     C*
+239200000000     C                   if        WImporto      <> 0
+239300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+239400000000     C                   Z-Add     21            Conta_Colo
+239500000000     C                   EXSR      RieImportoH
+239600000000     C                   endif
+239700000000     C*
+239800000000R211 X**** 22) Spese rimborsate
+239900000000R211 X****               Eval      WImporto      = WImp022
+240000000000     C*
+240100000000R211 X****               if        WImporto      <> 0
+240200000000R211 X****               Z-Add     Prog_AU       Conta_Rigo
+240300000000R211 X****               Z-Add     22            Conta_Colo
+240400000000R211 X****               EXSR      RieImportoH
+240500000000R211 X****               endif
+240600000000     C*
+240700000000R211 X****  23) Ritenute rimborsate
+240800000000R211 X****               Eval      WImporto      = WImp023
+240900000000     C*
+241000000000R211 X****               if        WImporto      <> 0
+241100000000R211 X****               Z-Add     Prog_AU       Conta_Rigo
+241200000000R211 X****               Z-Add     23            Conta_Colo
+241300000000R211 X****               EXSR      RieImportoH
+241400000000R211 X****               endif
+241500000000     C*
+241600000000     C*
+241700000000     C                   ENDSR
+241800000000     C/EJECT
+241900000000R211 C******************************************************
+242000000000  "  C* Valorizzo i dati aggiuntivi Cu 2016
+242100000000  "  C******************************************************
+242200000000R211 C     GesAltriDati  BEGSR
+242300000000     C*
+242400000000     C* AU0XXX
+242500000000     C*
+242600000000     C* 29) Codice fiscale ente previdenziale
+242700000000     C                   If        WdpCdf <> *blanks
+242800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+242900000000     C                   Z-Add     29            Conta_Colo
+243000000000     C                   MoveL     WDpCdf        Campo_Valore
+243100000000     C                   MoveL     WDpCdf        C60
+243200000000     C                   if        Campo_Valore <> *Blanks
+243300000000     C                   EXSR      RieSkieraAlfH
+243400000000     C                   endif
+243500000000     C                   endif
+243600000000     C* 30) Denominazione Ente previdenziale
+243700000000     C                   If        WdpDen <> *blanks
+243800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+243900000000     C                   Z-Add     30            Conta_Colo
+244000000000     C                   MoveL     WDpDen        Campo_Valore
+244100000000     C                   MoveL     WDpDen        C60
+244200000000     C                   if        Campo_Valore <> *Blanks
+244300000000     C                   EXSR      RieSkieraAlfH
+244400000000     C                   endif
+244500000000     C                   endif
+244600000000     C* 31) Codice Ente previdenziale
+244700000000     C                   If        WDpCenP <> *blanks
+244800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+244900000000     C                   Z-Add     31            Conta_Colo
+245000000000     C                   MoveL     WDpCenP       Campo_Valore
+245100000000     C                   MoveL     WDpCenP       C60
+245200000000     C                   if        Campo_Valore <> *Blanks
+245300000000     C                   EXSR      RieSkieraAlfH
+245400000000     C                   endif
+245500000000     C                   endif
+245600000000     C* 32) Codice Azienda
+245700000000     C                   If        WDpCazi <> *blanks
+245800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+245900000000     C                   Z-Add     32            Conta_Colo
+246000000000     C                   MoveL     WDpCazi       Campo_Valore
+246100000000     C                   MoveL     WDpCazi       C60
+246200000000     C                   if        Campo_Valore <> *Blanks
+246300000000     C                   EXSR      RieSkieraAlfH
+246400000000     C                   endif
+246500000000     C                   endif
+246600000000     C* 33) Categoria
+246700000000     C                   If        WDpCate <> *blanks
+246800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+246900000000     C                   Z-Add     33            Conta_Colo
+247000000000     C                   MoveL     WDpCate       Campo_Valore
+247100000000     C                   MoveL     WDpCate       C60
+247200000000     C                   if        Campo_Valore <> *Blanks
+247300000000     C                   EXSR      RieSkieraAlfH
+247400000000     C                   endif
+247500000000     C                   endif
+247600000000     C*
+247700000000     C* 34) Contributi previdenziali a carico del soggetto erogante
+247800000000     C                   Eval      WImporto      = WImp034
+247900000000     C*
+248000000000     C                   if        WImporto      <> 0
+248100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+248200000000     C                   Z-Add     34            Conta_Colo
+248300000000     C                   EXSR      RieImportoH
+248400000000     C                   endif
+248500000000     C*
+248600000000     C* 35) Contributi previdenziali a carico del percipiente
+248700000000     C                   Eval      WImporto      = WImp035
+248800000000     C*
+248900000000     C                   if        WImporto      <> 0
+249000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+249100000000     C                   Z-Add     35            Conta_Colo
+249200000000     C                   EXSR      RieImportoH
+249300000000     C                   endif
+249400000000     C*
+249500000000     C* 36) Altri contributi
+249600000000     C                   if        WDpAcon <> *blank
+249700000000     C                   Z-Add     Prog_AU       Conta_Rigo
+249800000000     C                   Z-Add     36            Conta_Colo
+249900000000     C                   Clear                   Campo_Valore
+250000000000     C                   Move      '1'           Campo_Valore
+250100000000     C                   EXSR      Ablank
+250200000000     C                   if        Campo_Valore <> *Blanks
+250300000000     C                   EXSR      RieSkieraH
+250400000000     C                   endif
+250500000000     C                   endif
+250600000000     C* 37) Importo altri contributi
+250700000000     C                   Eval      WImporto      = WImp037
+250800000000     C*
+250900000000     C                   if        WImporto      <> 0
+251000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+251100000000     C                   Z-Add     37            Conta_Colo
+251200000000     C                   EXSR      RieImportoH
+251300000000     C                   endif
+251400000000     C* 38) Contributi dovuti
+251500000000     C                   Eval      WImporto      = WImp038
+251600000000     C*
+251700000000     C                   if        WImporto      <> 0
+251800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+251900000000     C                   Z-Add     38            Conta_Colo
+252000000000     C                   EXSR      RieImportoH
+252100000000     C                   endif
+252200000000     C* 39) Contributi versati
+252300000000     C                   Eval      WImporto      = WImp039
+252400000000     C*
+252500000000     C                   if        WImporto      <> 0
+252600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+252700000000     C                   Z-Add     39            Conta_Colo
+252800000000     C                   EXSR      RieImportoH
+252900000000     C                   endif
+253000000000     C* 41) Somme corrisposte prima del fallimento
+253100000000     C                   Eval      WImporto      = WImp041
+253200000000     C*
+253300000000     C                   if        WImporto      <> 0
+253400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+253500000000     C                   Z-Add     41            Conta_Colo
+253600000000     C                   EXSR      RieImportoH
+253700000000     C                   endif
+253800000000     C* 42) Somme corrisposte prima dal curatore
+253900000000     C                   Eval      WImporto      = WImp042
+254000000000     C*
+254100000000     C                   if        WImporto      <> 0
+254200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+254300000000     C                   Z-Add     42            Conta_Colo
+254400000000     C                   EXSR      RieImportoH
+254500000000     C                   endif
+254600000000     C*
+254700000000     C* 52) Redditi erogati da altri soggetti: Codice Fiscale
+254800000000     C                   If        WAsCdf <> *blanks
+254900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+255000000000     C                   Z-Add     52            Conta_Colo
+255100000000     C                   MoveL     WAsCdf        Campo_Valore
+255200000000     C                   MoveL     WAsCdf        C60
+255300000000     C                   if        Campo_Valore <> *Blanks
+255400000000     C                   EXSR      RieSkieraAlfH
+255500000000     C                   endif
+255600000000     C                   endif
+255700000000     C*
+255800000000     C* 53) Redditi erogati da altri soggetti: Imponibile
+255900000000     C                   Eval      WImporto      = WImp053
+256000000000     C*
+256100000000     C                   if        WImporto      <> 0
+256200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+256300000000     C                   Z-Add     53            Conta_Colo
+256400000000     C                   EXSR      RieImportoH
+256500000000     C                   endif
+256600000000     C*
+256700000000     C* 53) Redditi erogati da altri soggetti: Imponibile
+256800000000     C                   Eval      WImporto      = WImp053
+256900000000     C*
+257000000000     C                   if        WImporto      <> 0
+257100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+257200000000     C                   Z-Add     53            Conta_Colo
+257300000000     C                   EXSR      RieImportoH
+257400000000     C                   endif
+257500000000     C*
+257600000000     C* 54) Redditi erogati da altri soggetti: Ritenute a titolo di acconto
+257700000000     C                   Eval      WImporto      = WImp054
+257800000000     C*
+257900000000     C                   if        WImporto      <> 0
+258000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+258100000000     C                   Z-Add     54            Conta_Colo
+258200000000     C                   EXSR      RieImportoH
+258300000000     C                   endif
+258400000000     C*
+258500000000     C* 55) Redditi erogati da altri soggetti: Ritenute a titolo di imposta
+258600000000     C                   Eval      WImporto      = WImp055
+258700000000     C*
+258800000000     C                   if        WImporto      <> 0
+258900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+259000000000     C                   Z-Add     55            Conta_Colo
+259100000000     C                   EXSR      RieImportoH
+259200000000     C                   endif
+259300000000     C*
+259400000000     C* 56) Redditi erogati da altri soggetti: Ritenute sospese
+259500000000     C                   Eval      WImporto      = WImp056
+259600000000     C*
+259700000000     C                   if        WImporto      <> 0
+259800000000     C                   Z-Add     Prog_AU       Conta_Rigo
+259900000000     C                   Z-Add     56            Conta_Colo
+260000000000     C                   EXSR      RieImportoH
+260100000000     C                   endif
+260200000000     C*
+260300000000     C* 57) Redditi erogati da altri soggetti: Add.Regionale a titolo di acconto
+260400000000     C                   Eval      WImporto      = WImp057
+260500000000     C*
+260600000000     C                   if        WImporto      <> 0
+260700000000     C                   Z-Add     Prog_AU       Conta_Rigo
+260800000000     C                   Z-Add     57            Conta_Colo
+260900000000     C                   EXSR      RieImportoH
+261000000000     C                   endif
+261100000000     C*
+261200000000     C* 58) Redditi erogati da altri soggetti: Add.Regionale a titolo di imposta
+261300000000     C                   Eval      WImporto      = WImp058
+261400000000     C*
+261500000000     C                   if        WImporto      <> 0
+261600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+261700000000     C                   Z-Add     58            Conta_Colo
+261800000000     C                   EXSR      RieImportoH
+261900000000     C                   endif
+262000000000     C*
+262100000000     C* 59) Redditi erogati da altri soggetti: Add.Regionale sospesa
+262200000000     C                   Eval      WImporto      = WImp059
+262300000000     C*
+262400000000     C                   if        WImporto      <> 0
+262500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+262600000000     C                   Z-Add     59            Conta_Colo
+262700000000     C                   EXSR      RieImportoH
+262800000000     C                   endif
+262900000000     C*
+263000000000     C* 60) Redditi erogati da altri soggetti: Add.Comunale a titolo di acconto
+263100000000     C                   Eval      WImporto      = WImp060
+263200000000     C*
+263300000000     C                   if        WImporto      <> 0
+263400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+263500000000     C                   Z-Add     60            Conta_Colo
+263600000000     C                   EXSR      RieImportoH
+263700000000     C                   endif
+263800000000     C*
+263900000000     C* 61) Redditi erogati da altri soggetti: Add.Comunale a titolo di imposta
+264000000000     C                   Eval      WImporto      = WImp061
+264100000000     C*
+264200000000     C                   if        WImporto      <> 0
+264300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+264400000000     C                   Z-Add     61            Conta_Colo
+264500000000     C                   EXSR      RieImportoH
+264600000000     C                   endif
+264700000000     C*
+264800000000     C* 62) Redditi erogati da altri soggetti: Add.Comunale sospesa
+264900000000     C                   Eval      WImporto      = WImp062
+265000000000     C*
+265100000000     C                   if        WImporto      <> 0
+265200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+265300000000     C                   Z-Add     62            Conta_Colo
+265400000000     C                   EXSR      RieImportoH
+265500000000     C                   endif
+265600000000     C*
+265700000000     C* 71) Codice fiscale (sez. lavoro autonomo e redd. diversi)
+265800000000     C                   If        WOsCdf1<> *blanks
+265900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+266000000000     C                   Z-Add     71            Conta_Colo
+266100000000     C                   MoveL     WOsCdf1       Campo_Valore
+266200000000     C                   MoveL     WOsCdf1       C60
+266300000000     C                   if        Campo_Valore <> *Blanks
+266400000000     C                   EXSR      RieSkieraAlfH
+266500000000     C                   endif
+266600000000     C                   endif
+266700000000     C*
+266800000000     C* 72) Codice fiscale (sez. pignoramento verso terzi)
+266900000000     C                   If        WOsCdf2<> *blanks
+267000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+267100000000     C                   Z-Add     72            Conta_Colo
+267200000000     C                   MoveL     WOsCdf2       Campo_Valore
+267300000000     C                   MoveL     WOsCdf2       C60
+267400000000     C                   if        Campo_Valore <> *Blanks
+267500000000     C                   EXSR      RieSkieraAlfH
+267600000000     C                   endif
+267700000000     C                   endif
+267800000000     C*
+267900000000     C*  73) Codice fiscale (sez. indennità di esproprio)
+268000000000     C                   If        WOsCdf3<> *blanks
+268100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+268200000000     C                   Z-Add     73            Conta_Colo
+268300000000     C                   MoveL     WOsCdf3       Campo_Valore
+268400000000     C                   MoveL     WOsCdf3       C60
+268500000000     C                   if        Campo_Valore <> *Blanks
+268600000000     C                   EXSR      RieSkieraAlfH
+268700000000     C                   endif
+268800000000     C                   endif
+268900000000     C*
+269000000000     C* 101) Pignoramento verso terzi : Codice Fiscale debitore principale
+269100000000     C                   If        WF2Cdf <> *blanks
+269200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+269300000000     C                   Z-Add     101           Conta_Colo
+269400000000     C                   MoveL     WF2Cdf        Campo_Valore
+269500000000     C                   MoveL     WF2Cdf        C60
+269600000000     C                   if        Campo_Valore <> *Blanks
+269700000000     C                   EXSR      RieSkieraAlfH
+269800000000     C                   endif
+269900000000     C                   endif
+270000000000     C*
+270100000000     C* 102) Pignoramento verso terzi : Somme erogate
+270200000000     C                   Eval      WImporto      = WImp102
+270300000000     C*
+270400000000     C                   if        WImporto      <> 0
+270500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+270600000000     C                   Z-Add     102           Conta_Colo
+270700000000     C                   EXSR      RieImportoH
+270800000000     C                   endif
+270900000000     C*
+271000000000     C* 103) Pignoramento verso terzi : Ritenute operate
+271100000000     C                   Eval      WImporto      = WImp103
+271200000000     C*
+271300000000     C                   if        WImporto      <> 0
+271400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+271500000000     C                   Z-Add     103           Conta_Colo
+271600000000     C                   EXSR      RieImportoH
+271700000000     C                   endif
+271800000000     C*
+271900000000     C* 104) Pignoramento verso terzi : Ritenute non operate
+272000000000     C                   if        WF2Rino <> *blank
+272100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+272200000000     C                   Z-Add     104           Conta_Colo
+272300000000     C                   Clear                   Campo_Valore
+272400000000     C                   Move      '1'           Campo_Valore
+272500000000     C                   EXSR      Ablank
+272600000000     C                   if        Campo_Valore <> *Blanks
+272700000000     C                   EXSR      RieSkieraH
+272800000000     C                   endif
+272900000000     C                   endif
+273000000000     C*
+273100000000     C* 105) Pignoramento verso terzi : Codice Fiscale debitore principale
+273200000000     C                   If        WF2Cdf2 <> *blanks
+273300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+273400000000     C                   Z-Add     105           Conta_Colo
+273500000000     C                   MoveL     WF2Cdf2       Campo_Valore
+273600000000     C                   MoveL     WF2Cdf2       C60
+273700000000     C                   if        Campo_Valore <> *Blanks
+273800000000     C                   EXSR      RieSkieraAlfH
+273900000000     C                   endif
+274000000000     C                   endif
+274100000000     C*
+274200000000     C* 106) Pignoramento verso terzi : Somme erogate
+274300000000     C                   Eval      WImporto      = WImp106
+274400000000     C*
+274500000000     C                   if        WImporto      <> 0
+274600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+274700000000     C                   Z-Add     106           Conta_Colo
+274800000000     C                   EXSR      RieImportoH
+274900000000     C                   endif
+275000000000     C*
+275100000000     C* 107) Pignoramento verso terzi : Ritenute operate
+275200000000     C                   Eval      WImporto      = WImp107
+275300000000     C*
+275400000000     C                   if        WImporto      <> 0
+275500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+275600000000     C                   Z-Add     107           Conta_Colo
+275700000000     C                   EXSR      RieImportoH
+275800000000     C                   endif
+275900000000     C*
+276000000000     C* 108) Pignoramento verso terzi : Ritenute non operate
+276100000000     C                   if        WF2Rino2 <> *blank
+276200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+276300000000     C                   Z-Add     108           Conta_Colo
+276400000000     C                   Clear                   Campo_Valore
+276500000000     C                   Move      '1'           Campo_Valore
+276600000000     C                   EXSR      Ablank
+276700000000     C                   if        Campo_Valore <> *Blanks
+276800000000     C                   EXSR      RieSkieraH
+276900000000     C                   endif
+277000000000     C                   endif
+277100000000     C*
+277200000000     C* 131) Indennità di esproprio   : Somme corrisposte
+277300000000     C                   Eval      WImporto      = WImp131
+277400000000     C*
+277500000000     C                   if        WImporto      <> 0
+277600000000     C                   Z-Add     Prog_AU       Conta_Rigo
+277700000000     C                   Z-Add     131           Conta_Colo
+277800000000     C                   EXSR      RieImportoH
+277900000000     C                   endif
+278000000000     C*
+278100000000     C* 132) Indennità di esproprio   : Ritenute operate
+278200000000     C                   Eval      WImporto      = WImp132
+278300000000     C*
+278400000000     C                   if        WImporto      <> 0
+278500000000     C                   Z-Add     Prog_AU       Conta_Rigo
+278600000000     C                   Z-Add     132           Conta_Colo
+278700000000     C                   EXSR      RieImportoH
+278800000000     C                   endif
+278900000000     C*
+279000000000     C* 133) Altre indennità e interessi: Somme corrisposte
+279100000000     C                   Eval      WImporto      = WImp133
+279200000000     C*
+279300000000     C                   if        WImporto      <> 0
+279400000000     C                   Z-Add     Prog_AU       Conta_Rigo
+279500000000     C                   Z-Add     133           Conta_Colo
+279600000000     C                   EXSR      RieImportoH
+279700000000     C                   endif
+279800000000     C*
+279900000000     C* 134) Altre indennità e interessi: Somme corrisposte
+280000000000     C                   Eval      WImporto      = WImp134
+280100000000     C*
+280200000000     C                   if        WImporto      <> 0
+280300000000     C                   Z-Add     Prog_AU       Conta_Rigo
+280400000000     C                   Z-Add     134           Conta_Colo
+280500000000     C                   EXSR      RieImportoH
+280600000000     C                   endif
+280700000000     C*
+280800000000     C* 135) Indennità di esproprio   : Ritenute operate
+280900000000     C                   Eval      WImporto      = WImp135
+281000000000     C*
+281100000000     C                   if        WImporto      <> 0
+281200000000     C                   Z-Add     Prog_AU       Conta_Rigo
+281300000000     C                   Z-Add     135           Conta_Colo
+281400000000     C                   EXSR      RieImportoH
+281500000000     C                   endif
+281600000000     C*
+281700000000     C* 136) Indennità di esproprio   : Ritenute operate
+281800000000     C                   Eval      WImporto      = WImp136
+281900000000     C*
+282000000000     C                   if        WImporto      <> 0
+282100000000     C                   Z-Add     Prog_AU       Conta_Rigo
+282200000000     C                   Z-Add     136           Conta_Colo
+282300000000     C                   EXSR      RieImportoH
+282400000000     C                   endif
+282500000000     C*
+282600000000     C* 137) Altre indennità e interessi: Somme corrisposte
+282700000000     C                   Eval      WImporto      = WImp137
+282800000000     C*
+282900000000     C                   if        WImporto      <> 0
+283000000000     C                   Z-Add     Prog_AU       Conta_Rigo
+283100000000     C                   Z-Add     137           Conta_Colo
+283200000000     C                   EXSR      RieImportoH
+283300000000     C                   endif
+283400000000     C*
+283500000000     C* 138) Indennità di esproprio   : Ritenute operate
+283600000000     C                   Eval      WImporto      = WImp138
+283700000000     C*
+283800000000     C                   if        WImporto      <> 0
+283900000000     C                   Z-Add     Prog_AU       Conta_Rigo
+284000000000     C                   Z-Add     138           Conta_Colo
+284100000000     C                   EXSR      RieImportoH
+284200000000     C                   endif
+284300000000     C*
+284400000000R211 C                   Endsr
+284500000000R211 C/EJECT
+284600000000     C******************************************************
+284700000000     C* Toglie gli zeri non significativi nelle caselle con
+284800000000     C* importo dei campi posizionali
+284900000000     C******************************************************
+285000000000     C     RieImportoH   BEGSR
+285100000000     C*
+285200000000R211 C                   Eval      $FlgNeg       = '0'
+285300000000  "  C*
+285400000000  "  C* Se l'importo è negativo
+285500000000  "  C                   If        Wimporto < 0
+285600000000  "  C                   Eval      $FlgNeg       = '1'
+285700000000  "  C                   Eval      Wimporto     = wimporto * -1
+285800000000  "  C                   Endif
+285900000000R211 C*
+286000000000     C                   Clear                   Campo_Valore
+286100000000     C                   Z-Add     WImporto      Importo16_2
+286200000000     C*
+286300000000     C                   Move      Importo16_2   CampoWrk
+286400000000     C                   Move      CampoInt      Int
+286500000000     C                   Move      ','           Virgola
+286600000000     C                   Move      CampoDec      Dec
+286700000000     C                   Move      CampoIntero   Importo16A
+286800000000     C*
+286900000000     C                   EXSR      Ablank2
+287000000000     C*
+287100000000     C                   if        Campo_Valore <> *Blanks
+287200000000     C                   EXSR      RieSkieraH
+287300000000     C                   endif
+287400000000     C*
+287500000000     C                   ENDSR
+287600000000     C/EJECT
+287700000000     C******************************************************
+287800000000     C* Toglie gli zeri non significativi nelle caselle con
+287900000000     C* importo dei campi posizionali
+288000000000     C******************************************************
+288100000000     C     RieImportoH2  BEGSR
+288200000000     C*
+288300000000     C                   Clear                   Campo_Valore
+288400000000     C                   Z-Add     WImporto      Importo16_0
+288500000000     C*
+288600000000     C                   Eval      $FlgNeg       = '0'
+288700000000     C                   if        WImporto     <   0
+288800000000     C                   Eval      $FlgNeg       = '1'
+288900000000     C                   Eval      Importo16_0  = Importo16_0 * -1
+289000000000     C                   endif
+289100000000     C                   EXSR      Ablank2
+289200000000     C*
+289300000000     C                   if        Campo_Valore <> *Blanks
+289400000000     C                   EXSR      RieSkieraH
+289500000000     C                   endif
+289600000000     C*
+289700000000     C                   ENDSR
+289800000000     C/EJECT
+289900000000     C******************************************************
+290000000000     C* Toglie gli zeri non significativi al Campo_Valore
+290100000000     C******************************************************
+290200000000     C     ABlank        BEGSR
+290300000000     C*
+290400000000     C                   MoveA     Campo_Valore  Sk_Campo
+290500000000     C*
+290600000000     C                   DO        Max$X         $X
+290700000000     C*
+290800000000     C                   if        Sk_Campo($X) = ' '   or
+290900000000     C                             Sk_Campo($X) = '0'
+291000000000     C                   Move      ' '           Sk_Campo($X)
+291100000000     C                   else
+291200000000     C                   LEAVE
+291300000000     C                   endif
+291400000000     C*
+291500000000     C                   endDo
+291600000000     C*
+291700000000     C                   MoveA     Sk_Campo      Campo_Valore
+291800000000     C*
+291900000000     C                   ENDSR
+292000000000      /EJECT
+292100000000     C******************************************************
+292200000000     C* Toglie gli zeri non significativi nelle caselle con
+292300000000     C* importo dei campi posizionali
+292400000000     C******************************************************
+292500000000     C     ABlank2       BEGSR
+292600000000     C*
+292700000000     C                   MoveA     Importo16A    SK_Importo
+292800000000     C*
+292900000000     C                   DO        Max$Z         $Z
+293000000000     C*
+293100000000     C                   if        Sk_Importo($Z) = ' '   or
+293200000000     C                             Sk_Importo($Z) = '0'
+293300000000     C                   Move      ' '           Sk_Importo($Z)
+293400000000     C                   else
+293500000000     C                   if        $FlgNeg       = '1'
+293600000000     C                   Eval      Sk_Importo($Z-1) = '-'
+293700000000     C                   Eval      $FlgNeg       = '0'
+293800000000     C                   endif
+293900000000     C                   LEAVE
+294000000000     C                   endif
+294100000000     C*
+294200000000     C                   endDo
+294300000000R169 C*
+294400000000  "  C                   If        Sk_Importo(13) =  ' '  and
+294500000000  "  C                             Sk_Importo(14) =  ','  and
+294600000000  "  C                             Sk_Importo(15) <> ' '
+294700000000  "  C                   Eval      Sk_Importo(13) = '0'
+294800000000R169 C                   EndIf
+294900000000     C*
+295000000000     C                   MoveA     Sk_Importo    Campo_Valore
+295100000000     C*
+295200000000     C                   ENDSR
+295300000000      /EJECT
+295400000000     C******************************************************
+295500000000     C* Scrittura t.r. Z
+295600000000     C******************************************************
+295700000000     C     WrtTpRecZ     BEGSR
+295800000000     C*
+295900000000     C                   Clear                   SDGSK61DSZ
+296000000000     C* Tipo Record
+296100000000     C                   Eval      K61ZTR       = 'Z'
+296200000000     C*-
+296300000000     C                   Z-ADD     1             K61ZNB
+296400000000     C*-
+296500000000     C                   Z-ADD     0             K61ZNC
+296600000000     C*-
+296700000000     C                   Z-ADD     Cnt_D         K61ZND
+296800000000     C*-
+296900000000     C                   Z-ADD     0             K61ZNG
+297000000000     C*-
+297100000000     C                   Z-ADD     Cnt_H         K61ZNH
+297200000000     C*-
+297300000000     C* Carattere di controllo
+297400000000     C                   MoveL     'A'           K61ZK1
+297500000000     C*-
+297600000000     C* Elementi di fine riga
+297700000000     C* Impostare i valori esadecimali '0D' e '0A'
+297800000000     C* (caratteri ASCI 'CR' ed 'LF')
+297900000000     C*
+298000000000     C                   Eval      K61ZK2  = *Blanks
+298100000000     C                   Eval      K61ZK2  = X'0D25'
+298200000000     C*
+298300000000     C                   Clear                   SDGCUW000
+298400000000     C                   MoveL     SDGSK61DSZ    CUWREC
+298500000000?    C                   WRITE     SDGCUW000
+298600000000     C                   FEOD      SDGCUW00F
+298700000000     C*
+298800000000     C                   ENDSR
+298900000000     C/EJECT
+299000000000     C************************************************************
+299100000000     C* Iscrizione a catalogo del file scarico
+299200000000     C************************************************************
+299300000000     C     IscrCatF      BEGSR
+299400000000     C*
+299500000000     C
+299600000000     C                   Eval      WNumero     = *All'0'
+299700000000     C                   Z-Add     AnnoK61       WAnno
+299800000000     C                   Z-Add     $ProgrInvio   WPrgInvio
+299900000000     C                   Move      WNumero       $Numero
+300000000000     C*
+300100000000     C                   Move      UDateIso      $DtAlfa
+300200000000     C*
+300300000000     C                   Call      'X36CATFR'
+300400000000     C                   PARM                    SocietaK61
+300500000000     C                   PARM      *Blank        $Unita
+300600000000     C                   PARM                    $File
+300700000000     C                   PARM                    $Libreria
+300800000000     C                   PARM                    $DesFileO
+300900000000     C                   PARM      'CU'          $CdScarico        2
+301000000000     C                   PARM      'P'           $TpSupp           1
+301100000000     C                   PARM      *Blank        $NmSupp          10
+301200000000     C                   PARM      '4'           $TpDist           1
+301300000000     C                   PARM                    $DtAlfa          10
+301400000000     C                   PARM                    $Numero           9
+301500000000     C                   PARM      *Blank        $DesBan          44
+301600000000     C                   PARM                    KNmus
+301700000000     C                   PARM      '0'           Sospeso           1
+301800000000     C                   PARM      '1'           Video             1
+301900000000     C*
+302000000000     C                   ENDSR
+302100000000     C/EJECT
+302200000000     C******************************************************
+302300000000     C* Gestione invio multiplo
+302400000000     C******************************************************
+302500000000     C     GesMultInv    BEGSR
+302600000000     C*
+302700000000     C* Inizializzazione schiera per record D
+302800000000     C                   EXSR      InzSkieraD
+302900000000     C*
+303000000000     C* Inizializzazione schiera per record H
+303100000000     C                   EXSR      InzSkieraH
+303200000000     C*
+303300000000     C                   EXSR      Inz770
+303400000000     C                   EXSR      Set770
+303500000000     C*
+303600000000     C                   DOW       $Fine770    = *Off     and
+303700000000     C                             $ProgrInvio < $NrInvii
+303800000000     C*
+303900000000     C                   Add       1             $ProgrInvio
+304000000000R172 X****               Z-Add     0             Cnt_Righe
+304100000000R172 C                   Z-Add     1             Cnt_Righe
+304200000000     C                   Eval      SoloPrimaVolta = *On
+304300000000     C* Azzeramento
+304400000000     C                   EXSR      AzzeraProg
+304500000000     C                   EXSR      InzSkieraD
+304600000000     C                   EXSR      InzSkieraH
+304700000000     C*
+304800000000     C                   EXSR      RepNomeF
+304900000000     C                   EXSR      GesFilTel
+305000000000     C*
+305100000000     C                   OPEN      SDGCUW00F
+305200000000     C*
+305300000000     C* Record A  testata della fornitura
+305400000000     C                   EXSR      WrtTpRecA
+305500000000     C*
+305600000000     C* Record B  testata della fornitura
+305700000000     C                   EXSR      WrtTpRecB
+305800000000     C*
+305900000000     C                   if        $ProgrInvio > 1
+306000000000     C                   EXSR      ElaboraKey
+306100000000     C*
+306200000000     C                   if        SavKey   <> NewKey  or
+306300000000     C                             $Fine770  = *On
+306400000000     C*
+306500000000     C                   EXSR      WrtTpRecD
+306600000000     C                   EXSR      InzSkieraD
+306700000000     C*
+306800000000R172 C                   if        TipInvK61 <> 2
+306900000000     C                   EXSR      WrtTpRecH
+307000000000     C                   EXSR      InzSkieraH
+307100000000R172 C                   endif
+307200000000     C*
+307300000000     C                   Add       1             $NrRecTot
+307400000000     C                   Add       1             CntDA
+307500000000     C                   Add       1             CntAU
+307600000000     C                   EXSR      ElaboraKey
+307700000000     C                   endif
+307800000000     C*
+307900000000     C                   if        N77Escludi <> '1'
+308000000000R172 C                             and
+308100000000 "   C                             ProtocK61  =  0 and
+308200000000 "   C                             ProtoDK61  =  0
+308300000000 "   C                             or
+308400000000 "   C                             ((ProtocK61  <> 0 and
+308500000000 "   C                              ProtoDK61  =  0 and
+308600000000 "   C                              N77Protoc  =  ProtocK61)
+308700000000 "   C                             or
+308800000000 "   C                             (ProtocK61  <> 0         and
+308900000000 "   C                              ProtoDK61  <> 0         and
+309000000000 "   C                              N77Protoc  =  ProtocK61 and
+309100000000 "   C                              N77ProtCea =  ProtoDK61))
+309200000000R172 C                             or $Fine770  = *On
+309300000000     C****                         and N77Cde  =  *blank
+309400000000     C****                         and N77Num  =  *blank
+309500000000     C                   EXSR      ElaboraRecD
+309600000000     C*
+309700000000R172 C                   if        TipInvK61 <> 2
+309800000000     C                   EXSR      ElaboraRecH
+309900000000R172 C                   endif
+310000000000R172 C*
+310100000000R172 C                   EXSR      Aggiorna770
+310200000000     C                   endif
+310300000000     C*
+310400000000     C                   endif
+310500000000     C*
+310600000000     C* seconda lettura per scrivere il multifile
+310700000000     C                   DOW       $Fine770    = *Off  and
+310800000000     C                             (Cnt_Righe   <  MaxRecK61 and
+310900000000     C                              MaxRecK61   > 0            )
+311000000000     C*
+311100000000     C                   if        TipInvK61   <> 2
+311200000000     C*
+311300000000     C                   EXSR      Lettura770
+311400000000     C*
+311500000000     C                   if        N77Escludi <> '1'
+311600000000R172 C                             and
+311700000000 "   C                             (ProtocK61  =  0 and
+311800000000 "   C                              ProtoDK61  =  0 or
+311900000000 "   C                              $RcdOk = *on)
+312000000000R172 C                             or $Fine770  = *On
+312100000000     C****                         and N77Cde  =  *blank
+312200000000     C****                         and N77Num  =  *blank
+312300000000     C                   if        SoloPrimaVolta  = *On
+312400000000     C                   EXSR      ElaboraKey
+312500000000     C                   endif
+312600000000     C*
+312700000000     C                   if        SavKey   <> NewKey  or
+312800000000     C                             $Fine770  = *On
+312900000000     C*
+313000000000     C                   EXSR      WrtTpRecD
+313100000000     C                   EXSR      InzSkieraD
+313200000000     C*
+313300000000R172 C                   if        TipInvK61 <> 2
+313400000000     C                   EXSR      WrtTpRecH
+313500000000     C                   EXSR      InzSkieraH
+313600000000R172 C                   endif
+313700000000     C*
+313800000000     C                   Add       1             $NrRecTot
+313900000000     C                   Add       1             CntDA
+314000000000     C                   Add       1             CntAU
+314100000000     C                   EXSR      ElaboraKey
+314200000000     C                   endif
+314300000000     C*
+314400000000     C                   EXSR      ElaboraRecD
+314500000000     C*
+314600000000R172 C                   if        TipInvK61 <> 2
+314700000000     C                   EXSR      ElaboraRecH
+314800000000R172 C                   endif
+314900000000R172 C*
+315000000000R172 C                   EXSR      Aggiorna770
+315100000000     C                   endif
+315200000000     C*
+315300000000     C                   endif
+315400000000     C*
+315500000000     C                   endDo
+315600000000     C*
+315700000000     C* Record Z di coda della fornitura
+315800000000     C                   EXSR      WrtTpRecZ
+315900000000     C*
+316000000000     C                   EXSR      IscrCatF
+316100000000     C*
+316200000000     C                   CLOSE     SDGCUW00F
+316300000000     C*
+316400000000     C                   endDo
+316500000000     C*
+316600000000     C                   ENDSR
+316700000000     C/EJECT
+316800000000     C************************************************************
+316900000000     C* Stampa errore
+317000000000     C************************************************************
+317100000000     C     StpErrore     BEGSR
+317200000000     C*
+317300000000     C*
+317400000000     C                   ENDSR
+317500000000     C/EJECT
+317600000000     C************************************************************
+317700000000     C* Inizializzazioni variabili
+317800000000     C************************************************************
+317900000000     C     INZVAR        BEGSR
+318000000000     C*
+318100000000     C                   MoveL     KPJBU         SDGSK61DS
+318200000000     C*
+318300000000     C                   Eval      ERRK61      = *Off
+318400000000     C                   Eval      MaxRecK61   = MaxRecK61 -4
+318500000000     C*
+318600000000     C                   MoveL     'SOC001'      TIPXSC
+318700000000     C                   MoveL     SOCIETAK61    SOCXSC
+318800000000     C*
+318900000000     C                   EXSR      RepSoc
+319000000000     C*
+319100000000     C                   if        RTNXSC     <> '1'
+319200000000     C                   MoveL     XSOCDS        SOC001
+319300000000     C                   else
+319400000000     C                   Eval      $Errori     = *On
+319500000000     C                   EXSR      ENDPGM
+319600000000     C                   endif
+319700000000     C*
+319800000000     C                   Move      XScSoc        SIFSocieta
+319900000000     C     K01SIF01      Chain     ANSIF01L                           21
+320000000000     C  N21              Move      SIFFlgOpe     WrkFlgOpe
+320100000000     C   21              Move      *Blanks       SocSogg
+320200000000     C*
+320300000000     C                   Z-Add     0             $I
+320400000000     C*
+320500000000     C                   ENDSR
+320600000000     C/EJECT
+320700000000     C************************************************************
+320800000000     C* Reperimento dati società
+320900000000     C************************************************************
+321000000000     C     RepSoc        BEGSR
+321100000000     C*
+321200000000     C                   CALL      'SDGSOCDR'
+321300000000     C                   PARM                    TIPXSC            6
+321400000000     C                   PARM                    SOCXSC            3
+321500000000     C                   PARM                    CDSXSC            9 0
+321600000000     C                   PARM                    MODXSC            3
+321700000000     C                   PARM      *Blanks       RTNXSC            1
+321800000000     C                   PARM                    XSOCDS
+321900000000     C                   PARM                    KPJBA
+322000000000     C*
+322100000000     C                   ENDSR
+322200000000     C/EJECT
+322300000000     C************************************************************
+322400000000     C* OPERAZIONI INIZIALI
+322500000000     C************************************************************
+322600000000     C     *INZSR        BEGSR
+322700000000     C*
+322800000000     C* Reperimento parametri
+322900000000     C*
+323000000000     C     *ENTRY        PLIST
+323100000000     C                   PARM                    KPJBA
+323200000000     C*
+323300000000     C     *DMY          Move      Udate         UDateISO
+323400000000     C*
+323500000000     C                   ENDSR
+323600000000     C/EJECT
+323700000000     C************************************************************
+323800000000     C* DEFINIZIONE KLIST
+323900000000     C************************************************************
+324000000000     C     DefKlist      BEGSR
+324100000000     C*
+324200000000     C* KLIST
+324300000000     C*
+324400000000     C* Nd77007L
+324500000000     C     K0277007      KLIST
+324600000000     C                   KFLD                    N77Societa
+324700000000     C                   KFLD                    N77Acf
+324800000000     C*
+324900000000     C* SDGSo301L
+325000000000     C     K04SO301      KLIST
+325100000000     C                   KFLD                    SO3Sogg
+325200000000     C                   KFLD                    SO3DtFiVL
+325300000000     C                   KFLD                    SO3Sys
+325400000000     C                   KFLD                    SO3NrAsint
+325500000000     C*
+325600000000     C* ANSIF01L
+325700000000     C     K01SIF01      KLIST
+325800000000     C                   KFLD                    SIFSocieta
+325900000000     C*
+326000000000     C                   ENDSR
+326100000000     C/EJECT

@@ -1,0 +1,1456 @@
+000100000000      ****************************************************************
+000200971113      * GESTISCE IL CALENDARIO                                       *
+000300930329      *     A SECONDA DEI PARAMETRI PUO' GESTIRE:                    *
+000400930329      *     - FESTIVITA' FILIALI PER CONSEGNE                        *
+000500930329      *     - FESTIVITA' FILIALI PER PRESE                           *
+000600930329      *     - FESTIVITA' TRAZIONI TRA TERMINAL                       *
+000700000000      ****************************************************************
+000800000000     H              J
+000900000000     F* FILE VIDEO (SUBFILE DATI)
+001000941109     FTNSD75D CF  E                    WORKSTN      KINFDS DEVDS1
+001100941109     F                                        SFLULTKSFILE SD75D05
+001200941109     F                                        MSGULTKSFILE SD75DMS
+001300941109     FAZCLN01LIF  E           K        DISK
+001400000000     E*****************************************************************
+001500000000     E* MESSAGGI
+001600930127     E                    MSG     1  20 78
+001700000000     E* COMANDI
+001800000000     E                    CMD     1   5 80
+001900000000     E* DESCRIZIONI OPZIONI
+002000000000     E                    OPD     1  24 80
+002100000000     E* DESCRIZIONI TASTI FUNZIONALI
+002200000000     E                    FUD     1  24 80
+002300000000     E* TABELLA OPZIONI DA CARICARE A VIDEO
+002400000000     E                    OPV        24 19
+002500000000     E* TABELLA TASTI FUNZIONALI DA CARICARE A VIDEO
+002600000000     E                    FUV        24 19
+002700000000     I*****************************************************************
+002800000000     I* RIDEFINIZIONE SCHIERA -OPD-
+002900000000     IOPDDS       DS
+003000000000     I*                -OPZIONE PRINCIPALE
+003100000000     I                                        1   2 OPDOPZ
+003200000000     I*                -DESCRIZIONE PARZIALE
+003300000000     I                                        3  19 OPDDE1
+003400000000     I*                -OPZIONE ALTERNATIVA
+003500000000     I                                       21  22 OPDOP1
+003600000000     I*                -FILLER
+003700000000     I                                       23  34 OPDFI0
+003800000000     I*                -FLAG OPZ. ATTIVA (S/N)
+003900000000     I                                       35  35 OPDATT
+004000000000     I*                -FILLER
+004100000000     I                                       36  80 OPDFI1
+004200000000     I*                -DESCRIZIONE COMPLETA
+004300000000     I                                        1  19 OPDDES
+004400000000     I*                -RIDEFINIZIONE RIGA
+004500000000     I                                        1  80 OPDRIG
+004600000000     I*****************************************************************
+004700000000     I* RIDEFINIZIONE SCHIERA -FUD-
+004800000000     IFUDDS       DS
+004900000000     I*                -DESCRIZIONE PARZIALE
+005000000000     I                                        1   1 FUDDE1
+005100000000     I*                -FUNZIONE
+005200000000     I                                        2   3 FUDFUN
+005300000000     I*                -DESCRIZIONE PARZIALE
+005400000000     I                                        4  19 FUDDE2
+005500000000     I*                -FILLER
+005600000000     I                                       20  34 FUDFI0
+005700000000     I*                -FLAG FUNZ.ATTIVA (S/N)
+005800000000     I                                       35  35 FUDATT
+005900000000     I*                -FILLER
+006000000000     I                                       36  80 FUDFI1
+006100000000     I*                -DESCRIZIONE COMPLETA
+006200000000     I                                        1  19 FUDDES
+006300000000     I*                -RIDEFINIZIONE RIGA
+006400000000     I                                        1  80 FUDRIG
+006500000000     I*****************************************************************
+006600930127     I* PARAMETRI CHIAMATA CL XMSG (GESTIONE MESSAGGI AL PGM)
+006700930127     IDSMSG     E DS
+006800930204     I*****************************************************************
+006900000000     I* DS PER GESTIONE TASTI FUNZIONALI
+007000930127     IDSKEY     E DS
+007100000000     IDEVDS1      DS
+007200000000     I                                      369 369 KEY
+007300930312     I***************************************************************
+007400930312     I* ARCHITETTURA
+007500930312     IKPJBA     E DS
+007600930329     I****************************************************************
+007700930329     IPARAM       DS
+007800930329     I                                        1   2 KPJOPZ
+007900000000     C*================================================================
+008000000000     C* MAIN DEL PGM
+008100000000     C                     EXSR RUTINZ
+008200000000     C*
+008300930126     C* SE CONTROLLI PRELIMINARI NON OK VADO A FINE PGM
+008400930126     C           ERRL00    IFNE '1'                        --- 1 -->
+008500000000     C*
+008600000000     C* CARICA IL SFL DAI PARAMETRI IN INPUT AL PROGRAMMA
+008700000000     C                     EXSR POSSFL
+008800000000     C*
+008900000000     C* CICLO FINO A CHE:
+009000000000     C*  -F03 NON VIENE ACCESO (IN QUESTO PGM)                 OR
+009100000000     C*  -F12 NON VIENE ACCESO (IN QUESTO PGM)                 OR
+009200000000     C*  -FINE PGM PER SCELTA EFFETTUATA O ENTER SENZA SCELTA
+009300000000     C           F03L00    DOUEQ'1'                        --- 2 -->
+009400000000     C           F12L00    OREQ '1'
+009500000000     C           FINL00    OREQ '1'
+009600000000     C*
+009700000000     C* AZZERA FLAG DI ERROE
+009800000000     C                     MOVEL'0'       ERRL00
+009900000000     C*
+010000000000     C* EMETTE SFL A VIDEO
+010100000000     C                     EXSR OUTSFL
+010200000000     C*
+010300000000     C* CONTROLLO E GESTIONE TASTI FUNZIONALI -ROUTINE FUNCON
+010400000000     C                     EXSR FUNCON
+010500000000     C*
+010600000000     C                     END                             <-- 2 ---
+010700000000     C*
+010800000000     C                     END                             <-- 1 --
+010900000000     C*
+011000000000     C                     SETON                     LR
+011100000000     C*FINE MAIN DEL PGM
+011200000000     C*================================================================
+011300930126     C* F03GES -GEST.TASTO FUNZ. F03 ===> FINE
+011400000000     C*================================================================
+011500000000     C           F03GES    BEGSR
+011600000000     C*
+011700000000     C* IMPOSTO FLAG DI PREMUTO TASTO F03 (A LIVELLO PGM 00)
+011800000000     C                     MOVEL'1'       F03L00
+011900000000     C*
+012000000000     C                     ENDSR
+012100000000     C*================================================================
+012200930129     C* F05GES -GEST.TASTO FUNZ. F05 ===> RIVISUALIZZAZIONE
+012300000000     C*================================================================
+012400000000     C           F05GES    BEGSR
+012500000000     C*
+012600000000     C* LANCIA LA ROUTINE DI CARICAMENTO DEL SUBFILE
+012700000000     C                     EXSR POSSFL
+012800000000     C*
+012900000000     C                     ENDSR
+013000000000     C*================================================================
+013100930126     C* F06GES -GEST.TASTO FUNZ. F06 ===> INSERIMENTO
+013200000000     C*================================================================
+013300930126     C           F06GES    BEGSR
+013400930127     C*
+013500941109     C* LANCIO IL PGM PER L'INSERIMENTO DEL RECORD (TNSD76R)
+013600930201     C                     MOVEL'F06'     WOPZ1   3
+013700941109     C                     MOVEL'TNSD76R' WPGM    8
+013800930201     C                     EXSR LANPGM
+013900930128     C*
+014000930128     C* LANCIA LA ROUTINE DI CARICAMENTO DEL SUBFILE
+014100930128     C                     EXSR POSSFL
+014200930127     C*
+014300000000     C                     ENDSR
+014400930408     C*================================================================
+014500930408     C* F08GES -GEST.TASTO FUNZ. F08 ===> AUTOMATISMI
+014600930408     C*================================================================
+014700930408     C           F08GES    BEGSR
+014800930408     C*
+014900930408     C* IMPOSTO PARAMETRI PER IL LANCIO DEL PGM PER LA GEST. DEGLI AUTOMATISMI
+015000930408     C                     MOVEL'0'       DSCF03  1        PREMUTO F03
+015100930408     C                     MOVEL'0'       DSCERR  1        '1'=ERRORE
+015200930408     C                     MOVEL*BLANKS   DSCMSG 80        MESSAGGIO
+015300930408     C*
+015400930408     C* LANCIO PROGRAMMA
+015500941109     C                     CALL 'TNSD77R'
+015600930408     C                     PARM           DSCF03           PREMUTO F03
+015700930408     C                     PARM           DSCERR           '1'=ERRORE
+015800930408     C                     PARM           DSCMSG           MESSAGGIO
+015900930408     C*
+016000930408     C* SE MI RITORNA PREMUTO F3 CHIUDO IL PROGRAMMA
+016100930408     C           DSCF03    IFEQ '1'
+016200930408     C                     MOVEL'1'       F03L00
+016300930408     C                     MOVEL'1'       ERRL00
+016400930408     C                     ELSE
+016500930408     C* ALTRIMENTI MANDO MESSAGGIO RICEVUTO DAL PGM CHIAMATO
+016600930408     C                     MOVELDSCMSG    DSMSMS
+016700930408     C                     END
+016800930408     C*
+016900930408     C* LANCIA LA ROUTINE DI CARICAMENTO DEL SUBFILE
+017000930408     C                     EXSR POSSFL
+017100930408     C*
+017200930408     C                     ENDSR
+017300000000     C*================================================================
+017400930129     C* F12GES -GEST.TASTO FUNZ. F12 ===> RITORNO
+017500000000     C*================================================================
+017600000000     C           F12GES    BEGSR
+017700000000     C*
+017800000000     C* IMPOSTO FLAG DI PREMUTO TASTO F12 (A LIVELLO PGM 00)
+017900000000     C                     MOVEL'1'       F12L00
+018000000000     C*
+018100000000     C                     ENDSR
+018200000000     C*================================================================
+018300930126     C* F17GES -GEST.TASTO FUNZ. F17 ===> INIZIO DATI
+018400000000     C*================================================================
+018500000000     C           F17GES    BEGSR
+018600000000     C*
+018700000000     C* IMPOSTA SFLRCDNBR PER PRIMA PAGINA
+018800000000     C                     Z-ADD1         SFLNBR
+018900000000     C*
+019000000000     C                     ENDSR
+019100000000     C*================================================================
+019200930126     C* F18GES -GEST.TASTO FUNZ. F18 ===> FINE DATI
+019300000000     C*================================================================
+019400000000     C           F18GES    BEGSR
+019500000000     C*
+019600000000     C* IMPOSTA SFLRCDNBR PER ULTIMA PAGINA
+019700000000     C                     Z-ADDSFLULT    SFLNBR
+019800000000     C*
+019900000000     C                     ENDSR
+020000930128     C*================================================================
+020100930128     C* F21GES -GEST.TASTO FUNZ. F21 ===> STAMPA ELENCO
+020200930128     C*================================================================
+020300930128     C           F21GES    BEGSR
+020400930128     C                     ENDSR
+020500000000     C*================================================================
+020600930126     C* F22GES -GEST.TASTO FUNZ. F22 ===> STAMPE
+020700000000     C*================================================================
+020800000000     C           F22GES    BEGSR
+020900930329     C*
+021000930329     C* ESEGUE IL COMANDO INDICATO NELLA SCHIERA CMD,1
+021100930329     C                     Z-ADD80        LENGH  155
+021200930329     C                     CALL 'QCAEXEC'
+021300930329     C                     PARM           CMD,1
+021400930329     C                     PARM           LENGH
+021500930329     C*
+021600000000     C                     ENDSR
+021700000000     C*================================================================
+021800930126     C* F23GES -GEST.TASTO FUNZ. F23 ===> ALTRE OPZIONI
+021900000000     C*================================================================
+022000000000     C           F23GES    BEGSR
+022100000000     C*
+022200000000     C* GESTIONE VISUALIZZAZIONE OPZIONI
+022300000000     C                     EXSR OPZGES
+022400000000     C*
+022500000000     C                     ENDSR
+022600000000     C*================================================================
+022700930126     C* F24GES -GEST.TASTO FUNZ. F24 ===> ALTRI TASTI
+022800000000     C*================================================================
+022900000000     C           F24GES    BEGSR
+023000000000     C*
+023100000000     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+023200000000     C                     EXSR FUNGES
+023300000000     C*
+023400000000     C                     ENDSR
+023500000000     C*================================================================
+023600930126     C* RUPGES -GEST.TASTO FUNZ. ROLLUP ===> PAGINA SUCCESSIVA
+023700000000     C*================================================================
+023800000000     C           RUPGES    BEGSR
+023900000000     C*
+024000000000     C* CARICA IL SFL DA FILE "FISICO"
+024100000000     C                     EXSR CARSFL
+024200000000     C*
+024300000000     C                     ENDSR
+024400000000     C*================================================================
+024500930126     C* HELGES - GEST.TASTO FUNZ. HELP ===> AIUTO
+024600000000     C*================================================================
+024700000000     C           HELGES    BEGSR
+024800000000     C                     ENDSR
+024900000000     C*================================================================
+025000930126     C* ENTGES - GEST.TASTO FUNZ. ENTER ===> INVIO
+025100000000     C*================================================================
+025200000000     C           ENTGES    BEGSR
+025300000000     C*
+025400000000     C* CONTROLLO SE RICHIESTO NUOVO POSIZIONAMENTO FILE DA CARICARE
+025500000000     C                     EXSR NEWPOS
+025600000000     C*
+025700000000     C* SE I PARAMETRI DI POSIZIONAMENTO SONO ERRATI NON RIEMETTE IL SUBFILE
+025800000000     C           ERRL00    IFEQ '0'                        --- 1 -->
+025900000000     C*
+026000000000     C* SWPOSI: 0=NO NEW POSIZION.   1=NEW POSIZION.
+026100000000     C           SWPOSI    IFNE 0                          --- 2 -->
+026200000000     C                     EXSR POSSFL
+026300000000     C*
+026400000000     C                     ELSE                            <-- 2 -->
+026500000000     C*
+026600000000     C* GESTIONE SFL CON TASTO FUNZIONALE ENTER
+026700000000     C           SFLULT    IFNE 0                          --- 3 -->
+026800000000     C                     EXSR ENTATT
+026900000000     C*
+027000000000     C* SWMODI: 0=NON RICARICO IL SUBFILE   1=RICARICO IL SUBFILE
+027100000000     C           SWMODI    IFNE 0                          --- 4 -->
+027200000000     C                     EXSR POSSFL
+027300000000     C                     END                             <-- 4 ---
+027400000000     C*
+027500000000     C                     END                             <-- 3 ---
+027600000000     C                     END                             <-- 2 ---
+027700000000     C                     END                             <-- 1 ---
+027800000000     C*
+027900000000     C                     ENDSR
+028000000000     C*================================================================
+028100930126     C*  O01GES - GESTIONE OPZIONE 1=SCELTA
+028200000000     C*================================================================
+028300000000     C           O01GES    BEGSR
+028400000000     C                     ENDSR
+028500000000     C*================================================================
+028600000000     C*  O02GES - GESTIONE OPZIONE 2=MODIFICA
+028700000000     C*================================================================
+028800000000     C           O02GES    BEGSR
+028900930128     C*
+029000930128     C* SE IL RECORD E' ANNULLATO NON CONSENTO LA MODIFICA
+029100930201     C           VIDATB    IFEQ 'A'
+029200930128     C                     MOVEL'1'       ERRL00
+029300930201     C                     MOVELMSG,4     DSMSMS
+029400930201     C                     END
+029500930201     C*
+029600930201     C           ERRL00    IFEQ '0'                        --- 1 -->
+029700000000     C*
+029800000000     C* LANCIO IL PGM PER LA MODIFICA DEL DETTAGLIO DELLA RIGA
+029900930201     C                     MOVEL'O02'     WOPZ1
+030000941109     C                     MOVEL'TNSD76R' WPGM
+030100930201     C                     EXSR LANPGM
+030200000000     C*
+030300930127     C* IMPOSTO LO SWITCH PER RICARICARE IL SUBFILE
+030400930304     C*********************Z-ADD1         SWMODI
+030500930128     C*
+030600930201     C                     END                             <-- 1 ---
+030700000000     C*
+030800000000     C                     ENDSR
+030900000000     C*================================================================
+031000000000     C*  O03GES - GESTIONE OPZIONE 3=COPIA
+031100000000     C*================================================================
+031200000000     C           O03GES    BEGSR
+031300000000     C                     ENDSR
+031400000000     C*================================================================
+031500000000     C*  O04GES - GESTIONE OPZIONE 4=CANCELLAZIONE
+031600000000     C*================================================================
+031700000000     C           O04GES    BEGSR
+031800930128     C*
+031900930128     C* SE IL RECORD E' ANNULLATO NON CONSENTO LA CANCELLAZIONE
+032000930201     C           VIDATB    IFEQ 'A'
+032100930128     C                     MOVEL'1'       ERRL00
+032200930201     C                     MOVELMSG,4     DSMSMS
+032300930201     C                     END
+032400930128     C*
+032500930201     C           ERRL00    IFEQ '0'                        --- 1 -->
+032600000000     C*
+032700930129     C* LANCIO IL PGM DI GESTIONE DEL CAPPARIO
+032800930201     C                     MOVEL'O04'     WOPZ1
+032900941109     C                     MOVEL'TNSD76R' WPGM
+033000930201     C                     EXSR LANPGM
+033100000000     C*
+033200930127     C* IMPOSTO LO SWITCH PER RICARICARE IL SUBFILE
+033300930304     C*********************Z-ADD1         SWMODI
+033400930128     C*
+033500930201     C                     END                             <-- 1 ---
+033600000000     C*
+033700000000     C                     ENDSR
+033800000000     C*================================================================
+033900000000     C*  O05GES - GESTIONE OPZIONE 5=VISUALIZZAZIONE
+034000000000     C*================================================================
+034100000000     C           O05GES    BEGSR
+034200000000     C*
+034300000000     C* LANCIO ROUTINE PER LA VISUALIZZAZIONE DEL DETTAGLIO DELLA RIGA
+034400930201     C                     MOVEL'O05'     WOPZ1
+034500941109     C                     MOVEL'TNSD76R' WPGM
+034600930201     C                     EXSR LANPGM
+034700000000     C*
+034800000000     C                     ENDSR
+034900000000     C*================================================================
+035000000000     C*  O06GES - GESTIONE OPZIONE 6=STAMPA
+035100000000     C*================================================================
+035200000000     C           O06GES    BEGSR
+035300000000     C                     ENDSR
+035400930128     C*================================================================
+035500930128     C*  O07GES - GESTIONE OPZIONE 7=RIPRISTINO
+035600930128     C*================================================================
+035700930128     C           O07GES    BEGSR
+035800930128     C*
+035900930128     C* SE IL RECORD NON E' ANNULLATO NON CONSENTO IL RIPRISTINO
+036000930201     C           VIDATB    IFNE 'A'
+036100930128     C                     MOVEL'1'       ERRL00
+036200930201     C                     MOVELMSG,5     DSMSMS
+036300930201     C                     END
+036400930201     C*
+036500930201     C           ERRL00    IFEQ '0'                        --- 1 -->
+036600930128     C*
+036700930201     C* LANCIO IL PGM PER IL RIPRISTINO DI UN ANNULLAMENTO
+036800930201     C                     MOVEL'O07'     WOPZ1
+036900941109     C                     MOVEL'TNSD76R' WPGM
+037000930201     C                     EXSR LANPGM
+037100930128     C*
+037200930128     C* IMPOSTO LO SWITCH PER RICARICARE IL SUBFILE
+037300930304     C*********************Z-ADD1         SWMODI
+037400930128     C*
+037500930201     C                     END                             <-- 1 ---
+037600930128     C*
+037700930128     C                     ENDSR
+037800930201     C*================================================================
+037900930329     C*  O08GES - GESTIONE OPZIONE 8=
+038000930201     C*================================================================
+038100930201     C           O08GES    BEGSR
+038200930201     C                     ENDSR
+038300000000     C*================================================================
+038400000000     C* NEWPOS - CONTROLLO DELLA RICHIESTA DI NUOVO POSIZIONAMENTO
+038500000000     C*================================================================
+038600000000     C           NEWPOS    BEGSR
+038700000000     C*
+038800000000     C* SWPOSI: 0= NESSUNA RICHIESTA DI POSIZIONAM.
+038900000000     C*         1= RICHIESTO POSIZIONAM.
+039000000000     C                     Z-ADD0         SWPOSI  70
+039100000000     C*
+039200000000     C* SWMODI: 0= NESSUN AGGIORNAMENTO AFFETTUATO SUL FILE DALL'UTENTE
+039300000000     C*            CON L'OPZIONE 2, NON OCCORRE RICARICARE IL SUBFILE
+039400000000     C*         1= AGGIORNAMENTI EFFETTUATI, OCCORRE RICARICARE
+039500000000     C                     Z-ADD0         SWMODI  10
+039600000000     C*
+039700000000     C* CONTROLLO SE RICHIESTO NUOVO POSIZIONAMENTO
+039800930329     C           VIPPAR    IFNE DEPPAR                     --- 1 -->
+039900930329     C           VIPARR    ORNE DEPARR
+040000930329     C           VIPANN    ORNE DEPANN
+040100930329     C           VIPMES    ORNE DEPMES
+040200930202     C*
+040300930202     C* E' RICHIESTO POSIZIONAMENTO, CONTROLLO I PARAMETRI DI PARTENZA
+040400930202     C                     EXSR CHKPAR
+040500930202     C*
+040600930202     C* SE I PARAMETRI SONO OK, LI MEMORIZZO E IMPOSTO FLAG PARAM.MODIF.
+040700930202     C           ERRL00    IFEQ '0'                        --- 2 -->
+040800000000     C                     Z-ADD1         SWPOSI
+040900930329     C                     Z-ADDVIPPAR    DEPPAR
+041000930329     C                     Z-ADDVIPARR    DEPARR
+041100930329     C                     Z-ADDVIPANN    DEPANN
+041200930329     C                     Z-ADDVIPMES    DEPMES
+041300930202     C                     END                             <-- 2 ---
+041400930202     C*
+041500000000     C                     END                             <-- 1 ---
+041600000000     C*
+041700000000     C                     ENDSR
+041800000000     C*================================================================
+041900000000     C* LETTURA RECORD FILE DA CARICARE
+042000000000     C*================================================================
+042100000000     C           LETFIL    BEGSR
+042200000000     C*
+042300930329     C* LETTURE SUCCESSIVE ALLA PRIMA
+042400941109     C                     READ AZCLN01L                 99
+042500000000     C*
+042600930201     C* SE FINE FILE, IMPOSTA SWITCH DI FINE CARICAMENTO SFL (SFLEOF)
+042700930329     C           *IN99     IFEQ '1'
+042800000000     C                     Z-ADD1         SFLEOF
+042900930329     C                     END
+043000000000     C*
+043100000000     C                     ENDSR
+043200000000     C*================================================================
+043300000000     C* SETFIL - SETLL DEL FILE DA CARICARE
+043400000000     C*================================================================
+043500000000     C           SETFIL    BEGSR
+043600000000     C*
+043700930202     C* POSIZIONAMENTO DEL FILE DA CARICARE E PRIMA LETTURA
+043800941109     C                     Z-ADDVIPPAR    KCLPAR
+043900941109     C                     Z-ADDVIPARR    KCLARR
+044000930405     C           VIPPAR    IFEQ *ZEROS
+044100930405     C           VIPARR    ANDEQ*ZEROS
+044200941109     C                     Z-ADD9999      KCLANN
+044300941109     C                     Z-ADD99        KCLMES
+044400930405     C                     ELSE
+044500941109     C                     Z-ADDVIPANN    KCLANN
+044600941109     C                     Z-ADDVIPMES    KCLMES
+044700930405     C                     END
+044800941109     C           KEYCLN    SETLLAZCLN01L             99    *FINE-ARCHIV
+044900941109     C  N99                READ AZCLN01L                 99
+045000000000     C*
+045100000000     C* IMPOSTA SWITCH DI FINE CARICAMENTO SFL (SFLEOF)
+045200930329     C           *IN99     IFEQ '1'
+045300000000     C                     Z-ADD1         SFLEOF
+045400930329     C                     END
+045500000000     C*
+045600000000     C                     ENDSR
+045700000000     C*================================================================
+045800000000     C* IRESFL - IMPOSTA I CAMPI DEL RECORD DEL SFL DAL FILE FISICO
+045900000000     C*================================================================
+046000000000     C           IRESFL    BEGSR
+046100000000     C*
+046200000000     C* IMPOSTA I CAMPI DEL RECORD DEL SFL DA FILE DA CARICARE
+046300930127     C*
+046400941109     C                     Z-ADDCLNTFP    VIDPAR
+046500941109     C                     Z-ADDCLNTFA    VIDARR
+046600941109     C                     Z-ADDCLNANN    VIDANN
+046700941109     C                     Z-ADDCLNMES    VIDMES
+046800941109     C                     MOVELCLNMAT    VIDMAT
+046900941109     C                     MOVELCLNPOM    VIDPOM
+047000941109     C                     MOVELCLNATB    VIDATB
+047100000000     C*
+047200000000     C                     ENDSR
+047300930202     C*================================================================
+047400930202     C*  CHKPAR - CONTROLLA I PARAMETRI DI INIZIO RICERCA
+047500930202     C*================================================================
+047600930202     C           CHKPAR    BEGSR
+047700930202     C*
+047800930202     C*
+047900930202     C                     ENDSR
+048000930201     C*================================================================
+048100930201     C* LANPGM - LANCIA UN PROGRAMMA
+048200930201     C*================================================================
+048300930201     C           LANPGM    BEGSR
+048400930201     C*
+048500930201     C* IMPOSTO PARAMETRI PER IL PGM
+048600930329     C                     MOVEL'0'       DSCF03  1        PREMUTO F03
+048700930329     C                     MOVEL'0'       DSCERR  1        '1'=ERRORE
+048800930329     C                     MOVEL*BLANKS   DSCMSG 80        MESSAGGIO
+048900930329     C                     MOVE WOPZ1     DSCOPZ  3        OPZIONE LIV.PGM
+049000930329     C                     Z-ADDVIDPAR    DSCPAR  30       PARTENZA
+049100930329     C                     Z-ADDVIDARR    DSCARR  30       ARRIVO
+049200941109     C                     Z-ADDVIDANN    DSCANN  40       ANNO
+049300930329     C                     Z-ADDVIDMES    DSCMES  20       MESE
+049400930201     C*
+049500930201     C* LANCIO PROGRAMMA
+049600930312     C                     CALL WPGM
+049700930329     C                     PARM           DSCF03           PREMUTO F03
+049800930329     C                     PARM           DSCERR           '1'=ERRORE
+049900930329     C                     PARM           DSCMSG           MESSAGGIO
+050000930329     C                     PARM           DSCOPZ           OPZIONE LIV.PGM
+050100930329     C                     PARM           DSCPAR           PARTENZA
+050200930329     C                     PARM           DSCARR           ARRIVO
+050300930329     C                     PARM           DSCANN           ANNO
+050400930329     C                     PARM           DSCMES           MESE
+050500930201     C*
+050600930201     C* SE MI RITORNA PREMUTO F3 CHIUDO IL PROGRAMMA
+050700930312     C           DSCF03    IFEQ '1'
+050800930201     C                     MOVEL'1'       F03L00
+050900930201     C                     MOVEL'1'       ERRL00
+051000930201     C                     ELSE
+051100930201     C* ALTRIMENTI MANDO MESSAGGIO RICEVUTO DAL PGM CHIAMATO
+051200930312     C                     MOVELDSCMSG    DSMSMS
+051300930201     C                     END
+051400930201     C*
+051500930201     C                     ENDSR
+051600930312     C*================================================================
+051700930312     C* CHKFOP - CONTROLLA TIPO GESTIONE E IMPOSTA FUNZ/OPZ
+051800930312     C*================================================================
+051900930312     C           CHKFOP    BEGSR
+052000930312     C*
+052100930312     C* CONTROLLO CHE VI SIA UNA OPZIONE DI PROCEDURA VALIDA IN INPUT
+052200930312     C* ALTRIMENTI FORZO INTERROGAZIONE
+052300930329     C           KPJOPZ    IFNE ' 2'                       *GESTIONE
+052400930329     C           KPJOPZ    ANDNE' 5'                       *INTERROGAZIONE
+052500930329     C                     MOVE ' 5'      KPJOPZ
+052600930312     C                     END
+052700930312     C*
+052800930312     C* SE L'UTENTE E' ENTRATO IN GESTIONE LO ABILITO A TUTTE LE FUNZIONI
+052900930329     C           KPJOPZ    IFEQ ' 2'
+053000930312     C                     MOVELOPD,2     OPDRIG           *MODIFICA
+053100930312     C                     MOVEL'S'       OPDATT
+053200930312     C                     MOVELOPDRIG    OPD,2
+053300930312     C                     MOVELOPD,4     OPDRIG           *CANCELLAZIONE
+053400930312     C                     MOVEL'S'       OPDATT
+053500930312     C                     MOVELOPDRIG    OPD,4
+053600930312     C                     MOVELOPD,5     OPDRIG           *INTERROGAZIONE
+053700930312     C                     MOVEL'S'       OPDATT
+053800930312     C                     MOVELOPDRIG    OPD,5
+053900930312     C                     MOVELOPD,7     OPDRIG           *RIPRISTINO
+054000930312     C                     MOVEL'S'       OPDATT
+054100930312     C                     MOVELOPDRIG    OPD,7
+054200930312     C                     MOVELFUD,6     FUDRIG           *INSERIMENTO
+054300930312     C                     MOVEL'S'       FUDATT
+054400930312     C                     MOVELFUDRIG    FUD,6
+054500930408     C                     MOVELFUD,8     FUDRIG           *AUTOMATISMI
+054600930408     C                     MOVEL'S'       FUDATT
+054700930408     C                     MOVELFUDRIG    FUD,8
+054800930312     C                     END
+054900930312     C*
+055000930312     C* SE IL PGM E' STATO LANCIATO IN INTERROGAZIONE ABILITO SOLO QUELLA
+055100930329     C           KPJOPZ    IFEQ ' 5'
+055200930312     C                     MOVELOPD,5     OPDRIG           *INTERROGAZIONE
+055300930312     C                     MOVEL'S'       OPDATT
+055400930312     C                     MOVELOPDRIG    OPD,5
+055500930312     C                     END
+055600930312     C*
+055700930312     C* IMPOSTO INDICE PER EMISSIONE OPZIONI A VIDEO
+055800930312     C                     Z-ADD0         OPZGRU  50
+055900930312     C*
+056000930312     C* GESTIONE OPZIONI A VIDEO
+056100930312     C                     EXSR OPZGES
+056200930312     C*
+056300930312     C* IMPOSTO INDICE PER EMISSIONE FUNZIONI A VIDEO
+056400930312     C                     Z-ADD0         FUNGRU  50
+056500930312     C*
+056600930312     C* GESTIONE TASTI FUNZIONALI A VIDEO
+056700930312     C                     EXSR FUNGES
+056800930329     C*
+056900930329     C* IMPOSTO INTERROGAZIONE/GESTIONE NELLA TESTATA DELLA VIDEATA
+057000930329     C           KPJOPZ    IFEQ ' 2'
+057100930329     C                     MOVEL'    GEST'VIDING
+057200930329     C                     MOVE 'IONE    'VIDING
+057300930329     C                     ELSE
+057400930329     C                     MOVEL' INTERRO'VIDING
+057500930329     C                     MOVE 'GAZIONE 'VIDING
+057600930329     C                     END
+057700930312     C*
+057800930312     C                     ENDSR
+057900000000     C*================================================================
+058000000000     C*  RUTINZ - ROUTINE INIZIALE
+058100000000     C*================================================================
+058200000000     C           RUTINZ    BEGSR
+058300000000     C*
+058400000000     C* RICEVIMENTO PARAMETRI
+058500000000     C           *ENTRY    PLIST
+058600930329     C                     PARM           KPJBA
+058700930204     C*
+058800930204     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+058900930204     C           XMSGPA    PLIST
+059000930204     C                     PARM           DSMSMS
+059100930204     C                     PARM           DSMSPG
+059200930204     C                     PARM           DSMSKE
+059300930204     C                     PARM           DSMSER
+059400000000     C*
+059500941109     C* CHIAVE LETTURA AZCLN01L - COMPLETA
+059600941109     C           KEYCLN    KLIST
+059700941109     C                     KFLD           KCLPAR
+059800941109     C                     KFLD           KCLARR
+059900941109     C                     KFLD           KCLANN
+060000941109     C                     KFLD           KCLMES
+060100000000     C*
+060200930129     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+060300930204     C                     CALL 'XKEY'
+060400930204     C                     PARM           DSKEY
+060500000000     C*
+060600000000     C* DEFINISCE LE VARIABILI DI PROGRAMMA
+060700000000     C           *LIKE     DEFN SFLNBR    SFLPAG
+060800000000     C           *LIKE     DEFN SFLPAG    WFLPAG
+060900000000     C           *LIKE     DEFN SFLNBR    SFLEOF
+061000000000     C           *LIKE     DEFN SFLNBR    SFLERR
+061100000000     C           *LIKE     DEFN SFLNBR    SFLULT
+061200000000     C           *LIKE     DEFN SFLNBR    WFLULT
+061300000000     C           *LIKE     DEFN SFLNBR    MSGULT
+061400000000     C           *LIKE     DEFN SFLNBR    SFLRIG
+061500000000     C           *LIKE     DEFN FUDFUN    FUNKEY
+061600941109     C           *LIKE     DEFN CLNTFP    KCLPAR
+061700941109     C           *LIKE     DEFN CLNTFA    KCLARR
+061800941109     C           *LIKE     DEFN CLNANN    KCLANN
+061900941109     C           *LIKE     DEFN CLNMES    KCLMES
+062000941109     C           *LIKE     DEFN CLNTFP    DEPPAR
+062100941109     C           *LIKE     DEFN CLNTFA    DEPARR
+062200941109     C           *LIKE     DEFN CLNANN    DEPANN
+062300941109     C           *LIKE     DEFN CLNMES    DEPMES
+062400000000     C*
+062500930127     C* IMPOSTA PER CL=XMSG  (FISSI IN TUTTO IL PGM) :
+062600000000     C*   -NOME PGM CHIAMANTE
+062700000000     C*   -NOME CODA MESSAGGI DI DESTINAZIONE
+062800941109     C                     MOVEL'TNSD75R' DSMSPG
+062900941109     C                     MOVEL'TNSD75R' MSGQUE
+063000000000     C                     MOVEL*BLANKS   MSGKEY
+063100930127     C                     MOVEL*BLANKS   DSMSMS
+063200930204     C                     MOVEL*BLANKS   DSMSKE
+063300930204     C                     Z-ADD0         DSMSER
+063400000000     C*
+063500930129     C* INIZIALIZZO SWITCH DI LIVELLO 0 (PGM)
+063600930127     C                     MOVEL'0'       F12L00  1
+063700930127     C                     MOVEL'0'       F03L00  1
+063800930127     C                     MOVEL'0'       FINL00  1
+063900930127     C                     MOVEL'0'       ERRL00  1
+064000930128     C                     MOVEL'0'       FLFINE  1
+064100930127     C*
+064200930312     C* IMPOSTO DEPOSITI PER CONFRONTI
+064300930329     C                     Z-ADD*ZEROS    DEPPAR
+064400930329     C                     Z-ADD*ZEROS    DEPARR
+064500930329     C                     Z-ADD*ZEROS    DEPANN
+064600930329     C                     Z-ADD*ZEROS    DEPMES
+064700000000     C*
+064800000000     C* INIZIALIZZO CONTATORE DI NUMERO RIGHE PER PAGINA
+064900000000     C* (DEVE ESSERE UGUALE A SFLPAG (IN RECORD CONTROLLO SFL)
+065000930329     C                     Z-ADD6         SFLPAG
+065100930312     C*
+065200930312     C* IMPOSTO LE OPZIONI E LE FUNZIONI A VIDEO
+065300930329     C                     MOVELKPJBU     PARAM
+065400930312     C                     EXSR CHKFOP
+065500930225     C*
+065600000000     C                     ENDSR
+065700930329     C*================================================================
+065800930312     C*
+065900930312     C*§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+066000930312     C*§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+066100930312     C* LA PARTE DI SPECIFICHE 'C' SOTTOSTANTE SI RIFA' A PARTICOLARI
+066200930312     C* STANDARDS DI PROGRAMMAZIONE E NELLA MAGGIOR PARTE DEI CASI
+066300930312     C* NON E' NECESSARIO MODIFICARLA, NEL CASO FARE ATTENZIONE.
+066400930312     C*§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+066500930312     C*§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+066600930312     C*
+066700930312     C*================================================================
+066800930312     C* POSSFL - RICARICAMENTO SFL DA NUOVO POSIZIONAMENTO FILE DA
+066900930312     C*          CARICARE
+067000930312     C*================================================================
+067100930312     C           POSSFL    BEGSR
+067200930312     C*
+067300930312     C* CLEAR SFL (ELIMINA CONTENUTO SFL)
+067400930312     C                     EXSR CLRSFL
+067500930312     C*
+067600930312     C* CONTROLLO SE VI SONO REC. CHE SODDISFANO I PARAMETRI IN INPUT
+067700930312     C                     EXSR SETFIL
+067800930312     C*
+067900930312     C* SE ESISTONO RECORD VALIDI CARICO IL SUBFILE
+068000930312     C           SFLEOF    IFEQ 0
+068100930312     C                     EXSR CARSFL
+068200930312     C                     END
+068300930312     C*
+068400930312     C                     ENDSR
+068500000000     C*================================================================
+068600000000     C* ENTATT - GESTIONE SFL CON TASTO FUNZIONALE ENTER
+068700000000     C*================================================================
+068800000000     C           ENTATT    BEGSR
+068900000000     C*
+069000000000     C* AZZERO SWITCH DI ERRORI IN RECORD SFL (OPZOK: 1=ERRORE 0=OK)
+069100000000     C                     Z-ADD0         OPZOK   10
+069200000000     C*
+069300000000     C* AZZERO CONTATORE DI RIGHE SFL VARIATE
+069400000000     C                     Z-ADD0         SFLVAR  50
+069500000000     C*
+069600000000     C* INIZIALIZZO COMODO CON PRIMO RECORD SFL IN ERRORE
+069700000000     C                     Z-ADD0         SFLERR
+069800000000     C*
+069900000000     C* SALVO ULTIMO RECORD SCRITTO IN SFL IN COMODO
+070000000000     C                     Z-ADDSFLULT    WFLULT
+070100000000     C*
+070200000000     C* SCORRIMENTO DEI SOLI RECORD VARIATI NEL SFL
+070300941109     C                     READCSD75D05                  98
+070400930202     C           *IN98     DOWEQ'0'
+070500000000     C*
+070600000000     C* ADD CONTATORE DI RIGHE SFL VARIATE
+070700000000     C                     ADD  1         SFLVAR
+070800000000     C*
+070900000000     C* SE RIGHE PRECEDENTI SENZA ERRORI (OPZOK: 1=ERRORE 0=OK)
+071000000000     C           OPZOK     IFEQ 0
+071100000000     C*
+071200000000     C* CONTROLLO ED ESECUZIONE OPZIONI RICHIESTE (OPZOK: 1=ERRORE 0=OK)
+071300000000     C           OPZKEY    IFNE *BLANKS
+071400000000     C                     EXSR OPZCON
+071500000000     C                     END
+071600000000     C*
+071700000000     C* SE OK    : 1. AZZERO SFLNXTCHG PER RECORD SFL
+071800000000     C*            2. PULIZIA SCELTA IN SFL
+071900000000     C           OPZOK     IFEQ 0
+072000000000     C                     MOVEL'0'       *IN41
+072100000000     C                     MOVEL*BLANKS   OPZKEY
+072200000000     C                     ELSE
+072300000000     C*
+072400000000     C* SE NON OK: 1. ACCENDO SFLNXTCHG COSI' COSTRINGO ALLA CORREZIONE
+072500000000     C*            2. IMPOSTO RECORD CON PRIMO ERRORE
+072600000000     C                     MOVEL'1'       *IN41
+072700000000     C                     Z-ADDSFLULT    SFLERR
+072800000000     C                     END
+072900000000     C                     ELSE
+073000000000     C*
+073100000000     C* SE RIGHE PRECEDENTI CON ERRORI (SFLERR DIVERSO DA 0):
+073200000000     C*   . ACCENDO SFLNXTCHG COSI' RIPROPONE LA RIGA IL PROSSIMO GIRO
+073300000000     C                     MOVEL'1'       *IN41
+073400000000     C                     END                             OPZOK=0
+073500000000     C*
+073600000000     C* IMPOSTO RIGA SFL SUL QUALE POSIZIONARSI:
+073700000000     C*   . SE ERRORE        MI POSIZIONO SULLA PRIMA RIGA IN ERRORE
+073800000000     C*   . SE NESSUN ERRORE MI POSIZIONO SULL'ULTIMA RIGA VARIATA
+073900000000     C           OPZOK     IFNE 0
+074000000000     C                     Z-ADDSFLERR    SFLNBR
+074100000000     C                     ELSE
+074200000000     C                     Z-ADDSFLULT    SFLNBR
+074300000000     C                     END
+074400000000     C*
+074500000000     C* AGGIORNO RECORD SFL
+074600941109     C                     UPDATSD75D05
+074700000000     C*
+074800941109     C                     READCSD75D05                  98
+074900000000     C                     END                             DO WHILE
+075000000000     C*
+075100000000     C* REIMPOSTO ULTIMO RECORD SCRITTO IN SFL DA COMODO
+075200000000     C                     Z-ADDWFLULT    SFLULT
+075300000000     C*
+075400000000     C* SE NESSUNA RIGA VARIATA, CON ENTER SI RITORNA AL PGM CHIAMANTE
+075500000000     C           SFLVAR    IFEQ 0
+075600000000     C                     MOVEL'1'       FINL00
+075700000000     C                     END
+075800000000     C*
+075900000000     C                     ENDSR
+076000000000     C*================================================================
+076100000000     C* ELIMINAZIONE CONTENUTO SFL
+076200000000     C*================================================================
+076300000000     C           CLRSFL    BEGSR
+076400000000     C*
+076500000000     C* INIZIALIZZO SWITCH DI FINE FILE "FISICO"
+076600000000     C* (0=NON FINE FILE  1=FINE FILE)
+076700000000     C                     Z-ADD0         SFLEOF
+076800000000     C*
+076900000000     C* INIZIALIZZO CONTATORI DI ULTIMO RECORD IN SFL
+077000000000     C                     Z-ADD0         SFLULT
+077100000000     C*
+077200000000     C* ACCENSIONE INDICATORE PER CLEAR SFL
+077300000000     C                     MOVEL'1'       *IN40
+077400941109     C                     WRITESD75D06
+077500000000     C                     MOVEL'0'       *IN40
+077600000000     C*
+077700000000     C                     ENDSR
+077800000000     C*================================================================
+077900000000     C* CARSFL - CARICAMENTO SFL
+078000000000     C*================================================================
+078100000000     C           CARSFL    BEGSR
+078200000000     C*
+078300000000     C* SE IL SFL E' VUOTO INIZIO LETTURA DA POSIZ. RICHIESTA
+078400000000     C           SFLULT    IFEQ 0
+078500000000     C                     EXSR SETFIL
+078600000000     C                     END
+078700000000     C*
+078800000000     C* SALVO SFLRCDNBR PER CONFRONTI SUCCESSIVI
+078900000000     C                     Z-ADDSFLULT    WFLULT
+079000000000     C*
+079100000000     C* CICLO:
+079200000000     C*    -CARICO NUMERO DI RIGHE=SFLPAG
+079300000000     C*    -SFLEOF=0 (NON FINE FILE "FISICO")
+079400000000     C                     Z-ADD1         SFLRIG
+079500000000     C           SFLRIG    DOWLESFLPAG
+079600000000     C           SFLEOF    ANDEQ0
+079700000000     C*
+079800000000     C* IMPOSTO CAMPI DEL RECORD SFL SOLO SE RECORD E' OK CIOE' ...
+079900000000     C                     MOVEL*BLANKS   OPZKEY
+080000000000     C*
+080100000000     C* IMPOSTA I CAMPI DEL RECORD DEL SFL DA FILE DA CARICARE
+080200000000     C                     EXSR IRESFL
+080300000000     C*
+080400000000     C* AGGIORNA CHIAVE PER RECORD SFL E SFLRCDNBR
+080500000000     C                     ADD  1         SFLULT
+080600000000     C*
+080700000000     C* SCRITTURA RECORD SFL
+080800941109     C                     WRITESD75D05
+080900000000     C                     ADD  1         SFLRIG
+081000000000     C*
+081100000000     C* LETTURA FILE DA CARICARE
+081200000000     C                     EXSR LETFIL
+081300000000     C                     END                             DO WHILE
+081400000000     C*
+081500000000     C* IMPOSTO SFLRCDNBR DELLA SUCCESSIVA PAGINA SE CARICATI ALTRI RECORD
+081600000000     C           WFLULT    IFNE SFLULT
+081700000000     C                     Z-ADDWFLULT    SFLNBR
+081800000000     C                     ADD  1         SFLNBR
+081900000000     C                     END
+082000000000     C*
+082100000000     C                     ENDSR
+082200000000     C*================================================================
+082300000000     C* EMISSIONE SUBFILE A VIDEO
+082400000000     C*================================================================
+082500000000     C           OUTSFL    BEGSR
+082600000000     C*
+082700000000     C* WRITE RECORD TESTATA VIDEO
+082800941109     C                     WRITESD75D01
+082900930205     C*
+083000930205     C* VISUALIZZAZIONE MESSAGGIO
+083100930205     C                     EXSR SNDMSG
+083200000000     C*
+083300000000     C* WRITE RECORD OPZIONI VIDEO
+083400941109     C                     WRITESD75D02
+083500000000     C*
+083600000000     C* WRITE RECORD PER POSIZIONAMEMTO VIDEO
+083700941109     C                     WRITESD75D03
+083800000000     C*
+083900000000     C* WRITE RECORD CON DESCRIZIONI COLONNE SFL
+084000941109     C                     WRITESD75D04
+084100000000     C*
+084200000000     C* GESTIONE AUTOMATICA SFLEND (+ A VIDEO)
+084300000000     C* SFLEOF=0 NON RAGGIUNTO FINE FILE "FISICO"
+084400000000     C           SFLEOF    IFEQ 0
+084500000000     C                     MOVEL'0'       *IN42
+084600000000     C                     ELSE
+084700000000     C*
+084800000000     C* SFLEOF=1 RAGGIUNTO FINE FILE "FISICO"
+084900000000     C                     MOVEL'1'       *IN42
+085000000000     C                     END
+085100000000     C*
+085200000000     C* WRITE RECORD TASTI FUNZIONALI
+085300941109     C                     WRITESD75D09
+085400000000     C*
+085500000000     C* CASO DI SFL VUOTO
+085600000000     C           SFLULT    IFLE 0
+085700000000     C*
+085800000000     C*    - WRITE RECORD VUOTO
+085900941109     C                     WRITESD75D0A
+086000941109     C                     READ SD75D0A                  99
+086100000000     C*
+086200000000     C                     ELSE
+086300000000     C*
+086400000000     C* CASO DI SFL CON RECORDS
+086500000000     C*
+086600000000     C*    - WRITE RECORD CONTROLLO SFL
+086700941109     C                     WRITESD75D06
+086800941109     C                     READ SD75D06                  99
+086900000000     C                     END
+087000000000     C*
+087100000000     C* READ RECORD PER POSIZIONAMEMTO VIDEO
+087200941109     C                     READ SD75D03                  99
+087300000000     C*
+087400000000     C                     ENDSR
+087500000000     C*================================================================
+087600000000     C* SNDMSG - MANDA MESSAGGIO
+087700000000     C*================================================================
+087800000000     C           SNDMSG    BEGSR
+087900000000     C*
+088000000000     C* PULIZIA SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+088100000000     C                     MOVEL'1'       *IN40
+088200941109     C                     WRITESD75DMC
+088300000000     C                     MOVEL'0'       *IN40
+088400000000     C*
+088500000000     C* VISUALIZZAZIONE MESSAGGIO
+088600000000     C                     Z-ADD0         MSGULT
+088700930204     C                     CALL 'XMSG'    XMSGPA
+088800930127     C           DSMSER    IFEQ 0
+088900930127     C                     MOVELDSMSKE    MSGKEY
+089000000000     C                     END
+089100000000     C                     Z-ADD1         MSGULT
+089200941109     C                     WRITESD75DMS                    SFL MESS
+089300941109     C                     WRITESD75DMC                    CONTR MESS
+089400000000     C*
+089500000000     C* MANDO MESSAGGIO *BLANKS PER PULIRE SFLMSG
+089600930127     C                     MOVEL*BLANKS   DSMSMS
+089700000000     C*
+089800000000     C                     ENDSR
+089900000000     C*================================================================
+090000000000     C* GESTIONE SCELTE DELL'OPERATORE A VIDEO (ATTRAVERSO TASTI FXX)
+090100000000     C*================================================================
+090200000000     C           FUNCON    BEGSR
+090300000000     C*
+090400000000     C* TRADUCE TASTI FUNZIONALI IN VARIABILE -FUNKEY-
+090500000000     C                     EXSR FUNVAR
+090600000000     C*
+090700000000     C* PULISCO CAMPI DI LAVORO
+090800000000     C                     Z-ADD0         I       50
+090900000000     C                     Z-ADD0         W       50
+091000000000     C*
+091100000000     C* RICERCA FUNZIONE (DIVERSA DA ENTER) SCELTA IN TABELLA FUNZIONI
+091200000000     C           FUNKEY    IFNE *BLANKS
+091300000000     C           1         DO   24        I
+091400000000     C                     MOVELFUD,I     FUDRIG
+091500000000     C*
+091600000000     C* SALVO INDICE DI FUNZIONE TROVATA ED ATTIVA (W)
+091700000000     C           FUNKEY    IFEQ FUDFUN
+091800000000     C           FUDATT    ANDEQ'S'
+091900000000     C                     Z-ADDI         W
+092000000000     C                     END
+092100000000     C                     END                             DO WHILE
+092200000000     C*
+092300000000     C* FUNZIONE NON ATTIVA (ERRORE)
+092400000000     C           W         IFEQ 0
+092500000000     C*
+092600000000     C* EMISSIONE MESSAGGIO DI ERRORE
+092700930127     C                     MOVELMSG,2     DSMSMS
+092800000000     C                     END                             W=0
+092900000000     C                     END                             FUNKEY NE *BLANKS
+093000000000     C*
+093100000000     C* FUNZIONE ATTIVA (PROCEDI ...)
+093200000000     C           W         IFNE 0
+093300000000     C           FUNKEY    OREQ *BLANKS
+093400000000     C*
+093500000000     C           FUNKEY    IFEQ *BLANKS
+093600000000     C                     EXSR ENTGES
+093700000000     C                     END
+093800000000     C           FUNKEY    IFEQ '03'
+093900000000     C                     EXSR F03GES
+094000000000     C                     END
+094100000000     C           FUNKEY    IFEQ '05'
+094200000000     C                     EXSR F05GES
+094300000000     C                     END
+094400930126     C           FUNKEY    IFEQ '06'
+094500930126     C                     EXSR F06GES
+094600000000     C                     END
+094700930408     C           FUNKEY    IFEQ '08'
+094800930408     C                     EXSR F08GES
+094900930408     C                     END
+095000000000     C           FUNKEY    IFEQ '12'
+095100000000     C                     EXSR F12GES
+095200000000     C                     END
+095300000000     C           FUNKEY    IFEQ '17'
+095400000000     C                     EXSR F17GES
+095500000000     C                     END
+095600000000     C           FUNKEY    IFEQ '18'
+095700000000     C                     EXSR F18GES
+095800000000     C                     END
+095900930129     C           FUNKEY    IFEQ '21'
+096000930129     C                     EXSR F21GES
+096100930129     C                     END
+096200000000     C           FUNKEY    IFEQ '22'
+096300000000     C                     EXSR F22GES
+096400000000     C                     END
+096500000000     C           FUNKEY    IFEQ '23'
+096600000000     C                     EXSR F23GES
+096700000000     C                     END
+096800000000     C           FUNKEY    IFEQ '24'
+096900000000     C                     EXSR F24GES
+097000000000     C                     END
+097100000000     C           FUNKEY    IFEQ 'RU'                       ROLLUP
+097200000000     C                     EXSR RUPGES
+097300000000     C                     END
+097400000000     C           FUNKEY    IFEQ 'HP'                       HELP
+097500000000     C                     EXSR HELGES
+097600000000     C                     END
+097700000000     C*
+097800000000     C                     END
+097900000000     C*
+098000000000     C                     ENDSR
+098100000000     C*================================================================
+098200000000     C* FUNVAR -TRADUCE INDICATORI DI TASTO FUNZIONALE IN VARIABILE
+098300000000     C*================================================================
+098400000000     C           FUNVAR    BEGSR
+098500000000     C*
+098600000000     C* INIZIALIZZA VARIABILE -FUNKEY-
+098700000000     C*
+098800000000     C* FUNKEY=*BLANKS SIGNIFICA ENTER
+098900000000     C           KEY       IFEQ ENTER
+099000000000     C                     MOVEL*BLANKS   FUNKEY
+099100000000     C                     END
+099200000000     C           KEY       IFEQ F1
+099300000000     C                     MOVEL'01'      FUNKEY
+099400000000     C                     END
+099500000000     C           KEY       IFEQ F2
+099600000000     C                     MOVEL'02'      FUNKEY
+099700000000     C                     END
+099800000000     C           KEY       IFEQ F3
+099900000000     C                     MOVEL'03'      FUNKEY
+100000000000     C                     END
+100100000000     C           KEY       IFEQ F4
+100200000000     C                     MOVEL'04'      FUNKEY
+100300000000     C                     END
+100400000000     C           KEY       IFEQ F5
+100500000000     C                     MOVEL'05'      FUNKEY
+100600000000     C                     END
+100700000000     C           KEY       IFEQ F6
+100800000000     C                     MOVEL'06'      FUNKEY
+100900000000     C                     END
+101000000000     C           KEY       IFEQ F7
+101100000000     C                     MOVEL'07'      FUNKEY
+101200000000     C                     END
+101300000000     C           KEY       IFEQ F8
+101400000000     C                     MOVEL'08'      FUNKEY
+101500000000     C                     END
+101600000000     C           KEY       IFEQ F9
+101700000000     C                     MOVEL'09'      FUNKEY
+101800000000     C                     END
+101900000000     C           KEY       IFEQ F10
+102000000000     C                     MOVEL'10'      FUNKEY
+102100000000     C                     END
+102200000000     C           KEY       IFEQ F11
+102300000000     C                     MOVEL'11'      FUNKEY
+102400000000     C                     END
+102500000000     C           KEY       IFEQ F12
+102600000000     C                     MOVEL'12'      FUNKEY
+102700000000     C                     END
+102800000000     C           KEY       IFEQ F13
+102900000000     C                     MOVEL'13'      FUNKEY
+103000000000     C                     END
+103100000000     C           KEY       IFEQ F14
+103200000000     C                     MOVEL'14'      FUNKEY
+103300000000     C                     END
+103400000000     C           KEY       IFEQ F15
+103500000000     C                     MOVEL'15'      FUNKEY
+103600000000     C                     END
+103700000000     C           KEY       IFEQ F16
+103800000000     C                     MOVEL'16'      FUNKEY
+103900000000     C                     END
+104000000000     C           KEY       IFEQ F17
+104100000000     C                     MOVEL'17'      FUNKEY
+104200000000     C                     END
+104300000000     C           KEY       IFEQ F18
+104400000000     C                     MOVEL'18'      FUNKEY
+104500000000     C                     END
+104600000000     C           KEY       IFEQ F19
+104700000000     C                     MOVEL'19'      FUNKEY
+104800000000     C                     END
+104900000000     C           KEY       IFEQ F20
+105000000000     C                     MOVEL'20'      FUNKEY
+105100000000     C                     END
+105200000000     C           KEY       IFEQ F21
+105300000000     C                     MOVEL'21'      FUNKEY
+105400000000     C                     END
+105500000000     C           KEY       IFEQ F22
+105600000000     C                     MOVEL'22'      FUNKEY
+105700000000     C                     END
+105800000000     C           KEY       IFEQ F23
+105900000000     C                     MOVEL'23'      FUNKEY
+106000000000     C                     END
+106100000000     C           KEY       IFEQ F24
+106200000000     C                     MOVEL'24'      FUNKEY
+106300000000     C                     END
+106400000000     C           KEY       IFEQ ROLLUP
+106500000000     C                     MOVEL'RU'      FUNKEY
+106600000000     C                     END
+106700000000     C           KEY       IFEQ HELP
+106800000000     C                     MOVEL'HP'      FUNKEY
+106900000000     C                     END
+107000000000     C*
+107100000000     C                     ENDSR
+107200000000     C*================================================================
+107300000000     C* FUNGES - GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI GESTITI DA PGM
+107400000000     C*================================================================
+107500000000     C           FUNGES    BEGSR
+107600000000     C*
+107700000000     C* PULISCO CAMPI DI LAVORO
+107800000000     C                     Z-ADD0         W       50
+107900000000     C*
+108000000000     C* RICERCO QUANTE FUNZIONI SONO ATTIVE
+108100000000     C* E CARICO TABELLA FUNZIONI ATTIVE
+108200000000     C           1         DO   24        I
+108300000000     C                     MOVELFUD,I     FUDRIG
+108400000000     C*
+108500000000     C* PULIZIA FUNZIONI PRECEDENTI
+108600000000     C                     MOVEL*BLANKS   FUV,I
+108700000000     C*
+108800000000     C* IMPOSTA FUNZIONI ATTIVE IN TABELLA
+108900000000     C* (SALTA F23 E F24)
+109000000000     C           FUDATT    IFEQ 'S'
+109100000000     C           FUDFUN    ANDNE'23'
+109200000000     C           FUDFUN    ANDNE'24'
+109300000000     C                     ADD  1         W
+109400000000     C                     MOVELFUDDES    FUV,W
+109500000000     C                     END
+109600000000     C                     END                             DO WHILE
+109700000000     C*
+109800000000     C* SE VI SONO PIU' DI 6 FUNZIONI ATTIVE, ATTIVO FUNZIONE F24
+109900000000     C* ALTRIMENTI DISATTIVO F24
+110000000000     C           1         DO   24        I
+110100000000     C                     MOVELFUD,I     FUDRIG
+110200000000     C*
+110300000000     C           FUDFUN    IFEQ '24'
+110400000000     C           W         IFGT 6
+110500000000     C                     MOVEL'S'       FUDATT
+110600000000     C                     ELSE
+110700000000     C                     MOVEL*BLANKS   FUDATT
+110800000000     C                     END                             W GT 8
+110900000000     C                     MOVELFUDRIG    FUD,I
+111000000000     C                     END
+111100000000     C                     END                             DO WHILE
+111200000000     C*
+111300000000     C* IMPOSTO QUANTI GRUPPI DI 6 FUNZIONI SI POSSONO VISUALIZZARE
+111400000000     C           W         DIV  6         I
+111500000000     C                     MVR            Z
+111600000000     C*
+111700000000     C           Z         IFNE 0
+111800000000     C           I         ADD  1         Z
+111900000000     C                     ELSE
+112000000000     C                     Z-ADDI         Z
+112100000000     C                     END
+112200000000     C*
+112300000000     C* IMPOSTO SUCCESSIVE 6 FUNZIONI ATTIVE A VIDEO
+112400000000     C                     ADD  1         FUNGRU
+112500000000     C           FUNGRU    IFGT Z
+112600000000     C           FUNGRU    ORLT 1
+112700000000     C                     Z-ADD1         FUNGRU
+112800000000     C                     END
+112900000000     C*
+113000000000     C* PRIMO GRUPPO DI 6 FUNZIONI
+113100000000     C           FUNGRU    IFEQ 1
+113200000000     C                     MOVELFUV,1     FUN001
+113300000000     C                     MOVELFUV,2     FUN002
+113400000000     C                     MOVELFUV,3     FUN003
+113500000000     C                     MOVELFUV,4     FUN004
+113600000000     C                     MOVELFUV,5     FUN005
+113700000000     C                     MOVELFUV,6     FUN006
+113800000000     C                     END
+113900000000     C*
+114000000000     C* SECONDO GRUPPO DI 6 FUNZIONI
+114100000000     C           FUNGRU    IFEQ 2
+114200000000     C                     MOVELFUV,7     FUN001
+114300000000     C                     MOVELFUV,8     FUN002
+114400000000     C                     MOVELFUV,9     FUN003
+114500000000     C                     MOVELFUV,10    FUN004
+114600000000     C                     MOVELFUV,11    FUN005
+114700000000     C                     MOVELFUV,12    FUN006
+114800000000     C                     END
+114900000000     C*
+115000000000     C* TERZO GRUPPO DI 6 FUNZIONI
+115100000000     C           FUNGRU    IFEQ 3
+115200000000     C                     MOVELFUV,13    FUN001
+115300000000     C                     MOVELFUV,14    FUN002
+115400000000     C                     MOVELFUV,15    FUN003
+115500000000     C                     MOVELFUV,16    FUN004
+115600000000     C                     MOVELFUV,17    FUN005
+115700000000     C                     MOVELFUV,18    FUN006
+115800000000     C                     END
+115900000000     C*
+116000000000     C* QUARTO GRUPPO DI 6 FUNZIONI
+116100000000     C           FUNGRU    IFEQ 4
+116200000000     C                     MOVELFUV,19    FUN001
+116300000000     C                     MOVELFUV,20    FUN002
+116400000000     C                     MOVELFUV,21    FUN003
+116500000000     C                     MOVELFUV,22    FUN004
+116600000000     C                     MOVEL*BLANKS   FUN005
+116700000000     C                     MOVEL*BLANKS   FUN006
+116800000000     C                     END
+116900000000     C*
+117000000000     C* F24 E F23 SE VI SONO, VENGONO SEMPRE VISUALIZZATI
+117100000000     C                     MOVEL*BLANKS   FUN007
+117200000000     C                     MOVEL*BLANKS   FUN008
+117300000000     C*
+117400000000     C           1         DO   24        I
+117500000000     C                     MOVELFUD,I     FUDRIG
+117600000000     C           FUDFUN    IFEQ '23'
+117700000000     C           FUDATT    ANDEQ'S'
+117800000000     C                     MOVELFUDDES    FUN007
+117900000000     C                     END
+118000000000     C           FUDFUN    IFEQ '24'
+118100000000     C           FUDATT    ANDEQ'S'
+118200000000     C                     MOVELFUDDES    FUN008
+118300000000     C                     END
+118400000000     C                     END                             DO
+118500000000     C*
+118600000000     C                     ENDSR
+118700000000     C*================================================================
+118800000000     C* OPZGES - GESTIONE VISUALIZZAZIONE OPZIONI GESTITE DAL PGM
+118900000000     C*================================================================
+119000000000     C           OPZGES    BEGSR
+119100000000     C*
+119200000000     C* PULISCO CAMPI DI LAVORO
+119300000000     C                     Z-ADD0         W       50
+119400000000     C*
+119500000000     C* RICERCO QUANTE OPZIONI SONO ATTIVE
+119600000000     C* E CARICO TABELLA OPZIONI ATTIVE
+119700000000     C           1         DO   24        I
+119800000000     C                     MOVELOPD,I     OPDRIG
+119900000000     C*
+120000000000     C* PULIZIA OPZIONI PRECEDENTI
+120100000000     C                     MOVEL*BLANKS   OPV,I
+120200000000     C*
+120300000000     C* IMPOSTA OPZIONE ATTIVA IN TABELLA
+120400000000     C           OPDATT    IFEQ 'S'
+120500000000     C                     ADD  1         W
+120600000000     C                     MOVELOPDDES    OPV,W
+120700000000     C                     END
+120800000000     C                     END                             DO WHILE
+120900000000     C*
+121000000000     C* SE VI SONO PIU' DI 8 OPZIONI ATTIVE, ATTIVO FUNZIONE F23
+121100000000     C* ALTRIMENTI DISATTIVO F23
+121200000000     C           1         DO   24        I
+121300000000     C                     MOVELFUD,I     FUDRIG
+121400000000     C*
+121500000000     C           FUDFUN    IFEQ '23'
+121600000000     C           W         IFGT 8
+121700000000     C                     MOVEL'S'       FUDATT
+121800000000     C                     ELSE
+121900000000     C                     MOVEL*BLANKS   FUDATT
+122000000000     C                     END                             W GT 8
+122100000000     C                     MOVELFUDRIG    FUD,I
+122200000000     C                     END
+122300000000     C                     END                             DO WHILE
+122400000000     C*
+122500000000     C* IMPOSTO QUANTI GRUPPI DI 8 OPZIONI SI POSSONO VISUALIZZARE
+122600000000     C           W         DIV  8         I
+122700000000     C                     MVR            Z       50
+122800000000     C*
+122900000000     C           Z         IFNE 0
+123000000000     C           I         ADD  1         Z
+123100000000     C                     ELSE
+123200000000     C                     Z-ADDI         Z
+123300000000     C                     END
+123400000000     C*
+123500000000     C* IMPOSTO SUCCESSIVE 8 OPZIONI ATTIVE A VIDEO
+123600000000     C                     ADD  1         OPZGRU
+123700000000     C           OPZGRU    IFGT Z
+123800000000     C           OPZGRU    ORLT 1
+123900000000     C                     Z-ADD1         OPZGRU
+124000000000     C                     END
+124100000000     C*
+124200000000     C* PRIMO GRUPPO DI 8 OPZIONI
+124300000000     C           OPZGRU    IFEQ 1
+124400000000     C                     MOVELOPV,1     OPZ001
+124500000000     C                     MOVELOPV,2     OPZ002
+124600000000     C                     MOVELOPV,3     OPZ003
+124700000000     C                     MOVELOPV,4     OPZ004
+124800000000     C                     MOVELOPV,5     OPZ005
+124900000000     C                     MOVELOPV,6     OPZ006
+125000000000     C                     MOVELOPV,7     OPZ007
+125100000000     C                     MOVELOPV,8     OPZ008
+125200000000     C                     END
+125300000000     C*
+125400000000     C* SECONDO GRUPPO DI 8 OPZIONI
+125500000000     C           OPZGRU    IFEQ 2
+125600000000     C                     MOVELOPV,9     OPZ001
+125700000000     C                     MOVELOPV,10    OPZ002
+125800000000     C                     MOVELOPV,11    OPZ003
+125900000000     C                     MOVELOPV,12    OPZ004
+126000000000     C                     MOVELOPV,13    OPZ005
+126100000000     C                     MOVELOPV,14    OPZ006
+126200000000     C                     MOVELOPV,15    OPZ007
+126300000000     C                     MOVELOPV,16    OPZ008
+126400000000     C                     END
+126500000000     C*
+126600000000     C* TERZO GRUPPO DI 8 OPZIONI
+126700000000     C           OPZGRU    IFEQ 3
+126800000000     C                     MOVELOPV,17    OPZ001
+126900000000     C                     MOVELOPV,18    OPZ002
+127000000000     C                     MOVELOPV,19    OPZ003
+127100000000     C                     MOVELOPV,20    OPZ004
+127200000000     C                     MOVELOPV,21    OPZ005
+127300000000     C                     MOVELOPV,22    OPZ006
+127400000000     C                     MOVELOPV,23    OPZ007
+127500000000     C                     MOVELOPV,24    OPZ008
+127600000000     C                     END
+127700000000     C                     ENDSR
+127800000000     C*================================================================
+127900000000     C*  OPZCON - CONTROLLO ED ESECUZIONE OPZIONI SCELTE
+128000000000     C*================================================================
+128100000000     C           OPZCON    BEGSR
+128200000000     C*
+128300000000     C* PULISCO CAMPI DI LAVORO
+128400000000     C                     Z-ADD0         I       50
+128500000000     C                     Z-ADD0         W       50
+128600000000     C*
+128700000000     C* RICERCA OPZIONE SCELTA IN TABELLA OPZIONI
+128800000000     C           1         DO   24        I
+128900000000     C                     MOVELOPD,I     OPDRIG
+129000000000     C*
+129100000000     C* SALVO INDICE DI OPZIONE TROVATA ED ATTIVA (W)
+129200000000     C           OPZKEY    IFEQ OPDOPZ
+129300000000     C           OPZKEY    OREQ OPDOP1
+129400000000     C*
+129500000000     C           OPDATT    IFEQ 'S'
+129600000000     C                     MOVELOPDOPZ    OPZKEY
+129700000000     C                     Z-ADDI         W
+129800000000     C                     END
+129900000000     C                     END
+130000000000     C*
+130100000000     C                     END                             DO WHILE
+130200000000     C*
+130300000000     C* OPZIONE NON ATTIVA (ERRORE)
+130400000000     C           W         IFEQ 0
+130500000000     C*
+130600000000     C* OPZIONE NON OK
+130700000000     C                     Z-ADD1         OPZOK
+130800000000     C*
+130900000000     C* EMISSIONE MESSAGGIO DI ERRORE
+131000930127     C                     MOVELMSG,1     DSMSMS
+131100000000     C                     ELSE
+131200000000     C*
+131300000000     C* OPZIONE ATTIVA (PROCEDI ...)
+131400000000     C*
+131500930129     C           OPZKEY    IFEQ ' 1'
+131600000000     C                     EXSR O01GES
+131700000000     C                     END
+131800000000     C           OPZKEY    IFEQ ' 2'
+131900000000     C                     EXSR O02GES
+132000000000     C                     END
+132100000000     C           OPZKEY    IFEQ ' 3'
+132200000000     C                     EXSR O03GES
+132300000000     C                     END
+132400000000     C           OPZKEY    IFEQ ' 4'
+132500000000     C                     EXSR O04GES
+132600000000     C                     END
+132700000000     C           OPZKEY    IFEQ ' 5'
+132800000000     C                     EXSR O05GES
+132900000000     C                     END
+133000000000     C           OPZKEY    IFEQ ' 6'
+133100000000     C                     EXSR O06GES
+133200000000     C                     END
+133300930128     C           OPZKEY    IFEQ ' 7'
+133400930128     C                     EXSR O07GES
+133500930128     C                     END
+133600930201     C           OPZKEY    IFEQ ' 8'
+133700930201     C                     EXSR O08GES
+133800930201     C                     END
+133900000000     C*
+134000000000     C                     END                             OPZ.NON ATTIVA
+134100000000     C*
+134200000000     C                     ENDSR
+134300000000     C*================================================================
+134400000000     C* NOTE PER COMPILAZIONE SCHIERE
+134500000000     C*================================================================
+134600000000     C* -MSG-
+134700000000     C* INSERIRE I VARI MESSAGGI EMESSI DAL PGM
+134800000000     C* (NON TOCCARE MSG,1 E MSG,2
+134900000000     C*
+135000000000     C* -CMD-
+135100000000     C* INSERIRE I VARI COMANDI DI SISTEMA RICHIESTI NEL PGM
+135200000000     C*
+135300000000     C* -OPD-
+135400000000     C* INSERIRE LE VARIE OPZIONI GESTITE DAL PGM
+135500000000     C*  . SI PUO' USARE LA OPZIONE ALTERNATIVA PER GESTIRE
+135600000000     C*    I CASI DI OPZIONI CON UN SOLO CARATTERE
+135700000000     C*    ESEMPIO: OPZIONI -1 -
+135800000000     C*                     - 1-  SONO LA STESSA COSA
+135900000000     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+136000000000     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+136100000000     C*  . POSSONO ESSERE IN ORDINE SPARSO
+136200000000     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+136300000000     C*    (VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO)
+136400000000     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA:
+136500000000     C*    . VIENE VISUALIZZATA A VIDEO MA IL PGM NON FA NULLA
+136600000000     C*
+136700000000     C* -FUD-
+136800000000     C* INSERIRE LE VARIE FUNZIONI GESTITE DAL PGM
+136900000000     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+137000000000     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+137100000000     C*  . POSSONO ESSERE IN ORDINE SPARSO
+137200000000     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+137300000000     C*    (VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO)
+137400000000     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA:
+137500000000     C*    . VIENE VISUALIZZATA A VIDEO MA IL PGM DICE "NON GESTITA"
+137600000000     C*  . METTERE F23 E F24 CON S/N=S  (RICALCOLATE NEL PGM)
+137700000000     C*  . SEGUIRE LE NOTE MESSE NELLA SCHIERA
+137800000000     C*
+137900000000     C*================================================================
+138000000000** ======== SCHIERA: MSG  (MESSAGGI)                       ================
+138100941109TNSD750- Opzione non gestita.                                                  1
+138200941109TNSD75R- Tasto funzionale non gestito.                                         2
+138300941109TNSD75R- 3                                                                     3
+138400941109TNSD75R- Dato già annullato, consentito solo Ripristino.                       4
+138500941109TNSD75R- Dato non annullato, impossibile ripristinare.                         5
+138600941109TNSD75R- 6                                                                     6
+138700941109TNSD75R- 7                                                                     7
+138800941109TNSD75R- 8                                                                     8
+138900941109TNSD75R- 9                                                                     9
+139000941109TNSD75R- 10                                                                   10
+139100941109TNSD75R- 11                                                                   11
+139200941109TNSD75R- 12                                                                   12
+139300941109TNSD75R- 13                                                                   13
+139400941109TNSD75R- 14                                                                   14
+139500941109TNSD75R- 15                                                                   15
+139600941109TNSD75R- 16                                                                   16
+139700941109TNSD75R- 17                                                                   17
+139800941109TNSD75R- 18                                                                   18
+139900941109TNSD75R- 19                                                                   19
+140000941109TNSD75R- 20                                                                   20
+140100000000** ======== SCHIERA: CMD  (COMANDI)                        ================
+140200000000WRKSPLF
+140300000000
+140400000000
+140500000000
+140600000000
+140700000000** ======== SCHIERA: OPD  OPZIONI GESTITE NEL PGM (ATTIVA=S) ==========
+140800930330                   -1 -     (S/N)=N                        opz. 01¬
+140900930312 2=Modifica        -2 -     (S/N)=N                        opz. 02¬
+141000930330                   -3 -     (S/N)=N                        opz. 03¬
+141100930312 4=Cancellazione   -4 -     (S/N)=N                        opz. 04¬
+141200930312 5=Visualizzazione -5 -     (S/N)=N                        opz. 05¬
+141300000000                   -6 -     (S/N)=N                        opz. 06¬
+141400930312 7=Ripristino      -7 -     (S/N)=N                        opz. 07¬
+141500930330                   -8 -     (S/N)=N                        opz. 08¬
+141600930129                   -9 -     (S/N)=N                        opz. 09¬
+141700000000                   -  -     (S/N)=N                        opz. 10¬
+141800000000                   -  -     (S/N)=N                        opz. 11¬
+141900000000                   -  -     (S/N)=N                        opz. 12¬
+142000000000                   -  -     (S/N)=N                        opz. 13¬
+142100000000                   -  -     (S/N)=N                        opz. 14¬
+142200000000                   -  -     (S/N)=N                        opz. 15¬
+142300000000                   -  -     (S/N)=N                        opz. 16¬
+142400000000                   -  -     (S/N)=N                        opz. 17¬
+142500000000                   -  -     (S/N)=N                        opz. 18¬
+142600000000                   -  -     (S/N)=N                        opz. 19¬
+142700000000                   -  -     (S/N)=N                        opz. 20¬
+142800000000                   -  -     (S/N)=N                        opz. 21¬
+142900000000                   -  -     (S/N)=N                        opz. 22¬
+143000000000                   -  -     (S/N)=N                        opz. 23¬
+143100000000                   -  -     (S/N)=N                        opz. 24¬
+143200000000** ======== SCHIERA: FUD  TASTI FUNZION. GESTITI NEL PGM (ATTIVA=S)
+143300930129                   -        (S/N)=N                        funz.01¬
+143400930129                   -        (S/N)=N                        funz.02¬
+143500930129F03=Fine           -        (S/N)=S  <== S-FISSO           funz.03¬
+143600930129                   -        (S/N)=N                        funz.04¬
+143700930129F05=Rivisualizzaz. -        (S/N)=S  <== S-FISSO           funz.05¬
+143800930312F06=Inserimento    -        (S/N)=N                        funz.06¬
+143900000000                   -        (S/N)=N                        funz.07¬
+144000930408F08=Automatismi    -        (S/N)=N                        funz.08¬
+144100000000                   -        (S/N)=N                        funz.09¬
+144200930204 RU=Pagina su      -        (S/N)=S  <== S-FISSO           funz.10¬
+144300930204 RD=Pagina giù     -        (S/N)=S  <== S-FISSO           funz.11¬
+144400930129F12=Ritorno        -        (S/N)=S  <== S-FISSO           funz.12¬
+144500000000                   -        (S/N)=N                        funz.13¬
+144600930129                   -        (S/N)=N                        funz.14¬
+144700930129                   -        (S/N)=N                        funz.15¬
+144800930126                   -        (S/N)=N                        funz.16¬
+144900000000F17=Inizio dati    -        (S/N)=S  <== S-FISSO           funz.17¬
+145000000000F18=Fine dati      -        (S/N)=S  <== S-FISSO           funz.18¬
+145100930128                   -        (S/N)=N                        funz.19¬
+145200930129                   -        (S/N)=N                        funz.20¬
+145300930330                   -        (S/N)=N                        funz.21¬
+145400930330                   -        (S/N)=N                        funz.22¬
+145500000000F23=Altre opzioni  -        (S/N)=S  <== S-FISSO           funz.23¬
+145600000000F24=Altri tasti    -        (S/N)=S  <== S-FISSO           funz.24¬

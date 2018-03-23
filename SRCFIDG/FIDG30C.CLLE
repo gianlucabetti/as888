@@ -1,0 +1,40 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400071008             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000500071008
+000600071008             RTVJOBA    JOB(&DSP)
+000700020118
+000800020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+000900020408/* procedura/programma fosse finita in maniera anomala occorre */
+001000020408/* parare il colpo riducendo il male al male minore ossia      */
+001100020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+001200020408/* metà piuttosto che confermarle. E ripartendo da una         */
+001300020408/* situazione pulita.                                          */
+001400071008             STRCMTCTL  LCKLVL(*CHG)
+001500020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+001600071008             ROLLBACK
+001700020409             ENDCMTCTL
+001800071008             STRCMTCTL  LCKLVL(*CHG)
+001900020409             ENDDO
+002000070517
+002100070517             OVRDBF     FILE(FIDST00F) SHARE(*YES)
+002200020116
+002300070316/* richiamo programma                              */
+002400070316             CALL       PGM(FIDG30R) PARM(&KPJBA)
+002500020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+002600020417             ROLLBACK
+002700071008             SNDBRKMSG  MSG('ERRORE La Gestione manuale distinte è +
+002800071008                          terminata in modo anomalo. Segnalare il +
+002900071008                          problema alla persona responsabile della +
+003000071008                          manutenzione del programma.') TOMSGQ(&DSP)
+003100071008             RCLRSC     LVL(*CALLER)
+003200020417             ENDDO
+003300070316
+003400020408 /* se per qualsiasi motivo il programma si è interrotto in modo */
+003500020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+003600020408 /* in modo pulito senza lasciare transazioni a metà.            */
+003700020322             ENDCMTCTL
+003800020116
+003900051108
+004000000000             ENDPGM

@@ -1,0 +1,102 @@
+000100060719 ===============================================================================
+000200060719 |Aut.|Data Mod. | Descrizione Modifica                                        |
+000300060719 ===============================================================================
+000400061025 : RM :30/05/00 :*Se ricevo scan 10 non cancello scan in attesa se
+000500061025                  i due scan sono contemporanei (stessa data scan)
+000600061025                  Si verificava errore per cui in questo caso non veni-
+000700061025                  va mai aggiornata la data di consegna sulla bolla in
+000800061025                  quanto lo scan 3c veniva cancellato prima ancora di
+000900061025                  essere elaborato
+001000061025 :----:---------:-------------------------------------------------------------
+001100061025 : AB :08/09/00 : Aggiunta la gestione DEPOT DPD tabella DEP per poter
+001200061025                : definire la linea 190, 191 o 195.
+001300061025 :----:---------:-------------------------------------------------------------
+001400061025 : AB :19/02/01 : Seper errore non parte dalla filiale lo scan alla DPD all'
+001500061025                : invio della merce, per rimediare, si prende il primo Scan DPD
+001600061025                : di ritorno (Stato da STATNEUPF), si prende la data e si toglie
+001700061025                : un giorno quindi si aggiorna con quella data l'FNARB->ARBDAM.
+001800061025                : ARBDAM serve al sistema per generare lo scan di invio merce a
+001900061025                : DPD.
+002000061025 :----:---------:-------------------------------------------------------------
+002100061025 : AB :17/07/01 : Aggiunta l'informazione del Nr.Docum.Dpd POD alla scrittura
+002200061025 :    :         : del MIC a fianco del Depot nel campo Note dalla posizione 4
+002300061025 :    :         : per 4 bytes il POD.
+002400061025 :----:---------:-------------------------------------------------------------
+002500061025 : AB : 21/01/02: Sostituita una substr con la DS OG143 del campo ORGDE3
+002600061025 :----:---------:-------------------------------------------------------------
+002700061025 : AB :16/07/02 : In vista dell'AS Unico tolta la vista logica AZORG05L
+002800061025 :    :         : e attivata la nuova routine TRUL26R per reperire in
+002900061025 :    :         : modo logico e non più fisico l'area di appartenenza
+003000061025 :    :         : dei vecchi singoli AS400. con ciò si aggancia la
+003100061025 :    :         : filiale e si controlla le linee DPD tramite il Network
+003200061025 :    :         : sull'organigramma.
+003300061025 :----:---------:-------------------------------------------------------------
+003400061025 : AB :24/09/02 : x AS Unico prg.348
+003500061025 :    :         : eliminato l'aggancio al file UTENT00F e sostituito con il
+003600061025 :    :         : TIBS34R prima della scrittura dei campi del file FNEVB.
+003700061025 | AB |14/11/02 | Cambiato TIBS34R in TIBS36R
+003800061025 | AB | 26/11/03| Allungato il tracciato ricevendo il nuovo SCAN 13
+003900061025 |    |         | x gestire altre informazioni quali l'orario di SCAN e altre
+004000061025 | AB |04/12/03| DPD ci ha assicurato che negli SCAN arriva sempre l'orario
+004100061025 |    |        | e che se arrivasse lo 0000 equivale alla mezzanotte quindi ho
+004200061025 |    |        | disattivato l'orario fittizio. Adesso l'orario assume un valore
+004300061025 |    |        | reale nella storia degli eventi.
+004400061025 | AB |05/12/03| noi per mezzanotte impostiamo a 00:01 in quanto probabilmente
+004500061025 |    |        | *zeros potrebbe essere male interpretato dai nostri pgm
+004600061025 | AB |05/05/09| Alla scrittura di Eventi diretta come il MIC la filiale dell'
+004700061025 |    |        | evento era erroneamente presa dal O36POU quindi occorre
+004800061025 |    |        | impostare la Linea di Arrivo decodificata da ARB .
+004900061025 | ES |17/10/05| SOSTITUITO FNARS CON FIARS                            e dell'
+005000061025 | AB |13/02/06 | Sostitutito FNAR4 e FNBL4 con FIAR4 nuovo
+005100060719 | AB | 19/7/06  | reintrodotto il giro desli SCAN in attesa x dare come       |
+005200060719 |    |          | consegnata spedizione di cui si riceve solo il MIC senza    |
+005300060719 |    |          | lo SCAN di consegna successivo.                             |
+005400061103 | AB | 03/11/06 | SCan da non considerare nel giro degli scan in attesa       |
+005500090721| AB | 09/07/21 | Non deve considerare un altro SCAN di delivery se precedenteme
+005600090721|    |          | nte era già stato inviato da DPD con stessa data consegna.
+005700090824| AB | 09/08/24 | Non deve considerare nuovamente lo SCAN 13 x una bolla di RESO
+005800090824|    |          | dove la data dello SCAN ricevuta è successiva alla data di
+005900090824|    |          | consegna presente su ARB.
+006000090831| AB | 09/08/31 | Cerca sempre di impostare i campi di ARB utilizzando la Mamma
+006100090831|    |          | se ci sono delle bolle legate eccezion fatta x il dirottamento
+006200090901|    |          | ed il cambio di porto che comunque era già gestito.
+006300091203| AB | 03/12/09 | Per il MIC deve sempre scrivere il file di attesa dei 5 gg.
+006400091203|    |          | da dare per consegnata.
+006500100311| AB | 11/03/10 | Aggiunto la casistica di Reso x Avaria a fianco al RESO.
+006600100312| AB | 12/03/10 | Se arriva contemporaneo uno SCAN 02 con stessa data e ora
+006700100312|    |          | di uno SCAN 03 precedentemente arrivato e che già quindi era
+006800100312|    |          | stato memorizzato per prevedere la consegna dopo 5 giorni del
+006900100312|    |          | Parcel, NON deve cancellare il record di prenotazione sul
+007000100312|    |          | TIDP500F. (solo però se c'è identità di data e ora evento).
+007100100920| AB | 20/09/10 | Per le bolle di reso NON deve essere rilevato nessuno SCAN
+007200100920|    |          | sulle bolle di RESO. (poichè sono i nostri EVENTI che inviamo
+007300100920|    |          | a DPD e che DPD pubblica sul sito rimandandoli a noi.
+007400131031| AB | 31/10/13 | Se non è un evento MIC riporta il DEPOT DPD nel campo preposto
+007500131112| AB | 12/11/13 | aggiunta specifica da eliminare dopo il test in Filiale
+007600140410| AB | 14/04/10 | Aggiunta la ricezione della Firma in CDEstero come x EEX.
+007700160414| AB | 14/04/16 | era invertito il test dell'evento da scrivere una volta sola
+007800160414|    |          | dal 2000 che funzionava casualmente.
+007900160907| AB | 07/09/16 | Per i Dirottamenti effettuati all'ESTERO che DPD poi addebita
+008000160907|    |          | nel clearing, occorre fare una bolla di RECUPERO da girare al
+008100161017|    |          | nostro cliente. Tramite l'AR4 teniamo memorizzato se già stato
+008200161017|    |          | fatto un recupero su Dirottamento poichè si vuole fare un solo
+008300161017|    |          | recupero.
+008400160909|    |          | perchè non vi è altro modo per tenerli sotto controllo.
+008500160928| AB | 28/09/16 | Aggiunto la modifica del peso proveniente da SCAN elaborato.
+008600170310| AB | 10/03/17 | Il Fuori Misura deve essere impostato solo se la spedizione è
+008700170310|    |          | superiore ai 3 kg. quindi deve condizionare la scrittura del
+008800170310|    |          | FNCDE qualora non ci sia sulla spedizione per altri motivi.
+008900170504| AB | 04/05/17 | Il peso può essere variato solo se diverso da 9kg. perchè la
+009000170504|    |          | FRANCIA (1043) sembra passare di default sempre 9 kg.
+009100170922| AB | 22/09/17 | Nuovo file FIPND00F al posto del FIAR4 tipo "I" per prendere
+009200170922|    |          | i flag dopo allineamento di ottobre 2017
+009300171030| AB | 30/10/17 | Corretto reperimento di ARB in funzione del nuovo FIPND.
+009400171030|    |          | Rimanevano i campi sporchi se non veniva agganciato FIPND
+009500171030|    |          | per agganciare.
+009600171130| AB | 30/11/17 | Tolta una vecchia specifica che era da togliere dopo un test.
+009700180117| AB | 17/01/18 | Se lo SCAN 06 di dirottamento avesse lo stesso DEPOT dello
+009800180117|    |          | SCAN identico a quello di DELIVERY, allora NON si tratta di un
+009900180117|    |          | vero DIROTTAMENTO pocihè è sempre lo stesso DEPOT che va in
+010000180117|    |          | CONSEGNA, quindi NON si deve fare alcun recupero.
+010100180117|    |          | DIVERSAMENTE se invece si passa il parcel ad un altro DEPOT
+010200180117|    |          | questo è un DIROTTAMENTO vero.

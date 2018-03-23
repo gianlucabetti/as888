@@ -1,0 +1,176 @@
+000100080711/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600080711             PGM        PARM(&TRBMFCDS)
+000700990908
+000800080711             DCL        VAR(&TRBMFCDS)  TYPE(*CHAR) LEN(197)
+000900030404             DCL        VAR(&DFCFNAM)   TYPE(*CHAR) LEN(10)
+001000030404             DCL        VAR(&DFCJNAM)   TYPE(*CHAR) LEN(10)
+001100030404             DCL        VAR(&DFCUNAM)   TYPE(*CHAR) LEN(10)
+001200030404             DCL        VAR(&DFCJNUM)   TYPE(*CHAR) LEN(6)
+001300030404             DCL        VAR(&DFCFNUM)   TYPE(*CHAR) LEN(6)
+001400030404             DCL        VAR(&DFCFOUT)   TYPE(*CHAR) LEN(10)
+001500030404             DCL        VAR(&DFCLOUT)   TYPE(*CHAR) LEN(10)
+001600030404             DCL        VAR(&DFCFOLEN)  TYPE(*CHAR) LEN(3)
+001700030404             DCL        VAR(&DFCFOPT)   TYPE(*CHAR) LEN(1)
+001800030404             DCL        VAR(&DFCFTXT)   TYPE(*CHAR) LEN(50)
+001900030404             DCL        VAR(&DFCERR)    TYPE(*CHAR) LEN(1)
+002000030404             DCL        VAR(&DFCMSG)    TYPE(*CHAR) LEN(80)
+002100030404             DCL        VAR(&SPOOLLEN)  TYPE(*CHAR) LEN(5)
+002200030404             DCL        VAR(&WLEN)      TYPE(*CHAR) LEN(5)
+002300030514             DCL        VAR(&CPFID)     TYPE(*CHAR) LEN(7)
+002400991028
+002500030404
+002600030404             CHGVAR     VAR(&DFCERR)   VALUE('0')
+002700080711             CHGVAR     VAR(&DFCFNAM)  VALUE(%SST(&TRBMFCDS  1 10))
+002800080711             CHGVAR     VAR(&DFCJNAM)  VALUE(%SST(&TRBMFCDS 11 10))
+002900080711             CHGVAR     VAR(&DFCUNAM)  VALUE(%SST(&TRBMFCDS 21 10))
+003000080711             CHGVAR     VAR(&DFCJNUM)  VALUE(%SST(&TRBMFCDS 31 10))
+003100080711             CHGVAR     VAR(&DFCFNUM)  VALUE(%SST(&TRBMFCDS 37 10))
+003200080711             CHGVAR     VAR(&DFCFOUT)  VALUE(%SST(&TRBMFCDS 43 10))
+003300080711             CHGVAR     VAR(&DFCLOUT)  VALUE(%SST(&TRBMFCDS 53 10))
+003400080711             CHGVAR     VAR(&DFCFOLEN) VALUE(%SST(&TRBMFCDS 63  3))
+003500080711             CHGVAR     VAR(&DFCFOPT)  VALUE(%SST(&TRBMFCDS 66  1))
+003600080711             CHGVAR     VAR(&DFCFTXT)  VALUE(%SST(&TRBMFCDS 148 50))
+003700030417
+003800030417/* Creo una copia dei file di wrk in QTEMP del JOB */
+003900080711             DLTF       FILE(QTEMP/&DFCFOUT)
+004000080711             MONMSG     MSGID(CPF0000)
+004100080711             CRTPF      FILE(QTEMP/&DFCFOUT) RCDLEN(256)
+004200080711             CRTDUPOBJ  OBJ(TRBMFCIF) FROMLIB(*LIBL) +
+004300030417                          OBJTYPE(*FILE) TOLIB(QTEMP)
+004400030417             MONMSG     MSGID(CPF0000)
+004500080711             CRTDUPOBJ  OBJ(TRBMFCOF) FROMLIB(*LIBL) +
+004600030417                          OBJTYPE(*FILE) TOLIB(QTEMP)
+004700030417             MONMSG     MSGID(CPF0000)
+004800030403
+004900030403/* Alloco i file di wrk ------------------*/
+005000080711             ALCOBJ     OBJ((TRBMFCIF *FILE *EXCL))
+005100030403             MONMSG     MSGID(CPF0000) EXEC(DO)
+005200030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+005300080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - File +
+005400080711                          TRBMFCIF già allocato')
+005500030403             GOTO       CMDLBL(FINE)
+005600030403             ENDDO
+005700080711             ALCOBJ     OBJ((TRBMFCOF *FILE *EXCL))
+005800030403             MONMSG     MSGID(CPF0000) EXEC(DO)
+005900030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+006000080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - File +
+006100080711                          TRBMFCOF già allocato')
+006200030403             GOTO       CMDLBL(FINE)
+006300030403             ENDDO
+006400030403
+006500030401/* Conversione spool in file piatto in formato *FCFC ----------------*/
+006600080711             CLRPFM     FILE(*LIBL/TRBMFCIF)
+006700030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+006800030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+006900080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Impossibile +
+007000080711                          clearare file TRBMFCIF')
+007100030404             GOTO       CMDLBL(FINE)
+007200030404             ENDDO
+007300080711             CLRPFM     FILE(*LIBL/TRBMFCOF)
+007400030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+007500030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+007600080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Impossibile +
+007700080711                          clearare file TRBMFCOF')
+007800030404             GOTO       CMDLBL(FINE)
+007900030404             ENDDO
+008000080711             CPYSPLF    FILE(&DFCFNAM) TOFILE(*LIBL/TRBMFCIF) +
+008100030404                          JOB(&DFCJNUM/&DFCUNAM/&DFCJNAM) +
+008200030404                          SPLNBR(&DFCFNUM) CTLCHAR(*FCFC)
+008300991021             MONMSG     MSGID(CPF0000) EXEC(DO)
+008400030515             RCVMSG     MSGQ(*PGMQ) MSGTYPE(*LAST) RMV(*NO) +
+008500030515                          MSGID(&CPFID)
+008600030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+008700080711             CHGVAR     VAR(&DFCMSG) VALUE(&CPFID *BCAT ' TRBMFCC - Errore in +
+008800030403                          CPYSPLF')
+008900030402             GOTO       CMDLBL(FINE)
+009000991021             ENDDO
+009100030403
+009200030404/* Chiamo il programma di reperimento attributi spool ---------------*/
+009300080711             CALL       PGM(TRBMFCR1) PARM(&TRBMFCDS &SPOOLLEN)
+009400030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+009500030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+009600080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCR1 - Errore in +
+009700030404                          reperimento attributi file di spool')
+009800030404             GOTO       CMDLBL(FINE)
+009900030404             ENDDO
+010000030404
+010100030404/* Chiamo il programma di "normalizzazione" file *FCFC --------------*/
+010200080711             CALL       PGM(TRBMFCR)
+010300030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+010400030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+010500080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCR - Errore in +
+010600030404                          "normalizzazione" file *FCFC')
+010700030404             GOTO       CMDLBL(FINE)
+010800030404             ENDDO
+010900030404
+011000030404/* Creo il file di output richiesto nel lancio ----------------------*/
+011100030404             IF         COND(&DFCFOLEN *NE '     ') THEN(DO)
+011200030404             CHGVAR     VAR(&WLEN)  VALUE('00' *TCAT &DFCFOLEN)
+011300030404             ENDDO
+011400030404             ELSE       CMD(DO)
+011500030404             CHGVAR     VAR(&WLEN)  VALUE(&SPOOLLEN)
+011600030404             ENDDO
+011700030404             IF         COND(&DFCFOPT = 'R') THEN(DO)           /* Se richiesta copia in replace */
+011800030404             DLTF       FILE(&DFCLOUT/&DFCFOUT)
+011900030404             MONMSG     MSGID(CPF0000)
+012000030404             CRTPF      FILE(&DFCLOUT/&DFCFOUT) RCDLEN(&WLEN) +
+012100030404                          TEXT(&DFCFTXT)
+012200030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+012300030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+012400080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Errore in +
+012500030404                          creazione file ' *BCAT &DFCLOUT *TCAT '/' +
+012600030404                          *TCAT &DFCFOUT)
+012700030404             GOTO       CMDLBL(FINE)
+012800030404             ENDDO
+012900080711             CPYF       FROMFILE(TRBMFCOF) TOFILE(&DFCLOUT/&DFCFOUT) +
+013000030404                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+013100030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+013200030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+013300080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Errore in +
+013400030404                          copia su file ' *BCAT &DFCLOUT *TCAT '/' +
+013500080711                          *TCAT &DFCFOUT *BCAT ' da file TRBMFCOF')
+013600030404             GOTO       CMDLBL(FINE)
+013700030404             ENDDO
+013800030404             ENDDO
+013900030404             IF         COND(&DFCFOPT = 'A') THEN(DO)           /* Se richiesta copia in add */
+014000030404             CHKOBJ     OBJ(&DFCLOUT/&DFCFOUT) OBJTYPE(*FILE)
+014100030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+014200030404             CRTPF      FILE(&DFCLOUT/&DFCFOUT) RCDLEN(&WLEN) +
+014300030404                          TEXT(&DFCFTXT)
+014400030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+014500030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+014600080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Errore in +
+014700030404                          creazione file ' *BCAT &DFCLOUT *TCAT '/' +
+014800030404                          *TCAT &DFCFOUT)
+014900030404             GOTO       CMDLBL(FINE)
+015000030404             ENDDO
+015100030404             ENDDO
+015200080711             CPYF       FROMFILE(TRBMFCOF) TOFILE(&DFCLOUT/&DFCFOUT) +
+015300030404                          MBROPT(*ADD) FMTOPT(*NOCHK)
+015400030404             MONMSG     MSGID(CPF0000) EXEC(DO)
+015500030418             CHGVAR     VAR(&DFCERR) VALUE('1')
+015600080711             CHGVAR     VAR(&DFCMSG) VALUE('TRBMFCC - Errore in +
+015700030404                          copia su file ' *BCAT &DFCLOUT *TCAT '/' +
+015800080711                          *TCAT &DFCFOUT *BCAT ' da file TRBMFCOF')
+015900030404             GOTO       CMDLBL(FINE)
+016000030404             ENDDO
+016100030404             ENDDO
+016200030403
+016300030404/* Infine disalloco i file di wrk -----------------------------------*/
+016400080711             DLCOBJ     OBJ((TRBMFCIF *FILE *EXCL))
+016500030404             MONMSG     MSGID(CPF0000)
+016600080711             DLCOBJ     OBJ((TRBMFCOF *FILE *EXCL))
+016700030404             MONMSG     MSGID(CPF0000)
+016800030401
+016900030402 FINE:
+017000080711             CHGVAR     VAR(%SST(&TRBMFCDS 67 1)) VALUE(&DFCERR)
+017100080711             CHGVAR     VAR(%SST(&TRBMFCDS 68 80)) VALUE(&DFCMSG)
+017200030514
+017300030514/* E rilascio le risorse --------------------------------------------*/
+017400030514             RCLRSC
+017500030402
+017600990907             ENDPGM

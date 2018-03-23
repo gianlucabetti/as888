@@ -1,0 +1,210 @@
+000100980729     H*------------------------------------------------------------------------*
+000200980729     H* ALLINEA CAPPARIO ESTERO BARTOLINI - ESEGUE                             *
+000300980729     H*------------------------------------------------------------------------*
+000400980729     H* NB: PER CREARLO COMPILARE IN INTERATTIVO DOPO LE OVRDBF DEL TNVR93C3
+000500980729     H*------------------------------------------------------------------------*
+000600980729     H              J
+000700980729     F*------------------------------------------------------------------------*
+000800980729     F* DATA BASE                                                              *
+000900980729     F*------------------------------------------------------------------------*
+001000980729     FTNVR93P3O   E             01     PRINTER
+001100980729     F*---
+001200980729     F* DA
+001300980729     F*---
+001400980729     FAZCPCDA IF  E           K        DISK
+001500980729     F*---
+001600980729     F* A
+001700980729     F*---
+001800980729     FAZCPCA  UF  E           K        DISK
+001900980729     F            AZCPC000                          KRENAMEAZCPCA00
+002000980729     E*------------------------------------------------------------------------*
+002100980729     E* SCHIERE                                                                *
+002200980729     E*------------------------------------------------------------------------*
+002300980729     E*---
+002400980729     E* MESSAGGI
+002500980729     E*---
+002600980729     E                    MSG     1   5 60
+002700980729     I*------------------------------------------------------------------------*
+002800980729     I* INPUT                                                                  *
+002900980729     I*------------------------------------------------------------------------*
+003000980729     I*---
+003100980729     I* RIDENOMINAZIONE CAMPI FILES TRAINI SU CUI COPIARE
+003200980729     I*---
+003300980729     IAZCPCA00
+003400980729     I              CPCVER                          APCVER
+003500980729     I              CPCNAR                          APCNAR
+003600980729     I              CPCCAP                          APCCAP
+003700980729     I              CPCLNA                          APCLNA
+003800980729     I              CPCZNC                          APCZNC
+003900980729     I              CPCPRV                          APCPRV
+004000980729     I              CPCPRA                          APCPRA
+004100980729     I              CPCISO                          APCISO
+004200980729     I              CPCZFD                          APCZFD
+004300980729     I              CPCLKG                          APCLKG
+004400980729     I              CPCLMC                          APCLMC
+004500980729     I              CPCLOL                          APCLOL
+004600980729     I              CPCZOL                          APCZOL
+004700980729     I              CPCLKS                          APCLKS
+004800980729     I              CPCLMS                          APCLMS
+004900980729     I              CPCLOS                          APCLOS
+005000980729     I              CPCZOS                          APCZOS
+005100980729     I              CPCLK2                          APCLK2
+005200980729     I              CPCLM2                          APCLM2
+005300980729     I              CPCLO2                          APCLO2
+005400980729     I              CPCZO2                          APCZO2
+005500980729     I              CPCCTS                          APCCTS
+005600980729     I              CPCCTE                          APCCTE
+005700980729     I              CPCTTC                          APCTTC
+005800980729     I              CPCFLG                          APCFLG
+005900980729     I              CPCFIT                          APCFIT
+006000980729     I              CPCPII                          APCPII
+006100980729     I              CPCPID                          APCPID
+006200980729     I              CPCPIS                          APCPIS
+006300980729     I              CPCGDD                          APCGDD
+006400980729     I              CPCESE                          APCESE
+006500980729     I              CPCESL                          APCESL
+006600980729     I              CPCATB                          APCATB
+006700980729     I              CPCFTR                          APCFTR
+006800980729     I              CPCDTR                          APCDTR
+006900980729     I              CPCFI1                          APCFI1
+007000980729     I              CPCFI2                          APCFI2
+007100980729     C*------------------------------------------------------------------------*
+007200980729     C* MAIN LINE
+007300980729     C*------------------------------------------------------------------------*
+007400980729     C*
+007500980729     C* POSIZIONAMENTO E PRIMA LETTURA FILE
+007600980729     C                     EXSR SETCPC
+007700980729     C*
+007800980729     C* FINO A FINE FILE
+007900980729DO  1C           $FINE     DOWEQ'N'
+008000980729     C*
+008100980729     C* ALLINEAMENTO
+008200980729     C                     EXSR ALLCPC
+008300980729     C*
+008400980729     C* LETTURA SUCESSIVA FILE
+008500980729     C                     EXSR LETCPC
+008600980729E   1C                     ENDDO                           *FINE CAP
+008700980729     C*
+008800980729     C                     SETON                     LR
+008900980729     C*------------------------------------------------------------------------*
+009000980729     C* SETCPC  - POSIZIONAMENTO E PRIMA LETTURA CAP
+009100980729     C*------------------------------------------------------------------------*
+009200980729     C           SETCPC    BEGSR
+009300980729     C*
+009400980729     C                     Z-ADD4         KPCVER
+009500980729     C                     MOVEL'A'       KPCNAR    P
+009600980729     C           KEYCPC    SETLLAZCPCDA              99
+009700980729IF  1C           *IN99     IFEQ *OFF                       *NO FINE FILE
+009800980729     C                     EXSR LETCPC                      -LETTURA
+009900980729X   1C                     ELSE                            *FINE FILE
+010000980729     C                     MOVEL'S'       $FINE             -FINE LETTURA
+010100980729E   1C                     ENDIF
+010200980729     C*
+010300980729     C                     ENDSR
+010400980729     C*------------------------------------------------------------------------*
+010500980729     C* LETCPC - LETTURA SUCESSIVA CAP
+010600980729     C*------------------------------------------------------------------------*
+010700980729     C           LETCPC    BEGSR
+010800980729     C*
+010900980729     C                     MOVEL'N'       WRECOK
+011000980729DO  1C           $FINE     DOWEQ'N'
+011100980729     C           WRECOK    ANDEQ'N'
+011200980729     C           KE2CPC    READEAZCPCDA                  99
+011300980729IF  2C           *IN99     IFEQ *ON                        *FINE FILE
+011400980729     C                     MOVEL'S'       $FINE             -FINE LETTURA
+011500980729X   2C                     ELSE                            *NO FILE FILE
+011600980729     C                     EXSR CHKCPC                      -CONTROLLA RECORD
+011700980729E   2C                     ENDIF
+011800980729E   1C                     ENDDO
+011900980729     C*
+012000980729     C                     ENDSR
+012100980729     C*------------------------------------------------------------------------*
+012200980729     C* CHKCPC - CONTROLLA VALIDITA' CAP
+012300980729     C*------------------------------------------------------------------------*
+012400980729     C           CHKCPC    BEGSR
+012500980729     C*
+012600980729     C                     MOVEL'S'       WRECOK           *RECORD VALIDO
+012700980729     C*
+012800980729     C* CAP ITALIA, ESCLUDE
+012900980729IF  1C           CPCNAR    IFEQ *BLANKS
+013000980729     C                     MOVEL'N'       WRECOK           *RECORD NON VALIDO
+013100980729E   1C                     ENDIF
+013200980729     C*
+013300980729     C                     ENDSR
+013400980729     C*------------------------------------------------------------------------*
+013500980729     C* ALLCPC - ALLINEA IL CAP
+013600980729     C*------------------------------------------------------------------------*
+013700980729     C           ALLCPC    BEGSR
+013800980729     C*
+013900980729     C* LEGGE IL RECORD DEL FILE "A" DA MODIFICARE
+014000980729     C                     MOVELCPCVER    KPCVER
+014100980729     C                     MOVELCPCNAR    KPCNAR
+014200980729     C                     MOVELCPCCAP    KPCCAP
+014300980729     C           KE3CPC    CHAINAZCPCA               98
+014400980729IF  1C           *IN98     IFEQ *ON                        *INESISTENTE
+014500980729     C                     Z-ADD*ZEROS    APCZNC           *IMPOSTA CAMPI
+014600980729     C                     Z-ADD*ZEROS    APCZOL
+014700980729     C                     Z-ADD*ZEROS    APCZFD
+014800980729     C                     MOVELMSG,1     DECMSG
+014900980729     C                     EXSR STADET                     *STAMPA ERRORE
+015000980729X   1C                     ELSE                            *ESISTENTE
+015100980729IF  2C           CPCZNC    IFNE APCZNC
+015200980729     C           CPCZOL    ORNE APCZOL
+015300980729     C           CPCZFD    ORNE APCZFD
+015400980729     C                     MOVELMSG,2     DECMSG
+015500980729     C                     EXSR STADET                     *STAMPA DETTAGLIO
+015600980729     C                     Z-ADDCPCZNC    APCZNC           *IMPOSTA CAMPI
+015700980729     C                     Z-ADDCPCZOL    APCZOL
+015800980729     C                     Z-ADDCPCZFD    APCZFD
+015900980729     C                     MOVEL*BLANKS   APCFTR
+016000980730     C                     UPDATAZCPCA00                   *AGGIORNA
+016100980729E   2C                     ENDIF
+016200980729E   1C                     ENDIF
+016300980729     C*
+016400980729     C                     ENDSR
+016500980729     C*------------------------------------------------------------------------*
+016600980729     C* STADET  - STAMPA DETTAGLIO
+016700980729     C*------------------------------------------------------------------------*
+016800980729     C           STADET    BEGSR
+016900980729     C*
+017000980729IF  1C           *IN01     IFEQ *ON                        *SE FINE PAGINA
+017100980729     C                     WRITEVR93IN                     *INTESTAZIONE
+017200980729     C                     SETOF                     01
+017300980729E   1C                     ENDIF
+017400980729     C                     WRITEVR93DE                     *DETTAGLIO
+017500980729     C*
+017600980729     C                     ENDSR
+017700980729     C*------------------------------------------------------------------------*
+017800980729     C* *INZSR - ROUTINE INIZIALE
+017900980729     C*------------------------------------------------------------------------*
+018000980729     C           *INZSR    BEGSR
+018100980729     C*
+018200980729     C* VARIABILI RIFERITE AL DATA BASE
+018300980729     C           *LIKE     DEFN CPCVER    KPCVER           *AZCPC00F
+018400980729     C           *LIKE     DEFN CPCNAR    KPCNAR
+018500980729     C           *LIKE     DEFN CPCCAP    KPCCAP
+018600980729     C*
+018700980729     C* CHIAVI DI LETTURA
+018800980729     C           KEYCPC    KLIST                           *AZCPC01L
+018900980729     C                     KFLD           KPCVER            -VERSIONE
+019000980729     C                     KFLD           KPCNAR            -NAZIONE
+019100980729     C           KE2CPC    KLIST                           *AZCPC01L
+019200980729     C                     KFLD           KPCVER            -VERSIONE
+019300980729     C           KE3CPC    KLIST                           *AZCPC01L
+019400980729     C                     KFLD           KPCVER            -VERSIONE
+019500980729     C                     KFLD           KPCNAR            -NAZIONE
+019600980729     C                     KFLD           KPCCAP            -CAP
+019700980729     C*
+019800980729     C* VARIABILI DI CONTROLLO
+019900980729     C                     MOVEL'N'       $FINE   1        *FINE CAP
+020000980729     C                     MOVEL'N'       WRECOK  1        *VALIDITA' RECORD
+020100980729     C                     MOVEL'1'       *IN01            *OVERFLOW
+020200980729     C*
+020300980729     C                     ENDSR
+020400980729     O*------------------------------------------------------------------------*
+020500980729** MSG - MESSAGGI (60)
+020600980729RECORD NON TROVATO                                              1
+020700980729RECORD AGGIORNATO                                               2
+0208009807293
+0209009807294
+0210009807295

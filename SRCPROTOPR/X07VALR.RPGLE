@@ -1,0 +1,3 @@
+000100080509     D Proj_ValoreCampo...
+000200080509     D                 PR                  EXTPROC('X07VALR')
+000300080520     D  x07ValDs                           LIKEDS(x07ValDs)

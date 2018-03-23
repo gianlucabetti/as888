@@ -1,0 +1,73 @@
+000100930510             PGM        PARM(&KPJBA)
+000200000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000300930617             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000600990520             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+000700990520             DCL        VAR(&TUTE) TYPE(*CHAR) LEN(3)
+000701030411             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10)
+000702030411             DCL        VAR(&LIBL)  TYPE(*CHAR) LEN(10)
+000703030411             DCL        VAR(&VIDEO) TYPE(*CHAR) LEN(10)
+000704030411             DCL        VAR(&MSGER) TYPE(*CHAR) LEN(200)
+000705030411             DCL        VAR(&OKPGM) TYPE(*CHAR) LEN(2)
+000706030411  /*  Reperisco il video a cui mandare il msg di errore                 */
+000707030411             CHGVAR     VAR(&VIDEO) VALUE(%SST(&KPJBA 20 10))
+000708030411             CHGVAR     VAR(&LIBL) VALUE('*LIBL     ')
+000800930520
+000900990520             RTVJOBA    JOB(&DSP) USER(&USER)
+001000990520
+001100030318/* APERTURA CON STESSO PROFILO */
+001200910417
+001300990520             CHGVAR     VAR(&TUTE) VALUE(%SST(&USER 1 3))
+001400990520
+001500990520             IF         COND((&TUTE *NE 'EDP')) THEN(DO)
+001600990520             ALCOBJ     OBJ((&USER *MSGQ *EXCL)) WAIT(5)
+001700990520             MONMSG     MSGID(CPF1002) EXEC(DO)
+001800990520             SNDBRKMSG  MSG('Non è possibile lavorare con QUESTO +
+001900990520                          profilo in quanto già utilizzato su altro +
+002000990520                          video: dopo aver +
+002100990520                          risposto ok + invio al presente +
+002200990520                          messaggio si ritorna a menù.') TOMSGQ(&DSP) MSGTYPE(*INQ) +
+002300990520                          RPYMSGQ(&DSP)
+002400030318             GOTO       CMDLBL(ENDPGM)
+002500990520             ENDDO
+002600990520             ENDDO
+002900990520
+003000940210             CHGDTAARA  DTAARA(*LDA (1 8)) VALUE('00000000')
+003100030318/* se precedentemente c'è stata una chiusura anomale rollback */
+003101030318             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003102030318             MONMSG     MSGID(CPF8351) EXEC(DO)
+003103030318             ENDCMTCTL
+003104030318             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+003105030318             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003106030318             ENDDO
+003700930510
+003800030318/* QUADRATURA INCASSI GIORNALIERI                       */
+003900030318             CALL       PGM(CNC0W1R) PARM(&KPJBA)
+003901030318
+003902030318             MONMSG     MSGID(CPF0000) EXEC(DO)
+003903030318             ROLLBACK
+003904030318             SNDBRKMSG  MSG('ERRORE La quadratura giornaliera degli +
+003905030318                          incassi e versamenti è terminata in modo +
+003906030318                          anomalo e potrebbe non essere stata +
+003907030318                          registrata. Segnalare il problema alla +
+003908030318                          persona responsabile della manutenzione +
+003909030318                          del programma.') TOMSGQ(&DSP)
+003910030318 /* disalloco FNMOV00T */
+003911030318             DLCOBJ     OBJ((FNMOV00T *FILE *EXCL))
+003912030318             MONMSG     MSGID(CPF1005)
+003913030318             ENDDO
+003914030318
+003915030318             ENDCMTCTL
+003916030411  /*  Se pgm non è finito  correttamente gestisco errore x allocazione  */
+003917030411             CHGVAR     VAR(&OKPGM) VALUE(%SST(&KPJBA 247 2))
+003918030411             IF         COND(&OKPGM *EQ 'NO') THEN(DO)
+003919030411             CHGVAR     VAR(&FILE) VALUE('FNMOV00T  ')
+003920030411             CHGVAR     VAR(&MSGER) VALUE('Non è possibile proseguire +
+003922030411                          perchè qualcuno sta utilizzando il file' +
+003923030411                          *BCAT &FILE *TCAT '. Premere invio per +
+003924030411                          sapere chi sta allocando il file. Farlo +
+003925030411                          sospendere poi riprovare.')
+003926030411             CALL       PGM(TRUL89C) PARM(&FILE &LIBL &VIDEO &MSGER)
+003927030411                        ENDDO
+003938030318
+004201030318ENDPGM:
+007400930510             RCLRSC     LVL(*)

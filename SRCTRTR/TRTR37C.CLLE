@@ -1,0 +1,69 @@
+000100971127/*----------------------------------------------------------------------------*/
+000200170110/* Gufo per ricezione variazioni bolle in sede                                */
+000300111007/*           senza fare SMBJOB ma call diretta                                */
+000400971127/*----------------------------------------------------------------------------*/
+000500971127             PGM
+000700111007             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+000800111007             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000900111114             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+001000111114             DCL        VAR(&SYS5) TYPE(*CHAR) LEN(5)
+001001170117             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001100111114
+001200111114             RTVNETA    SYSNAME(&SYSNAM)
+001300111114             CHGVAR     VAR(&SYS5) VALUE(%SST(&SYSNAM  1 5))
+001301170117/* IMPOSTAZIONE KPJBA PER LANCIO PROGRAMMI CHE LA USANO */
+001302170117    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE('EDPCEDXXX ')                 /*KNMUS*/
+001303170117    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                            /*KNRAZ*/
+001304170117    CHGVAR VAR(%SST(&KPJBA 20 10)) VALUE('EDPCEDXXX ')        /*KNMTD*/
+001305170117    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                            /*KNRVJ*/
+001306170117    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(0)                            /*KNRJO*/
+001307170117    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                          /*KSTJO*/
+001308170117    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                            /*KTMIN*/
+001309170117    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                          /*KTPAZ*/
+001310170117    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                            /*KNMSB*/
+001311170117    CHGVAR VAR(%SST(&KPJBA 77 10)) VALUE('AZNAUTO   ')                 /*KNMEB*/
+001312170117    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                            /*KKEYF*/
+001313170117    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                            /*KRCDS*/
+001314170117    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                          /*KEXCN*/
+001315170117    CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('  ')                         /*KCOJB*/
+001316170117    CHGVAR VAR(%SST(&KPJBA 156 7)) VALUE('       ')                    /*KQEBI*/
+001317170117    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')                          /*KCANC*/
+001400971127
+001500971127/* IMPOSTA LA PRIORITA' DEL JOB */
+001600971127             CHGJOB     RUNPTY(20)
+001700040621
+001800040621/* se sono su As di backup esco dal pgm  */
+001900040621             CHKOBJ     OBJ(QGPL/MIMIXBACK) OBJTYPE(*DTAARA)
+002000040621             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOBACK))
+002100040621             goto       fine
+002200040621NOBACK:
+002300111114
+002400111114/* Se sottosistema non è SETTRAS --> ambiente di prova           */
+002500111114
+002600111114             IF         COND(&SYS5   *EQ 'AS888') THEN(do)
+002700111114
+002701170117             CHGVAR     VAR(&KNSIF) VALUE('GAITRAPSP ')
+002800170117             CALL       PGM(TRUL07C) PARM(&KNSIF)
+002900040507
+003000111007             GOTO       CMDLBL(GUFO)
+003100040507             enddo
+003200111114
+003300111114/* Se sottosistema     è SETTRAS -->                             */
+003400111114             IF         COND(&SYS5   *NE 'AS888') THEN(do)
+003401170117             CHGVAR     VAR(&KNSIF) VALUE('GAITRA201 ')
+003500170117             CALL       PGM(TRUL07C) PARM(&KNSIF)
+003600111007             ENDDO
+003700111007
+003800111007 GUFO:
+003801170117             CHGVAR     VAR(%SST(&KPJBA 92 10)) VALUE(&KNSIF)
+003900170110             CALL       PGM(TRTR37R) PARM(&KPJBA &CHIUDI)
+004000111007
+004100111007             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(FINE))
+004101130206
+004102130206             RCLRSC
+004200111007
+004300170126             DLYJOB     DLY(300)
+004400111007             GOTO       CMDLBL(GUFO)
+004500111007
+004600111007 FINE:
+004700111007             ENDPGM

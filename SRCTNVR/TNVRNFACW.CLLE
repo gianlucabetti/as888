@@ -1,0 +1,35 @@
+000100021017             PGM        PARM(&NUM)
+000200021017
+000300021017/* Dichiarazione variabili ___________________________________________________ */
+000400021017             DCL        VAR(&NUM)  TYPE(*CHAR) LEN(3)
+000500021017             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+000600021017             DCL        VAR(&CMD)  TYPE(*CHAR) LEN(350)
+000700021017             DCL        VAR(&LUNG) TYPE(*DEC)  LEN(15 5) VALUE(350)
+000800021017
+000900021017/* Reperisco la lista librerie CORRENTE ______________________________________ */
+001000021017             RTVJOBA    USRLIBL(&L275)
+001100021017
+001200021017/* Elimino *dtaara (non si sa mai) ___________________________________________ */
+001300021017             DLTDTAARA  DTAARA(QTEMP/§AZUTE)
+001400021017             MONMSG     MSGID(CPF0000)
+001500021017             DLTDTAARA  DTAARA(QTEMP/§DATIUTE)
+001600021017             MONMSG     MSGID(CPF0000)
+001700021017
+001800021017/* Imposto la lista librerie x BAR ___________________________________________ */
+001900021017             CALL       PGM(TRUL07C) PARM('GAITRAPFP')
+002000021017/* Crea nuovo numeratore nel file AZNUM (copiandolo dal file FLNUF) __________ */
+002100021017             CALL       PGM(EDPWK/TNVRNFAR) PARM(&NUM)
+002200021017
+002300021017/* Controllo se c'è la SDI ___________________________________________________ */
+002400021017             CHKOBJ     OBJ(SDITRAPRD) OBJTYPE(*LIB)
+002500021017             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(NOSDI))
+002600021017/* Imposto la lista librerie x SDI ___________________________________________ */
+002700021017             CALL       PGM(TRUL07C) PARM('SDITRAPFP')
+002800021017/* Crea nuovo numeratore nel file AZNUM (copiandolo dal file FLNUF) __________ */
+002900021017             CALL       PGM(EDPWK/TNVRNFAR) PARM(&NUM)
+003000021017 NOSDI:
+003100021017
+003200021017/* Reimposto la lista librerie originale _____________________________________ */
+003300021017             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+003400021017                          *CAT ')')
+003500021017             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)

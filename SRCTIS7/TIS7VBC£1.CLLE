@@ -1,0 +1,54 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600000928
+000700000928
+000800010330             PGM        PARM(&KPJBA)
+000900010330
+001000010330             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+001100010330             DCL        VAR(&UNI)     TYPE(*CHAR) LEN(7)
+001200010330             DCL        VAR(&IMI)     TYPE(*CHAR) LEN(1)
+001300001218             DCL        VAR(&MBR)     TYPE(*CHAR) LEN(10)
+001400140702             DCL        VAR(&PARAM)   TYPE(*CHAR) LEN(38)
+001500050825             DCL        VAR(&OPZ)     TYPE(*CHAR) LEN(1)
+001600010131
+001700140702             CHGVAR     VAR(&PARAM) VALUE(%SST(&KPJBA 247 38))
+001800100312             CHGVAR     VAR(&IMI) VALUE(%SST(&PARAM 24 1))
+001900050825             CHGVAR     VAR(&OPZ) VALUE(%SST(&PARAM 26 1))
+002000100907             CHGVAR     VAR(&UNI) VALUE(%SST(&PARAM 27 7))
+002100010330
+002200050825
+002300050825  /* Se richiesta creazione membro "RIC" in FNVAC00T */
+002400050825             IF         COND(&OPZ = '1') THEN(DO)
+002500010131             CHGVAR     VAR(&MBR) VALUE(RIC *CAT &UNI)
+002600010131
+002700010131             IF         COND(&IMI *EQ 'S') THEN(DO)
+002800010131             CHGVAR     VAR(&MBR) VALUE(IMI *CAT &UNI)
+002900010131             ENDDO
+003000000928
+003100001218
+003200001222             ADDPFM     FILE(FNVAB00T) MBR(&MBR)
+003300001218             MONMSG     MSGID(CPF5812 CPF7306)
+003400001218
+003500001222             ALCOBJ     OBJ((FNVAB00T *FILE *EXCL &MBR))
+003600000928
+003700001222             OVRDBF     FILE(FNVAB00T) TOFILE(FNVAB00T) MBR(&MBR) +
+003800001218                          OVRSCOPE(*CALLLVL)
+003900050825             ENDDO
+004000001218
+004100001218
+004200050825
+004300050825  /* Eseguo elaborazione */
+004400001222             CALL       PGM(TIS7VBR) PARM(&PARAM)
+004500001218
+004600001218
+004700050825
+004800050825  /* Se richiesta creazione membro "RIC" in FNVAC00T */
+004900050825             IF         COND(&OPZ = '1') THEN(DO)
+005000001222             DLCOBJ     OBJ((FNVAB00T *FILE *EXCL &MBR))
+005100050825             ENDDO
+005200001218
+005300991026
+005400990907             ENDPGM

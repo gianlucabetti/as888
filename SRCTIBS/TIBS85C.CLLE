@@ -1,0 +1,101 @@
+000100050414             PGM        PARM(&PARPO &PARTPO &PARTPN &SKIPO &TPOAEX +
+000200050414                          &TPNAEX)
+000300050107/* DA FAR GIRARE SOLO IN SETRAS      */
+000400050107             DCLF       FILE(QSYS/QAdspobj)
+000500050107
+000600050107             DCL        VAR(&code) TYPE(*CHAR) LEN(5)
+000700050107             DCL        VAR(&qinter) TYPE(*CHAR) LEN(9)
+000800050107             DCL        VAR(&parpo) TYPE(*dec) LEN(3 0)
+000900050107             DCL        VAR(&partpn) TYPE(*dec) LEN(3 0)
+001000050107             DCL        VAR(&partpo) TYPE(*dec) LEN(3 0)
+001100050414             DCL        VAR(&tpoaex) TYPE(*char) LEN(3)
+001200050414             DCL        VAR(&tpnaex) TYPE(*char) LEN(3)
+001300050107             DCL        VAR(&cartpo) TYPE(*char) LEN(3)
+001400050107             DCL        VAR(&cartpn) TYPE(*char) LEN(3)
+001500050214             DCL        VAR(&skipo) TYPE(*char) LEN(90)
+001600050214             DCL        VAR(&po) TYPE(*char) LEN(3)
+001700050214             DCL        VAR(&POSIZ) TYPE(*DEC) LEN(2 0) VALUE(1)
+001800050107
+001900050107 /* se per caso esiste, annullo il file in qtemp      */
+002000050107             DLTF       FILE(QTEMP/§FILE2)
+002100050107             MONMSG     MSGID(CPF0000)
+002200050412
+002300050412             CHGVAR     VAR(&CARtPO) VALUE(&PARtPO)
+002400050412
+002500050412 /* Congelo code solo se 1° livello che diventa 2°livello    */
+002600050412             IF         COND(&PARPO *EQ &PARTPO) THEN(DO)
+002700050107
+002800050107             CHGVAR     VAR(&CODE) VALUE('K' *CAT &cARTPO *CAT '*')
+002900050107
+003000050107             DSPOBJD    OBJ(&CODE) OBJTYPE(*JOBQ) OUTPUT(*OUTFILE) +
+003100050107                          OUTFILE(QTEMP/§FILE2) OUTMBR(*FIRST *ADD)
+003200050107             MONMSG     MSGID(CPF2123) EXEC(GOTO CMDLBL(FINE))
+003300050107
+003400050107             OVRDBF     FILE(QAdspobj) TOFILE(QTEMP/§file2)
+003500050107READ:
+003600050107             RCVF
+003700050107             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(endr))
+003800050107
+003900050107             HLDJOBQ    JOBQ(&ODLBNM/&ODOBNM)
+004000050107             MONMSG     MSGID(CPF3425)
+004100050107
+004200050107             GOTO       CMDLBL(READ)
+004300050107
+004400050107endr:
+004500050107             DLTF       FILE(QTEMP/§FILE2)
+004600050412
+004700050412             enddo
+004800050107
+004900050107fine:
+005000050107
+005100050414/* Sistemo solo se i 2 sottosistemi qinter sono diversi         */
+005200050414             IF         COND(&TPOaeX *NE &TPNaeX) THEN(DO)
+005300050414
+005400050107/* Aggiungo al sottosistema i DSP del terminal vecchio        */
+005500050414             CHGVAR     VAR(&qinter) VALUE('QINTER' *cat &tpnaex)
+005600050107
+005700050214altropo:
+005800050214             CHGVAR     VAR(&PO) VALUE(%SST(&skipo &posiz 3))
+005900050214             if         (&po *Gt '000') do
+006000050214
+006100050214             CHGVAR     VAR(&CODE) VALUE('R' *CAT &PO *CAT '*')
+006200050107             ADDWSE     SBSD(&QINTER) WRKSTN(&CODE)
+006300050110             MONMSG     MSGID(CPF1697)
+006400050107
+006500050214             CHGVAR     VAR(&CODE) VALUE('P' *CAT &PO *CAT '*')
+006600050107             ADDWSE     SBSD(&QINTER) WRKSTN(&CODE)
+006700050110             MONMSG     MSGID(CPF1697)
+006800050214
+006900050214             chgvar     var(&posiz) value(&posiz + 3)
+007000050214             GOTO       CMDLBL(ALTROPO)
+007100050214             enddo
+007200050215
+007300050215 /* se sKIPO vuota, elaboro solo il p.o. passato                  */
+007400050215             ELSE       CMD(IF COND(&POSIZ *EQ 1) THEN(DO))
+007500050215             CHGVAR     VAR(&PO) VALUE(&PARPO)
+007600050215
+007700050215             CHGVAR     VAR(&CODE) VALUE('R' *CAT &PO *CAT '*')
+007800050215             ADDWSE     SBSD(&QINTER) WRKSTN(&CODE)
+007900050215             MONMSG     MSGID(CPF1697)
+008000050215
+008100050215             CHGVAR     VAR(&CODE) VALUE('P' *CAT &PO *CAT '*')
+008200050215             ADDWSE     SBSD(&QINTER) WRKSTN(&CODE)
+008300050215             MONMSG     MSGID(CPF1697)
+008400050412
+008500050412/* Tolgo al sottosistema old i dsp del p.o. passato         */
+008600050414             CHGVAR     VAR(&qinter) VALUE('QINTER' *cat &tpoaex)
+008700050412             RMVWSE     SBSD(&QINTER) WRKSTN(&CODE)
+008800050412             MONMSG     MSGID(CPF1697)
+008900050412
+009000050412             CHGVAR     VAR(&CODE) VALUE('R' *CAT &PO *CAT '*')
+009100050412             RMVWSE     SBSD(&QINTER) WRKSTN(&CODE)
+009200050412             MONMSG     MSGID(CPF1697)
+009300050215             enddo
+009400050414             enddo
+009500050107
+009600050107/* Imposto su profili del terminal old il menù FS88           */
+009700050412             IF         COND(&PARPO *EQ &PARTPO) THEN(DO)
+009800050214             CALL       PGM(TIBS85R) PARM(&PARPO &PARTPO &PARTPN &skipo)
+009900050412             enddo
+010000050107
+010100050107             ENDPGM

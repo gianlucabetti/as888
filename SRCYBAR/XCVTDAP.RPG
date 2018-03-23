@@ -1,0 +1,144 @@
+000100930930     H             Y
+000200930930     F*****************************************************************
+000300930930     F*
+000400930930     F*   CONVERTE DATA DA GREGORIANO IN GIULIANO E VICEVERSA
+000500930930     F*
+000600930930     F*****************************************************************
+000700930930     F*
+000800930930     F*
+000900930930     F*
+001000930930     IINPVAR      DS
+001100930930     I                                        1   1 CEN
+001200930930     I                                        2   7 DATE
+001300930930     I                                        8  13 TIME
+001400930930     I                                       14  16 MILS
+001500930930     IOUTVAR      DS                             16
+001600930930     I                                        2   6 JUL
+001700930930     I                                        2   7 GRE
+001800930930     IERRCOD      DS
+001900930930     I                                    B   1   40BYTPRV
+002000930930     I                                    B   5   80BYTAVA
+002100930930     I                                        9  15 ERRID
+002200930930     I                                       16  16 ERR
+002300930930     I                                       17 256 INSDTA
+002400930930     C           *ENTRY    PLIST
+002500930930     C                     PARM           DGRE    6
+002600930930     C                     PARM           DJUL    5
+002700930930     C                     PARM           TIPD    1
+002800930930     C*-------
+002900930930     C                     MOVE *BLANKS   INPVAR
+003000930930     C                     MOVE *BLANKS   OUTVAR
+003100930930     C*-------
+003200930930     C*- Secolo
+003300930930     C*-
+003400930930     C           DGRE      IFNE ' '
+003500930930     C           TIPD      IFEQ '1'
+003600930930     C           TIPD      OREQ '3'
+003700930930     C                     MOVE DGRE      AA      20
+003800930930     C                     ELSE
+003900930930     C                     MOVELDGRE      AA
+004000930930     C                     END
+004100930930     C                     END
+004200930930     C*---
+004300930930     C           DJUL      IFNE ' '
+004400930930     C                     MOVE UYEAR     AA
+004500930930     C                     END
+004600930930     C*---
+004700930930     C           AA        IFLE 30
+004800930930     C                     MOVE '1'       CEN
+004900930930     C                     ELSE
+005000930930     C                     MOVE '0'       CEN
+005100930930     C                     END
+005200930930     C*-------
+005300930930     C*- Orario
+005400930930     C*-
+005500930930     C                     TIME           ORARIO  60
+005600930930     C                     MOVE ORARIO    TIME
+005700930930     C                     MOVE '000'     MILS
+005800930930     C*-------
+005900930930     C                     MOVE *BLANKS   ERRCOD
+006000930930     C                     Z-ADD272       BYTPRV
+006100930930     C                     Z-ADD0         BYTAVA
+006200930930     C*-------
+006300930930     C*- Conversione da  Gregoriano  a  Giuliano
+006400930930     C*-
+006500930930     C           DGRE      IFNE ' '
+006600930930     C*-----
+006700930930     C*- Conversione da  GGMMAA  a  Giuliano
+006800930930     C*-
+006900930930     C           TIPD      IFEQ '1'
+007000930930     C                     MOVEL'*DMY'    INPFMT 10
+007100930930     C                     END
+007200930930     C*---
+007300930930     C*- Conversione da  AAMMGG  a  Giuliano
+007400930930     C*-
+007500930930     C           TIPD      IFEQ '2'
+007600930930     C                     MOVEL'*YMD'    INPFMT
+007700930930     C                     END
+007800930930     C*---
+007900930930     C*- Conversione da  MMGGAA  a  Giuliano
+008000930930     C*-
+008100930930     C           TIPD      IFEQ '3'
+008200930930     C                     MOVEL'*MDY'    INPFMT
+008300930930     C                     END
+008400930930     C*-----
+008500930930     C                     MOVE DGRE      DATE
+008600930930     C                     MOVEL'*JUL'    OUTFMT 10
+008700930930     C                     CALL 'QWCCVTDT'
+008800930930     C                     PARM           INPFMT
+008900930930     C                     PARM           INPVAR
+009000930930     C                     PARM           OUTFMT
+009100930930     C                     PARM           OUTVAR
+009200930930     C                     PARM           ERRCOD
+009300930930     C                     MOVE JUL       DJUL
+009400930930     C*-----
+009500930930     C                     GOTO FINE
+009600930930     C                     END
+009700930930     C*-------
+009800930930     C*- Conversione da  Giuliano  a  Gregoriano
+009900930930     C*-
+010000930930     C           DJUL      IFNE ' '
+010100930930     C*-----
+010200930930     C*- Conversione da  Giuliano  a  GGMMAA
+010300930930     C*-
+010400930930     C           TIPD      IFEQ '1'
+010500930930     C                     MOVEL'*DMY'    OUTFMT
+010600930930     C                     END
+010700930930     C*---
+010800930930     C*- Conversione da  Giuliano  a  AAMMGG
+010900930930     C*-
+011000930930     C           TIPD      IFEQ '2'
+011100930930     C                     MOVEL'*YMD'    OUTFMT
+011200930930     C                     END
+011300930930     C*---
+011400930930     C*- Conversione da  Giuliano  a  MMGGAA
+011500930930     C*-
+011600930930     C           TIPD      IFEQ '3'
+011700930930     C                     MOVEL'*MDY'    OUTFMT
+011800930930     C                     END
+011900930930     C*-----
+012000930930     C                     MOVELDJUL      DATE
+012100930930     C                     MOVEL'*JUL'    INPFMT
+012200930930     C                     CALL 'QWCCVTDT'
+012300930930     C                     PARM           INPFMT
+012400930930     C                     PARM           INPVAR
+012500930930     C                     PARM           OUTFMT
+012600930930     C                     PARM           OUTVAR
+012700930930     C                     PARM           ERRCOD
+012800930930     C                     MOVE GRE       DGRE
+012900930930     C*-----
+013000930930     C                     END
+013100930930     C*-------
+013200930930     C           FINE      TAG
+013300930930     C*-------
+013400930930     C*- ERRORI
+013500930930     C*-
+013600930930     C           BYTAVA    IFNE 0
+013700930930     C*-----
+013800930930     C           ERRID     IFEQ 'CPF1060'
+013900930930     C                     END
+014000930930     C*-----
+014100930930     C                     END
+014200930930     C*-------
+014300930930     C                     RETRN
+014400930930      /EJECT

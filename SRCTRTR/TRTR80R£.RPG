@@ -1,0 +1,191 @@
+000100000000     H              J
+000200900605     F* TRTR80R  *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400900605     F* - AGGIORNA IL FILE CNABI00F RICEVUTO                         *
+000500000000     F*--------------------------------------------------------------*
+000600900605     FCNABI00RUF  E                    DISK                           UC
+000700900605     F            CNABI000                          KRENAMECNABIR
+000800900605     FCNABI00FUF  E           K        DISK                      A
+000900900517     FCMRIC01LUF  E           K        DISK
+001000900514     E                    CMD1    1   1 55
+001100900514     E                    CMD2    1   1 55
+001200900514     E                    CMD3    1   1 55
+001300900514     E                    CMD5    1   1 55
+001400000000     E                    TCU        50  6               TAB FLAG CNT
+001500000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001600000000     E                    DTU        12  6 0             DATE PARAM
+001700900605     ICNABIR
+001800900605     I              ABIABI                          RBIABI
+001900900605     I              ABICAB                          RBICAB
+002000900605     I              ABIIST                          RBIIST
+002100900605     I              ABIAGE                          RBIAGE
+002200900605     I              ABIND                           RBIND
+002300900605     I              ABILOC                          RBILOC
+002400900605     I              ABICOM                          RBICOM
+002500900605     I              ABICAP                          RBICAP
+002600900605     I              ABIPRO                          RBIPRO
+002700900605     I              ABIDTR                          RBIDTR
+002800900605     I              ABIFTR                          RBIFTR
+002900900605     I              ABIANN                          RBIANN
+003000000000     IKPJBA     E DS
+003100900514     I                                       92 101 LIBSYS
+003200900517     I                                      483 492 LEGFIL
+003300900514     I                                      493 502 MBRFIL
+003400000000     IUTEDSE    E DSUTEDSE0F
+003500000000     I                                      398 697 TCU
+003600000000     I                                    P 698 847 KCU
+003700000000     I                                    P 848 8950DTU
+003800000000     I/SPACE 3
+003900900411     C*
+004000900514     C                     EXSR DEFCAM
+004100900411     C*
+004200900514     C                     DO   *HIVAL
+004300900605     C                     READ CNABI00R                 21
+004400900514     C  N21                DO
+004500900605     C           KTAB      CHAINCNABI00F             54
+004600900605     C                     MOVE RBIABI    ABIABI
+004700900605     C                     MOVE RBICAB    ABICAB
+004800900605     C                     MOVE RBIIST    ABIIST
+004900900605     C                     MOVE RBIAGE    ABIAGE
+005000900605     C                     MOVE RBIND     ABIND
+005100900605     C                     MOVE RBILOC    ABILOC
+005200900605     C                     MOVE RBICOM    ABICOM
+005300900605     C                     MOVE RBICAP    ABICAP
+005400900605     C                     MOVE RBIPRO    ABIPRO
+005500911023     C                     MOVE RBIANN    ABIANN
+005600940825     C                     Z-ADDUDATE     ABIDTR
+005700940825     C                     MOVELUYEAR     ABIDTR
+005800940825     C                     MOVE UDAY      ABIDTR
+005900900605     C                     MOVE 'R'       ABIFTR
+006000900605     C           *IN,54    IFEQ '1'
+006100900605     C                     WRITECNABI000
+006200900605     C                     DELETCNABIR
+006300900514     C                     ADD  1         NUMREC  70
+006400900514     C                     ELSE
+006500911023     C           RBIANN    IFNE '*'
+006600900605     C                     UPDATCNABI000
+006700911023     C                     ELSE
+006800911023     C                     DELETCNABI000
+006900911023     C                     END
+007000900605     C                     DELETCNABIR
+007100900514     C                     ADD  1         NUMREC
+007200900514     C                     END
+007300900411     C                     END
+007400900514     C  N21                END
+007500900514     C*
+007600900514     C*
+007700900514     C* CHIUSURA E RIORGANIZZAZIONE MEMBRO TRASCODIFICATO
+007800900514     C*
+007900900514     C                     EXSR CAEXB
+008000900514     C*
+008100900517     C* AGGIORNA ARCHIVIO DI LOG
+008200900517     C           LEGFIL    CHAINCMRIC01L             20
+008300900517     C  N20                Z-ADDNUMREC    RICNR1
+008400900517     C  N20                MOVE '1'       RICFL2            AGG.TO
+008500900517     C  N20                UPDATCMRIC000
+008600900514     C           STOP      TAG
+008700900514     C                     SETON                     LR
+008800900411     C*
+008900900411     C/EJECT
+009000900411     C*---------------------------------------------------------------*
+009100900411     C           DEFCAM    BEGSR
+009200000000     C*---------------------------------------------------------------*
+009300000000     C           *ENTRY    PLIST
+009400000000     C                     PARM           KPJBA
+009500900524     C* SE IL MEMBRO DA TRASCODIFICARE NON E' STATO PASSATO
+009600900524     C* ASSUMO IL PRIMO MEMBRO DEL FILE
+009700900524     C           MBRFIL    IFEQ *BLANK
+009800900524     C                     MOVEL'*FIRST'  MBRFIL
+009900900524     C                     END
+010000000000     C                     Z-ADD1         CODUT
+010100000000     C                     CALL 'XPARUT'
+010200000000     C                     PARM           UTEDSE
+010300000000     C           CODUT     CABEQ-1        FINE
+010400000000     C                     MOVELRAGUT     RSUT   20
+010500891209     C*
+010600891213     C* KLIST
+010700891213     C*
+010800900514     C           KTAB      KLIST
+010900900605     C                     KFLD           RBIABI
+011000900605     C                     KFLD           RBICAB
+011100900514     C*
+011200900514     C* APERTURA MEMBRO DA TRASCODIFICARE
+011300900514     C*
+011400900514     C                     EXSR CAEXA
+011500900514     C*
+011600900412     C           FINE      ENDSR
+011700900514     C/SPACE
+011800900514     C**---------------------------------------------------------
+011900900605     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI CNABI00R      -
+012000900514     C**---------------------------------------------------------
+012100900514     C           CAEXA     BEGSR
+012200900514     C                     MOVE ')'       VAR11  11
+012300900514     C                     MOVELMBRFIL    VAR11
+012400900514     C                     MOVE '))'      VAR12  12
+012500900514     C                     MOVELMBRFIL    VAR12
+012600900514     C                     Z-ADD55        LUNG   155
+012700900514     C*
+012800900514     C                     SETOF                     20
+012900900514     C                     MOVE VAR11     CMD1
+013000900514     C                     MOVEL*BLANKS   COMMAN
+013100900514     C                     MOVEACMD1,1    COMMAN 80
+013200900514     C                     CALL 'QCMDEXC'              20
+013300900514     C                     PARM           COMMAN
+013400900514     C                     PARM           LUNG
+013500900514     C   20                GOTO STOP
+013600900514     C** CONTROLLO SE ESISTE IL MEMBRO
+013700900514     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+013800900514     C                     SETOF                     20
+013900900514     C                     MOVE VAR12     CMD2
+014000900514     C                     MOVEL*BLANKS   COMMAN
+014100900514     C                     MOVEACMD2,1    COMMAN
+014200900514     C                     CALL 'QCMDEXC'              20
+014300900514     C                     PARM           COMMAN
+014400900514     C                     PARM           LUNG
+014500900514     C   20                GOTO STOP
+014600900514     C** ALLOCO MEMBRO
+014700900514     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+014800900514     C                     SETOF                     20
+014900900514     C                     MOVE VAR11     CMD3
+015000900514     C                     MOVEL*BLANKS   COMMAN
+015100900514     C                     MOVEACMD3,1    COMMAN
+015200900514     C                     CALL 'QCMDEXC'              20
+015300900514     C                     PARM           COMMAN
+015400900514     C                     PARM           LUNG
+015500900514     C   20                GOTO STOP
+015600900514     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+015700900514     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+015800900605     C                     OPEN CNABI00R
+015900900514     C                     ENDSR
+016000900514     C/SPACE 005
+016100900514     C**---------------------------------------------------------
+016200900605     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI CNABI00R      -
+016300900514     C**---------------------------------------------------------
+016400900514     C           CAEXB     BEGSR
+016500900514     C                     MOVE ')'       VAR11  11
+016600900514     C                     MOVELMBRFIL    VAR11
+016700900514     C                     MOVE '))'      VAR12  12
+016800900514     C                     MOVELMBRFIL    VAR12
+016900900514     C                     Z-ADD55        LUNG   155
+017000900514     C*
+017100940826     C                     CLOSECNABI00R               20
+017200940825     C** RIORGANIZZA IL MEMBRO  ELIMINATE SPECIFICHE
+017300940826     C  N20                DO
+017400900514     C                     MOVE VAR12     CMD5
+017500900514     C                     MOVEL*BLANKS   COMMAN
+017600900514     C                     MOVEACMD5,1    COMMAN
+017700900514     C                     CALL 'QCMDEXC'
+017800900514     C                     PARM           COMMAN
+017900900514     C                     PARM           LUNG
+018000940826     C                     END
+018100900514     C** DISALLOCA IL MEMBRO AGG.TO
+018200900514     C                     ENDSR
+018300900514     C/SPACE 005
+018400900514**         CMD1
+018500900605CHKOBJ OBJ(CNABI00R) OBJTYPE(*FILE)     MBR(M234567890)
+018600900514**         CMD2
+018700900605ALCOBJ OBJ((CNABI00R *FILE *EXCL           M234567890))
+018800900514**         CMD3
+018900900605OVRDBF FILE(CNABI00R)                   MBR(M234567890)
+019000900514**         CMD5
+019100900605DLCOBJ OBJ((CNABI00R *FILE *EXCL           M234567890))

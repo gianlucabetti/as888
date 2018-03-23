@@ -1,0 +1,56 @@
+000100040120             PGM
+000200080213
+000300081029/* ______________________________________________________________________________*/
+000400080219
+000500081029             ENDJRNPF   FILE(UNITRAGRU/TNCPI00F)
+000600080225             monmsg cpf0000
+000700040909
+000800040907/* _____ Sposta i programmi dalla EDPWKSE alla OBJ ______________________________*/
+000900040915             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM('EDPWKSE   ' +
+001000040915                          'GAITRAOBJ' '*ALL     ')
+001100040915             MONMSG     MSGID(CPF0000)
+001200080219
+001300081029/* _____ Modifica  e aggiunta dati in TICPO ______________________     __________*/
+001400080219
+001500081029             CALL       PGM(GAITRAOBJ/TRUL07C) PARM('GAITRA201 ')
+001600080219
+001700081029             CALL       PGM(GAITRAOBJ/TRMKCPI)
+001800081029             MONMSG     MSGID(CPF0000)
+001900081029
+002000080227
+002100081029/* ___cancello pgm della gaicur020 _____*/
+002200081029             DLTPGM     PGM(GAICUR020/TRMK11R)
+002300081029             monmsg     msgid(CPF0000)
+002400081029             DLTF       FILE(GAICUR020/TRMK11D)
+002500080307             monmsg     msgid(CPF0000)
+002600081029
+002700081030             DLTPGM     PGM(gaitraobj/trmkcpi)
+002800081029             monmsg     msgid(CPF0000)
+002900081029
+003000081029/* _____ Azioni e menù ______________________________________________*/
+003100081029             call       pgm(XAMKCSE)
+003200081029             monmsg     msgid(CPF0000)
+003300081030/* _____ CPYF per averne una copia di tncpo in EDPES ________________*/
+003400081030             CPYF       FROMFILE(UNITRAGRU/TNCPO00F) +
+003500081030                          TOFILE(EDPES/TNCPO00F) MBROPT(*ADD) +
+003600081030                          CRTFILE(*YES)
+003700081030             monmsg     msgid(CPF0000)
+003800081029
+003900081029/* _____ EDTFFD su FNACR00F _________________________________________*/
+004000081029             EDTFFD     FILE(UNITRAGRU/FNACR00F) FIELD(ACRTCR) +
+004100081029                          COLHDG1('FRE.') COLHDG2('RIT.') +
+004200081029                          COLHDG3('CLI.') +
+004300081029                          TEXT('FREQ.RIT.CLI.:F=FISSO R=RICOR. O=NO +
+004400081029                          INT. M=MAI')
+004500081029             MONMSG     MSGID(CPF0000)
+004501081031/* _____ EDTFFD su FISGN00F _________________________________________*/
+004502081031             EDTFFD     FILE(FILTRA201/FISGN00F) FIELD(SGNTST) +
+004503081031                          DESCRTYPE(TEXT) TEXT('TIPO ETICHETTA: +
+004504081031                          "ITA","EST","DIS"=Picking')
+004505081031             MONMSG     MSGID(CPF0000)
+004506081031             EDTFFD     FILE(FILTRA201/FISGN00F) FIELD(SGNTSE) +
+004507081031                          DESCRTYPE(TEXT) TEXT('STipo:" +
+004508081031                          "(TST=ITA);"EEX"(TST=ITA);"DP4"(TST=EST)')
+004509081031             MONMSG     MSGID(CPF0000)
+004600081029
+004700040716             ENDPGM

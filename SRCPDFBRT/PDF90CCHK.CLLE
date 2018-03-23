@@ -1,0 +1,32 @@
+000100130307/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600130307             PGM        PARM(&DELAY &MINUPL &NLOG0)
+000700120123
+000800120124             DCL        VAR(&DELAY)     TYPE(*CHAR)  LEN(4)
+000900120124             DCL        VAR(&MINUPL)    TYPE(*CHAR)  LEN(4)
+001000130307             DCL        VAR(&NLOG0)     TYPE(*CHAR)  LEN(4)
+001100120124             DCL        VAR(&DELAYSEC)  TYPE(*DEC)   LEN(4 0)
+001200130307             DCL        VAR(&TEXT)      TYPE(*CHAR)  LEN(80)
+001300130307             DCL        VAR(&ESITO)     TYPE(*CHAR)  LEN(1)
+001400120123
+001500130307             CHGVAR     VAR(&DELAYSEC)  VALUE(&DELAY)
+001600991111
+001700130417 GUFO:
+001800130417             CHGVAR     VAR(&ESITO)     VALUE('0')
+001900130417             CHKPDFSRV
+002000130307             MONMSG     MSGID(CPF0000) EXEC(DO)
+002100130307             RCVMSG     MSG(&TEXT)
+002200130307             IF         COND(%SST(&TEXT 11 7) *NE 'SUCCESS') +
+002300130307                        THEN(CHGVAR VAR(&ESITO) VALUE('1'))
+002400130307             ENDDO
+002500130307
+002600130307             CALL       PGM(PDF90RCHK) PARM(&MINUPL &NLOG0 &ESITO)
+002700991111             MONMSG     MSGID(CPF0000)
+002800991111
+002900130307 CICLA:      DLYJOB     DLY(&DELAYSEC)
+003000000621             GOTO       CMDLBL(GUFO)
+003100991111
+003200990907             ENDPGM

@@ -1,0 +1,38 @@
+000100990217             PGM        PARM(&KPJBA)
+000200990204
+000300040923/* Dichiarazione variabili ______________________________________________________________________ */
+000400040923             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000500050222             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000600050222             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+000700040923             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+000800040923             DCL        VAR(&CMD) TYPE(*CHAR) LEN(350)
+000900040923             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+001000050222
+001100050222             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+001200040923
+001300040923/* Reperisco la lista librerie CORRENTE _________________________________________________________ */
+001400040923             RTVJOBA    USRLIBL(&L275)
+001500050222
+001600050222/* SE S.I. DI PROVA IMPOSTO FILTRAPFP */
+001700050222             IF         COND(%SST(&KNSIF 7 1) = 'P') THEN(DO)
+001800050222             CHGVAR     VAR(&SIF) VALUE('FILTRAPFP ')
+001900050222             ENDDO
+002000050222             ELSE       CMD(DO)
+002100050222             CHGVAR     VAR(&SIF) VALUE('FILTRA201 ')
+002200050222             ENDDO
+002300040923
+002400040923/* FORZO S.I. DEL P.O. __________________________________________________________________________ */
+002500040923
+002600050222             CALL       PGM(TRUL07C) PARM(&SIF)
+002700930402
+002800040923/* CALCOLO RESPONSABILITA _______________________________________________________________________ */
+002900040923
+003000040923             CALL       PGM(FIDN50R) PARM(&KPJBA)
+003100040923
+003200040923/* Reimposto la lista librerie originale ________________________________________________________ */
+003300040923             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+003400040923                          *CAT ' )')
+003500040923             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+003600040923
+003700930402
+003800980917             ENDPGM

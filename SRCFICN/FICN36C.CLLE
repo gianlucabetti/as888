@@ -1,0 +1,108 @@
+000100030606             PGM        PARM(&KPJBA)
+000200030606
+000300030606             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400030610             DCL        VAR(&FASE) TYPE(*CHAR) LEN(1) VALUE('1')
+000500121205             DCL        VAR(&TIPOALC) TYPE(*CHAR) LEN(1) VALUE('2')
+000600030610             DCL        VAR(&MSGSTOP) TYPE(*CHAR) LEN(256) +
+000700030610                          VALUE('STOP Il sistema deve eseguire la +
+000800030610                          valorizzazione delle cooperative. +
+000900030610                          Sospendere qualsiasi azione riguardante +
+001000030610                          le cooperative fino a nuovo messaggio.')
+001100030610             DCL        VAR(&MSGGO) TYPE(*CHAR) LEN(256) VALUE('La +
+001200030610                          valorizzazione delle cooperative è +
+001300030610                          terminata.')
+001400030610             DCL        VAR(&NBRLOCK) TYPE(*CHAR) LEN(4)
+001500030610             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001600100819             DCL        VAR(&TENTATIVI) TYPE(*DEC) LEN(1 0)
+001700100819             DCL        VAR(&MSGRPY) TYPE(*CHAR) LEN(1)
+001800100819
+001900121130             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) VALUE('CEDALERT@BRT.IT')
+002000100819             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253)
+002100100819             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44)  VALUE('VALORIZZAZIONE COOP')
+002200100819             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000) +
+002300100819                        VALUE('INFO Valorizzazione coop non +
+002400100819                        eseguibile per conflitto. +
+002500100819                          PER maggiori dettagli visualizzare la coda +
+002600100819                         messaggi dell''operatore.+
+002700100819                          Oppure       eseguire il seguente comando +
+002800100819                        su as400 per verificare quali utenti stanno +
+002900100819                         impedendo l''esecuzione del lavoro:   +
+003000100819                           WRKOBJLCK OBJ(FICTT00F) OBJTYPE(*FILE) ')
+003100100819
+003200100819             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+003300030610
+003400030610/* Invio messaggio di stop agli utenti che usano FICTT00F -----------*/
+003500030610/*                                                                   */
+003600030610 STOP:
+003700030610             CHGVAR     VAR(%BINARY(&NBRLOCK)) VALUE(0)
+003800030610             CHGVAR     VAR(&ESITO) VALUE(' ')
+003900121205             CHGVAR     VAR(&TIPOALC) VALUE('2')
+004000121130/*                                                                   */
+004100121130/*   il controllo effettuato dal TRULMLOCK sull'allocazione          */
+004200121130/*   è determinato dal tipo di controllo allocazione richiesto       */
+004300121130/*   con questo parametro: TIPOALC che può avere i seguenti valori   */
+004400121130/*                                                                   */
+004500121130/*     (1) - *EXCL              (4) - *SHRNUPD                       */
+004600121130/*     (2) - *EXCLRD            (5) - *SHRRD                         */
+004700121130/*     (3) - *SHRUPD                                                 */
+004800030610
+004900030610             CALL       PGM(TRULMLOCK) PARM(&FASE 'FICTT00F  ' +
+005000030610                          '*LIBL     ' '*FILE     ' '*FIRST    ' +
+005100121130                          &TIPOALC &MSGSTOP &NBRLOCK &ESITO)
+005200030610
+005300030610/* Allocazione FICTT00F ---------------------------------------------*/
+005400030610/*                                                                   */
+005500121130/*           ALCOBJ     OBJ((FICTT00F *FILE *EXCL *FIRST))   prima   */
+005600121130
+005700121130             ALCOBJ     OBJ((FICTT00F *FILE *EXCLRD *FIRST))
+005800030610             MONMSG     MSGID(CPF1002) EXEC(DO)
+005900030610
+006000030610             CHGVAR     VAR(&FASE) VALUE('5')
+006100030610             CHGVAR     VAR(&TENTATIVI) VALUE(&TENTATIVI + 1)
+006200030610
+006300030610             IF         COND(&TENTATIVI *EQ 5) THEN(DO)
+006400030610
+006500030610             CHGVAR     VAR(&TENTATIVI) VALUE(0)
+006600030610
+006700100819             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+006800030611
+006900030610             SNDUSRMSG  MSGID(BAR0018) MSGF(YBARMSG) TOMSGQ(*SYSOPR) +
+007000030610                          MSGRPY(&MSGRPY)
+007100030610
+007200030610             IF         COND(&MSGRPY *EQ 'R') THEN(GOTO CMDLBL(STOP))
+007300030611
+007400030611             IF         COND(&MSGRPY *EQ 'I') THEN(GOTO +
+007500030611                          CMDLBL(FICN36R))
+007600030610
+007700030610             IF         COND(&MSGRPY *EQ 'C') THEN(DO)
+007800100819             CHGVAR     VAR(&EMMSG) VALUE('ERRORE Valorizzazione +
+007900100819                          coop non eseguita per conflitto. +
+008000100819                          Allocazione FICTT00F +
+008100030610                          *FILE *EXCL *FIRST non riuscita.')
+008200100819             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+008300030610             GOTO       CMDLBL(VIALIBERA)
+008400030610             ENDDO
+008500030610
+008600030610             ENDDO
+008700030610
+008800030610             GOTO       CMDLBL(STOP)
+008900030610
+009000030610             ENDDO
+009100030610/*                                                                   */
+009200030610/*-------------------------------------------------------------------*/
+009300030611 FICN36R:
+009400030611             CALL       PGM(FICN36R) PARM(&KPJBA)
+009500030610
+009600030610/* Via libera -------------------------------------------------------*/
+009700030610/*                                                                   */
+009800121130/*           DLCOBJ     OBJ((FICTT00F *FILE *EXCL *FIRST))  prima    */
+009900121130             DLCOBJ     OBJ((FICTT00F *FILE *EXCLRD *FIRST))
+010000030610 VIALIBERA:
+010100030610             CHGVAR     VAR(&FASE) VALUE('9')
+010200030610             CALL       PGM(TRULMLOCK) PARM(&FASE 'FICTT00F  ' +
+010300030610                          '*LIBL     ' '*FILE     ' '*FIRST    ' +
+010400121130                        &TIPOALC &MSGGO &NBRLOCK &ESITO)
+010500030610/*                                                                   */
+010600030610/*-------------------------------------------------------------------*/
+010700030606
+010800030606 ENDPGM:     ENDPGM

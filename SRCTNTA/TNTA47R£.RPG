@@ -1,0 +1,203 @@
+000100980415     H*------------------------------------------------------------------------*
+000200980415     H* ANNULLAMENTO DATI TIPO TARIFFE DA CONTO ECONOMICO - ESEGUE             *
+000300980415     H*------------------------------------------------------------------------*
+000400980415     H              J
+000500980415     F*------------------------------------------------------------------------*
+000600980415     F* DATA BASE                                                              *
+000700980415     F*------------------------------------------------------------------------*
+000800980415     F*---
+000900980415     F* IN LETTURA
+001000980415     F*---
+001100011001     FTEETC01LIF  E           K        DISK
+001200980415     F                                              KINFDS INFETC
+001300011001     F            TEETC000                          KRENAMETEETC
+001400011001     FTEETS01LIF  E           K        DISK
+001500980415     F                                              KINFDS INFETS
+001600011001     F            TEETS000                          KRENAMETEETS
+001700011001     FTEETT01LIF  E           K        DISK
+001800980415     F                                              KINFDS INFETT
+001900011001     F            TEETT000                          KRENAMETEETT
+002000980415     F*---
+002100980415     F* IN AGGIORNAMENTO
+002200980415     F*---
+002300011001     FTEETC00FUF  E                    DISK
+002400011001     FTEETS00FUF  E                    DISK
+002500011001     FTEETT00FUF  E                    DISK
+002600980415     I*------------------------------------------------------------------------*
+002700980415     I* INPUT
+002800980415     I*------------------------------------------------------------------------*
+002900980415     I*-------------
+003000980415     I* DS INFORMAZIONI
+003100980415     I*-------------
+003200980415     IINFETC      DS
+003300980415     I                                    B 397 4000NRRETC
+003400980415     IINFETS      DS
+003500980415     I                                    B 397 4000NRRETS
+003600980415     IINFETT      DS
+003700980415     I                                    B 397 4000NRRETT
+003800980415     I*-------------
+003900980415     I* DS SCOMPOSIZIONE DATA (8)
+004000980415     I*-------------
+004100980415     IWLBDA8     IDS
+004200980415     I                                        1   80G08DAT
+004300980415     I                                        9  160G08INV
+004400980415     I                                       17  17 G08ERR
+004500980415     I                                       18  220G08TGI
+004600980415     I*-------------
+004700980415     I* DS DI PROCEDURA
+004800980415     I*-------------
+004900980415     IDSTA47    E DSTNTA47DS
+005000980415     I*-------------
+005100980415     I* ARCHITETTURA
+005200980415     I*-------------
+005300980415     IKPJBA     E DS
+005400980415     C*------------------------------------------------------------------------*
+005500980415     C* MAIN LINES                                                             *
+005600980415     C*------------------------------------------------------------------------*
+005601040308     C* RICEVIMENTO PARAMETRI
+005602040308     C           *ENTRY    PLIST
+005603040308     C                     PARM           KPJBA
+005604040308     C                     MOVELKPJBU     DSTA47
+005700980415     C*
+005800980415IF  1C           D47TLA    IFNE 'C'                        *PGM DA ELABORARE
+005802040303     C* IMPOSTA LA CHIAVE DI LETTURA
+005803040303     C                     MOVELD47DSF    KTXDSF           *DATI SEDE/FILIALE
+005804040303     C                     MOVELD47CTO    KTXCTO           *TARIFFA/OFFERTA
+005805040303     C                     Z-ADDD47KSC    KTXKSC           *CLIENTE/VISITA
+005806040303     C                     Z-ADDD47CTR    KTXCTR           *CODICE
+005807040303     C                     Z-ADDD47PRG    KTXPRG           *PROGRESSIVO
+005808040303     C*
+005900980415IF  2C           D47TUP    IFEQ '1'                        *ANN TARIFFA
+006000980415     C           D47TUP    OREQ '2'                        *ANN OFFERTA
+006100980415     C           D47TUP    OREQ '4'                        *ANN TARIFFA SCADUTA
+006900980415     C*---
+007000980415     C* DATI TIPO GENERALI
+007100980415     C*---
+007200011001     C           KEYETX    SETLLTEETC01L
+007300011001     C           KEYETX    READETEETC01L                 99
+007400980415DO  3C           *IN99     DOWEQ*OFF
+007500011001     C           NRRETC    CHAINTEETC00F             98
+007600980415IF  4C           D47TUP    IFEQ '2'                        *SE OFFERTA
+007700011001     C                     DELETTEETC000                   *CANCELLA
+007800980415X   4C                     ELSE                            *SE TARIFFA
+007900980415     C                     MOVEL'A'       ETCATB
+008000980415     C                     MOVELDATCOR    ETCDUV
+008100980415     C                     MOVEL*BLANKS   ETCFTR
+008200980415     C                     Z-ADD*ZEROS    ETCDTR
+008300011001     C                     UPDATTEETC000                   *ANNULLA
+008400980415E   4C                     ENDIF
+008500011001     C           KEYETX    READETEETC01L                 99
+008600980415E   3C                     ENDDO
+008700980415     C*---
+008800980415     C* DATI TIPO SCAGLIONI
+008900980415     C*---
+009000011001     C           KEYETX    SETLLTEETS01L
+009100011001     C           KEYETX    READETEETS01L                 99
+009200980415DO  3C           *IN99     DOWEQ*OFF
+009300011001     C           NRRETS    CHAINTEETS00F             98
+009400980415IF  4C           D47TUP    IFEQ '2'                        *SE OFFERTA
+009500011001     C                     DELETTEETS000                   *CANCELLA
+009600980415X   4C                     ELSE                            *SE TARIFFA
+009700980415     C                     MOVEL'A'       ETSATB
+009800980415     C                     MOVELDATCOR    ETSDUV
+009900980415     C                     MOVEL*BLANKS   ETSFTR
+010000980415     C                     Z-ADD*ZEROS    ETSDTR
+010100011001     C                     UPDATTEETS000                   *ANNULLA
+010200980415E   4C                     ENDIF
+010300011001     C           KEYETX    READETEETS01L                 99
+010400980415E   3C                     ENDDO
+010500980415     C*---
+010600980415     C* DATI TIPO CODICI TASSAZIONE
+010700980415     C*---
+010800011001     C           KEYETX    SETLLTEETT01L
+010900011001     C           KEYETX    READETEETT01L                 99
+011000980415DO  3C           *IN99     DOWEQ*OFF
+011100011001     C           NRRETT    CHAINTEETT00F             98
+011200980415IF  4C           D47TUP    IFEQ '2'                        *SE OFFERTA
+011300011001     C                     DELETTEETT000                   *CANCELLA
+011400980415X   4C                     ELSE                            *SE TARIFFA
+011500980415     C                     MOVEL'A'       ETTATB
+011600980415     C                     MOVELDATCOR    ETTDUV
+011700980415     C                     MOVEL*BLANKS   ETTFTR
+011800980415     C                     Z-ADD*ZEROS    ETTDTR
+011900011001     C                     UPDATTEETT000                   *ANNULLA
+012000980415E   4C                     ENDIF
+012100011001     C           KEYETX    READETEETT01L                 99
+012200980415E   3C                     ENDDO
+012300980415     C*
+012400980415X   2C                     ELSE                            *ANN VISITA
+012500980415     C*---
+012600980415     C* DATI TIPO GENERALI
+012700980415     C*---
+012800011001     C           KE2ETX    SETLLTEETC01L
+012900011001     C           KE2ETX    READETEETC01L                 99
+013000980415DO  3C           *IN99     DOWEQ*OFF
+013100011001     C           NRRETC    CHAINTEETC00F             98
+013200011001     C                     DELETTEETC000                   *CANCELLA
+013300011001     C           KE2ETX    READETEETC01L                 99
+013400980415E   3C                     ENDDO
+013500980415     C*---
+013600980415     C* DATI TIPO SCAGLIONI
+013700980415     C*---
+013800011001     C           KE2ETX    SETLLTEETS01L
+013900011001     C           KE2ETX    READETEETS01L                 99
+014000980415DO  3C           *IN99     DOWEQ*OFF
+014100011001     C           NRRETS    CHAINTEETS00F             98
+014200011001     C                     DELETTEETS000                   *CANCELLA
+014300011001     C           KE2ETX    READETEETS01L                 99
+014400980415E   3C                     ENDDO
+014500980415     C*---
+014600980415     C* DATI TIPO CODICI TASSAZIONE
+014700980415     C*---
+014800011001     C           KE2ETX    SETLLTEETT01L
+014900011001     C           KE2ETX    READETEETT01L                 99
+015000980415DO  3C           *IN99     DOWEQ*OFF
+015100011001     C           NRRETT    CHAINTEETT00F             98
+015200011001     C                     DELETTEETT000                   *CANCELLA
+015300011001     C           KE2ETX    READETEETT01L                 99
+015400980415E   3C                     ENDDO
+015500980415     C*
+015600980415E   2C                     ENDIF
+015700980415E   1C                     ENDIF
+015800980415     C*
+015900980415     C* CHIUSURA PROGRAMMA
+016000980415IF  1C           D47TLA    IFEQ *BLANKS
+016100980415     C                     RETRN
+016200980415X   1C                     ELSE
+016300980415     C                     SETON                     LR
+016400980415E   1C                     ENDIF
+016500980415     C*------------------------------------------------------------------------*
+016600980415     C* *INZSR - OPERAZIONI INIZIALI                                           *
+016700980415     C*------------------------------------------------------------------------*
+016800980415     C           *INZSR    BEGSR
+017400980415     C*
+017500980415     C* VARIABILI RIFERITE AL DATABASE
+017600011001     C           *LIKE     DEFN ETCDSF    KTXDSF           *TEETX00F
+017700980526     C           *LIKE     DEFN ETCCTO    KTXCTO
+017800980415     C           *LIKE     DEFN ETCKSC    KTXKSC
+017900980415     C           *LIKE     DEFN ETCCTR    KTXCTR
+018000980415     C           *LIKE     DEFN ETCPRG    KTXPRG
+018100980415     C*
+018200980415     C* CHIAVI DI LETTURA
+018300011001     C           KEYETX    KLIST                           *TEETX01L
+018400980526     C                     KFLD           KTXDSF            -DATI SEDE/FILIALE
+018500980526     C                     KFLD           KTXCTO            -TARIFFA/OFFERTA
+018600980415     C                     KFLD           KTXKSC            -CLIENTE/VISITA
+018700980415     C                     KFLD           KTXCTR            -CODICE
+018800980415     C                     KFLD           KTXPRG            -PROGRESSIVO
+018900011001     C           KE2ETX    KLIST                           *TEETX01L
+019000980526     C                     KFLD           KTXDSF            -DATI SEDE/FILIALE
+019100980526     C                     KFLD           KTXCTO            -TARIFFA/OFFERTA
+019200980526     C                     KFLD           KTXKSC            -CLIENTE/VISITA
+019300980415     C*
+019400980415     C* REPERIMENTO DATA CORRENTE
+019500980415     C                     TIME           N14    140       *ORA (6)+ DATA (8)
+019600980415     C                     MOVE N14       N8      80       *DATA (8) IN G/M/AA
+019700980415     C                     Z-ADDN8        G08DAT
+019800980415     C                     Z-ADD*ZEROS    G08INV
+019900980415     C                     MOVEL'0'       G08ERR
+020000980415     C                     CALL 'XSRDA8'
+020100980415     C                     PARM           WLBDA8
+020200980415     C                     Z-ADDG08INV    DATCOR  80       *DATA CORRENTE AA/M/G
+020300980415     C*
+020400980415     C                     ENDSR

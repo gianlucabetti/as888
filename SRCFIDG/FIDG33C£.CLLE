@@ -1,0 +1,61 @@
+000100070321             pgm        parm(&KPJBA)
+000200070321
+000300070321             dcl        var(&KPJBA)    type(*char)  len(502)
+000400070321             dcl        var(&KPJBU)    type(*char)  len(256)
+000500070321             dcl        var(&MODBOL)   type(*char)  len(10)
+000600070321             dcl        var(&MODBA4)   type(*char)  len(10)
+000700070321             dcl        var(&MODBA5)   type(*char)  len(10)
+000800070321             dcl        var(&PRTBOL)   type(*char)  len(10)
+000900070321             dcl        var(&PRTBA4)   type(*char)  len(10)
+001000070321             dcl        var(&PRTBA5)   type(*char)  len(10)
+001100070321
+001200070321             chgvar     var(&KPJBU)    value(%sst(&KPJBA 247 256))
+001300070321
+001400070321             chgvar     var(&MODBOL)   value(%sst(&KPJBU  32 10))
+001500070321             chgvar     var(&MODBA4)   value(%sst(&KPJBU  42 10))
+001600070321             chgvar     var(&MODBA5)   value(%sst(&KPJBU  52 10))
+001700070321             chgvar     var(&PRTBOL)   value(%sst(&KPJBU  62 10))
+001800070321             chgvar     var(&PRTBA4)   value(%sst(&KPJBU  72 10))
+001900070321             chgvar     var(&PRTBA5)   value(%sst(&KPJBU  82 10))
+002000070321
+002100070321/* Override ai printer file ---------------------------------------- */
+002200070321   /* prtf bolle per stampanti ad aghi */
+002300070321             if         cond(&PRTBOL *ne ' ') then(do)
+002400070321             ovrprtf    file(FNLSB0P)  outq(&PRTBOL) +
+002500070321                          formtype(&MODBOL)     +
+002600070321                          usrdta('Ldv x Giro')  +
+002700070321                          share(*yes)
+002800070321             ovrprtf    file(FNLSB0P1) outq(&PRTBOL) +
+002900070321                          formtype('BOLLE-Dpd') +
+003000070321                          usrdta('Ldv x Giro')  +
+003100070321                          share(*yes)
+003200070321             ovrprtf    file(FNLSB0P2) outq(&PRTBOL) +
+003300070321                          formtype('BOLLE-Fed') +
+003400070321                          copies(2)             +
+003500070321                          usrdta('Ldv x Giro')  +
+003600070321                          share(*yes)
+003700070321               enddo
+003800070321   /* prtf bolle per stampanti laser */
+003900070321             if         cond(&PRTBA4 *ne ' ') then(do)
+004000070321             ovrprtf    file(FNLSB5PA4)       +
+004100070321                          outq(&PRTBA4)       +
+004200070321                          formtype(&MODBA4)   +
+004300070321                          usrdta('Bolle§A4')  +
+004400070321                          share(*yes)
+004500070321               enddo
+004600070321             if         cond(&PRTBA5 *ne ' ') then(do)
+004700070321             ovrprtf    file(FNLSB5PA5)       +
+004800070321                          outq(&PRTBA5)       +
+004900070321                          formtype(&MODBA5)   +
+005000070321                          usrdta('Bolle§A5')  +
+005100070321                          share(*yes)
+005200070321               enddo
+005300070321
+005400070321/* Richiamo pgm di elaborazione -------------------------------------*/
+005500070321             call       pgm(FIDG33R)   parm(&KPJBA)
+005600070321
+005700070321/* Fine -------------------------------------------------------------*/
+005800070321             rclrsc     lvl(*caller)
+005900070321             dltovr     file(*all)
+006000070321
+006100070321             endpgm

@@ -1,0 +1,100 @@
+000100920324     FFILE000FIF  F    9999            DISK         KINFDS TESI
+000200920219      *====================================================
+000300920219      *
+000400920219      *infds del file da comprimere
+000500920219      *
+000600920219     ITESI        DS                            528
+000700920219     I                                       81  82 ODP
+000800920219     I                                       83  92 FILE
+000900920219     I                                       93 102 LIB
+001000920219     I                                    B 125 1260AA
+001100920219     I                                    B 127 1280BB
+001200920219     I                                      129 138 MBR
+001300920219     I                                    B 156 1590RCDS
+001400920219     I                                    B 283 2860LREC
+001500920219      *====================================================
+001600920219      *
+001700920219      *ds associata al file da comprimere
+001800920219      *
+001900920324     IFILEDS      DS                           9999
+002000920219      *====================================================
+002100920219      *
+002200920219      *tracciato dello HEADER dello userspace
+002300920219      *
+002400920219     IHEADER     IDS
+002500920219      *nome del file da spedire
+002600920219     I                                       01  10 HFILE
+002700920219      *nome della libreria in cui è il file
+002800920219     I                                       11  20 HLIB
+002900920219      *nome del membro da spedire
+003000920219     I                                       21  30 HMBR
+003100920219      *n° totale records nel membro
+003200920219     I                                    B  31  340HRCDS
+003300920219      *lunghezza del record
+003400920219     I                                    B  35  360HLREC
+003500920219      *lunghezza dello header
+003600920219     I                                    B  37  380HLHDR
+003700920219      *lunghezza dati da comprimere
+003800920219     I                                    B  39  420HLDATA
+003900920219      *lunghezza dati compressi (calcolata dalla API)
+004000920219     I                                    B  43  460HL
+004100920219      *====================================================
+004200920219      *
+004300920219      *              parametri di QUSCHGUS
+004400920219      *
+004500920219      *nome qualificato dello userspace
+004600920219     IUSRSPC      DS                             20
+004700920219     I           IDS
+004800920219      *posizione iniziale dello userspace in cui scrivere i dati
+004900920219     I                                    B  21  240STRPOS
+005000920219      *lunghezza dei dati da scrivere
+005100920219     I                                    B  25  280LDATA
+005200920219      *dati da scrivere
+005300920324     IDATA        DS                           9999
+005600920323     I              'APICHGUSR'           C         CHGUSR
+005700920219      *====================================================
+005800920219      *
+005900920219     C                     Z-ADD1         STRPOS
+006000920219     C                     Z-ADD46        HLHDR
+006200920219      *
+006300920219     C                     READ FILE000F  FILEDS         21
+006400920219      *hdrusrspc
+006500920219     C                     MOVELFILE      HFILE
+006600920219     C                     MOVELLIB       HLIB
+006700920219     C                     MOVELMBR       HMBR
+006800920219     C                     Z-ADDRCDS      HRCDS
+006900920219     C                     Z-ADDLREC      HLREC
+007000920219     C                     Z-ADD46        HLHDR
+007100920219     C           HRCDS     MULT HLREC     DUMMY   90
+007200920219     C           DUMMY     ADD  HLHDR     HLDATA
+007300920219     C           *ZERO     ADD  HLHDR     LDATA
+007400920219     C                     MOVELHEADER    DATA
+007500920219      *
+007700920323     C                     CALL CHGUSR    CHGLST
+007800920219      *
+007900920219     C           STRPOS    ADD  HLHDR     STRPOS
+008000920219     C           *ZERO     ADD  LREC      LDATA
+008100920219      *
+008101920324     C                     MOVE ' '       OPZ
+008200920219     C           *IN21     DOWEQ'0'
+008300920219      *
+008400920219     C                     MOVELFILEDS    DATA
+008600920323     C                     CALL CHGUSR    CHGLST
+008601920324     C                     MOVE '1'       OPZ
+008700920219     C           STRPOS    ADD  LREC      STRPOS
+008800920219     C                     READ FILE000F  FILEDS         21
+008900920219     C                     END
+009000920219      *
+009100920219     C                     SETON                         LR
+009200920219     C                     RETRN
+009300920219      *
+009400920219     C           *ENTRY    PLIST
+009500920219     C                     PARM           USRSPC
+009600920219      *
+010300920219      *
+010400920323     C           CHGLST    PLIST
+010500920323     C                     PARM           USRSPC
+010600920323     C                     PARM           STRPOS
+010700920323     C                     PARM           LDATA
+010800920323     C                     PARM           DATA
+010900920324     C                     PARM           OPZ     1

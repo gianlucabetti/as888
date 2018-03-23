@@ -1,0 +1,88 @@
+000100971203     H              J
+000200971203?     *--------------------------------------------------------------*
+000300971203      * TNTL90R                                                      *
+000400971203?     *--------------------------------------------------------------*
+000500971204     FTABEL00FIF  E           K        DISK
+000600971204?     *--------------------------------------------------------------*
+000700971204      * SCHIERE                                                      *
+000800971204?     *--------------------------------------------------------------*
+000900971204     E                    ERR     1   4 78
+001000971203?     *--------------------------------------------------------------*
+001100971203      * DS                                                           *
+001200971203?     *--------------------------------------------------------------*
+001300971203     IDS3I      E DS
+001400971203     ITNTL90    E DSTNTL90DS
+001500020805     ITIBS50    E DSTIBS55DS
+001600971203?     *--------------------------------------------------------------*
+001700971203      * ESECUZIONE                                                   *
+001800971203?     *--------------------------------------------------------------*
+001900971203      * Dati in entrata
+002000971204     C           *ENTRY    PLIST
+002100971204     C                     PARM           TNTL90
+002200971204      * Definizione chiavi di accesso ai file
+002300971204     C           KTAB      KLIST
+002400971204     C                     KFLD           KKUT
+002500971204     C                     KFLD           KCOD
+002600971204     C                     KFLD           KKEY
+002700971204      * Definizione dei campi
+002800971204     C           *LIKE     DEFN TBLKUT    KKUT
+002900971204     C           *LIKE     DEFN TBLCOD    KCOD
+003000971204     C           *LIKE     DEFN TBLKEY    KKEY
+003100971204      *
+003200971204      * Imposto DS per reperire librerie del S.Informativo
+003300971204     C                     CLEARTIBS50
+003400971204     C                     MOVELD90NSI    I50PSI
+003500971204     C                     MOVEL'L'       I50TLA
+003600020805     C                     CALL 'TIBS55R'
+003700971204     C                     PARM           TIBS50
+003800971204      * Se non ci sono errori imposto le librerie e i rami aziendali
+003900971204     C           O50ERR    IFEQ *BLANKS
+004000010717      * Se non so in che sistema informativo SONO lo imposto in DS
+004100010717     C           D90NSI    IFEQ *BLANK
+004200971204     C                     MOVELO50PSI    D90NSI
+004300010717     C                     ENDIF
+004400971204     C                     MOVELO50PLA    D90LIB
+004500971204     C                     MOVELO50PLR    D90AZP
+004600971204     C                     MOVELO50PLG    D90GRP
+004700971204     C                     ELSE
+004800971204     C                     MOVEL'1'       D90ERR
+004900971204     C                     MOVELO50MSG    D90MSG
+005000971204     C                     GOTO FINE
+005100971204     C                     END
+005200971204      *
+005300971204      * Aggancio tabella 3I x reperire libreiria dati gestionale
+005400971204     C                     Z-ADD1         KKUT
+005500971204     C                     MOVEL'3I'      KCOD
+005600971204     C                     MOVEL*BLANKS   KKEY
+005700010613     C                     MOVEL'1'       KKEY
+005800971204     C           KTAB      CHAINTABEL00F             31
+005900971204     C           *IN31     IFEQ '0'
+006000971204     C           TBLFLG    ANDEQ' '
+006100010613      * Controllo se inserita libreria dati gestionali in tab.
+006200010613      * + reperire dati sistema informativo traini
+006300010613     C                     MOVELTBLUNI    DS3I
+006400971204     C           §3ILBG    IFEQ *BLANKS
+006500971204     C                     MOVELERR,2     D90MSG
+006600971204     C                     MOVEL'1'       D90ERR
+006700971204     C                     GOTO FINE
+006800971204     C                     ELSE
+006900971204     C                     MOVEL§3ILBG    D90GES
+007000010613      * Controllo se il sistema informativo in cui sto lavorando
+007100010613     C           §3IBST    IFNE D90NSI
+007200010613     C                     MOVELERR,4     D90MSG
+007300010613     C                     MOVEL'1'       D90ERR
+007400010613     C                     END
+007500971204     C                     END
+007600971204     C                     ELSE
+007700971204     C                     MOVELERR,1     D90MSG
+007800971204     C                     MOVEL'1'       D90ERR
+007900971204     C                     GOTO FINE
+008000010613     C                     END
+008100971204     C*
+008200971204     C           FINE      TAG
+008300971204     C                     SETON                     LR
+008400971204**
+008500971204Non esiste tabella dati gestionali
+008600971204Non inserita in tabella libreria dati gestionali
+008700971204Non esiste tabella dati partenza
+008800971204Impossibile lavorare con i traini: sistema informativo errato

@@ -1,0 +1,317 @@
+000100940912     H*------------------------------------------------------------------------*
+000200950310     H* SALVATAGGIO E PULIZIA LEGAMI BOLLA
+000300940912     H*------------------------------------------------------------------------*
+000400930128     H              J
+000500950309     F* F N L B L
+000600950309     FFNLBL01LUF  E           K        DISK
+000700950309     FFNLBL00FO   E           K        DISK                      A
+000800950309     F            FNLBL000                          KRENAMEFNLBLS00
+000900950310     F* T N T A S
+001000990803     FTITAS30CIF  E           K        DISK
+001100931105     FPRTF198 O   F     198     OF    LPRINTER
+001200940912     L*------------------------------------------------------------------------*
+001300931105     LPRTF198  66FL 60OL
+001400940912     E*------------------------------------------------------------------------*
+001500940912     E* SCHIERE
+001600940912     E*------------------------------------------------------------------------*
+001700931105     E                    TES     1  15 66
+001800950309     I***************************************************************
+001900950309     I* DS PER SCOMPORRE DATA IN ANNO/MESE/GIONRO
+002000950309     IDS§DAT      DS
+002100950309     I                                        1   20DSSEC
+002200950309     I                                        3   40DSANN
+002300950309     I                                        5   60DSMES
+002400950309     I                                        7   80DSGIO
+002500950309     I                                        1   40DSAAS
+002600950309     I                                        5   80DSMGS
+002700950309     I                                        3   80DSDAT6
+002800950309     I                                        1   80DSDAT8
+002900940912     I*------------------------------------------------------------------------*
+003000940912     I* INPUT
+003100940912     I*------------------------------------------------------------------------*
+003200941123     I            DS
+003300941123     I                                        1   40DSAASI
+003400941123     I                                        5   80DSMGSI
+003500950309     I                                        1   80DSDATI
+003600941123     I            DS
+003700941123     I                                        1   40DSAASF
+003800941123     I                                        5   80DSMGSF
+003900950309     I                                        1   80DSDATF
+004000940912     I*-------------------
+004100931115     I* PARAMETRI LANCIO PGM
+004200940912     I*-------------------
+004300931115     IPARAM      IDS
+004400950309     I                                        1   80PARDTI                DT.INI
+004500950309     I                                        9  160PARDTF                DT.FIN
+004600940912     I*-------------------
+004700940912     I* ARCHITETTURA
+004800940912     I*-------------------
+004900931115     IKPJBA     E DS
+005000940912     C*------------------------------------------------------------------------*
+005100940912     C*?MAIN LINE
+005200940912     C*------------------------------------------------------------------------*
+005300000000     C*
+005400930129     C* ROUTINE INIZIALE
+005500930129     C                     EXSR RUTINZ
+005600931105     C*
+005700931105     C* STAMPA RIGA DI TESTATA
+005800931105     C                     EXCPTTESTA
+005900930601     C*
+006000930601     C* SE NON DEVE ESSERE ESEGUITO IL PGM VADO A FINE
+006100930601     C           FINL00    IFEQ '0'                        --- 1 -->
+006200000000     C*
+006300950309     C* POSIZIONAMENTO SUL FILE E PRIMA LETTURA SU FNLBL
+006400950309     C                     EXSR SETLBL
+006500930128     C*
+006600950309     C* CICLO FINO A FINE FILE FNLBL OPPURE
+006700950308     C* RICHIESTA CHIUSURA PGM OPPURE
+006800950308     C* FINE PGM PER ERRORE
+006900950308     C                     SETOF                     98
+007000950309     C           FINLBL    DOWEQ'0'                        --- 2 -->
+007100950308     C           *IN98     ANDEQ'0'
+007200950308     C           FINL00    ANDEQ'0'
+007300950307     C*
+007400950309     C                     WRITEFNLBLS00               99  *SCRIVO FNLBLS
+007500950309     C   99                EXCPTERRLBL
+007600950308     C   99                MOVEL'1'       FINL00           *FINE PGM
+007700950310     C                     DELETFNLBL000                   *CANCELLO FNLBL
+007800950309     C  N99                ADD  1         NUMLBL           *REC TRASF FNLBL
+007900000000     C*
+008000950309     C                     EXSR LETLBL                     *SUCCESSIVO FNLBL
+008100950308     C                     SHTDN                     98    *CONTR.CHIUSURA PGM
+008200930128     C*
+008300950307     C                     ENDDO                           <-- 2 ---
+008400950307     C                     ENDIF                           <-- 1 ---
+008500931105     C*
+008600931105     C* STAMPA RIGA DI FINE STAMPA
+008700931115     C                     Z-ADDUDATE     DATA    60
+008800931115     C                     TIME           ORA     60
+008900931105     C                     EXCPTSTAFIN
+009000000000     C*
+009100000000     C                     SETON                     LR
+009200940912     C*------------------------------------------------------------------------*
+009300950309     C*? SETLBL - POSIZIONAMENTO E PRIMA LETTURA DEL FILE FNLBL
+009400940912     C*------------------------------------------------------------------------*
+009500950309     C           SETLBL    BEGSR
+009600931115     C*
+009700931115     C* AZZERO CONTATORE RECORD LETTI
+009800950309     C                     MOVEL'0'       FINLBL  1
+009900930208     C*
+010000930316     C* POSIZIONAMENTO E PRIMA LETTURA
+010100941123     C                     Z-ADDPARDTI    DSDATI
+010200941123     C                     Z-ADDPARDTF    DSDATF
+010300950309     C                     Z-ADD*ZEROS    LBLAAN
+010400950309     C           KEYLBL    SETLLFNLBL01L             99    *FINE-ARCHIV
+010500930625     C*
+010600930625     C           *IN99     IFEQ '1'
+010700950309     C                     MOVEL'1'       FINLBL
+010800930625     C                     ELSE
+010900950309     C                     EXSR LETLBL
+011000930625     C                     END
+011100930208     C*
+011200930208     C                     ENDSR
+011300940912     C*------------------------------------------------------------------------*
+011400950309     C*? LETLBL   LETTURA PROSSIMO RECORD FNLBL
+011500940912     C*------------------------------------------------------------------------*
+011600950309     C           LETLBL    BEGSR
+011700930625     C*
+011800930625     C* LEGGO FINO A:
+011900930625     C*     - FINE FILE O SUPERATO LIMITE FINALE
+012000930625     C*     - TROVATO RECORD VALIDO
+012100930625     C                     MOVEL'N'       WRECOK
+012200950309     C           FINLBL    DOWEQ'0'                        --- 1 -->
+012300930625     C           WRECOK    ANDEQ'N'
+012400930208     C*
+012500930316     C* LETTURE SUCCESSIVE ALLA PRIMA
+012600950309     C                     READ FNLBL01L                 99
+012700930625     C*
+012800930625     C           *IN99     IFEQ '1'                        *FINE FILE
+012900950309     C           LBLAAN    ORGT DSAASF                     *SUPERATO ANNO FINE
+013000950309     C                     MOVEL'1'       FINLBL
+013100930625     C                     ELSE
+013200950309     C                     EXSR CHKREC                     *CONTR.VALIDITA REC.
+013300930208     C                     END
+013400930625     C*
+013500930625     C                     END                             <-- 1 ---
+013600930208     C*
+013700930208     C                     ENDSR
+013800950307     C*------------------------------------------------------------------------*
+013900950309     C*? CHKREC - CONTROLLA VALIDITA' DEL RECORD
+014000950307     C*------------------------------------------------------------------------*
+014100950309     C           CHKREC    BEGSR
+014200950307     C*
+014300950307     C                     MOVEL'S'       WRECOK  1
+014400950309     C*
+014500950309     C* TUTTE LE BOLLE DEVONO AVERE LA DATA INFERIORE ALLA DATA DI FINE CANC.
+014600950309     C* BOLLA ORIGINALE
+014700950309     C           LBLAAO    IFGT DSAASF
+014800950309     C                     MOVEL'N'       WRECOK
+014900950309     C                     ENDIF
+015000950309     C           LBLAAO    IFEQ DSAASF
+015100950309     C           LBLMGO    ANDGTDSMGSF
+015200950309     C                     MOVEL'N'       WRECOK
+015300950309     C                     ENDIF
+015400950309     C* BOLLA SEGUENTE
+015500950309     C           LBLAAN    IFGT DSAASF
+015600950309     C                     MOVEL'N'       WRECOK
+015700950309     C                     ENDIF
+015800950309     C           LBLAAN    IFEQ DSAASF
+015900950309     C           LBLMGN    ANDGTDSMGSF
+016000950309     C                     MOVEL'N'       WRECOK
+016100950309     C                     ENDIF
+016200950309     C* BOLLA PRECEDENTE
+016300950309     C           LBLAAP    IFGT DSAASF
+016400950309     C                     MOVEL'N'       WRECOK
+016500950309     C                     ENDIF
+016600950309     C           LBLAAP    IFEQ DSAASF
+016700950309     C           LBLMGP    ANDGTDSMGSF
+016800950309     C                     MOVEL'N'       WRECOK
+016900950309     C                     ENDIF
+017000950309     C*
+017100990803     C* CONTROLLA SE ESISTE IN TITAS LA BOLLA ORIGINALE
+017200950309     C           WRECOK    IFEQ 'S'
+017300950309     C                     Z-ADDLBLAAO    TASAAS
+017400950309     C                     Z-ADDLBLLPO    TASLNP
+017500950309     C                     Z-ADDLBLNRO    TASNRS
+017600950309     C                     Z-ADDLBLNSO    TASNSP
+017700950309     C                     MOVEL*LOVAL    TASTBL
+017800990803     C           KEYTAS    SETLLTITAS30C             99
+017900990803     C  N99                READ TITAS30C                 99
+018000950309     C           *IN99     IFEQ '0'
+018100950309     C           TASAAS    ANDEQLBLAAO
+018200950309     C           TASLNP    ANDEQLBLLPO
+018300950309     C           TASNRS    ANDEQLBLNRO
+018400950309     C           TASNSP    ANDEQLBLNSO
+018500950309     C                     MOVEL'N'       WRECOK           *ESISTE, NON CANCELLO
+018600950309     C                     ENDIF
+018700950309     C                     ENDIF
+018800950309     C*
+018900990803     C* CONTROLLA SE ESISTE IN TITAS LA BOLLA SEGUENTE
+019000950309     C           WRECOK    IFEQ 'S'
+019100950309     C                     Z-ADDLBLAAN    TASAAS
+019200950309     C                     Z-ADDLBLLPN    TASLNP
+019300950309     C                     Z-ADDLBLNRN    TASNRS
+019400950309     C                     Z-ADDLBLNSN    TASNSP
+019500950309     C                     MOVEL*LOVAL    TASTBL
+019600990803     C           KEYTAS    SETLLTITAS30C             99
+019700990803     C  N99                READ TITAS30C                 99
+019800950309     C           *IN99     IFEQ '0'
+019900950309     C           TASAAS    ANDEQLBLAAN
+020000950309     C           TASLNP    ANDEQLBLLPN
+020100950309     C           TASNRS    ANDEQLBLNRN
+020200950309     C           TASNSP    ANDEQLBLNSN
+020300950309     C                     MOVEL'N'       WRECOK           *ESISTE, NON CANCELLO
+020400950309     C                     ENDIF
+020500950309     C                     ENDIF
+020600950309     C*
+020700990803     C* CONTROLLA SE ESISTE IN TITAS LA BOLLA PRECEDENTE
+020800950309     C           WRECOK    IFEQ 'S'
+020900950309     C                     Z-ADDLBLAAP    TASAAS
+021000950309     C                     Z-ADDLBLLPP    TASLNP
+021100950309     C                     Z-ADDLBLNRP    TASNRS
+021200950309     C                     Z-ADDLBLNSP    TASNSP
+021300950309     C                     MOVEL*LOVAL    TASTBL
+021400990803     C           KEYTAS    SETLLTITAS30C             99
+021500990803     C  N99                READ TITAS30C                 99
+021600950309     C           *IN99     IFEQ '0'
+021700950309     C           TASAAS    ANDEQLBLAAP
+021800950309     C           TASLNP    ANDEQLBLLPP
+021900950309     C           TASNRS    ANDEQLBLNRP
+022000950309     C           TASNSP    ANDEQLBLNSP
+022100950309     C                     MOVEL'N'       WRECOK           *ESISTE, NON CANCELLO
+022200950309     C                     ENDIF
+022300950309     C                     ENDIF
+022400950307     C*
+022500950307     C                     ENDSR
+022600940912     C*------------------------------------------------------------------------*
+022700940912     C*? RUTINZ - ROUTINE INIZIALE
+022800940912     C*------------------------------------------------------------------------*
+022900000000     C           RUTINZ    BEGSR
+023000931115     C*
+023100931115     C* PARAMETRI IN INPUT AL PGM
+023200931115     C           *ENTRY    PLIST
+023300931115     C                     PARM           KPJBA
+023400931115     C                     MOVELKPJBU     PARAM
+023500930208     C*
+023600990803     C* CHIAVE LETTURA TITAS30C - COMPLETA
+023700930621     C           KEYTAS    KLIST
+023800941123     C                     KFLD           TASAAS
+023900950309     C                     KFLD           TASLNP
+024000950309     C                     KFLD           TASNRS
+024100950309     C                     KFLD           TASNSP
+024200950309     C                     KFLD           TASTBL
+024300950307     C*
+024400950309     C* CHIAVE LETTURA FNLBL01L - COMPLETA
+024500950309     C           KEYLBL    KLIST
+024600950309     C                     KFLD           LBLAAN
+024700950309     C                     KFLD           LBLLPN
+024800950309     C                     KFLD           LBLNRN
+024900950309     C                     KFLD           LBLNSN
+025000930208     C*
+025100930208     C* IMPOSTO A ZERO IL FINE PGM
+025200930208     C                     MOVEL'0'       FINL00  1
+025300931105     C                     MOVEL*BLANKS   RSUT   20
+025400950309     C                     Z-ADD*ZEROS    NUMLBL  90
+025500931115     C*
+025600931115     C* RECUPERO LA DATA E L'ORA
+025700931115     C                     Z-ADDUDATE     DATA    60
+025800931115     C                     TIME           ORA     60
+025900000000     C*
+026000000000     C                     ENDSR
+026100940912     O*------------------------------------------------------------------------*
+026200940905     OPRTF198 E   02           TESTA
+026300950309     O                                    8 'TNSB40R '
+026400931105     O                         RSUT      45
+026500950309     O                                   82 'SALVATAGGIO FNLBL       '
+026600931115     O                                   90 'DAL:'
+026700950309     O                         PARDTI    99
+026800931115     O                                  110 'AL:'
+026900950309     O                         PARDTF   119
+027000931105     O                                  150 'Data:'
+027100931105     O                         DATA     159 '  /  /  '
+027200931105     O                                  167 'Ora:'
+027300931105     O                         ORA      178 '  .  .  '
+027400931105     O                                  190 'Pagina:'
+027500931105     O                         PAGE  Z  198
+027600931105     O        E 11             TESTA
+027700931105     O                         TES,2     66
+027800931105     O                         TES,3    132
+027900931105     O                         TES,4    198
+028000931105     O        E  1             TESTA
+028100931105     O                         TES,1     66
+028200931105     O                         TES,1    132
+028300931105     O                         TES,1    198
+028400931105     O*------------------------------------
+028500950309     O        E  1             ERRLBL
+028600950309     O                         LBLAAN  +  5
+028700950309     O                         LBLLPN  +  1
+028800950309     O                         LBLNRN  +  1
+028900950309     O                         LBLNSN  +  1
+029000950309     O                                 +  1 'ERR. WRITE FNLBL   '
+029100931105     O*------------------------------------
+029200950308     O        E  1             STAFIN
+029300950309     O                                   30 'N.REC.TRASF. FNLBL'
+029400950309     O                         NUMLBL2   44
+029500950308     O        E   60           STAFIN
+029600931115     O                                   76 '*** FINE STAMPA ***'
+029700931115     O                                  150 'Data:'
+029800931115     O                         DATA     159 '  /  /  '
+029900931115     O                                  167 'Ora:'
+030000940912     O                         ORA      178 '  :  :  '
+030100940912     O*------------------------------------------------------------------------*
+030200931105**
+030300931105------------------------------------------------------------------  1
+030400931105 DATA    ORA       AA LNP SE N.SPED. TB     ERR  DESCRIZIONE ERROR  2
+030500950308E                                                                   3
+030600931105                                                                    4
+030700931105                                                                    5
+030800931105                                                                    6
+030900931105                                                                    7
+031000931105                                                                    8
+031100931105                                                                    9
+031200931105                                                                   10
+031300931105                                                                   11
+031400931105                                                                   12
+031500931105                                                                   13
+031600931105                                                                   14
+031700931105                                                                   15

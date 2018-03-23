@@ -1,0 +1,487 @@
+000100890921     H              J
+000200980903      *---------------------------------------------------------*
+000300980903      *  STAMPA STATISTICA SPEDIZIONI CLIENTE "BAUSCH & LOMB"   *
+000400980903      *---------------------------------------------------------*
+000500990809     FTITAS38CIF  E           K        DISK
+000600990809     FTITA730CIF  E           K        DISK
+000700980903     FTNCSB03LIF  E           K        DISK
+000800980903     FTABEL00FIF  E           K        DISK
+000900980903     FQSYSPRT O   F     132     OF     PRINTER
+001000980903      *
+001100980903     E                    NSP         4  6 0             NUM. SPEDIZIONI
+001200980903     E                    NCL         4  6 0             NUMERO COLLI
+001300980903     E                    PKB         4  7 1             PESO
+001400020108     E                    TPO         4 13 3             TASSAZIONE PORTO
+001500020108     E                    TAL         4 13 3             TASSAZIONE ALTRI IMP.
+001600980904     E                    §SP         4  7 0             NUM. SPEDIZIONI
+001700980904     E                    §CL         4  7 0             NUMERO COLLI
+001800980904     E                    §KB         4  8 1             PESO
+001900020108     E                    §PO         4 13 3             TASSAZIONE PORTO
+002000020108     E                    §AL         4 13 3             TASSAZIONE ALTRI IMP.
+002100980904     E                    TBS        20  2               TIPI BOLLA SPEDIZIONE
+002200980904     E                    TBR        20  2               TIPI BOLLA RICAVO
+002300980904     E                    KOS     1   9 66               COSTANTI STAMPA
+002400980903      *
+002500890921     IKPJBA     E DS
+002600980903     IUT§DSE    E DSUT§DSE0F
+002700980903     IDSTB      E DS
+002800990809     IDS$2      E DS
+002900900315     IPARAM       DS
+003000980903     I                                        1   40PAAI
+003100980903     I                                        5   60PMMI
+003200980903     I                                        7   80PGGI
+003300980903     I                                        5   80PMGI
+003400980903     I                                        9  120PAAF
+003500980903     I                                       13  140PMMF
+003600980903     I                                       15  160PGGF
+003700980903     I                                       13  160PMGF
+003800980903     I                                       17  230PKSC
+003900980903     I            DS
+004000980903     I                                        1   40OMGS
+004100980903     I                                        1   20OMS
+004200980903     I                                        3   40OGS
+004300980903      *---------------------------------------------------------*
+004400980903     C                     Z-ADDTASAAS    OAAS    40
+004500980903     C                     Z-ADDTASMGS    OMGS    40
+004600980903     C                     SETON                     OF
+004700980903      *
+004800990809     C           KTAS      SETLLTITAS38C
+004900980903      *
+005000921023     C                     DO   *HIVAL
+005100990809     C                     READ TITAS38C                 70
+005200980903      *
+005300980903      * Se supero data limite stampo vado a fine
+005400980903     C  N70      TASAAS    IFGT PAAF
+005500980903     C           TASAAS    OREQ PAAF
+005600980903     C           TASMGS    ANDGTPMGF
+005700980903     C                     SETON                     70
+005800980903     C                     ELSE
+005900980903      *
+006000980903      * Elaboro solo cod. cliente selezionato
+006100980903     C           TASKSC    IFEQ PKSC
+006200980903      *
+006300980903      * Elaboro solo tipo bolla valido
+006400980904     C           TASTBL    LOKUPTBS                      71
+006500980904     C           TASTBL    LOKUPTBR                      72
+006600980904      *
+006700980903     C           *IN71     IFEQ *ON
+006800980904     C           *IN72     OREQ *ON
+006900980903      *
+007000980903      * Stampo a rottura di giorno tranne il primo giro
+007100980903     C           TASAAS    IFNE OAAS
+007200980903     C           OAAS      ANDNE*ZEROS
+007300980903     C           TASMGS    ORNE OMGS
+007400980903     C           OMGS      ANDNE*ZEROS
+007500980903     C                     EXSR STAMPA
+007600980903     C                     END
+007700980903      *
+007800980903      * Elaboro spedizione
+007900980903     C                     EXSR ELABOR
+008000980903     C                     END
+008100980903     C                     END
+008200980903      *
+008300980903     C                     END
+008400980903     C  N70                END
+008500980903      *
+008600980903      * Stampo ultimo gg
+008700980903     C                     EXSR STAMPA
+008800980904      *
+008900980904      * Stampo totale
+009000980904     C                     EXCPTTESTA
+009100980904     C                     EXCPTTOTAL
+009200980903      *
+009300980903     C                     SETON                     LR
+009400980903      *--------------------------------------------------------
+009500980903      * ELABORO SPEDIZIONE E INCREMENTO I TOTALI GIORNALIERI
+009600980903      *--------------------------------------------------------
+009700980903     C           ELABOR    BEGSR
+009800980903      *
+009900980903     C                     Z-ADDTASAAS    OAAS    40
+010000980903     C                     Z-ADDTASMGS    OMGS    40
+010100980903      *
+010200980903      * Determino la fascia di peso
+010300980903     C                     SELEC
+010400990809     C*?*        TASPKB    WHLE 3
+010500990809     C           TASPKF    WHLE 3
+010600980903     C                     Z-ADD01        XX
+010700990809     C*?*        TASPKB    WHLE 10
+010800990809     C           TASPKF    WHLE 10
+010900980903     C                     Z-ADD02        XX
+011000990809     C*?*        TASPKB    WHLE 50
+011100990809     C           TASPKF    WHLE 50
+011200980903     C                     Z-ADD03        XX
+011300980903     C                     OTHER
+011400980903     C                     Z-ADD04        XX
+011500980903     C                     ENDSL
+011600980904      *
+011700980904      * Ricavo importi aggiuntivi e determino se la spedizione è fatturata
+011800980904      * se previsto dal tipo bolla
+011900980904     C           *IN72     IFEQ '1'
+012000980904     C                     EXSR IMPORT
+012100020108     C* TRASF.IN EURO
+012200020108     C                     Z-ADDTASPOR    WWIMP  133
+012300020108     C           TASDIV    IFNE 'EUR'
+012400020108     C           TASPOR    DIV  1936,27   WWIMP     H
+012500020108     C                     ENDIF
+012600020108     C*
+012700020108     C                     ADD  WWIMP     TPO,XX
+012800980904     C                     ADD  ALTIMP    TAL,XX
+012900980904     C                     END
+013000980903      *
+013100980904      * Totalizzo dati spedizione se previsto dal tipo bolla
+013200980904     C           *IN71     IFEQ '1'
+013300980903     C                     ADD  1         NSP,XX
+013400980903     C                     ADD  TASNCL    NCL,XX
+013500990809     C*?*                  ADD  TASPKB    PKB,XX
+013600990809     C                     ADD  TASPKF    PKB,XX
+013700980904     C                     END
+013800980903      *
+013900980903      * Determino se sped. con C/assegno ed eventualmente totalizzo
+014000980903     C           TASFCA    IFEQ 'S'
+014100980904     C           KCSB      CHAINTNCSB000             73
+014200020108     C  N73                DO
+014300020108     C                     Z-ADDCSBCAS    WWIMP
+014400020108     C           CSBVCA    IFNE 'EUR'
+014500020108     C           CSBCAS    DIV  1936,27   WWIMP     H
+014600020108     C                     ENDIF
+014700020108     C                     ADD  1         CODSPE  60
+014800020108     C                     ADD  WWIMP     CODIMP 133
+014900020108     C                     ENDDO
+015000980903     C                     END
+015100980903      *
+015200941122     C                     ENDSR
+015300980903      *----------------------------------------------------*
+015400980903      *  IMPORTI AGGIUNTIVI E TEST FATTURATA
+015500980903      *----------------------------------------------------*
+015600980903     C           IMPORT    BEGSR
+015700980903      *
+015800980904      * Tengo separato l'importo della varia G
+015900990809      * NON CONTEGGIO IVA E BOLLO
+016000020219      * NON CONTEGGIO VARIA "N - 88888888"
+016100980904      *
+016200990809     C*?*        TASINL    ADD  TASDIF    ALTIMP  90
+016300020108     C                     Z-ADD*ZEROS    ALTIMP 133
+016400980904      *
+016500990809     C           TASSV1    IFNE §$2BOL
+016600990809     C           TASSV1    ANDNE§$2IVA
+016700020219     C           TASSV1    IFNE 'N'
+016800020219     C           TASVA1    ANDNE88888888
+016900020108     C                     Z-ADDTASVA1    WWIMP
+017000020108     C           TASDIV    IFNE 'EUR'
+017100020108     C           TASVA1    DIV  1936,27   WWIMP     H
+017200020108     C                     ENDIF
+017300990809     C           TASSV1    IFEQ 'G'
+017400020108     C                     ADD  WWIMP     CODIVG 133
+017500980904     C                     ELSE
+017600020108     C                     ADD  WWIMP     ALTIMP
+017700980904     C                     END
+017800020219     C                     ENDIF
+017900990809     C                     ENDIF
+018000980904      *
+018100020108     C           TASSV2    IFNE §$2BOL
+018200020108     C           TASSV2    ANDNE§$2IVA
+018300020219     C           TASSV2    IFNE 'N'
+018400020219     C           TASVA2    ANDNE88888888
+018500020108     C                     Z-ADDTASVA2    WWIMP
+018600020108     C           TASDIV    IFNE 'EUR'
+018700020108     C           TASVA2    DIV  1936,27   WWIMP     H
+018800020108     C                     ENDIF
+018900980904     C           TASSV2    IFEQ 'G'
+019000020108     C                     ADD  WWIMP     CODIVG
+019100980904     C                     ELSE
+019200020108     C                     ADD  WWIMP     ALTIMP
+019300980904     C                     END
+019400020219     C                     ENDIF
+019500990809     C                     ENDIF
+019600980904      *
+019700020108     C           TASSV3    IFNE §$2BOL
+019800020108     C           TASSV3    ANDNE§$2IVA
+019900020219     C           TASSV3    IFNE 'N'
+020000020219     C           TASVA3    ANDNE88888888
+020100020108     C                     Z-ADDTASVA3    WWIMP
+020200020108     C           TASDIV    IFNE 'EUR'
+020300020108     C           TASVA3    DIV  1936,27   WWIMP     H
+020400020108     C                     ENDIF
+020500980904     C           TASSV3    IFEQ 'G'
+020600020108     C                     ADD  WWIMP     CODIVG
+020700980904     C                     ELSE
+020800020108     C                     ADD  WWIMP     ALTIMP
+020900980904     C                     END
+021000020219     C                     ENDIF
+021100990809     C                     ENDIF
+021200980903      *
+021300990809      * Leggo TITA7 per altri importi
+021400980903     C           TASSV3    IFNE *BLANK
+021500990809     C           KTA7      SETLLTITA730C
+021600980903     C                     DO   *HIVAL
+021700980904      *
+021800990809     C           KTA7      READETITA730C                 73
+021900020108     C  N73      TA7SVN    IFNE §$2BOL
+022000020108     C           TA7SVN    ANDNE§$2IVA
+022100020219     C           TA7SVN    IFNE 'N'
+022200020219     C           TA7VAN    ANDNE88888888
+022300020108     C                     Z-ADDTA7VAN    WWIMP
+022400020108     C           TASDIV    IFNE 'EUR'
+022500020108     C           TA7VAN    DIV  1936,27   WWIMP     H
+022600020108     C                     ENDIF
+022700990809     C           TA7SVN    IFEQ 'G'
+022800020108     C                     ADD  WWIMP     CODIVG
+022900980904     C                     ELSE
+023000020108     C                     ADD  WWIMP     ALTIMP
+023100980904     C                     END
+023200020219     C                     ENDIF
+023300990809     C                     ENDIF
+023400980904      *
+023500980904     C  N73                END
+023600980903     C                     END
+023700980904      *
+023800980903     C                     ENDSR
+023900980903      *----------------------------------------------------*
+024000980903      *  STAMPA
+024100980903      *----------------------------------------------------*
+024200980903     C           STAMPA    BEGSR
+024300980903      *
+024400980903     C                     XFOOTNSP       WNSP    70
+024500980903      *
+024600980903     C           WNSP      IFGT *ZEROS
+024700980903     C   OF                EXCPTTESTA
+024800980903     C   OF                SETOF                     OF
+024900980903     C                     EXCPTDETTA
+025000980903     C                     END
+025100980904      *
+025200980904      * Sommo totali
+025300980904     C           1         DO   4         XX
+025400980904     C                     ADD  TPO,XX    §PO,XX
+025500980904     C                     ADD  TAL,XX    §AL,XX
+025600980904     C                     ADD  NSP,XX    §SP,XX
+025700980904     C                     ADD  NCL,XX    §CL,XX
+025800980904     C                     ADD  PKB,XX    §KB,XX
+025900980904     C                     ENDDO
+026000980904     C                     ADD  CODSPE    §ODSPE  70
+026100980904     C                     ADD  CODIMP    §ODIMP 133
+026200020108     C                     ADD  CODIVG    §ODIVG 133
+026300980904      *
+026400980904      * Azzero campi di comodo
+026500980903     C                     CLEARNSP
+026600980903     C                     CLEARNCL
+026700980903     C                     CLEARPKB
+026800980903     C                     CLEARTPO
+026900980903     C                     CLEARTAL
+027000980903     C                     CLEARCODSPE
+027100980903     C                     CLEARCODIMP
+027200980904     C                     CLEARCODIVG
+027300980903      *
+027400980903     C                     ENDSR
+027500980903      *----------------------------------------------------*
+027600980903      *  SUBROUTINE INIZIALE
+027700980903      *----------------------------------------------------*
+027800980903     C           *INZSR    BEGSR
+027900980903      *
+028000980903     C           *ENTRY    PLIST
+028100980903     C                     PARM           KPJBA
+028200980903      *
+028300980903     C                     MOVELKPJBU     PARAM
+028400990809      * TITAS
+028500980903     C           KTAS      KLIST
+028600980903     C                     KFLD           PAAI
+028700980903     C                     KFLD           PMGI
+028800980903     C                     KFLD           PKSC
+028900990809      * TITA7
+029000980903     C           KTA7      KLIST
+029100980903     C                     KFLD           TASAAS
+029200980903     C                     KFLD           TASLNP
+029300980903     C                     KFLD           TASNRS
+029400980903     C                     KFLD           TASNSP
+029500980903     C                     KFLD           TASTBL
+029600980903      * TNCSB
+029700980903     C           KCSB      KLIST
+029800980903     C                     KFLD           TASAAS
+029900980903     C                     KFLD           TASLNP
+030000980903     C                     KFLD           TASNRS
+030100980903     C                     KFLD           TASNSP
+030200980903      *
+030300980903     C           KTB       KLIST
+030400980903     C                     KFLD           TBLKUT
+030500980903     C                     KFLD           TBLCOD
+030600980903      *
+030700980903     C                     Z-ADD1         CODUT
+030800980903     C                     CALL 'X§PARUT'
+030900980903     C                     PARM           UT§DSE
+031000980903     C                     MOVELRAGUT     RSUT   20
+031100980903      *
+031200980903     C                     TIME           WTIME  140       ORA & DATA
+031300980903     C                     MOVE WTIME     WDATE   80       GG/MM/AAAA
+031400980903     C                     MOVELWTIME     UTIME   60       HH:MM:SS
+031500990809      *
+031600990809      * CARICO DS SIGLA VARIE
+031700990809     C                     Z-ADD1         TBLKUT
+031800990809     C                     MOVEL'$2'      TBLCOD
+031900990809     C                     CLEARDS$2
+032000990809     C           KTB       CHAINTABEL00F             73
+032100990809     C  N73      TBLFLG    IFNE '*'
+032200990809     C                     MOVELTBLUNI    DS$2
+032300990809     C                     ENDIF
+032400990809      *
+032500980903      *
+032600980903      * Riempio schiera con tipo bolla validi
+032700980903     C                     Z-ADD1         TBLKUT
+032800980903     C                     MOVEL'TB'      TBLCOD
+032900980903     C                     Z-ADD*ZEROS    XX      20
+033000980904     C                     Z-ADD*ZEROS    JJ      20
+033100980903      *
+033200980903     C           KTB       SETLLTABEL00F
+033300980903     C                     DO   *HIVAL
+033400980904     C           KTB       READETABEL00F                 73
+033500980904     C  N73      TBLFLG    IFNE '*'
+033600980903     C                     MOVELTBLUNI    DSTB
+033700980904      *
+033800980904      * Tipo porto per spedizione
+033900980903     C           §TBRBL    IFEQ 'N'
+034000980903     C           §TBRBL    OREQ 'S'
+034100980903     C                     ADD  1         XX
+034200980904     C                     MOVELTBLKEY    TBS,XX
+034300980903     C                     ENDIF
+034400980904      *
+034500980904      * Tipo porto per ricavo
+034600980904     C           §TBRBL    IFEQ 'N'
+034700980904     C           §TBRBL    OREQ 'R'
+034800980904     C                     ADD  1         JJ
+034900980904     C                     MOVELTBLKEY    TBR,JJ
+035000980904     C                     ENDIF
+035100980904      *
+035200980903     C                     ENDIF
+035300980904     C  N73                ENDDO
+035400980903      *
+035500980903     C                     ENDSR
+035600980903      *--------------------------------------------------------
+035700980903     OQSYSPRT E   02           TESTA
+035800980903     O                         RSUT      20
+035900020108     O                                   56 '*** ELENCO SPEDIZIONI BA'
+036000020108     O                                 +  0 'USCH & LOMB <IN EURO>***'
+036100980914     O                                 +  5 '*FNLVB8R*'
+036200980903     O                         WDATE    116 '  /  /    '
+036300980903     O                         PAGE  Z  132
+036400980903     O        E 1              TESTA
+036500980903     O                         KNSIF     10
+036600980903     O                         KNMUS     21
+036700980904     O                                   50 'Codice cliente'
+036800980903     O                         PKSC  Z +  1
+036900980903     O                                 +  2 'dal'
+037000980903     O                         PGGI  Z +  1
+037100980903     O                                 +  0 '/'
+037200980903     O                         PMMI    +  0
+037300980903     O                                 +  0 '/'
+037400980903     O                         PAAI    +  0
+037500980904     O                                 +  2 'al'
+037600980903     O                         PGGF  Z +  1
+037700980903     O                                 +  0 '/'
+037800980903     O                         PMMF    +  0
+037900980903     O                                 +  0 '/'
+038000980903     O                         PAAF    +  0
+038100980903     O                         UTIME    115 '  :  :  '
+038200980904      *
+038300980903     O        E 2              DETTA
+038400980903     O                         KOS,1     66
+038500980903     O                         KOS,2    132
+038600980903     O                         OGS   Z   10
+038700980903     O                                 +  0 '/'
+038800980903     O                         OMS     +  0
+038900980903     O                                 +  0 '/'
+039000980903     O                         OAAS    +  0
+039100980903      *
+039200980903     O        E 1              DETTA
+039300980903     O                         KOS,3     66
+039400980903     O                         NSP,1 2   34
+039500980903     O                         NCL,1 2   44
+039600980903     O                         PKB,1 2   56
+039700020108     O                         TPO,1 2   75
+039800020108     O                         TAL,1 2  104
+039900980903      *
+040000980903     O        E 1              DETTA
+040100980903     O                         KOS,4     66
+040200980903     O                         NSP,2 2   34
+040300980903     O                         NCL,2 2   44
+040400980903     O                         PKB,2 2   56
+040500020108     O                         TPO,2 2   75
+040600020108     O                         TAL,2 2  104
+040700980903      *
+040800980903     O        E 1              DETTA
+040900980903     O                         KOS,5     66
+041000980903     O                         NSP,3 2   34
+041100980903     O                         NCL,3 2   44
+041200980903     O                         PKB,3 2   56
+041300020108     O                         TPO,3 2   75
+041400020108     O                         TAL,3 2  104
+041500980903      *
+041600980903     O        E 1              DETTA
+041700980903     O                         KOS,6     66
+041800980903     O                         NSP,4 2   34
+041900980903     O                         NCL,4 2   44
+042000980903     O                         PKB,4 2   56
+042100020108     O                         TPO,4 2   75
+042200020108     O                         TAL,4 2  104
+042300980903      *
+042400980903     O        E 1              DETTA
+042500980903     O                         KOS,7     66
+042600980904     O                         KOS,8    132
+042700020108     O        E 1              DETTA
+042800980904     O                         CODSPE2   34
+042900020108     O                         CODIMP2   67
+043000020108     O                         CODIVG2   94
+043100980904      *
+043200980904     O        E 2              TOTAL
+043300980904     O                         KOS,9     66
+043400980904     O                         KOS,2    132
+043500980904      *
+043600980904     O        E 0              TOTAL
+043700980904     O                                   12 'T O T A L E:'
+043800980904      *
+043900980904     O        E 1              TOTAL
+044000980904     O                         KOS,3     66
+044100980904     O                         §SP,1 2   34
+044200980904     O                         §CL,1 2   44
+044300980904     O                         §KB,1 2   56
+044400020108     O                         §PO,1 2   75
+044500020108     O                         §AL,1 2  104
+044600980904      *
+044700980904     O        E 1              TOTAL
+044800980904     O                         KOS,4     66
+044900980904     O                         §SP,2 2   34
+045000980904     O                         §CL,2 2   44
+045100980904     O                         §KB,2 2   56
+045200020108     O                         §PO,2 2   75
+045300020108     O                         §AL,2 2  104
+045400980904      *
+045500980904     O        E 1              TOTAL
+045600980904     O                         KOS,5     66
+045700980904     O                         §SP,3 2   34
+045800980904     O                         §CL,3 2   44
+045900980904     O                         §KB,3 2   56
+046000020108     O                         §PO,3 2   75
+046100020108     O                         §AL,3 2  104
+046200980904      *
+046300980904     O        E 1              TOTAL
+046400980904     O                         KOS,6     66
+046500980904     O                         §SP,4 2   34
+046600980904     O                         §CL,4 2   44
+046700980904     O                         §KB,4 2   56
+046800020108     O                         §PO,4 2   75
+046900020108     O                         §AL,4 2  104
+047000980904      *
+047100980904     O        E 1              TOTAL
+047200980904     O                         KOS,7     66
+047300980904     O                         KOS,8    132
+047400020108     O        E 1              TOTAL
+047500980904     O                         §ODSPE2   35
+047600020108     O                         §ODIMP2   67
+047700020108     O                         §ODIVG2   94
+047800980904**  KOST  8E/L66                                                 *
+047900020108Giorno:                 Spedizioni     Colli     Peso Kg            1
+048000020108    Porto  Altri importi tranne varia G                             2
+048100980903da  0  a  3  Kg                                                     3
+048200980914da  4  a 10  Kg                                                     4
+048300980914da 11  a 50  Kg                                                     5
+048400980903   oltre 50  Kg                                                     6
+048500020108COD             Spedizioni                Importo                   7
+048600020108       Varia  G                                                     8
+048700020108T O T A L E:            Spedizioni     Colli     Peso Kg            9

@@ -1,0 +1,300 @@
+000100920310     H        1     J
+000200890508     F* CNC002R * -----------------------------------------*
+000300890508     F*----------------*                                   *
+000400890508     F*          MANUTENZIONE TABELLE GENERICHE            *
+000500890508     F*          ------------------------------   AZ. C002 *
+000600890508     F*          FILE : ANTAB00F-CNC002D                   *
+000700890508     F*          FMT. : M002001 M0020CF1 M0020SC1          *
+000800890508     F*                 M002002 M0020CF2 M0020SC2          *
+000900890508     F*----------------------------------------------------*
+001000920303     F*   DAGR = Modifiche apportate da Daniele Greggio Pro*
+001100920303     F*       Milano in data 03/03/92 x passaggio nome pgm *
+001200920303     F*       pgm al video con DS.                         *
+001300920303     F*----------------------------------------------------*
+001400890508     FANTAB00FUF  E           K        DISK                      A
+001500890508     FCNC002D CF  E                    WORKSTN
+001600890508     F                                        RN1   KSFILE M0020SF1
+001700890508     F                                        RN2   KSFILE M0020SF2
+001800890508     IPARUT     E DSUTEDSE0F
+001900890508     IKPJBA     E DS
+002000890508     I                                        1   3 EDP
+002100890508     IDSTAB       DS
+002200890508     I                                        1  75 S2DES
+002300890508     IDSIND       DS
+002400890508     I                                        1  30 S1DES
+002500890508     I                                       31  75 S1DES1
+002600890508     I                                       69  75 PROG
+002700920303DAGR I           SDS
+002800920303DAGR I                                        1   8 NOMPG
+002900920303DAGR I            DS
+003000920303DAGR I                                        1  11 NOMPGM
+003100920303DAGR I I            '*'                       1   1 AST1
+003200920303DAGR I                                        3  10 NOMPG1
+003300920303DAGR I I            '*'                      11  11 AST2
+003400890508     C/EJECT
+003500890508     C*----------------------------------------------------*
+003600890508      * INDICATORI
+003700890508      *
+003800890508      * 14 COSTANTE SECONDA COLONNA                                  C1
+003900890508      * 21
+004000890508      * 61 ROLLUP                                                    S2
+004100890508      * 63 ERASEINP                                                  C1
+004200890508      *
+004300890508      * 91
+004400890508      * 92
+004500890508      * 93
+004600890508     C*----------------------------------------------------*
+004700890508      * CHIAVI
+004800890508     C*---------                                           *
+004900890508     C           KTAB      KLIST                           *
+005000890508     C                     KFLD           TABGRU           *
+005100890508     C                     KFLD           TABCOD           *
+005200890508     C           KTAB1     KLIST                           *
+005300890508     C                     KFLD           TABGRU
+005400890508     C*----------------------------------------------------*
+005500890508      *  CARICO COSTANTI
+005600890508      *
+005700890508      *
+005800890508     C           *ENTRY    PLIST                           *
+005900890508     C                     PARM           KPJBA            *
+006000890508     C                     Z-ADD1         CODUT
+006100890508     C                     CALL 'XPARUT'
+006200890508     C                     PARM           PARUT
+006300890508     C*--------- SE DITTA INESISTENTE FINE LAVORO          *
+006400890508     C           CODUT     CABEQ-1        FINE
+006500890508     C                     MOVELRAGUT     RSUT   20
+006600920303DAGR C                     MOVELNOMPG     NOMPG1
+006700890508     C*----------------------------------------------------*
+006800890508     C*-------- CLEAR SUBFILE INDICE TABELLA --------------*
+006900890508?    C           INIZIO    TAG                             *
+007000890508     C                     SETON                     70    *
+007100890508     C                     WRITEM0020SC1                   *
+007200890508     C                     SETOF                     1470  *
+007300890508     C                     SETON                     71
+007400890508     C*--------                                            *
+007500890508     C                     Z-ADD0         RN1     30       *
+007600890508     C                     Z-ADD1         CURSOR  30       *
+007700890508     C*
+007800890508  AA C                     MOVEL*BLANK    DSIND
+007900890508     C                     MOVE *ZEROS    TABGRU
+008000890508     C           KTAB1     CHAINANTAB000             99    *
+008100890508      *
+008200890508      * FILE NUOVO -- GENERA RECORD INDICE
+008300890508      *
+008400890508     C   99                DO
+008500890508     C                     MOVE *BLANKS   TABCOD
+008600890508     C                     MOVEL'INDICE T'SV1DES 14
+008700890508     C                     MOVE 'ABELLE'  SV1DES
+008800890508     C                     MOVELSV1DES    TABDES
+008900890508     C                     WRITEANTAB000
+009000890508     C                     END
+009100890508     C*
+009200890508     C           KTAB1     SETLLANTAB000             99    *
+009300890508     C*
+009400890508     C*-------- CARICA SUBFILE INDICE TABELLA -------------*
+009500890508     C*
+009600890508?    C           LAB100    TAG                             *
+009700890508     C           KTAB1     READEANTAB000                 99
+009800890508     C*
+009900890508     C  N99                DO
+010000890508     C*
+010100890508     C                     ADD  1         RN1              *
+010200890508     C                     MOVE TABCOD    S1COD            *
+010300890508AA   C****                 MOVELTABDES    S1DES            *
+010400890508     C                     MOVELTABDES    DSIND            *
+010500890508     C                     WRITEM0020SF1                   *
+010600890508     C                     GOTO LAB100                     *
+010700890508     C                     END                             *
+010800890508     C*
+010900890508  AA C                     MOVEL*BLANK    DSIND
+011000890508     C*
+011100890508     C*
+011200890508?    C           T1TAG     TAG                             *
+011300890508     C*
+011400890508     C           RN1       COMP 14                   14  14*
+011500890508     C*-------- EMISSIONE TESTATA INDICE ------------------*
+011600890508     C                     WRITEM002001                    *
+011700890508     C*-------- EMISSIONE SUBFILE INDICE ------------------*
+011800890508?    C           C1TAG     TAG                             *
+011900890508     C*
+012000890508     C           RN1       IFEQ 0
+012100890508     C                     SETOF                     71
+012200890508     C                     END
+012300890508     C*
+012400890508     C                     EXFMTM0020SC1                   *
+012500890508     C                     SETON                     71    *
+012600890508     C                     MOVEA*ZEROS    *IN,90           *
+012700890508     C                     SETOF                     63
+012800890508     C   KC                GOTO FINE                       *
+012900890508     C*-------- RICHIESTA STAMPA TABELLE :                 *
+013000891018     C   KH                CALL 'CNC019R'                  *
+013100890508     C                     PARM           KPJBA            *
+013200890508     C   KH                GOTO C1TAG                      *
+013300890508     C/SPACE 3
+013400890508     C*-------- CONTROLLO CREAZIONE NUOVA TABELLA ---------*
+013500900312     C   KF                DO                              *
+013600890508     C           V1COD     IFEQ *BLANK
+013700890508     C                     SETON                     9092
+013800890508     C                     GOTO C1TAG
+013900890508     C                     END
+014000890508     C           V1DES     IFEQ *BLANKS
+014100890508     C                     SETON                     9093
+014200890508     C                     GOTO C1TAG
+014300890508     C                     END
+014400890508     C                     MOVE *ZEROS    TABGRU           *
+014500890508     C                     MOVE V1COD     TABCOD
+014600890508     C           KTAB      CHAINANTAB000             21    *
+014700890508     C  N21                SETON                     9091  *
+014800890508     C  N21                GOTO C1TAG
+014900890508     C                     MOVE *ZEROS    TABGRU           *
+015000890508     C                     MOVE V1COD     TABCOD           *
+015100890508     C                     MOVEL*BLANK    TABDES
+015200890508     C                     MOVELV1DES     TABDES           *
+015300890508     C                     WRITEANTAB000                   *
+015400890508     C                     MOVE *BLANKS   V1COD            *
+015500890508     C                     MOVE *BLANKS   V1DES            *
+015600890508     C                     SETON                     63
+015700890508      *
+015800890508     C                     GOTO INIZIO                     *
+015900890508     C                     END                             *
+016000890508     C/EJECT
+016100890508     C           RN1       CABEQ0         C1TAG
+016200890508      *
+016300890508     C*-------- SCELTA TABELLA DA AGGIORNARE --------------*
+016400890508     C*
+016500890508     C                     READCM0020SF1                 21*
+016600890508     C*
+016700890508     C           *IN21     CABEQ'1'       C1TAG      7171
+016800890508     C           S1SEL     CABEQ*BLANKS   C1TAG
+016900890508     C*
+017000890508 AA  C           S1SEL     IFEQ 'P'
+017100890508 AA  C                     CALL PROG                   21
+017200890508 AA  C                     PARM           KPJBA            *
+017300890508 AA  C  N21                MOVE *BLANK    S1SEL
+017400890508 AA  C  N21                UPDATM0020SF1
+017500890508 AA  C  N21                GOTO C1TAG
+017600890508 AA  C                     END
+017700890508     C*
+017800890508     C                     MOVE *BLANK    S1SEL
+017900890508     C                     UPDATM0020SF1
+018000890508     C*-------- EMISSIONE REC.TESTATA TABELLA -------------*
+018100890508     C                     MOVE S1COD     V2COD            *
+018200890508     C                     MOVELS1DES     V2DES            *
+018300890508     C                     WRITEM002002                    *
+018400890508     C*
+018500890508?    C           CARS2     TAG                             *
+018600890508     C*-------- PULIZIA RK CONTROLLO SUB. ELEM. TABELLA ---*
+018700890508     C                     SETON                     70    *
+018800890508     C                     WRITEM0020SC2                   *
+018900890508     C                     SETOF                     70    *
+019000890508     C                     SETON                     71    *
+019100890508      *
+019200890508     C*-------- CARICAMENTO SUBFILE ELEMENTI TABELLA ------*
+019300890508     C                     Z-ADD0         RN2     30       *
+019400890508     C                     MOVE S1COD     TABGRU           *
+019500890508     C           KTAB1     SETLLANTAB000             21    *
+019600890508     C*
+019700890508     C*----------------------------------------------------*
+019800890508      /EJECT
+019900890508     C*-------- LETTURA FILE E CARIC.SUBFILE ELEM.TAB. ----*
+020000890508     C           KTAB1     READEANTAB000                 21*
+020100890508     C           *IN21     DOWNE'1'                        *
+020200890508  AA C*****                MOVELTABDES    S2DES            *
+020300890508     C                     MOVELTABDES    DSTAB            *
+020400890508     C                     MOVE TABCOD    S2KEY            *
+020500890508     C                     MOVE TABCOD    H2KEY            *
+020600890508     C                     MOVE *BLANKS   S2ANN            *
+020700890508     C                     ADD  1         RN2
+020800890508     C                     WRITEM0020SF2                   *
+020900890508     C*
+021000890508     C           KTAB1     READEANTAB000                 21*
+021100890508     C  N21                END                             *
+021200890508     C/SPACE 3
+021300890508      * RIEMPIO LA PAGINA
+021400890508     C                     EXSR ROLLUP
+021500890508     C*-------- EMISSIONE SUBFILE ELEMENTI TABELLA --------*
+021600890508      *
+021700890508?    C           C2TAG     TAG                             *
+021800890508     C           RN2       IFEQ 0
+021900890508     C                     SETOF                         71
+022000890508     C                     END
+022100890508      *
+022200890508     C                     EXFMTM0020SC2                   *
+022300890508     C*--------                                            *
+022400890508     C** KC                SETON                         71
+022500901017     C   KL                GOTO INIZIO                     *
+022600901017     C   KQ                GOTO CARS2                      *
+022700890508      *
+022800890508     C   61                EXSR ROLLUP
+022900890508     C   61                GOTO C2TAG
+023000890508     C*----------------------------------------------------*
+023100890508      /EJECT
+023200890508     C*-------- LEGGO RECORD VARIATI ----------------------*
+023300890508     C*
+023400890508     C                     READCM0020SF2                 74*
+023500890508     C   74                SETOF                         71
+023600890508     C   74                GOTO C2TAG
+023700890508      *
+023800890508     C           *IN74     DOWNE'1'
+023900890508     C*-------- AGGIORNAMENTO :                            *
+024000890508     C           H2KEY     IFNE *ZERO
+024100890508     C                     MOVE H2KEY     TABCOD           *
+024200890508     C                     MOVE H2KEY     S2KEY
+024300890508      *
+024400890508      *
+024500890508     C           KTAB      CHAINANTAB000             21    *
+024600890508 AA  C*****                MOVELS2DES     TABDES           *
+024700890508     C                     MOVELDSTAB     TABDES           *
+024800890508     C     N21   S2ANN     IFEQ 'A'                        *CANCELLAZIONE
+024900890508     C                     DELETANTAB000
+025000890508     C                     MOVE *ZEROS    H2KEY
+025100890508     C                     ELSE                            *UPDATE
+025200890508     C                     UPDATANTAB000
+025300890508     C                     END                             *
+025400890508     C*
+025500890508     C                     ELSE
+025600890508     C*-------- SCRIVO    NUOVO RECORD --------------------*
+025700890508     C           S2KEY     IFNE *BLANK
+025800890508     C                     MOVE S2KEY     TABCOD           *
+025900890508     C           KTAB      CHAINANTAB000             21    *
+026000890508     C         21          DO
+026100890508     C                     MOVE S2KEY     TABCOD
+026200890508 AA  C*****                MOVELS2DES     TABDES           *
+026300890508     C                     MOVELDSTAB     TABDES           *
+026400890508     C                     WRITEANTAB000
+026500890508     C                     MOVE S2KEY     H2KEY
+026600890508     C                     END
+026700890508      *
+026800890508     C                     END
+026900890508     C                     END
+027000890508     C*
+027100890508     C                     UPDATM0020SF2
+027200890508     C*
+027300890508     C                     READCM0020SF2                 74*
+027400890508     C  N74                END
+027500890508     C                     Z-ADDRN2       CURS2
+027600890508      *
+027700890508     C                     GOTO C2TAG
+027800890508     C*-------- FINE LAVORO      --------------------------*
+027900890508?    C           FINE      TAG                             *
+028000890508     C                     SETON                     LR    *
+028100890508     C*----------------------------------------------------*
+028200890508      /EJECT
+028300890508     C*-------- -------------------------------------------*
+028400890508     C           ROLLUP    BEGSR                           *
+028500890508     C           RN2       DIV  7         SV1RN2  30
+028600890508     C                     MVR            SV2RN2  30
+028700890508     C           SV2RN2    DO   6                          *
+028800890508     C                     MOVE *ZEROS    S2KEY            *
+028900890508     C                     MOVE *ZEROS    H2KEY            *
+029000890508  AA C******               MOVE *BLANKS   S2DES            *
+029100890508     C                     MOVE *BLANKS   DSTAB            *
+029200890508     C                     MOVE *BLANKS   S2ANN            *
+029300890508     C                     ADD  1         RN2
+029400890508     C                     WRITEM0020SF2                   *
+029500890508     C                     END                             *
+029600890508     C           RN2       SUB  7         CURS2
+029700890508     C           CURS2     IFLT 1
+029800890508     C                     Z-ADD1         CURS2
+029900890508     C                     END
+030000890508     C                     ENDSR

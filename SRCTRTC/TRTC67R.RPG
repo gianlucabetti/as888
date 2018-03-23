@@ -1,0 +1,100 @@
+000100961219     H              J
+000200930128      ***********************************************************************
+000300980427      *   Cancella i record dei file EDRA000F                               *
+000400961219      *   se la bolla è già stata confermata e cancellata                   *
+000500980427      ***********************************************************************
+000600970108     FFNARB01LIF  E           K        DISK
+000700980427     FEDRDA01LUF  E           K        DISK
+000800961219      *---------------------------------------------------------------------*
+000900980427      * Posizionamento su prima spedizione
+001000961220     C                     EXSR SETFIL
+001100980427      *
+001200980427      * Ciclo fino a fine file
+001300980427     C           WFINE     DOWEQ'N'
+001400980427      * Controlla se la bolla è già stata cancellata
+001500931006     C                     EXSR CHKREC
+001600980427      * Se si esegue pulizia archivi EDI
+001700931006     C                     EXSR CANCEL
+001800980427     C                     END
+001900980427      * Fine pgm
+002000000000     C                     SETON                     LR
+002100980427      *----------------------------------------------------------------
+002200980427      *? SETFIL - Aggancio la spedizione successiva
+002300980427      *----------------------------------------------------------------
+002400961220     C           SETFIL    BEGSR
+002500980427      *
+002600980428     C           *LOVAL    SETLLEDRDA01L
+002700980428     C                     READ EDRDA01L                 30
+002800961220     C           *IN30     IFEQ '1'
+002900961220     C                     MOVEL'S'       WFINE
+003000931006     C                     END
+003100980427      *
+003200930208     C                     ENDSR
+003300980427      *----------------------------------------------------------------
+003400980427      *? CHKREC - Controlla se il record è da cancellare
+003500980427      *----------------------------------------------------------------
+003600931006     C           CHKREC    BEGSR
+003700980427      *
+003800961220     C                     MOVEL'N'       WCANC   1
+003900980427      * Controllo se record su ARB
+004000980428     C                     Z-ADDRDAAAS    KAAS
+004100980428     C                     Z-ADDRDALNP    KLNP
+004200980428     C                     Z-ADDRDANRS    KNRS
+004300980428     C                     Z-ADDRDANSP    KNSP
+004400980428     C           KARB      CHAINFNARB01L             31
+004500980427     C   31                MOVEL'S'       WCANC   1
+004600980427      *
+004700931006     C                     ENDSR
+004800980427      *----------------------------------------------------------------
+004900980428      *? CANCEL - CANCELLA IL RECORD SU EDRDA00F
+005000980427      *----------------------------------------------------------------
+005100931006     C           CANCEL    BEGSR
+005200980427      *
+005300980427      * Cancello archivi EDI
+005400931006     C           WCANC     IFEQ 'S'
+005500980427      * Imposto nr. sepdizione in campi di appoggio
+005600980428     C                     Z-ADDRDAAAS    WSVAAS
+005700980428     C                     Z-ADDRDALNP    WSVLNP
+005800980428     C                     Z-ADDRDANRS    WSVNRS
+005900980428     C                     Z-ADDRDANSP    WSVNSP
+006000980428      * EDRDA: loop di delete fino a nuovo nr. spedizione
+006100961220     C           *IN30     DOWEQ'0'
+006200980428     C           WSVNSP    ANDEQRDANSP
+006300980428     C           WSVNRS    ANDEQRDANRS
+006400980428     C           WSVLNP    ANDEQRDALNP
+006500980428     C           WSVAAS    ANDEQRDAAAS
+006600961220     C           *IN30     ANDEQ'0'
+006700980428     C                     DELETEDRDA000
+006800980428     C                     READ EDRDA01L                 30
+006900931006     C                     END
+007000980427      * Se il record non è da cancellare leggo successivo
+007100961220     C                     ELSE
+007200980428     C                     READ EDRDA01L                 30
+007300961220     C                     END
+007400980427      * Controllo se sono a fine file
+007500980427     C   30                MOVEL'S'       WFINE
+007600980427      *
+007700930212     C                     ENDSR
+007800980427      *----------------------------------------------------------------
+007900980427      *? *INZSR: OPERAZIONI INIZIALI
+008000980427      *----------------------------------------------------------------
+008100961219     C           *INZSR    BEGSR
+008200980427      *
+008300970108     C           KARB      KLIST
+008400970108     C                     KFLD           KAAS
+008500970108     C                     KFLD           KLNP
+008600970108     C                     KFLD           KNRS
+008700970108     C                     KFLD           KNSP
+008800980427      *
+008900980428     C           *LIKE     DEFN ARBAAS    KAAS
+009000980428     C           *LIKE     DEFN ARBLNP    KLNP
+009100980428     C           *LIKE     DEFN ARBNRS    KNRS
+009200980428     C           *LIKE     DEFN ARBNSP    KNSP
+009300980428     C           *LIKE     DEFN RDAAAS    WSVAAS
+009400980428     C           *LIKE     DEFN RDALNP    WSVLNP
+009500980428     C           *LIKE     DEFN RDANRS    WSVNRS
+009600980428     C           *LIKE     DEFN RDANSP    WSVNSP
+009700980427      *
+009800961219     C                     MOVEL'N'       WFINE   1
+009900980427      *
+010000000000     C                     ENDSR

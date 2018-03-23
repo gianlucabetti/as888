@@ -1,0 +1,26 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200991018/* TIST16C - STATISTICA PESI - GUIDA                                          */
+000300000000/*----------------------------------------------------------------------------*/
+000400080317 TIST16C:    PGM        PARM(&KPJBA)
+000500000000
+000600080317             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700080317             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000800000000
+000900080317/* CREO FILE DI LAVORO IN QTEMP */
+001000090706             DLTF       FILE(QTEMP/WFPESF*)
+001100080317             MONMSG     MSGID(CPF0000)
+001200090706             RTVMBRD    FILE(WFPESF0F) RTNLIB(&LIB)
+001300080317             MONMSG     MSGID(CPF0000)
+001400080317             IF         COND(&LIB = '          ') THEN(GOTO +
+001500080317                          CMDLBL(FINE))
+001600090706             CRTDUPOBJ  OBJ(WFPESF*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001700080317                          TOLIB(QTEMP)
+001800080317/* lancia creazione file di lavoro */
+001900080317             CALL       PGM(FNLSF2R) PARM(&KPJBA)
+002000000000
+002100080317  /* LANCIA STAMPA                                                            */
+002200080319             OVRPRTF    FILE(PRTF198) FORMTYPE(*STD) USRDTA('ST.PESI')
+002300080317             CALL       PGM(FNLSF3R) PARM(&KPJBA)
+002400000000             RCLRSC     LVL(*CALLER)
+002500000000
+002600080317 FINE:       ENDPGM

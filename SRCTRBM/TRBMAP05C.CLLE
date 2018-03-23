@@ -1,0 +1,66 @@
+000100150618/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600090514             PGM        PARM(&IFSNAM &FILNAM &JOBNAM &USRNAM &JOBNUM +
+000700170605                          &NUMFIL &ROOT &SUBFLDR &TRBMFCDS &FILETYPE &FILEOUT +
+000800170605                          &DATAORA &FLGSUBFLDR &FLGREPLACE &FLGDELSPL &ESITO)
+000900060721
+001000990908
+001100160115             DCL        VAR(&IFSNAM)     TYPE(*CHAR) LEN(10)
+001200160115             DCL        VAR(&FILNAM)     TYPE(*CHAR) LEN(10)
+001300160115             DCL        VAR(&JOBNAM)     TYPE(*CHAR) LEN(10)
+001400160115             DCL        VAR(&USRNAM)     TYPE(*CHAR) LEN(10)
+001500160115             DCL        VAR(&JOBNUM)     TYPE(*CHAR) LEN(6)
+001600160115             DCL        VAR(&NUMFIL)     TYPE(*CHAR) LEN(6)
+001700160115             DCL        VAR(&ROOT)       TYPE(*CHAR) LEN(100)
+001800160115             DCL        VAR(&SUBFLDR)    TYPE(*CHAR) LEN(50)
+001900160119             DCL        VAR(&TRBMFCDS)   TYPE(*CHAR) LEN(197)
+002000170605             DCL        VAR(&FILETYPE)   TYPE(*CHAR) LEN(3)
+002100160119             DCL        VAR(&FILEOUT)    TYPE(*CHAR) LEN(255)
+002200160115             DCL        VAR(&DATAORA)    TYPE(*CHAR) LEN(15)
+002300160115             DCL        VAR(&FLGSUBFLDR) TYPE(*CHAR) LEN(1)
+002400160120             DCL        VAR(&FLGREPLACE) TYPE(*CHAR) LEN(1)
+002500170605             DCL        VAR(&FLGDELSPL)  TYPE(*CHAR) LEN(1)
+002600160119             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1)
+002700160119
+002800160119             DCL        VAR(&LIB)        TYPE(*CHAR) LEN(10)
+002900160119             DCL        VAR(&OBJ)        TYPE(*CHAR) LEN(10)
+003000160119             DCL        VAR(&PARAMS)     TYPE(*CHAR) LEN(10240)
+003100160119             DCL        VAR(&ESITO2)     TYPE(*CHAR) LEN(1)
+003200030404
+003300160119
+003400160119             CHGVAR     VAR(&ESITO)  VALUE('0')
+003500160119
+003600160119
+003700160119  /* Compongo (ovvero concateno) i parametri di input in un unico stream */
+003800160119             CHGVAR     VAR(&ESITO2) VALUE(' ')
+003900160119             CHGVAR     VAR(&LIB)    VALUE('*LIBL')
+004000170605             CHGVAR     VAR(&OBJ)    VALUE('TRBMAP06C')
+004100160119             CHGVAR     VAR(&PARAMS) VALUE(&IFSNAM *CAT &FILNAM *CAT +
+004200160119                            &JOBNAM *CAT &USRNAM *CAT &JOBNUM *CAT +
+004300160119                            &NUMFIL *CAT &ROOT *CAT &SUBFLDR *CAT +
+004400170605                            &TRBMFCDS *CAT &FILEOUT *CAT &DATAORA *CAT +
+004500170605                            &FLGSUBFLDR *CAT &FLGREPLACE *CAT &FILETYPE *CAT +
+004600170605                            &FLGDELSPL *CAT &ESITO)
+004700170605
+004800160119
+004900160119  /* Effettuo il tunneling */
+005000160119             CALL       PGM(TIS7CALLR) PARM(&LIB &OBJ &PARAMS &ESITO2)
+005100160119             MONMSG     MSGID(CPF0000) EXEC(DO)
+005200160119             CHGVAR     VAR(&ESITO) VALUE('2')
+005300160119             ENDDO
+005400160119             IF         COND(&ESITO2 *NE '0') THEN(DO)
+005500160119             CHGVAR     VAR(&ESITO) VALUE('2')
+005600160119             ENDDO
+005700160119
+005800160119
+005900160119  /* Verifico esito chiamata dal pamatero si esito "tunnelato" */
+006000170605             IF         COND(%SST(&PARAMS 676 1) *NE '0') THEN(DO)
+006100160119             CHGVAR     VAR(&ESITO) VALUE('2')
+006200160119             ENDDO
+006300070607
+006400030402 FINE:
+006500030402
+006600990907             ENDPGM

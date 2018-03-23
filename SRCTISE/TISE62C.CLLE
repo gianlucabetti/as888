@@ -1,0 +1,96 @@
+000100980410/*----------------------------------------------------------------------------*/
+000200980410/* STATISTICA CLIENTE - PER TUTTI I CLIENTI - LANCIO                          */
+000300980410/*----------------------------------------------------------------------------*/
+000400020524 TISE62C:    PGM        PARM(&KPJBA)
+000500980410
+000600980410/* DICHIARAZIONE VARIABILI */
+000700980410             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000800980410             DCL        VAR(&CODA)      TYPE(*CHAR) LEN(10)
+000900170328     /***    DCL        VAR(&SPLFILE)   TYPE(*CHAR) LEN(10)           ***/
+001000170328     /***    DCL        VAR(&FORMTYPE)  TYPE(*CHAR) LEN(10)           ***/
+001100170328     /***    DCL        VAR(&STATO)     TYPE(*CHAR) LEN(3)            ***/
+001200170328     /***    DCL        VAR(&LIBOUT)    TYPE(*CHAR) LEN(10)           ***/
+001300170328     /***    DCL        VAR(&FILOUT)    TYPE(*CHAR) LEN(10)           ***/
+001400170328     /***    DCL        VAR(&LIBOUTQ)   TYPE(*CHAR) LEN(10)           ***/
+001500170328     /***    DCL        VAR(&NAMOUTQ)   TYPE(*CHAR) LEN(10)           ***/
+001600020524             DCL        VAR(&TIPLAN)    TYPE(*CHAR) LEN(3)
+001700170328
+001800170615             dcl        var(&Packed)    type(*char) len(8)
+001900170615             dcl        var(&Zoned)     type(*char) len(15)
+002000170614             dcl        var(&File)      type(*char) len(10) value('SCLI      ')
+002100170328             dcl        var(&JOB)       type(*char) len(10)
+002200170328             dcl        var(&USR)       type(*char) len(10)
+002300170328             dcl        var(&NBR)       type(*char) len(6)
+002400170328             dcl        var(&SplFile)   type(*char) len(10) value('TISE62P   ')
+002500170614             dcl        var(&AplKey)    type(*char) len(15) value('TISE62C        ')
+002600170328             dcl        var(&SubFldr)   type(*char) len(50) value('SCLI')
+002700020524
+002800020524/* REPERISCO IL TIPO DI LANCIO */
+002900020524             CHGVAR     VAR(&TIPLAN) VALUE(%SUBSTRING(&KPJBA 250 3))
+003000051019             CHGVAR     VAR(&CODA)     VALUE('QPRINTS   ')
+003100020524
+003200020606/* SE TIPO DI LANCIO TUTTE LE STATISTICHE X TUTTI I CLIENTI CAMBIOI LO USRDTA DEGLI SPOOL */
+003300020606             IF         COND(&TIPLAN *EQ 'STT') THEN(DO)
+003400051019             OVRPRTF    FILE(TISE62P) TOFILE(TISE62P) OUTQ(&CODA) +
+003500051019                          USRDTA(STCLIALL)
+003600020606             ENDDO
+003700020606
+003800980410
+003900980410/* LANCIA IL PROGRAMMA */
+004000020610             CALL       PGM(TISE62R) PARM(&KPJBA)
+004100980410
+004200020524
+004300020524/* SE TIPO DI LANCIO TUTTE LE STATISTICHE X TUTTI I CLIENTI */
+004400020524             IF         COND(&TIPLAN *EQ 'STT') THEN(DO)
+004500020606
+004600020606
+004700020606/* ELIMINA SOVRAPPOSIZIONI SUI PRTF */
+004800020606             DLTOVR     FILE(TISE62P) LVL(*)
+004900020524
+005000980410/* CANCELLA FILES PER OTTICO */
+005100170328     /***    DLTF       FILE(LIBASP4/STACLI)                          ***/
+005200170328     /***    MONMSG     MSGID(CPF0000)                                ***/
+005300980410
+005400000225/* REPERISCE CODA DI STAMPA ASSOCIATA AL TERMINALE */
+005500051019/* ATTENZIONE NON VA BENE : IL TERMINALE POTREBBE AVERE *DEV  E QUINDI MANDA IN*/
+005600051019/* ERRORE IL TISE69C1 --> TRUL84C                  */
+005700051019/*           RTVJOBA    OUTQ(&CODA)                             */
+005800000225
+005900170420/*** CONVERTE SPOOL PER OTTICO E LI SPOSTA NELLA CODA "STATISTIC" ***/
+006000170420     /***    CHGVAR     VAR(&SPLFILE)  VALUE('TISE62P   ')            ***/
+006100170328     /***    CHGVAR     VAR(&FORMTYPE) VALUE('STCLIALL  ')            ***/
+006200170328     /***    CHGVAR     VAR(&STATO)    VALUE('RDY')                   ***/
+006300170328     /***    CHGVAR     VAR(&LIBOUT)   VALUE('LIBASP4   ')            ***/
+006400170328     /***    CHGVAR     VAR(&FILOUT)   VALUE('STACLI    ')            ***/
+006500170328     /***    CHGVAR     VAR(&LIBOUTQ)  VALUE('GAITRAOBJ ')            ***/
+006600170328     /***    CHGVAR     VAR(&NAMOUTQ)  VALUE('STATISTIC ')            ***/
+006700170328     /***    CALL       PGM(TISE69C1) PARM(&CODA &SPLFILE &FORMTYPE + ***/
+006800170328     /***                 &STATO &LIBOUT &FILOUT &LIBOUTQ &NAMOUTQ)   ***/
+006900170615
+007000170615/*?Converte AAAAMM packed in formato zoned?*/
+007100170615             chgvar     var(&Packed)   value(%sst(&KPJBA 420 6))
+007200170615
+007300170615             call       pgm(TISE62R2)  parm(&Packed &Zoned)
+007400170328
+007500170420/*?Copia lo SPOOL "STACLI" nella rispettiva cartella DOCFLOW "SCLI"?*/
+007600170615             chgvar     var(&File)     value('SCLI' *cat %sst(&Zoned 3 4))
+007700170420             chgvar     var(&SplFile)  value('TISE62P   ')
+007800170614             chgvar     var(&AplKey)   value('TISE62C        ')
+007900170328             chgvar     var(&SubFldr)  value('SCLI')
+008000170420
+008100170427             /***RtvJobA    job(&JOB)      user(&USR)   nbr(&NBR) +***/
+008200170427             /***           outq(&Coda)                            ***/
+008300170427             /***if         cond(&Coda *eq '*DEV ')     then(do)   ***/
+008400170427             /***  chgvar   var(&Coda)     value('QPRINTS   ')     ***/
+008500170427             /***enddo                                             ***/
+008600170427
+008700170427             RtvJobA    job(&JOB)      user(&USR)   nbr(&NBR)
+008800170328
+008900170328             call       pgm(TREC30C1)  parm(&File &SplFile +
+009000170328                                            &Job &Usr &Nbr +
+009100170328                                            &Coda +
+009200170328                                            &AplKey &SubFldr)
+009300020524
+009400020524             ENDDO
+009500980410
+009600980410             ENDPGM

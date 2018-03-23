@@ -1,0 +1,81 @@
+000100980213     FFNARB29LIF  E           K        DISK
+000200980213     FFNART01LIF  E           K        DISK
+000300980213     FFNAGB01LUF  E           K        DISK                      A
+000400980213     IKPJBA     E DS
+000500980213     C           KART      KLIST
+000600980213     C                     KFLD           ARBAAS
+000700980213     C                     KFLD           ARBLNP
+000800980213     C                     KFLD           ARBNRS
+000900980213     C                     KFLD           ARBNSP
+001000980213     C           KAGB      KLIST
+001100980213     C                     KFLD           WTBO
+001200980213     C                     KFLD           ARBAAS
+001300980213     C                     KFLD           ARBLNP
+001400980213     C                     KFLD           ARBNRS
+001500980213     C                     KFLD           ARBNSP
+001600980213     C                     KFLD           WAGB
+001700980213     C*
+001800980213     C           *LIKE     DEFN AGBTBO    WTBO
+001900980213     C           *LIKE     DEFN AGBAGB    WAGB
+002000980213     C                     MOVEL'A'       WTBO
+002100980213     C                     MOVEL'DT'      WAGB
+002200980213     C*
+002300980213     C           *ENTRY    PLIST
+002400980213     C                     PARM           KPJBA
+002500980213     C*
+002600980213     C           *LOVAL    SETLLFNARB29L
+002700980213     C                     READ FNARB29L                 30
+002800980213    1C           *IN30     DOWEQ*OFF
+002900980213    2C           ARBDAM    IFGT 0
+003000980213     C* SE DATA ARRIVO > 0 MI POSIZIONO SU ALTRA LNA
+003100980213     C           ARBLNA    SETGTFNARB29L
+003200980213     C                     GOTO LEGGI
+003300980213    2C                     END
+003400980213     C                     MOVE *BLANKS   WFLAG   1
+003500980213     C           KART      SETLLFNART01L
+003600980213     C           KART      READEFNART01L                 31
+003700980213    2C           *IN31     DOWEQ*OFF
+003800980213     C           WFLAG     ANDEQ*BLANKS
+003900980213    3C           ARTDAM    IFGT *ZEROS
+004000980213     C                     MOVE '1'       WFLAG
+004100980213    3C                     END
+004200980213     C           KART      READEFNART01L                 31
+004300980213    2C                     ENDDO
+004400980213     C* SCRIVO AGB SE ALMENO UN COLLO E' ARRIVATO
+004500980213    2C           WFLAG     IFEQ '1'
+004600980213     C                     EXSR WRTAGB
+004700980213    2C                     END
+004800980213     C*
+004900980213     C           LEGGI     TAG
+005000980213     C                     READ FNARB29L                 30
+005100980213    1C                     ENDDO
+005200980213     C*
+005300980213     C* SOLO SE HO SCRITTO ALMENO UN RECORD IN FNAGB
+005400980213     C           WLV5A     IFEQ 'S'
+005500980213     C                     CLEARKPJBU
+005600980213     C                     MOVEL'LV5A'    KCOAZ
+005700980213     C                     CALL 'FNLV52R'
+005800980213     C                     PARM           KPJBA
+005900980213     C                     ENDIF
+006000980213     C                     SETON                     LR
+006100980213     C**************************************************************************
+006200980213     C* SCRITTURA DI FNAGB PER AGGIORNAMENTO  BOLLE
+006300980213     C**************************************************************************
+006400980213     C           WRTAGB    BEGSR
+006500980213     C           KAGB      CHAINFNAGB01L             34
+006600980213     C   34                CLEARFNAGB000
+006700980213     C                     MOVELWTBO      AGBTBO
+006800980213     C                     MOVELWAGB      AGBAGB
+006900980213     C                     MOVELARBAAS    AGBAAS
+007000980213     C                     MOVELARBLNP    AGBLNP
+007100980213     C                     MOVELARBNRS    AGBNRS
+007200980213     C                     MOVELARBNSP    AGBNSP
+007300980213     C                     MOVEL'S'       AGBFBS
+007400980213     C                     MOVEL'S'       AGBFVC
+007500980213     C* PULISCO CAMPI DI WORK
+007600980213     C*
+007700980213     C   34                WRITEFNAGB000
+007800980213     C  N34                UPDATFNAGB000
+007900980213     C                     MOVEL'S'       WLV5A   1
+008000980213     C*
+008100980213     C                     ENDSR

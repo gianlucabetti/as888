@@ -1,0 +1,57 @@
+000100141229/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER )                                   */
+000200141229/*-------------------------------------------------------------------*/
+000300141229/* Dichiarazioni d'intento                                           */
+000400141229/*-------------------------------------------------------------------*/
+000500141229             PGM        PARM(&FILE &LIBRF &TPDIS &DATADIS &DESFILEI +
+000600141229                          &DESFILEO &ERR)
+000700141229
+000800141229/* Parametri passati                                          */
+000900141229/* Libreria/file  da creare                                   */
+001000141229             DCL        VAR(&FILE)     TYPE(*CHAR) LEN(10)
+001100141229             DCL        VAR(&LIBRF)    TYPE(*CHAR) LEN(10)
+001200141229             DCL        VAR(&TPDIS)    TYPE(*CHAR) LEN(2)
+001300141229             DCL        VAR(&DATADIS)  TYPE(*CHAR) LEN(10)
+001400141229             DCL        VAR(&DESFILEI) TYPE(*CHAR) LEN(8)
+001500141229             DCL        VAR(&DESFILEO) TYPE(*CHAR) LEN(50)
+001600141229             DCL        VAR(&ERR)      TYPE(*CHAR) LEN(1)
+001700141229/* Libreria file                                              */
+001800141229             DCL        VAR(&LIBRIMW)  TYPE(*CHAR) LEN(10)
+001900141229
+002000141229             DCL        VAR(&DDTR)     TYPE(*CHAR) LEN(10)
+002100141229
+002200141229             CVTDAT     DATE(&DATADIS) TOVAR(&DDTR) FROMFMT(*YYMD) +
+002300141229                          TOFMT(*DMYY) TOSEP(/)
+002400141229
+002500141229             DLTOVR     FILE(SDGDIW00F)
+002600141229             MONMSG     MSGID(CPF0000)
+002700141229
+002800141229/*- Cerco file per scarico                                           */
+002900141229             CHKOBJ     OBJ(&LIBRF/&FILE) OBJTYPE(*FILE)
+003000141229             MONMSG     MSGID(CPF0000)
+003100141229
+003200141229             DLTF       FILE(&LIBRF/&FILE)
+003300141229             MONMSG     MSGID(CPF0000)
+003400141229
+003500141229
+003600141229/*- Se il file non esiste  lo creo a immagine di                     */
+003700141229             RTVMBRD    FILE(SDGDIW00F) RTNLIB(&LIBRIMW)
+003800141229             CRTDUPOBJ  OBJ(SDGDIW00F) FROMLIB(&LIBRIMW) +
+003900141229                          OBJTYPE(*FILE) TOLIB(&LIBRF) +
+004000141229                          NEWOBJ(&FILE) DATA(*NO)
+004100141229/*- Se  errore  vado a fine                                    */
+004200141229             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300141229             CHGVAR     VAR(&ERR) VALUE('1')
+004400141229             GOTO       CMDLBL(FINE)
+004500141229             ENDDO
+004600141229
+004700141229/*- Modifica descrizione file                                        */
+004800141229             CHGOBJD    OBJ(&LIBRF/&FILE) OBJTYPE(*FILE) +
+004900141229                          TEXT(&DESFILEO)
+005000141229             MONMSG     MSGID(CPF0000)
+005100141229
+005200141229
+005300141229/*- Ovr per file scarico                                            */
+005400141229             OVRDBF     FILE(SDGDIW00F) TOFILE(&LIBRF/&FILE) +
+005500141229                          OVRSCOPE(*JOB)
+005600141229
+005700141229 FINE:       ENDPGM

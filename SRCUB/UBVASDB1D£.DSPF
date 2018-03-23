@@ -1,0 +1,139 @@
+000100120801      */*PRM rstdsp(*yes) dfrwrt(*yes) decfmt(*job)
+000200120801      */*END
+000300120801      **-------------------------------------------------------------**
+000400120801      **?Cancellazione bolle partenza già confermate o da confermare?**
+000500120801      **-------------------------------------------------------------**
+000600120809     A                                      REF(CNDIZION)
+000700030220     A                                      DSPSIZ(24 80 *DS3)
+000800030220     A                                      CHGINPDFT(HI UL)
+000900030220     A                                      PRINT
+001000120801      *---------------------------------------------------------------*
+001100030220     A          R FNLSCB1
+001200030220     A                                      CA03
+001300030220     A                                      CF06
+001400120810     A*//                                   OVERLAY
+001500120809      *
+001600120809     A            RSUT      R           1  2REFFLD(RSUT       DDATIUTE)
+001700030220     A                                  1 25'*  CANCELLAZIONE BOLLE PARTENZA  *'
+001800030220     A                                      DSPATR(RI)
+001900030220     A                                  1 63'FNLSCBR'
+002000030220     A                                  1 72DATE
+002100030220     A                                      EDTCDE(Y)
+002200120809     A            KNSIF     R           2  2REFFLD(KNSIF      KPJBA)
+002300120809     A            KNMUS     R            + 1REFFLD(KNMUS      KPJBA)
+002400120801     A                                  2 38' Utility '
+002500030220     A                                  2 72TIME
+002600120801      *
+002700120810     A                                  4  2'Fil. Part.(BLPLNP) o Gest.(VABFGS)-
+002800120810     A                                      :'
+002900120809     A            VIDLNP    R     Y  B  4 39REFFLD($LNP)
+003000120809     A                                      CHECK(RZ)
+003100120801     A                                      EDTCDE(Z)
+003200120810     A  20                                  ERRMSG('Filiale di partenza/gestion-
+003300120810     A                                      e obbligatoria' 20)
+003400120810     A  22                                  ERRMSG('Filiale di partenza/gestion-
+003500120810     A                                      e errata' 22)
+003600120810     A  23                                  ERRMSG('Filiale di partenza/gestion-
+003700120810     A                                      e NON gestibile' 23)
+003800120809     A  28                                  ERRMSG('Fil. Partenza Poste: NON è -
+003900120801     A                                      possibile cancellare le bolle!!' 28)
+004000120801     A            VIDDEA        20A  O  4 51
+004100120810     A                                      COLOR(BLU)
+004200120801      *
+004300121023     A*//                               5  4'+'
+004400121023     A*//                                   DSPATR(RI)
+004500121023      *
+004600121023     A                                  6  2'Codice Cliente Mittente ..........-
+004700120810     A                                      :'
+004800121023     A            VIDCLI    R     Y  B  6 39REFFLD($CCM)
+004900120809     A                                      CHECK(RZ)
+005000120801     A                                      EDTCDE(Z)
+005100120810     A  21                                  ERRMSG('Inserire "Codice Cliente Mi-
+005200120810     A                                      tente" OPPURE "Numero Serie"' 21)
+005300120801     A  01                                  ERRMSG('Cliente Errato' 01)
+005400120801     A  26                                  ERRMSG('Cliente poste: Non è possib-
+005500120801     A                                      ile cancellare le bolle!!' 26)
+005600121023     A            VIDDES        19A  B  6 51
+005700120801      *
+005800121023     A                                  7  4'oppure'
+005900120801     A                                      DSPATR(RI)
+006000120801      *
+006100121023     A                                  8  2'Numero Serie .....................-
+006200120810     A                                      :'
+006300121023     A            VIDNRS    R     Y  B  8 39REFFLD($NRS)
+006400120809     A                                      CHECK(RZ)
+006500120801     A                                      EDTCDE(Z)
+006600120809   - A*/24                                  ERRMSG('Serie non può essere zero' -
+006700120809   - A*//                                   24)
+006800120809   - A*/25                                  ERRMSG('Se Immessa Serie, Immettere-
+006900120809   - A*//                                    anche Fil. Partenza' 25)
+007000120801      *
+007100120810     A                                 10  2'Cancellazione Bolle Confermate ...-
+007200120810     A                                      :'
+007300120801     A                                      DSPATR(UL)
+007400120801     A            VIDCON         1A  B 10 39VALUES('S' 'N')
+007500120801     A  41                                  ERRMSG('Scegliere se Cancellare le -
+007600120801     A                                      Bolle Confermate OPPURE le NON Conf-
+007700120801     A                                      ermate' 41)
+007800120801     A            VIDSC1         5A  O 10 41
+007900120801     A                                 10 51'S=Si  N=No'
+008000120801     A                                      COLOR(BLU)
+008100120810     A                                 11  2'Data di Spedizione ...............-
+008200120810     A                                      :'
+008300120809     A            VIDDTS    R    8Y  B 11 39REFFLD($DSP)
+008400120809     A                                      CHECK(RB)
+008500120801     A                                      EDTWRD('  /  /    ')
+008600120801     A  02                                  ERRMSG('Immettere una Data Formalme-
+008700120801     A                                      nte Valida' 02)
+008800120810     A                                 12  2'Tipo Cancellazione ...............-
+008900120810     A                                      :'
+009000030220     A            VIDSPU         1A  B 12 39VALUES('1' '2')
+009100120801     A                                 12 51'1=Tutte le Bolle'
+009200120801     A                                      COLOR(BLU)
+009300120801     A                                 13 51'2=Solo Bolle Senza Spunte'
+009400120801     A                                      COLOR(BLU)
+009500120801      *
+009600120810     A                                 15  2'Cancellazione Bolle NON Confermate-
+009700120810     A                                      :'
+009800120801     A                                      DSPATR(UL)
+009900120801     A            VIDNCO         1A  B 15 39VALUES('S' 'N')
+010000120801     A            VIDSC2         5   O 15 41
+010100120801     A                                 15 51'S=Si  N=No'
+010200120801     A                                      COLOR(BLU)
+010300120810     A                                 16  2'Tipo Cancellazione ...............-
+010400120810     A                                      :'
+010500120801     A            VIDDOP         1A  B 16 39VALUES('1' '2')
+010600120801     A                                 16 51'1=Tutte le Bolle'
+010700120801     A                                      COLOR(BLU)
+010800120801     A                                 17 51'2=Solo Bolle con Segn.Doppio'
+010900120801     A                                      COLOR(BLU)
+011000120801      *
+011100120810     A                                 19  2'Simulazione/Aggiornamento ........-
+011200120810     A                                      :'
+011300120801     A            VIDSIM         1A  B 19 39VALUES('S' 'A')
+011400120801     A                                 19 51'S=Simulaz.  A=Aggiornam.'
+011500120801     A                                      COLOR(BLU)
+011600120801      *
+011700120801     A  04N10                          21 36' Simulazione '
+011800120801     A                                      DSPATR(RI)
+011900120801     A  04 10                          21 35' Aggiornamento '
+012000120801     A                                      DSPATR(RI)
+012100030220     A  03                             22 26'Non Trovate Bolle da Cancellare'
+012200030220     A                                      DSPATR(HI)
+012300120810     A N03 04                          22 29'Cancellate nr.'
+012400120810     A N03 04     VIDNRB         6  0O   + 1EDTCDE(Z)
+012500030220     A                                      DSPATR(HI)
+012600120810     A N03 04                            + 1'bolle'
+012700120801      *
+012800120801     A                                 24  2'F3=Fine'
+012900120801     A                                      COLOR(BLU)
+013000120801     A                                   + 3'F6=Elaborazione'
+013100120801     A                                      COLOR(BLU)
+013200120801      *---------------------------------------------------------------*
+013300000919     A          R FNLSCB2
+013400000919     A                                      FRCDTA
+013500000919     A                                      OVERLAY
+013600120801     A                                      WINDOW(18 20 3 43)
+013700120801     A                                  2  2'Elaborazione in corso... Attendere-
+013800120801     A                                       prego.'
+013900000919     A                                      DSPATR(BL)

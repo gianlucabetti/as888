@@ -1,0 +1,144 @@
+000100000000     H        1     J
+000200920310     F* CNC031R  *-AN/38-*-------------------------------------------*
+000300000000     F*------------------*                                           *
+000400000000     F*       - RICERCA CODIFICA CAUSALI OPERATIVE         -         *
+000500000000     F*       ----------------------------------------------         *
+000600000000     F*         FILE : CNOPE00F                                      *
+000700000000     F*                                                              *
+000800920227     F*                                                              *
+000900920227     F*--------------------------------------------------------------*
+001000920227     F*   DAGR = Modifiche apportate da Daniele Greggio Pro Milano   *
+001100920227     F*          in data 27/02/92 x scelta con 1 invece che con X    *
+001200920319     F*--------------------------------------------------------------*
+001300920319     F*   DAGR = Modifiche apportate da Daniele Greggio Pro Milano   *
+001400920319     F*          in data 19/03/92 x visualizzazione con 5 sul subf.  *
+001500920327     F*          e visualizzazione tipologia causale.                *
+001600000000     F*--------------------------------------------------------------*
+001700000000     FCNOPE00FIF  E           K        DISK
+001800000000     F*---------
+001900880714     FCNC031D CF  E                    WORKSTN
+002000880714     F                                        REC1  KSFILE C031SFL
+002100920319DAGR IKPJBA     E DS
+002200920319DAGR  *-- ds per passaggio parametri
+002300920319DAGR ICNC034    E DS
+002400920319DAGR  *--  Ds per nome programma da riportare a video
+002500920227DAGR I           SDS
+002600920227DAGR I                                        1   8 NOMPG
+002700920227DAGR I            DS
+002800920227DAGR I                                        1  11 NOMPGM
+002900920227DAGR I I            '*'                       1   1 AST1
+003000920227DAGR I                                        3  10 NOMPG1
+003100920227DAGR I I            '*'                      11  11 AST2
+003200000000     C*----------------------------------------------------*
+003300890605     C           *ENTRY    PLIST                           *
+003400890605     C                     PARM           TIPMOV  2
+003500890605     C                     PARM           CODMOV  4
+003600000000     C*----------                                          *
+003700000000     C           KEYOPE    KLIST                           *
+003800000000     C                     KFLD           KUT     10       *
+003900890605     C                     KFLD           TIPMOV           *
+004000920227DAGR C                     MOVELNOMPG     NOMPG1
+004100920819     C                     MOVELCODMOV    WTIPO   1
+004200000000     C*
+004300880714     C                     WRITEC031D1                     *
+004400000000     C*----------------------------------------------------*
+004500000000      /SPACE 2
+004600000000     C*----------------------------------------------------*
+004700000000     C*           GESTIONE SUBFILE                         *
+004800000000     C*----------------------------------------------------*
+004900000000     C                     Z-ADD1         KUT              *
+005000890605     C           TIPMOV    IFEQ *BLANK
+005100890605     C           *LOVAL    SETLLCNOPE000
+005200890605     C                     ELSE
+005300000000     C           KEYOPE    SETLLCNOPE000             90  91*
+005400000000     C  N91                SETON                     90    *
+005500000000     C   90                GOTO FINE                       *
+005600890605     C                     END
+005700000000     C                     Z-ADD0         REC1    30       *
+005800000000     C                     MOVE *BLANKS   SCELTA           *
+005900000000     C*---------- PULIZIA SLFCT :                          *
+006000000000     C                     SETON                         70*
+006100880714     C                     WRITEC031CTL                    *
+006200000000     C                     SETOF                     7071  *
+006300000000     C*---------- CARICAMENTO SFL :                        *
+006400000000?    C           SOPRA     TAG
+006500890605     C           TIPMOV    IFEQ *BLANK
+006600890605     C                     READ CNOPE000                 91
+006700890605     C                     ELSE
+006800000000     C           KEYOPE    READECNOPE000                 91*
+006900890605     C                     END
+007000000000     C   91                GOTO EMISF1                     *
+007100000000     C           OPEDES    IFNE *BLANK
+007200000000     C                     MOVE OPEFLG    FLG              *
+007300000000     C                     MOVE OPECD1    CAUPF            *
+007400000000     C                     MOVE OPECOD    MOVCAU           *
+007500000000     C                     MOVE OPEDES    CAUDES           *
+007600920319DAGR C                     MOVELOPEP0     TIP
+007700920327DAGR C                     MOVELOPEP0     TIP1
+007800920819     C*-
+007900920327DAGR C           TIP1      IFEQ *BLANKS
+008000920327DAGR C                     MOVEL'0'       TIP1
+008100920819     C                     ELSE
+008200920819     C           WTIPO     IFNE *BLANK
+008300920819     C           TIP1      CABNEWTIPO     SOPRA
+008400920819     C                     END
+008500920819DAGR C                     END
+008600920819     C*-
+008700000000     C           REC1      ADD  1         REC1       71    *
+008800880714     C                     WRITEC031SFL                    *
+008900000000     C                     END
+009000000000     C                     GOTO SOPRA                      *
+009100000000     C*---------- EMISSIONE SFL :                          *
+009200000000?    C           EMISF1    TAG
+009300880714     C                     EXFMTC031CTL                    *
+009400900312     C   KC                SETON                         90*
+009500900312     C   KC                GOTO FINE                       *
+009600000000     C*---------- LETTURA RECORD VARIATI :                 *
+009700880714     C   71                READCC031SFL                  91*
+009800000000     C  N71                                                *
+009900000000     COR 91                GOTO EMISF1                     *
+010000920227     C*****      SCELTA    CABNE'X'       EMISF1           *
+010100920319DAGR C           SCELTA    IFNE '1'
+010200920319DAGR C           SCELTA    ANDNE'5'
+010300920319DAGR C                     GOTO EMISF1
+010400920319DAGR C                     END
+010500920319DAGR  *-- Dipendentemente dalla tipologia richiamo il pgm di
+010600920319DAGR  *-- visualizzazione opportuno
+010700920319DAGR C           SCELTA    IFEQ '5'
+010800920319DAGR C                     MOVELTIP       P34TIP
+010900920319DAGR C                     MOVEL'S'       P34VIS
+011000920319DAGR C                     MOVELMOVCAU    P34COD
+011100920319DAGR C                     MOVELCAUPF     P34CD1
+011200920319DAGR C                     MOVE CAUDES    P34DES
+011300920319DAGR C                     MOVEL*BLANKS   P34CPY
+011400920319DAGR C                     MOVEL*BLANKS   P34FRE
+011500920319DAGR C                     MOVELCNC034    KPJBU
+011600920319DAGR C           TIP       IFEQ '0'
+011700920319DAGR C           TIP       OREQ ' '
+011800920319DAGR C                     CALL 'CNC032R0'
+011900920319DAGR C                     PARM           KPJBA
+012000920319DAGR C                     END
+012100920319DAGR C           TIP       IFEQ '1'
+012200920319DAGR C                     CALL 'CNC032R1'
+012300920319DAGR C                     PARM           KPJBA
+012400920319DAGR C                     END
+012500920319DAGR C           TIP       IFEQ '2'
+012600920319DAGR C                     CALL 'CNC032R2'
+012700920319DAGR C                     PARM           KPJBA
+012800920319DAGR C                     END
+012900920319DAGR C                     MOVEL*BLANK    SCELTA
+013000920319DAGR C                     UPDATC031SFL
+013100920319DAGR C                     GOTO EMISF1
+013200920319DAGR C                     END
+013300880714     C                     MOVE CAUPF     TIPMOV           *
+013400890605     C                     MOVE MOVCAU    CODMOV  4        *
+013500000000     C*----------------------------------------------------*
+013600000000      /SPACE 2
+013700000000     C*----------------------------------------------------*
+013800000000     C*     USCITA PROGRAMMA                               *
+013900000000     C*----------------------------------------------------*
+014000000000?    C           FINE      TAG
+014100880714     C   90                MOVE '    '    CODMOV           *
+014200880714     C   90                MOVE '  '      TIPMOV           *
+014300000000     C                     SETON                         LR*
+014400000000     C*----------------------------------------------------*

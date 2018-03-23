@@ -1,0 +1,76 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200120403/* FNLR48C:  Richiamo manutenzione bolle di filiale da manutenz. bolle di sede*/
+000300000000/*----------------------------------------------------------------------------*/
+000400120403 FNLR48C:    PGM        PARM(&KPJBA &DSARBD &DSARBK &DARBT &DSARBG)
+000500000000
+000600000000/* DICHIARAZIONE VARIABILI */
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000702120403             DCL        VAR(&dsarbd) TYPE(*CHAR) LEN(231)
+000703120403             DCL        VAR(&dsarbk) TYPE(*CHAR) LEN(22)
+000704120403             DCL        VAR(&darbt) TYPE(*CHAR) LEN(191)
+000705120403             DCL        VAR(&dsarbg) TYPE(*CHAR) LEN(15)
+000706120403             DCL        VAR(&trul90ds) TYPE(*CHAR) LEN(177)
+000707120403             DCL        VAR(&d48fgs) TYPE(*char) LEN(3 )
+000708120302             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1) VALUE('0')
+000709120229             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000710120229             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+000711120229             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+000712120229             DCL        VAR(&CMD) TYPE(*CHAR) LEN(350)
+000713120229             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+000714120301             DCLF       FILE(TNSB51DW)
+000715120229             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+000716120403             CHGVAR     VAR(&d48fgs) VALUE(%SST(&KPJBA 248 3))
+000717120229/* Reperisco la lista librerie CORRENTE _________________________________________________________ */
+000718120229             RTVJOBA    USRLIBL(&L275)
+000719120301/* Copia aree dati dell'utente */
+000720120301             CRTDUPOBJ  OBJ(伶ATIUTE) FROMLIB(*LIBL) +
+000721120413                          OBJTYPE(*DTAARA) NEWOBJ(伶ATIUTE48)
+000722120301             CRTDUPOBJ  OBJ(你ZUTE) FROMLIB(*LIBL) OBJTYPE(*DTAARA) +
+000723120413                          NEWOBJ(你ZUTE48)
+000724120403/* Cambio SIMFEL rendendolo di filiale*/
+000725120403             CHGDTAARA  DTAARA(伶ATIUTE (100 3)) VALUE(&D48FGS)
+000726120301
+000727120403/* Se S.I. di prova imposto FILTRAPFP */
+000728120229             IF         COND(%SST(&KNSIF 7 1) = 'P') THEN(DO)
+000729120403             CHGVAR     VAR(&SIF) VALUE('FILTRAPFP ')
+000730120229             ENDDO
+000731120229             ELSE       CMD(DO)
+000732120403             CHGVAR     VAR(&SIF) VALUE('FILTRA201 ')
+000733120229             ENDDO
+000734120403/* Forzo S.I. di filiale ________________________________________________________________________ */
+000735120229
+000736120229             CALL       PGM(TRUL07C) PARM(&SIF)
+001500000000
+001507120403/* Richiamo manutenzione bolle di filiale */
+001508120403             CALL       PGM(FNLR48R) PARM(&KPJBA &DSARBD &DSARBK +
+001509120403                          &DARBT &DSARBG &TRUL90DS)
+001510120302             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ERR) +
+001511120302                          VALUE('1'))
+001512120229
+001513120229/* Reimposto la lista librerie originale ________________________________________________________ */
+001514120229             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+001515120229                          *CAT ' )')
+001516120229             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+001517120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+001518120301/*Ripristino aree dati iniziali */
+001519120301             DLTDTAARA  DTAARA(伶ATIUTE)
+001520120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+001521120413             DLTDTAARA  DTAARA(你ZUTE)
+001522120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+001523120413             RNMOBJ     OBJ(伶ATIUTE48) OBJTYPE(*DTAARA) +
+001524120301                          NEWOBJ(伶ATIUTE)
+001525120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+001526120413             RNMOBJ     OBJ(你ZUTE48) OBJTYPE(*DTAARA) NEWOBJ(你ZUTE)
+001527120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+001531120302             IF         COND(&ERR *EQ '1') THEN(DSPJOBLOG +
+001532120302                          OUTPUT(*PRINT))
+001533120301             GOTO       CMDLBL(ENDPGM)
+001534120301
+001535120301WINDOW:
+001536120301             SNDRCVF    RCDFMT(SB51W01)
+001537120301             ROLLBACK
+001538120301             MONMSG     MSGID(CPF0000)
+001539120302             DSPJOBLOG  OUTPUT(*PRINT)
+001540120301             SIGNOFF
+001541120301
+014900120301ENDPGM:      ENDPGM

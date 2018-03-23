@@ -1,0 +1,95 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200130507/* TEST - SIMULAZIONE DELTA TARIFFA/OFFERTA                                   */
+000300000000/*----------------------------------------------------------------------------*/
+000400130509  TNTE51C:    PGM        PARM(&KPJBA)
+000500000000
+000600000000/* DICHIARAZIONE VARIABILI */
+000700000000              DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000800130205              DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000900130205              DCL        VAR(&KSC) TYPE(*CHAR) LEN(7)
+001000130205              DCL        VAR(&CTR) TYPE(*CHAR) LEN(3)
+001100130205              DCL        VAR(&PRG) TYPE(*CHAR) LEN(3)
+001200130205              DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001300130205              DCL        VAR(&WLIB)  TYPE(*CHAR) LEN(10)
+001400130205              DCL        VAR(&WLIBA)  TYPE(*CHAR) LEN(10)
+001500130205
+001600130205/* Imposto variabili */
+001700130205             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001800130507             CHGVAR     VAR(&KSC) VALUE(%SST(&KPJBU   1 7))
+001900130507             CHGVAR     VAR(&CTR) VALUE(%SST(&KPJBU   8 3))
+002000130507             CHGVAR     VAR(&PRG) VALUE(%SST(&KPJBU  11 3))
+002100130205
+002200130205             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+002300130509
+002400130509/* Se richiamato per CLOSE cancello i file in qtemp */
+002500130509
+002600130509             IF         COND(%SST(&KPJBU 31 1) = 'C') THEN(DO)
+002700130509             GOTO       CMDLBL(CLOSE)
+002800130509             ENDDO
+002900130507
+003000130205/* In base al S.I. determino la libreria dove sono presenti i file */
+003100130205             SELECT
+003200130205             WHEN       COND(%SST(&KNSIF 7 1) = 'P') THEN(CHGVAR +
+003300130205                          VAR(&WLIB) VALUE('UNITRAGRP '))
+003400130205             OTHERWISE  CMD(CHGVAR VAR(&WLIB) VALUE('UNITRAGRU '))
+003500130205             ENDSELECT
+003600130205             SELECT
+003700130205             WHEN       COND(%SST(&KNSIF 7 1) = 'P') THEN(CHGVAR +
+003800130205                          VAR(&WLIBA) VALUE('FILTRAGRPF'))
+003900130205             OTHERWISE  CMD(CHGVAR VAR(&WLIBA) VALUE('FILTRAGRU '))
+004000130205             ENDSELECT
+004100130205
+004200130205
+004300130507/* Elaborazione da offerta copio in qtemp nei file tariffe i dati dell'offerta */
+004400130226       /*  TNTAM  */
+004500130205             CRTDUPOBJ  OBJ(TNTAM*) FROMLIB(&WLIB) OBJTYPE(*FILE) +
+004600130205                          TOLIB(QTEMP)
+004700130205             CPYF       FROMFILE(&WLIBA/TNOFM00F) +
+004800130205                          TOFILE(QTEMP/TNTAM00F) MBROPT(*REPLACE) +
+004900130205                          INCREL((*IF TAMKSC *EQ &KSC) (*AND TAMCTR +
+005000130205                          *EQ &CTR) (*AND TAMPRG *EQ &PRG))
+005100130226       /*  TITAD  */
+005200130226             CRTDUPOBJ  OBJ(TITAD*) FROMLIB(&WLIB) OBJTYPE(*FILE) +
+005300130226                          TOLIB(QTEMP)
+005400130226             CPYF       FROMFILE(&WLIBA/TIOFD00F) +
+005500130226                          TOFILE(QTEMP/TITAD00F) MBROPT(*REPLACE) +
+005600130226                          INCREL((*IF TADKSC *EQ &KSC) (*AND TADCTR +
+005700130226                          *EQ &CTR) (*AND TADPRG *EQ &PRG))
+005800130226       /*  TITPT  */
+005900130226             CRTDUPOBJ  OBJ(TITPT*) FROMLIB(&WLIB) OBJTYPE(*FILE) +
+006000130226                          TOLIB(QTEMP)
+006100130226             CPYF       FROMFILE(&WLIBA/TIOPT00F) +
+006200130226                          TOFILE(QTEMP/TITPT00F) MBROPT(*REPLACE) +
+006300130226                          INCREL((*IF TPTKSC *EQ &KSC) (*AND TPTCTR +
+006400130226                          *EQ &CTR) (*AND TPTPRG *EQ &PRG))
+006500130226       /*  TITPD  */
+006600130226             CRTDUPOBJ  OBJ(TITPD*) FROMLIB(&WLIB) OBJTYPE(*FILE) +
+006700130226                          TOLIB(QTEMP)
+006800130226             CPYF       FROMFILE(&WLIBA/TIOPD00F) +
+006900130226                          TOFILE(QTEMP/TITPD00F) MBROPT(*REPLACE) +
+007000130226                          INCREL((*IF TPDKSC *EQ &KSC) (*AND TPDCTR +
+007100130226                          *EQ &CTR) (*AND TPDPRG *EQ &PRG))
+007200130226       /*  TITGC  */
+007300130226             CRTDUPOBJ  OBJ(TITGC*) FROMLIB(&WLIB) OBJTYPE(*FILE) +
+007400130226                          TOLIB(QTEMP)
+007500130226             CPYF       FROMFILE(&WLIBA/TIOGC00F) +
+007600130226                          TOFILE(QTEMP/TITGC00F) MBROPT(*REPLACE) +
+007700130226                          INCREL((*IF TGCKSC *EQ &KSC) (*AND TGCCTR +
+007800130226                          *EQ &CTR) (*AND TGCPRG *EQ &PRG))
+007900130226
+008000130226    /* Richiamo pgm per sistemare i dati dell'offerta copiata nei file tariffe */
+008100130226    /* e per aggiungere ai file in qtemp tutte le tariffe di cartello, solo quelle valide */
+008200130509             CALL       PGM(TNTE51R1) PARM(&KPJBA)
+008300130509             GOTO       CMDLBL(FINE)
+008400130509
+008500130509 CLOSE:      RCLRSC     LVL(*CALLER)
+008600130509
+008700130509/* cancello i file creati in qtemp */
+008800130509
+008900130509             DLTF       FILE(QTEMP/TNTAM*)
+009000130509             DLTF       FILE(QTEMP/TITAD*)
+009100130509             DLTF       FILE(QTEMP/TITPT*)
+009200130509             DLTF       FILE(QTEMP/TITPD*)
+009300130509             DLTF       FILE(QTEMP/TITGC*)
+009400130205
+009500130509 FINE:       ENDPGM

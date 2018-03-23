@@ -1,0 +1,11 @@
+000100050304/* Testo : FINE LAVORI IN KSNOTTESK                                */
+000200050304 TNSYEKSC:   PGM        PARM(&KPJBA)
+000300911230             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400050310             DCL        VAR(&ESMS) TYPE(*CHAR) LEN(150)
+000500050310             CHGVAR     VAR(&ESMS) VALUE('SETRAS: FINE lavori in +
+000600050310                          KSNOTTESK')
+000700920201
+000800050310/* INVIO    SMS                                */
+000900050310             CALL       PGM(TNSYEMSC) PARM(&ESMS)
+001000040615             MONMSG CPF0000
+001100050304             ENDPGM

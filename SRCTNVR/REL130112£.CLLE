@@ -1,0 +1,56 @@
+000100110406             PGM
+000200110407
+000300110407/* _ Modifica descrizione di 2 campi nel file FIILV00F _ */
+000400110407             EDTFFD     file(FIILV00F)      field(ILVFIRPDA) +
+000500110407                          colhdg1('Firma ') colhdg2('su LdV') +
+000600110407                          colhdg3('(S/_) ') +
+000700110407                          text('FLAG _=FIRMA SU PDA, S=FIRMA SU LDV')
+000800110407             monmsg     msgid(CPF0000)
+000900110407             EDTFFD     file(FIILV00F)      field(ILVSCAN) +
+001000110407                          colhdg1('Immag.') colhdg2('LdV/Sc') +
+001100110407                          colhdg3('(L/_) ') +
+001200110407                          text('FLAG L=IMMAGINE LDV, +
+001300110407                                     _=LDV DA SCANNERIZZARE')
+001400110407             monmsg     msgid(CPF0000)
+001500100921
+001600110323
+001700110406             ENDJRNPF   FILE(UNITRAGRU/UNMOV00F)
+001800110407             monmsg cpf0000
+001900110406
+002000110406/* _ Copiamo dati vecchi in file nuovo _ */
+002100110406             CPYF       FROMFILE(UNITRAGRU/UNMOV00F) +
+002200110406                          TOFILE(EDPWKSE/UNMOV00F) MBROPT(*ADD) +
+002300110325                          FMTOPT(*MAP *DROP)
+002400110406
+002500110406 /* salvo file vecchio */
+002600110406             CRTDUPOBJ  OBJ(UNMOV*) FROMLIB(UNITRAGRU) OBJTYPE(*FILE) +
+002700110406                          TOLIB(EDPES) DATA(*YES)
+002800110406
+002900110406             DLTF       FILE(UNITRAGRU/UNMOV*)
+003000110406
+003100110406 /* creo file nuovo    */
+003200110406             CRTDUPOBJ  OBJ(UNMOV*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+003300110406                          TOLIB(UNITRAGRU) DATA(*YES)
+003400110325
+003500110406             DLTF       FILE(EDPWKSE/UNMOV*)
+003600110406             MONMSG     MSGID(CPF0000)
+003700110406
+003800110406/* Imposto la matricola   */
+003900110406             CALL       PGM(GAITRAOBJ/TRUL07C) PARM('GAITRA201 ')
+004000110406
+004100110406             CALL       PGM(EDPWKSE/TNVRUNM1R)
+004200110406
+004300110406             DLTPGM     PGM(EDPWKSE/TNVRUNM1R)
+004400110406             MONMSG     MSGID(CPF0000)
+004500110406
+004600110406             STRJRNPF   FILE(UNITRAGRU/UNMOV00F) +
+004700110406                          JRN(GAITRAGRU/JRWGRU) OMTJRNE(*OPNCLO)
+004800110407             MONMSG     MSGID(CPF0000)
+004900110406
+005000110406/* _ Spostamento oggetti dalla EDPWKSE alla GAITRAOBJ   */
+005100110406             call       pgm(GAITRAOBJ/TNSYMVC) +
+005200110406                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+005300110406
+005400110325     FINE:
+005500100921
+005600100921             ENDPGM

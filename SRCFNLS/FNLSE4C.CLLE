@@ -1,0 +1,40 @@
+000100101206/*END                                                                */
+000200090512             Pgm        parm(&KPJBA)
+000300060331
+000400090603             dcl        var(&KPJBA)       type(*char)       len(502)
+000500090603             dcl        var(&KNSIF)       type(*char)       len(10)
+000600090603             dcl        var(&KPJBU)       type(*char)       len(256)
+000700090603             dcl        var(&WLib)        type(*char)       len(10) +
+000800070730                          value('*LIBL     ')
+000900090603             dcl        var(&WFile)       type(*char)       len(10) +
+001000140115                          value('TIPDL00F  ')
+001100070219
+001200090603             chgvar     var(&KNSIF)       value(%sst(&KPJBA  92  10))
+001300090603             chgvar     var(&KPJBU)       value(%sst(&KPJBA 247 256))
+001400060331
+001500140115    /*?Allocazione del file TIPDL00F?--------------------------------*/
+001600070730             select
+001700070730             when       cond(%sst(&KNSIF 1 3) = 'GAI')      then(+
+001800090603               chgvar     var(&WLib)      value('*LIBL     ') )
+001900070730             when       cond(%sst(&KNSIF 7 1) = 'P')        then(+
+002000090603               chgvar     var(&WLib)      value('GAITRAAZP ') )
+002100070730             otherwise  (+
+002200090603               chgvar     var(&WLib)      value('GAITRAAZM ') )
+002300070730             endselect
+002400070730
+002500090603             alcobj     obj((&WLib/&WFile *file *EXCLRD) )
+002600090603             monmsg     msgid(CPF1002)    exec(goto cmdlbl(FINE))
+002700070730
+002800131220    /*?Pulizia del file TIPDL00F?------------------------------------*/
+002900140115             call       pgm(FNLSE4R1)
+003000060331
+003100140115    /*?Richiamo del pgm per impostare i dati nel file TIPDL00F?------*/
+003200090603             call       pgm(FNLSE4R)      parm(&KPJBA)
+003300060331
+003400140115    /*?Disallocazione del file TIPDL00F?-----------------------------*/
+003500090603             dlcobj     obj((&WLib/&WFile *file *EXCLRD))
+003600070730             monmsg     msgid(CPF1005)
+003700060331
+003800101206    /*?Fine?---------------------------------------------------------*/
+003900090512    Fine:
+004000090512             EndPgm

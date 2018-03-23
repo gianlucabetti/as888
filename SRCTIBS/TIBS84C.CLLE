@@ -1,0 +1,43 @@
+000100050105             PGM        PARM(&KPJBA)
+000200041119             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+000300050105             DCL        VAR(&CMD) TYPE(*CHAR) LEN(350)
+000400050105             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+000500050105
+000600050105             DCL        VAR(&kpjba) TYPE(*char) len(502)
+000700050105             DCL        VAR(&sif) TYPE(*CHAR) LEN(10) +
+000800050105                          VALUE('GAITRA201 ')
+000900050105             DCL        VAR(&kpjsifold) TYPE(*CHAR) LEN(10)
+001000050105
+001100050105/* Sistema informativo memorizzato in kpjba       */
+001200050105             CHGVAR     VAR(&KPJSIFOLD) VALUE(%SST(&KPJBA 92 10))
+001300050105
+001400101103             CHKOBJ     OBJ(FILTRAAZM) OBJTYPE(*LIB)
+001500050105             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&sif) +
+001600050105                          VALUE('GAITRAPSP '))
+001700041201
+001800041119/* Reperisco la lista librerie CORRENTE _________________________________________________________ */
+001900041119             RTVJOBA    USRLIBL(&L275)
+002000041201
+002100050105/* _____ Imposto lista di librerie della SEDE gaitra201 o gaitrapsp______________*/
+002200050105             CALL       PGM(TRUL07C) PARM(&sif)
+002300041201             MONMSG CPF0000
+002400050105
+002500050105/* _____ Imposto nome S.I. in kpjba perchè viene visualizzato a video____________*/
+002600050105             CHGVAR     VAR(%SST(&KPJBA 92 10)) value(&sif)
+002700041201
+002800050105             CALL       PGM(TNSD15R) PARM(&KPJBA)
+002900050105
+003000050105/* _____ Eseguo trasmissione organigramma________________________________________*/
+003100050105             CALL       PGM(TRTRZ1R) PARM(&KPJBA)
+003200050105
+003300050105/* Reimposto la lista librerie originale ________________________________________________________ */
+003400050105             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+003500050105                          *CAT ' )')
+003600050105             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+003700050105             MONMSG CPF0000
+003800050105
+003900050105/* _____ Reimposto S.I. in kpjba originale ______________________________________*/
+004000050105             CHGVAR     VAR(%SST(&KPJBA 92 10)) value(&kpjsifold)
+004100050105
+004200041119
+004300040716             ENDPGM

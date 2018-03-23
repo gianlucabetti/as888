@@ -1,0 +1,111 @@
+000100890921     H              J
+000101991102      *   AGGIORNA DESCRIZIONE BANCA APPOGGIO INDBNA
+000200991102     FCNIND00FUP  E           K        DISK
+000201991102     FCNACO00FUF  E           K        DISK
+000202991102     FCNABI01LIF  E           K        DISK
+000300980225     FQSYSPRT O   F     132            PRINTER
+000301991102     E                    AGZ        16  1               DESCRIZ. AGE
+000302991102     E                    LOC        16  1               DESCRIZ. LOC
+000500910830     C  N99                EXSR DEFCAM
+000600920821      *
+000601991102     C           INDABI    IFNE 0
+000602991102     C           INDCAB    ANDNE0
+000603991102     C           INDBNA    ANDEQ*BLANK
+000604991102     C           KABI      CHAINCNABI01L             20
+000605991102     C                     CLEARDESBAN
+000606991102     C                     CLEARDESAGE
+000607991102     C           *IN20     IFEQ *OFF
+000608991102     C                     MOVELABIIST    DESBAN 20
+000609991102     C* PER L'AGENZIA PRENDO ANCHE LA LOCALITA' O IL COMUNE
+000610991102     C           ABIAGE    IFEQ *BLANKS
+000611991102     C*
+000612991102     C           ABILOC    IFEQ *BLANKS
+000613991102     C           ABICOM    IFEQ *BLANKS
+000614991102     C                     MOVEL*BLANKS   DESAGE 16
+000615991102     C                     ELSE
+000616991102     C                     MOVELABICOM    DESAGE
+000617991102     C                     END
+000618991102     C                     ELSE
+000619991102     C                     MOVELABILOC    DESAGE
+000620991102     C                     END
+000621991102     C*
+000622991102     C                     ELSE
+000623991102     C                     MOVEAABIAGE    AGZ
+000624991102     C* INDIVIDUO IL PRIMO BLANKS DELLA DESCRIZIONE AGENZIA
+000625991102     C                     Z-ADD16        P       20
+000626991102     C           AGZ,P     DOWEQ' '
+000627991102     C                     SUB  1         P
+000628991102     C                     END
+000629991102     C                     ADD  2         P
+000630991102     C* SE POSSO SCRIVERE ALMENO UN CARATTERE, RIEMPO LA DESCRIZ. AGENZ
+000631991102     C*    CON LA LOCALITA PER LO SPAZIO RESTANTE
+000632991102     C           P         IFLE 16
+000633991102     C* SE LOCALITA O COMUNE IL BOANCO, NON SCRIVO PIUà NIENTE
+000634991102     C           ABILOC    IFEQ *BLANKS
+000635991102     C           ABICOM    IFEQ *BLANKS
+000636991102     C                     GOTO SOTTO
+000637991102     C                     ELSE
+000638991102     C                     MOVEAABICOM    LOC
+000639991102     C                     END
+000640991102     C                     ELSE
+000641991102     C                     MOVEAABILOC    LOC
+000642991102     C                     END
+000643991102     C* RIEMPO AGE COL PARTE DO LOC
+000644991102     C                     Z-ADD1         Q       20
+000645991102     C           P         DOWLE16
+000646991102     C                     MOVE LOC,Q     AGZ,P
+000647991102     C                     ADD  1         P
+000648991102     C                     ADD  1         Q
+000649991102     C                     END
+000650991102     C*
+000651991102     C           SOTTO     TAG
+000652991102     C                     MOVEAAGZ       DESAGE
+000653991102     C                     END
+000654991102     C                     END
+000655991102      *
+000656991102     C                     MOVELDESBAN    INDBNA
+000657991102     C                     MOVE DESAGE    INDBNA
+000658991102     C                     EXCPTSTAGG
+000659991102      *
+000660991102     C           AGG       IFEQ 'S'
+000661991102     C                     EXCPTAGGIND
+000662991102      * TRASMETTO SOLO CLI/FOR
+000663991102     C           INDKCC    IFEQ 151
+000664991102     C           INDKCC    OREQ 400
+000665991102     C           KACO      CHAINCNACO00F             21
+000666991102     C        N21          CLEARACOFTR
+000667991102     C        N21          CLEARACODTR
+000668991102     C        N21          EXCPTAGGACO
+000669991102     C                     ENDIF
+000670991102     C                     ENDIF
+000671991102      *
+000672991102     C                     ENDIF
+000673991102     C                     ENDIF
+030100920821      *
+030200910830     C*----------------------------------------------------*
+030300910830     C           DEFCAM    BEGSR
+030301991102     C           *ENTRY    PLIST
+030302991102     C                     PARM           AGG     1
+030900910830     C*                                                    *
+031000991102     C           KABI      KLIST
+031100991102     C                     KFLD           INDABI
+031200991102     C                     KFLD           INDCAB
+031201991102     C*                                                    *
+031202991102     C           KACO      KLIST
+031203991102     C                     KFLD           INDKUT
+031204991102     C                     KFLD           INDKCC
+031205991102     C                     KFLD           INDKSC
+031800910830     C                     SETON                     99
+031900920821     C*-                                                   *
+032000910830     C                     ENDSR
+033100991102     OQSYSPRT E 1              STAGG
+033200991102     O                         INDKCC  +  1
+033300991102     O                         INDKSC  +  1
+033400991102     O                         INDABI  +  1
+033500991102     O                         INDCAB  +  1
+033600991102     O                         INDBNA  +  1
+033700991102     OCNIND000E                AGGIND
+033800991102     O                         INDBNA
+033900991102     OCNACO000E                AGGACO
+034000991102     O                         ACOFTR
+034100991102     O                         ACODTR

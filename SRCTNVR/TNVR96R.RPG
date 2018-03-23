@@ -1,0 +1,558 @@
+000100980603     H*------------------------------------------------------------------------*
+000200980611     H* ALLINEA SINONIMI - RICHIESTA PARAMETRI                                 *
+000300980603     H*------------------------------------------------------------------------*
+000400980603     H              J
+000500980603     F*------------------------------------------------------------------------*
+000600980603     F* DATA BASE
+000700980603     F*------------------------------------------------------------------------*
+000800980611     FTNVR96D CF  E                    WORKSTN      KINFDS DEVDS1
+000900980611     F                                        MSGULTKSFILE VR96DVM
+001000980603     E*------------------------------------------------------------------------*
+001100980603     E* SCHIERE
+001200980603     E*------------------------------------------------------------------------*
+001300980603     E*-------------------
+001400980603     E* MESSAGGI, COMANDI E FUNZIONI
+001500980603     E*-------------------
+001600980603     E                    MSG     1  20 78               *MESSAGGI
+001700980603     E                    FUN     1  31 40               *FUNZ.VIDEO
+001800980603     E*-------------------
+001900980603     E* SINGOLE SCHIERE ALL'INTERNO DELLA RIGA FUNZIONI
+002000980603     E*-------------------
+002100980603     E                    FFU        31  6               *FUNZIONE
+002200980603     E                    FDE        31 19               *DESCRIZIONE FUNZIONE
+002300980603     E                    FAT        31  1               *FUNZIONE ATTIVA S/N
+002400980603     E*-------------------
+002500980603     E* TABELLA DESCRIZIONI A VIDEO
+002600980603     E*-------------------
+002700980603     E                    FUV         8 19               *FUNZIONI A VIDEO
+002800980603     E*-------------------
+002900980603     E* TABELLA TASTI FUNZIONALI PREMUTI
+003000980603     E*-------------------
+003100980603     E                    KEYS       40  1
+003200980603     I*------------------------------------------------------------------------*
+003300980603     I* INPUT
+003400980603     I*------------------------------------------------------------------------*
+003500980603     I*---------------------
+003600980603     I* RIDEFINIZIONE SCHIERA -FUD- (FUNZIONI)
+003700980603     I*---------------------
+003800980603     IDSFUN     E DS
+003900980603     I                                        1  40 FUNRIG
+004000980603     I*---------------------
+004100980603     I* DS PER GESTIONE TASTI FUNZIONALI
+004200980603     I*---------------------
+004300980603     IDSKEYS    E DS
+004400980603     I                                        1  40 KEYRIG
+004500980603     I*---------------------
+004600980603     I* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+004700980603     I*---------------------
+004800980603     I           SDS
+004900980603     I                                      254 263 USER
+005000980603     I*---------------------
+005100980603     I* RIDEFINIZIONE INFDS DEL FILE VIDEO
+005200980603     I*---------------------
+005300980603     IDEVDS1      DS
+005400980603     I                                      369 369 KEY
+005500980603     I                                      370 371 CURSOR
+005600980603     I*---------------------
+005700980611     I* DS GESTIONE MESSAGGI AL PGM
+005800980603     I*---------------------
+005900980603     IDSMSG     E DS
+006000980603     I*---------------------
+006100980611     I* DS REPERIMENTO DATI UTENTE
+006200980603     I*---------------------
+006300980603     IDSFIL     E DS
+006400980603     I*---------------------
+006500980603     I* DS PARAMETRI DI LANCIO
+006600980603     I*------------------
+006700980603     IPARAM      IDS
+006800980611     I                                        1   1 PARSEN
+006900980611     I                                        2   60PARVER
+007000980611     I*---------------------
+007100980611     I* ARCHITETTURA
+007200980611     I*---------------------
+007300980611     IKPJBA     E DS
+007400980611     I                                       98  98 SIFPRV
+007500980603     C*------------------------------------------------------------------------*
+007600980603     C* MAIN LINE
+007700980603     C*------------------------------------------------------------------------*
+007800980603     C*
+007900980603     C* CICLO FINO A CHE:
+008000980603DO  1C           $FINE     DOUEQ'1'
+008100980603     C*
+008200980603     C* CONTROLLA GESTIONE VIDEO
+008300980603     C                     MOVEL'0'       $ERR             *FLAG ERRORE
+008400980603IF  2C           $GES      IFEQ 'V1'
+008500980603     C                     EXSR GESV1                      *PARAMETRI
+008600980603E   2C                     ENDIF
+008700980603E   1C                     ENDDO
+008800980603     C*
+008900980603     C                     SETON                     LR
+009000980603     C*------------------------------------------------------------------------*
+009100980603     C* GESV1 - GESTIONE VIDEO UNO
+009200980603     C*------------------------------------------------------------------------*
+009300980603     C           GESV1     BEGSR
+009400980603     C*
+009500980603IF  1C           $TESVD    IFEQ '1'                        *TESTATA DA RIEMETTER
+009600980603     C                     EXSR CARV1                      *CARICA VIDEO
+009700980603E   1C                     ENDIF
+009800980603     C*
+009900980603IF  1C           MSGULT    IFEQ *ZEROS                     *SE CI SONO MESSAGGGI
+010000980603     C                     MOVEL*BLANKS   $MSG             *EMETTE BLANK
+010100980603     C                     EXSR CARMSG                     *CARICA MESSAGGIO
+010200980603E   1C                     ENDIF
+010300980603     C                     EXSR OUTMSG                     *EMETTE MESSAGGI
+010400980611     C                     EXFMTVR96DV1                    *PARAMETRI
+010500980603     C*
+010600980603     C                     EXSR CONFUN                     *CONTROLLA TASTI FUNZ
+010700980603     C*
+010800980603IF  1C           $ERR      IFEQ '0'                        *TASTO ABILITATO
+010900980603SL  2C                     SELEC
+011000980603     C           KEY       WHEQ ENTER
+011100980603     C                     EXSR ENTV1                      *GEST.ENTER VIDEO V1
+011200980603     C           KEY       WHEQ F6
+011300980603     C                     EXSR F06GES                     *CONFERMA
+011400980603     C                     OTHER
+011500980603     C                     EXSR FUNSTD                     *GEST.TASTI STANDARD
+011600980603E   2C                     ENDSL
+011700980603E   1C                     ENDIF
+011800980603     C*
+011900980603     C                     ENDSR
+012000980603     C*------------------------------------------------------------------------*
+012100980603     C* CARV1 - CARICA VIDEO UNO
+012200980603     C*------------------------------------------------------------------------*
+012300980603     C           CARV1     BEGSR
+012400980603     C*
+012500980603     C                     MOVEL'V1'      $GES             *GESTIONE ATTUALE
+012600980603     C*
+012700980603     C                     EXSR CARFUN                     *CARICA FUNZIONI
+012800980603     C                     EXSR OUTFUN                     *EMETTE FUNZIONI
+012900980603     C*
+013000980611     C                     WRITEVR96DVT                    *TESTATA
+013100980611     C                     WRITEVR96DVF                    *FUNZIONI
+013200980603     C*
+013300980603     C                     ENDSR
+013400980603     C*------------------------------------------------------------------------*
+013500980603     C* ENTV1 - GESTIONE TASTO ENTER VIDEO UNO
+013600980603     C*------------------------------------------------------------------------*
+013700980603     C           ENTV1     BEGSR
+013800980603     C*
+013900980603     C* CONTROLLA I CAMPI IMMESSI
+014000980603     C                     EXSR DECODI                     *CONTROLLO CAMPI
+014100980603     C*
+014200980603     C                     ENDSR
+014300980603     C*------------------------------------------------------------------------*
+014400980603     C* F06GES - GESTIONE TASTO FUNZIONALE F06 ==> CONFERMA LANCIO
+014500980603     C*------------------------------------------------------------------------*
+014600980603     C           F06GES    BEGSR
+014700980603     C*
+014800980603     C* CONTROLLA I CAMPI IMMESSI
+014900980603     C                     EXSR DECODI
+015000980603     C*
+015100980603     C* LANCIA IL PROGRAMMA DI DUPLICA
+015200980603IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+015300980611     C                     MOVELV1CSEN    PARSEN           *SENSO
+015400980603     C                     Z-ADDV1CVER    PARVER           *VERSIONE
+015500980603     C*
+015600980611     C                     MOVEL'VR97'    KCOAZ
+015700980603     C                     MOVELPARAM     KPJBU
+015800980603     C                     CALL 'BCH10'
+015900980603     C                     PARM           KPJBA
+016000980603     C                     MOVEL'1'       $FINE            *FINE PGM
+016100980603E   1C                     ENDIF
+016200980603     C*
+016300980603     C                     ENDSR
+016400980603     C*------------------------------------------------------------------------*
+016500980603     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+016600980603     C*------------------------------------------------------------------------*
+016700980603     C           DECODI    BEGSR
+016800980603     C*
+016900980603     C* REIMPOSTA INDICATORI DI ERRORE
+017000980611     C                     SETOF                     6061
+017100980611     C***
+017200980611     C* NON LANCIABILE DA PROVA
+017300980611     C***
+017400980611IF  1C           $ERR      IFEQ '0'
+017500980611IF  2C           SIFPRV    IFEQ 'P'
+017600980611     C                     MOVEL'1'       $ERR
+017700980611     C                     MOVELMSG,12    $MSG
+017800980611     C                     EXSR CARMSG
+017900980611E   2C                     ENDIF
+018000980611E   1C                     ENDIF
+018100980611     C*--------------------
+018200980611     C* SENSO
+018300980611     C*--------------------
+018400980611IF  1C           $ERR      IFEQ '0'
+018500980611IF  2C           V1CSEN    IFEQ '1'
+018600980611     C           V1CSEN    OREQ '2'
+018700980611X   2C                     ELSE
+018800980611     C                     SETON                     60
+018900980611     C                     MOVEL'1'       $ERR
+019000980611     C                     MOVELMSG,11    $MSG
+019100980611     C                     EXSR CARMSG
+019200980611E   2C                     ENDIF
+019300980611E   1C                     ENDIF
+019400980603     C*--------------------
+019500980603     C* VERSIONE CAPPARIO
+019600980603     C*--------------------
+019700980603IF  1C           $ERR      IFEQ '0'
+019800980603IF  2C           V1CVER    IFEQ *ZEROS
+019900980611     C                     SETON                     61
+020000980603     C                     MOVEL'1'       $ERR
+020100980611     C                     MOVELMSG,10    $MSG
+020200980603     C                     EXSR CARMSG
+020300980603E   2C                     ENDIF
+020400980603E   1C                     ENDIF
+020500980611     C*
+020600980611     C                     ENDSR
+020700980611     C*------------------------------------------------------------------------*
+020800980611     C* IMPVID - IMPOSTAZIONI VIDEO
+020900980611     C*------------------------------------------------------------------------*
+021000980611     C           IMPVID    BEGSR
+021100980611     C*
+021200980611     C                     MOVEL'1'       V1CSEN           *SENSO
+021300980611     C*
+021400980611     C                     ENDSR
+021500980603     C*------------------------------------------------------------------------*
+021600980603     C* *INZSR - ROUTINE INIZIALE
+021700980603     C*------------------------------------------------------------------------*
+021800980603     C           *INZSR    BEGSR
+021900980603     C*
+022000980603     C* RICEVIMENTO PARAMETRI
+022100980603     C           *ENTRY    PLIST
+022200980603     C                     PARM           KPJBA
+022300980603     C*
+022400980603     C* VARIABILI DI CONTROLLO
+022500980603     C                     MOVEL'N'       WRECOK  1        *VALIDITA' RECORD
+022600980603     C                     MOVEL'G'       $TGES   1        *G=GESTIONE
+022700980603     C*
+022800980603     C* ESEGUE OPERAZIONI INIZIALI STANDARD
+022900980603     C                     EXSR INZSTD
+023000980611     C*
+023100980611     C* IMPOSTAZIONI VIDEO
+023200980611     C                     EXSR IMPVID
+023300980603     C*
+023400980603     C* EMETTE VIDEATA
+023500980603     C                     EXSR CARV1
+023600980603     C*
+023700980603     C                     ENDSR
+023800980603     C*------------------------------------------------------------------------*
+023900980603     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024000980603     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024100980603     C*    LA PARTE DI SPECIFICHE 'C' SOTTOSTANTE SI RIFA' A PARTICOLARI
+024200980603     C*    STANDARDS DI PROGRAMMAZIONE E NELLA MAGGIOR PARTE DEI CASI
+024300980603     C*    NON E' NECESSARIO MODIFICARLA, NEL CASO FARE ATTENZIONE.
+024400980603     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024500980603     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024600980603     C*------------------------------------------------------------------------*
+024700980603     C* INZSTD - ROUTINE INIZIALE STANDARD
+024800980603     C*------------------------------------------------------------------------*
+024900980603     C           INZSTD    BEGSR
+025000980603     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+025100980603     C                     CALL 'XKEYS'
+025200980603     C                     PARM           DSKEYS
+025300980603     C                     MOVEAKEYRIG    KEYS             *CARICA SCHIERA FUNZ.
+025400980603     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+025500980603     C           XMSGPA    PLIST
+025600980603     C                     PARM           DSMSMS
+025700980603     C                     PARM           DSMSPG
+025800980603     C                     PARM           DSMSKE
+025900980603     C                     PARM           DSMSER
+026000980603     C* IMPOSTA PER CL=XMSG (MESSAGGI ALLA CODA PGM), FISSI IN TUTTO IL PGM
+026100980611     C                     MOVEL'TNVR96R' DSMSPG           *NOME PGM CHIAMANTE
+026200980611     C                     MOVEL'TNVR96R' VMCQUE           *CODA MESSAGGI DESTIN
+026300980603     C                     MOVEL*BLANKS   VMCKEY           *CHIAVE MESSAGGIO
+026400980603     C                     MOVEL*BLANKS   DSMSMS           *MESSAGGIO
+026500980603     C* INIZIALIZZO FLAG CONTROLLO PGM
+026600980603     C                     MOVEL'0'       $ERR    1        *ERRORE
+026700980603     C                     MOVEL'0'       $F03    1        *PREMUTO TASTO F03
+026800980603     C                     MOVEL*BLANKS   $GES    2        *GESTIONE VIDEO
+026900980603     C                     MOVEL*BLANKS   $MSG   80        *MESSAGGI
+027000980603     C                     MOVEL'0'       $FINE   1        *FINE PGM
+027100980603     C                     MOVEL'1'       $TESVD  1        *1=RIEMETT.TEST.VIDEO
+027200980603     C                     MOVEL'I'       $TGES   1        *I=INTER. G=GESTIONE
+027300980603     C* LANCIO ROUTINE PER VERIFICARE SE
+027400980603     C* SONO IN SEDE, IN FILIALE DI 1° LIVELLO O IN FILIALE DI 2° LIVELLO
+027500980603     C* E PER RECUPERARE LA RAGIONE SOCIALE DELL'UTENTE
+027600980603     C                     CALL 'XFIL'
+027700980603     C                     PARM           DSFIL
+027800980603     C* POSIZIONE MINIMA E MASSIMA DEL CURSORE PER GESTIONE MESSAGGI
+027900980603     C                     BITOF'01234567'POSMI1  1
+028000980603     C                     BITOF'01234567'POSMI2  1
+028100980603     C                     BITOF'01234567'POSMA1  1
+028200980603     C                     BITOF'01234567'POSMA2  1
+028300980603     C                     BITON'34'      POSMI1  1        *18
+028400980603     C                     BITON'7'       POSMI2  1        *01
+028500980603     C                     BITON'34'      POSMA1  1        *18
+028600980603     C                     BITON'0'       POSMA2  1        *80
+028700980603     C                     MOVE POSMI2    POSMIN  2
+028800980603     C                     MOVELPOSMI1    POSMIN
+028900980603     C                     MOVE POSMA2    POSMAX  2
+029000980603     C                     MOVELPOSMA1    POSMAX
+029100980603     C                     ENDSR
+029200980603     C*------------------------------------------------------------------------*
+029300980603     C* FUNSTD - LANCIA SUBROUTINE STANDARD
+029400980603     C*------------------------------------------------------------------------*
+029500980603     C           FUNSTD    BEGSR
+029600980603     C                     SELEC
+029700980603     C           KEY       WHEQ F3
+029800980603     C                     EXSR F03STD
+029900980603     C           KEY       WHEQ F12
+030000980603     C                     EXSR F12STD
+030100980603     C           KEY       WHEQ F24
+030200980603     C                     EXSR F24STD
+030300980603     C                     OTHER
+030400980603     C                     MOVELMSG,2     $MSG
+030500980603     C                     EXSR CARMSG
+030600980603     C                     ENDSL
+030700980603     C                     ENDSR
+030800980603     C*------------------------------------------------------------------------*
+030900980603     C* F03STD - GEST. TASTO FUNZ. F03 STANDARD ==> FINE
+031000980603     C*------------------------------------------------------------------------*
+031100980603     C           F03STD    BEGSR
+031200980603     C* IMPOSTO FLAG DI PREMUTO TASTO F03
+031300980603     C                     MOVEL'1'       $F03
+031400980603     C* IMPOSTO FLAG DI FINE PROGRAMMA
+031500980603     C                     MOVEL'1'       $FINE
+031600980603     C* PULISCE IL MESSAGGIO
+031700980603     C                     ENDSR
+031800980603     C*------------------------------------------------------------------------*
+031900980603     C* F12STD - GEST. TASTO FUNZ. F12 STANDARD ==> FINE
+032000980603     C*------------------------------------------------------------------------*
+032100980603     C           F12STD    BEGSR
+032200980603     C* IMPOSTO FLAG DI FINE PROGRAMMA
+032300980603     C                     MOVEL'1'       $FINE
+032400980603     C                     ENDSR
+032500980603     C*------------------------------------------------------------------------*
+032600980603     C* F24STD - GEST. TASTO FUNZ. F24 STANDARD ==> ALTRI TASTI
+032700980603     C*------------------------------------------------------------------------*
+032800980603     C           F24STD    BEGSR
+032900980603     C*
+033000980603     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+033100980603     C                     EXSR OUTFUN
+033200980603     C*
+033300980603     C                     ENDSR
+033400980603     C*------------------------------------------------------------------------*
+033500980603     C* CARMSG - CARICA MESSAGGIO NEL SUBFILE MESSAGGI E LO INVIA ALLA
+033600980603     C*          CODA MESSAGGI DEL PGM
+033700980603     C*------------------------------------------------------------------------*
+033800980603     C           CARMSG    BEGSR
+033900980603     C* SE QUELLO CHE STO PER CARICARE E' IL PRIMO MESSAGGIO
+034000980603     C* PULISCO SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+034100980603     C           MSGULT    IFEQ 0
+034200980603     C                     MOVEL'1'       *IN40
+034300980611     C                     WRITEVR96DVK
+034400980603     C                     MOVEL'0'       *IN40
+034500980603     C                     ENDIF
+034600980603     C* INVIA MESSAGGIO ALLA CODA DEL PGM
+034700980603     C                     MOVEL$MSG      DSMSMS
+034800980603     C                     CALL 'XMSG'    XMSGPA
+034900980603     C           DSMSER    IFEQ 0
+035000980603     C                     MOVELDSMSKE    VMCKEY           *CHIAVE DEL MESSAGGIO
+035100980603     C                     ENDIF
+035200980603     C* CARICA IL MESSAGGIO NEL SUBFILE MESSAGGI
+035300980603     C                     ADD  1         MSGULT  40       *CHIAVE SFL MESS
+035400980611     C                     WRITEVR96DVM                    *SFL MESS
+035500980603     C* PULISCO CAMPO MESSAGGIO APPENA CARICATO
+035600980603     C                     MOVEL*BLANKS   $MSG
+035700980603     C                     ENDSR
+035800980603     C*------------------------------------------------------------------------*
+035900980603     C* OUTMSG - EMETTE A VIDEO IL SUBFILE MESSAGGI
+036000980603     C*------------------------------------------------------------------------*
+036100980603     C           OUTMSG    BEGSR
+036200980603     C* VISUALIZZAZIONE MESSAGGIO
+036300980603     C                     MOVEL'1'       *IN44            *SFLEND (+)
+036400980611     C                     WRITEVR96DVK                    *CONTR MESS
+036500980603     C* AZZERO LA CHIAVE DEL SUBFILE MESSAGGI
+036600980603     C                     Z-ADD*ZEROS    MSGULT
+036700980603     C                     ENDSR
+036800980603     C*------------------------------------------------------------------------*
+036900980603     C* CARFUN - CARICA LE SCHIERE PER LA GESTIONE DEI TASTI FUNZIONALI
+037000980603     C*          INPUT:  - FUN    (SCHIERA TASTI ABILITATI PER IL VIDEO ATTUALE)
+037100980603     C*          OUTPUT: - FFU    (SCHIERA FUNZIONI)
+037200980603     C*                  - FDE    (SCHIERA DESCRIZIONI FUNZIONI)
+037300980603     C*                  - FAT    (SCHIERA FLAG DI FUNZIONE ATTIVA S/N)
+037400980603     C*------------------------------------------------------------------------*
+037500980603     C           CARFUN    BEGSR
+037600980603     C                     Z-ADD*ZEROS    FUNULT  50       *ULTIMA FUNZ. VISUAL.
+037700980603     C           1         DO   31        I       50       --- 1 -->
+037800980603     C                     MOVELFUN,I     FUNRIG           *DS RIGA FUNZIONI
+037900980603     C                     MOVELFUNFUN    FFU,I            *FUNZIONE
+038000980603     C                     MOVELFUNDES    FDE,I            *DESCRIZIONE
+038100980603     C           DSFITI    IFEQ 'S'                        --- 2 --> *SEDE
+038200980603     C           $TGES     IFEQ 'G'                        *GESTIONE
+038300980603     C                     MOVELFUNASG    FAT,I            *FUNZIONE ATTIVA S/N
+038400980603     C                     ELSE                            *INTERROG.
+038500980603     C                     MOVELFUNASI    FAT,I
+038600980603     C                     ENDIF
+038700980603     C                     ELSE                            <-- 2 --> *FILIALE
+038800980603     C           $TGES     IFEQ 'G'                        *GESTIONE
+038900980603     C                     MOVELFUNAFG    FAT,I
+039000980603     C                     ELSE                            *INTERROG.
+039100980603     C                     MOVELFUNAFI    FAT,I
+039200980603     C                     ENDIF
+039300980603     C                     ENDIF                           <-- 2 ---
+039400980603     C           FAT,I     IFEQ 'E'                        *FLAG 'E'->SOLO EDP
+039500980603     C                     MOVELUSER      WEDP    3        *PROFILO
+039600980603     C           WEDP      IFEQ 'EDP'                      *SE PROFILO EDPXX
+039700980603     C                     MOVEL'S'       FAT,I            *ABILITO
+039800980603     C                     ELSE
+039900980603     C                     MOVEL'N'       FAT,I            *NON ABILITO
+040000980603     C                     ENDIF
+040100980603     C                     ENDIF
+040200980603     C                     ENDDO                           <-- 1 ---
+040300980603     C                     ENDSR
+040400980603     C*------------------------------------------------------------------------*
+040500980603     C* OUTFUN - EMETTE A VIDEO LE FUNZIONI ABILITATE
+040600980603     C*          INPUT:  - FUNULT (ULTIMA FUNZIONE EMESSA NEL VIDEO PRECEDENTE)
+040700980603     C*          OUTPUT: - VFD001-008 (CAMPI FUNZIONI A VIDEO)
+040800980603     C*                  - FUNULT (ULTIMA FUNZIONE EMESSA A VIDEO)
+040900980603     C*------------------------------------------------------------------------*
+041000980603     C           OUTFUN    BEGSR
+041100980603     C           1         DO   8         I                *PULIZIA FUNZIONI A
+041200980603     C                     MOVEL*BLANKS   FUV,I            *VIDEO
+041300980603     C                     ENDDO
+041400980603     C* CONTROLLO QUANTE FUNZIONI ATTIVE DA EMETTERE A VIDEO CI SONO
+041500980603     C                     Z-ADD*ZEROS    FUNNAT  20       *N.FUNZIONI ATTIVE
+041600980603     C           1         DO   31        I
+041700980603     C           FAT,I     IFEQ 'S'                        *FUNZIONE ATTIVA
+041800980603     C           FDE,I     ANDNE*BLANKS                    *DESCRIZIONE FUNZIONE
+041900980603     C                     ADD  1         FUNNAT
+042000980603     C                     ENDIF
+042100980603     C                     ENDDO
+042200980603     C* SE VI SONO PIU' DI 8 FUNZIONI ATTIVO IL TASTO F24
+042300980603     C           FUNNAT    IFGT 8
+042400980603     C                     MOVEL'S'       FAT,24           *FLAG ATTIVITA' FUNZ
+042500980603     C                     ENDIF
+042600980603     C* IMPOSTO IL N.DI FUNZIONI VISUALIZZABILI A 8, E SE SONO ATTIVE F23 E F24
+042700980603     C* (SE ATTIVE DA VISUALIZZARE SEMPRE) DIVENTANO 6
+042800980603     C                     Z-ADD8         FUNVIS  50
+042900980603     C           FAT,23    IFEQ 'S'
+043000980603     C                     SUB  1         FUNVIS
+043100980603     C                     ENDIF
+043200980603     C           FAT,24    IFEQ 'S'
+043300980603     C                     SUB  1         FUNVIS
+043400980603     C                     ENDIF
+043500980603     C* AGGIUNGO UNO ALL'ULTIMA FUNZIONE VISUALIZZATA PER AVERE LA 1A DA VISUALI
+043600980603     C                     Z-ADD*ZEROS    W       50
+043700980603     C                     ADD  1         FUNULT
+043800980603     C           FUNULT    IFGT 31
+043900980603     C                     Z-ADD1         FUNULT
+044000980603     C                     ENDIF
+044100980603     C* RICERCO LE OPZIONI ATTIVE E LE EMETTO A VIDEO
+044200980603     C           FUNULT    DO   31        I                --- 1 -->
+044300980603     C* SE HO GIA' RAGGIUNTO IL NUMERO DI FUNZIONI VISUALIZZABILI VADO A FINE
+044400980603     C           W         IFLT FUNVIS                     --- 2 -->
+044500980603     C* SE OPZIONE ATTIVA ED ESISTE LA DESCRIZIONE EMETTO A VIDEO
+044600980603     C           FAT,I     IFEQ 'S'                        --- 3 -->
+044700980603     C           FDE,I     ANDNE*BLANKS
+044800980603     C           I         IFEQ 23                         *TOLGO F23
+044900980603     C           I         OREQ 24                         *E F24
+045000980603     C                     ELSE
+045100980603     C                     ADD  1         W
+045200980603     C                     MOVELFDE,I     FUV,W
+045300980603     C                     ENDIF
+045400980603     C                     ENDIF                           <-- 3 ---
+045500980603     C* MEMORIZZO L'ULTIMO INDICE TRATTATO
+045600980603     C                     Z-ADDI         FUNULT
+045700980603     C                     ENDIF                           <-- 2 ---
+045800980603     C                     ENDDO                           <-- 1 ---
+045900980603     C* TRASFERISCO LE OPZIONI DALLA SCHIERA AI CAMPI VIDEO
+046000980603     C                     MOVELFUV,1     VFD001
+046100980603     C                     MOVELFUV,2     VFD002
+046200980603     C                     MOVELFUV,3     VFD003
+046300980603     C                     MOVELFUV,4     VFD004
+046400980603     C                     MOVELFUV,5     VFD005
+046500980603     C                     MOVELFUV,6     VFD006
+046600980603     C           FAT,23    IFEQ 'N'                        --- 1 -->
+046700980603     C           FAT,24    ANDEQ'N'
+046800980603     C                     MOVELFUV,7     VFD007
+046900980603     C                     MOVELFUV,8     VFD008
+047000980603     C                     ELSE                            <-- 1 -->
+047100980603     C           FAT,23    IFEQ 'S'                        --- 2 -->
+047200980603     C           FAT,24    ANDEQ'S'
+047300980603     C                     MOVELFDE,23    VFD007
+047400980603     C                     MOVELFDE,24    VFD008
+047500980603     C                     ELSE                            <-- 2 -->
+047600980603     C                     MOVELFUV,7     VFD007
+047700980603     C           FAT,23    IFEQ 'S'
+047800980603     C                     MOVELFDE,23    VFD008
+047900980603     C                     ELSE
+048000980603     C                     MOVELFDE,24    VFD008
+048100980603     C                     ENDIF
+048200980603     C                     ENDIF                           <-- 2 ---
+048300980603     C                     ENDIF                           <-- 1 ---
+048400980603     C                     MOVEL'0'       $TESVD           *REIMPOSTA EMIS TESTA
+048500980603     C                     ENDSR
+048600980603     C*------------------------------------------------------------------------*
+048700980603     C* CONFUN - CONTROLLA SE LA FUNZIONE SCELTA E' ATTIVA
+048800980603     C*           INPUT:  - KEY    (FUNZIONE PREMUTA - DA INFDS)
+048900980603     C*           OUTPUT: - FUNOK  (OPZIONE OK S/N)
+049000980603     C*                   - ERRORE SE FUNZIONE NON ATTIVA
+049100980603     C*------------------------------------------------------------------------*
+049200980603     C           CONFUN    BEGSR
+049300980603     C* RICERCA FUNZIONE SCELTA IN TABELLA FUNZIONI
+049400980603     C           1         DO   31        I                --- 1 -->
+049500980603     C           KEY       IFEQ KEYS,I                     --- 2 -->
+049600980603     C* CONTROLLO SE IL TASTO E' ATTIVO
+049700980603     C           FAT,I     IFNE 'S'                        --- 3 -->
+049800980603     C                     MOVELMSG,1     $MSG             *FUNZ.NON ACCETTABILE
+049900980603     C                     EXSR CARMSG
+050000980603     C                     MOVEL'1'       $ERR
+050100980603     C                     ENDIF                           <-- 3 ---
+050200980603     C                     ENDIF                           <-- 2 ---
+050300980603     C                     ENDDO                           <-- 1 ---
+050400980603     C                     ENDSR
+050500980603     O*------------------------------------------------------------------------*
+050600980603** MSG - (MESSAGGI)
+050700980611TNVR96R- Tasto funzionale non valido.                                          1
+050800980611TNVR96R- Tasto funzionale abilitato ma non gestito. Avvertire CED.             2
+050900980611TNVR96R- Opzione non valida.                                                   3
+051000980611TNVR96R- Opzione abilitata ma non gestita. Avvertire CED.                      4
+051100980611TNVR96R- Inizio elenco.                                                        5
+051200980611TNVR96R- Fine elenco.                                                          6
+051300980611TNVR96R- 7
+051400980611TNVR96R- 8
+051500980611TNVR96R- 9
+051600980611TNVR96R- Versione errata                                                      10
+051700980611TNVR96R- Immettere uno dei valori possibili                                   11
+051800980611TNVR96R- Azione non lanciabile da un S.informativo di prova                   12
+051900980611TNVR96R- 13
+052000980611TNVR96R- 14
+052100980611TNVR96R- 15
+052200980611TNVR96R- 16
+052300980611TNVR96R- 17
+052400980611TNVR96R- 18
+052500980611TNVR96R- 19
+052600980611TNVR96R- 20
+052700980603** FUN  (PARAMETRI)       SEDE:GI FIL:GI   (G=GESTIONE,I=INTERROG.)
+052800980603F1    -                   -    NN     NN
+052900980603F2    -                   -    NN     NN
+053000980603F3    -F3=Fine            -    SS     SS
+053100980603F4    -                   -    NN     NN
+053200980603F5    -                   -    NN     NN
+053300980603F6    -F6=Conferma        -    SS     SS
+053400980603F7    -                   -    NN     NN
+053500980603F8    -                   -    NN     NN
+053600980603F9    -                   -    NN     NN
+053700980603F10   -                   -    NN     NN
+053800980603F11   -                   -    NN     NN
+053900980603F12   -F12=Ritorno        -    SS     SS
+054000980603F13   -                   -    NN     NN
+054100980603F14   -                   -    NN     NN
+054200980603F15   -                   -    NN     NN
+054300980603F16   -                   -    NN     NN
+054400980603F17   -                   -    NN     NN
+054500980603F18   -                   -    NN     NN
+054600980603F19   -                   -    NN     NN
+054700980603F20   -                   -    NN     NN
+054800980603F21   -                   -    NN     NN
+054900980603F22   -                   -    NN     NN
+055000980603F23   -                   -    NN     NN
+055100980603F24   -                   -    NN     NN
+055200980603ENTER -                   -    SS     SS
+055300980603ROLLUP-                   -    NN     NN
+055400980603ROLLDN-                   -    NN     NN
+055500980603HELP  -                   -    NN     NN
+055600980603PRINT -                   -    NN     NN
+055700980603BSPACE-                   -    NN     NN
+055800980603CLEAR -                   -    NN     NN

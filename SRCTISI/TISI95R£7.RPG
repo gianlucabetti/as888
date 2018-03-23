@@ -1,0 +1,2059 @@
+000100970627     H*------------------------------------------------------------------------*
+000200970515     H* CONTROLLO CAP/LOCALITA                                                 *
+000300061207     H* NB: Compilare con la versione più vecchia V5R1M0                       *
+000400020211     H* NB: Ricordarsi di non modificare mai il TISI95R ma di creare sempre un *
+000500020211     H*     TISI95RNEW perchè i clienti scaricano e utilizzano il sorgente     *
+000600970424     H*------------------------------------------------------------------------*
+000700970424     H              J
+000800970424     F*------------------------------------------------------------------------*
+000900970424     F* DATA BASE
+001000970424     F*------------------------------------------------------------------------*
+001100970515     FAZCPC01LIF  E           K        DISK
+001200970515     FAZCPL01LIF  E           K        DISK
+001300970605     FAZCPL02LIF  E           K        DISK
+001400970605     F            AZCPL000                          KRENAMEAZCPL002
+001500970605     FAZCPS04LIF  E           K        DISK
+001600970605     FAZCPS02LIF  E           K        DISK
+001700970605     F            AZCPS000                          KRENAMEAZCPS002
+001800970627     FAZCPS01LIF  E           K        DISK
+001900970627     F            AZCPS000                          KRENAMEAZCPS001
+002000970519     FAZCPT01LIF  E           K        DISK
+002100970519     FAZCPE01LIF  E           K        DISK
+002200970523     FAZCPR02LIF  E           K        DISK
+002300930323     FTABEL00FIF  E           K        DISK
+002400970424     E*------------------------------------------------------------------------*
+002500970424     E* SCHIERE
+002600970424     E*------------------------------------------------------------------------*
+002700970424     E*-------------------
+002800970424     E* MESSAGGI
+002900970424     E*-------------------
+003000970408     E                    MSG     1  20 78
+003100970424     E*-------------------
+003200970515     E* SCHIERE PER CONTROLLO FORMALE
+003300970424     E*-------------------
+003400970515     E                    CCP         9  1               CARATT.CONTROLLO
+003500970515     E                    CAP         9  1               CAP DA CONTROLLAR
+003600970515     E                    CAF         9  1               CAP FITTIZIO
+003700150203     E                    CAPN        9  1               CAP NORMALIZZATO
+003800040528     E                    LET    32  32  1               LETTERE ALFABETO
+003900040528     E                    LEM    32  32  1               LETTERE ALFAB. MINUSCOLE
+004000970515     E                    NUM    10  10  1               NUMERI
+004100971104     E*-------------------
+004200971104     E* SCHIERE PER OTTIMIZZAZIONE LOCALITA'
+004300971104     E*-------------------
+004400971104     E                    LOI        35  1               LOCALITA' INPUT DA OTTIMIZZ
+004500971104     E                    LOO        35  1               LOCALITA' OUTPUT OTTIMIZZ
+004600970424     I*------------------------------------------------------------------------*
+004700970424     I* INPUT
+004800970424     I*------------------------------------------------------------------------*
+004900970424     I*-------------------
+005000970424     I* DS PASSAGGIO PARAMETRI
+005100970424     I*-------------------
+005200970516     ITISI95    E DSTISI95DS
+005300970424     I*-------------------
+005400970516     I* DS NAZIONI
+005500970424     I*-------------------
+005600970516     IDS15      E DS
+005700091002     I              §15DPDPOE                       §15POE
+005800150204     I              §15PREF                         §15PRE
+005900970519     I*-------------------
+006000970519     I* DS PROVINCIA
+006100970519     I*-------------------
+006200970519     IDSPR      E DS
+006300970424     I*-------------------
+006400970424     I* DS PER MESSAGGI
+006500970424     I*-------------------
+006600970409     I            DS
+006700970409     I                                        1  78 DSMSG
+006800970409     I                                       75  78 DSERR
+006900970516     I*-------------------
+007000970516     I* DS SCOMPOSIZIONE DATA IN ANNO/MESE/GIONRO
+007100970516     I*-------------------
+007200970516     IDS§DAT      DS
+007300970516     I                                        1   20DSSEC
+007400970516     I                                        3   40DSANN
+007500970516     I                                        1   40DSAAS
+007600970516     I                                        5   60DSMES
+007700970516     I                                        7   80DSGIO
+007800970516     I                                        5   80DSMGS
+007900970516     I                                        3   80DSDAT6
+008000970516     I                                        1   80DSDAT8
+008100970516     IDS§TIM      DS
+008200970516     I                                        1   20DTORA
+008300970516     I                                        3   40DTMIN
+008400970516     I                                        5   60DTSCN
+008500970516     I                                        7   80DTGIO
+008600970516     I                                        9  100DTMES
+008700970516     I                                       11  120DTSEC
+008800970516     I                                       13  140DTANN
+008900970516     I                                        1   60DTORA6
+009000970516     I                                        1  140DTTIME
+009100000419     I*-------------------
+009200000419     I* DS REPERIMENTO INSTRADAMENTO POSTE
+009300000419     I*-------------------
+009400000419     ITISI98    E DSTISI98DS
+009500000419     I*-------------------
+009600000419     I* DS LETTURA O95RDS -DATI INSTRADAMENTO POSTE-
+009700000419     I*-------------------
+009800000419     IDRDS      E DS
+009900970424     I*-------------------
+010000970424     I* ARCHITETTURA
+010100970424     I*-------------------
+010200970424     IKPJBA     E DS
+010300970424     C*------------------------------------------------------------------------*
+010400970424     C* MAIN LINE
+010500970424     C*------------------------------------------------------------------------*
+010600970516     C*
+010700970424     C* OPERAZIONI INIZIALI
+010800930304     C                     EXSR RUTINZ
+010900930528     C*
+011000970519IF  1C           $ERR      IFEQ 'N'
+011100930602     C*
+011200970424     C* SE LANCIATO CON TIPO LANCIO='C' -CHIUDE FILE-, VA A FINE PROGRAMMA
+011300970516IF  2C           I95TLA    IFNE 'C'
+011400970604     C*
+011500970604     C* CONTROLLI DI TIPO GENERALE
+011600970604     C                     EXSR CHKGEN
+011700970604     C*
+011800970604     C* SELEZIONI PER OGNI TIPO CONTROLLO
+011900970604IF  3C           $ERR      IFEQ 'N'
+012000970604SL  4C                     SELEC
+012100970604     C           I95TCN    WHEQ '1'
+012200970604     C                     EXSR TCN1                       *CONTR.FORMALE CAP
+012300970604     C           I95TCN    WHEQ '3'
+012400970604     C                     EXSR TCN3                       *CONTR.CAP/LOC
+012500970604     C           I95TCN    WHEQ '4'
+012600970604     C                     EXSR TCN4                       *CONTR.LOC/CAP
+012700970627     C           I95TCN    WHEQ '7'
+012800970630     C                     EXSR TCN7                       *CONTR.X INS.BOLLE
+012900970604E   4C                     ENDSL
+013000970604E   3C                     ENDIF
+013100970516     C*
+013200970516     C* SE LANCIATO CON TIPO CONTROLLO = 1, VA A FINE PGM
+013300970516IF  3C           I95TCN    IFNE '1'
+013400970605     C*
+013500970605     C* PORTA OUT CAP O LOC NELL'OUT GENERALE
+013600970605     C           $ERR      IFEQ 'N'
+013700970605     C                     EXSR OUTGEN
+013800970630     C                     EXSR GESLID
+013900970605     C                     ENDIF
+014000970519     C*
+014100980602     C* SE RICHIESTO RECUPERO TEMPI CONSEGNA
+014200970519     C           $ERR      IFEQ 'N'
+014300980602     C           I95FRT    IFEQ 'S'                        *RICH.TEMPI CONS.
+014400970519     C           O95TTC    ANDNE*ZEROS
+014500970519     C                     EXSR CHKCPT
+014600970519     C                     ENDIF
+014700970519     C                     ENDIF
+014800970519     C*
+014900980602     C* SE RICHIESTO E IL CAP HA DELLE ECCEZIONI
+015000970606     C* E SOLO SE TROVATO LIVELLO DATI CAP O CAP FITT.
+015100970520     C* RECUPERO ECCEZIONI LINEE/ZONE
+015200970519     C           $ERR      IFEQ 'N'
+015300980602     C           I95FRE    IFEQ 'S'                        *RICH.CONTR.ECCEZ.
+015400970530     C           O95ESE    ANDEQ'S'                        *ESIST.DIFF. X LNP
+015500970606     C           O95LID    IFEQ '1'                        *LIV DATI CAP FITT.
+015600970606     C           O95LID    OREQ '2'                        *LIV DATI CAP
+015700970616     C           O95LID    OREQ '3'                        *LIV DATI LOC
+015800970616     C           O95LIV    ANDEQ'C'                        *E LIV GEST. CAP
+015900970722     C           O95LID    OREQ '4'                        *LIV DATI SIN
+016000970722     C           O95LIV    ANDEQ'C'                        *E LIV GEST. CAP
+016100970519     C                     EXSR CHKCPE
+016200970606     C                     ENDIF
+016300970519     C                     ENDIF
+016400970519     C                     ENDIF
+016500970616     C*
+016600970616     C* ERRORE GENERICO
+016700970616     C           O95ERR    IFEQ *BLANKS
+016800970616     C           O95CAP    ANDEQ*BLANKS
+016900970616     C                     MOVELMSG,20    $MSG             *ERR. GENERICO
+017000970616     C                     EXSR ERRORE
+017100970616     C                     ENDIF
+017200000419     C*
+017300000419     C* SE IL TIPO SERVIZIO = "P", REPERISCE L'INSTRADAMENTO PER LE POSTE
+017400000419IF  4C           I95TSP    IFEQ 'P'
+017500000419     C                     EXSR REPRDS
+017600000419E   4C                     ENDIF
+017700970516E   3C                     ENDIF
+017800021028     C*
+017900021028     C* SE LANCIO PER DPD, REPERISCE I DATI DI INTSTRADAMENTO DALLA TABELLA NAZIONI
+018000130906     C           $ERR      IFEQ 'N'
+018100021028IF  3C           I95FI1    IFEQ 'D'
+018200021028     C                     EXSR OUTDPD
+018300021028E   3C                     ENDIF
+018400130906     C                     ENDIF
+018500020211     C*
+018600020211     C* SE LANCIO PER FEDEX, REPERISCE I DATI DI INTSTRADAMENTO DALLA TABELLA NAZIONI
+018700130906     C           $ERR      IFEQ 'N'
+018800020211IF  3C           I95FI1    IFEQ 'S'
+018900020211     C                     EXSR OUTFED
+019000020211E   3C                     ENDIF
+019100130906     C                     ENDIF
+019200020211     C*
+019300970424E   2C                     ENDIF
+019400970424E   1C                     ENDIF
+019500930323     C*
+019600970424     C* OPERAZIONI DI CHIUSURA
+019700970630     C                     MOVELJ95TCN    I95TCN
+019800970630     C                     MOVELJ95PRV    I95PRV
+019900970516     C           I95TLA    IFEQ 'C'
+020000000419     C                     EXSR FINSR                      *OPERAZIONI FINALI
+020100930323     C                     SETON                     LR
+020200970516     C                     ELSE
+020300930324     C                     SETON                     RT
+020400970516     C                     ENDIF
+020500970516     C*------------------------------------------------------------------------*
+020600970516     C* CHKGEN - CONTROLLI DI TIPO GENERALE
+020700970516     C*------------------------------------------------------------------------*
+020800970516     C           CHKGEN    BEGSR
+020900970630     C*
+021000970630     C* SE LANCIATO CON CONTROLLO '7' MA SENZA IL CAP TRSFORMO IL LANCIO IN '4'
+021100970630     C           I95TCN    IFEQ '7'
+021200970630     C           I95CAP    ANDEQ*BLANKS
+021300970630     C                     MOVEL'4'       I95TCN
+021400970630     C                     ENDIF
+021500980602     C*
+021600980602     C* SE RICHIESTI TEMPI DI CONSEGNA E NON INSERITO IN INPUT IL TIPO SERVIZIO,ERRORE
+021700980602     C           I95FRT    IFEQ 'S'                        *RICH.TEMPI CONS.
+021800980602     C           I95TSP    ANDEQ*BLANKS                    *TIPO SERVIZIO
+021900980602     C                     MOVELMSG,3     $MSG             *RICH.TEMPI SENZA TSP
+022000980602     C                     EXSR ERRORE
+022100980602     C                     ENDIF
+022200980602     C*
+022300980602     C* SE RICHIESTO CONTROLLO ECCEZIONI LINEE/ZONE E NON INSERITO AS PARTENZA,ERRORE
+022400980602     C           $ERR      IFEQ 'N'
+022500980602     C           I95FRE    IFEQ 'S'                        *RICH.CONTR.ECC.
+022600980602     C           I95TFP    ANDEQ*ZEROS                     *AS PARTENZA
+022700980602     C                     MOVELMSG,4     $MSG             *RICH.ECCEZ.SENZA TFP
+022800980602     C                     EXSR ERRORE
+022900980602     C                     ENDIF
+023000980602     C                     ENDIF
+023100970516     C*
+023200970516     C* SE DATA RIFERIMENTO = 0, USO DATA DI OGGI
+023300970516     C           I95DAT    IFEQ *ZEROS
+023400970516     C                     TIME           DTTIME
+023500970516     C                     Z-ADDDTANN     DSANN
+023600970516     C                     Z-ADDDTMES     DSMES
+023700970516     C                     Z-ADDDTGIO     DSGIO
+023800970516     C                     Z-ADDDTSEC     DSSEC
+023900970516     C                     Z-ADDDSDAT8    I95DAT
+024000970516     C                     ENDIF
+024100970604     C*
+024200970604     C* CONTROLLA NAZIONE
+024300970604     C           $ERR      IFEQ 'N'
+024400970604     C                     EXSR CHKNAR
+024500970604     C                     ENDIF
+024600020212     C*
+024700020212     C* SE NAZIONE SENZA CAPPARIO TRASFORMA IL TIPO CONTROLLO IN '1'
+024800020212     C           §15CPP    IFEQ 'N'
+024900020212     C                     MOVEL'1'       I95TCN
+025000020212     C                     ENDIF
+025100970605     C*
+025200970605     C* CONTROLLA PROVINCIA
+025300970630IF  1C           $ERR      IFEQ 'N'
+025400971024IF  2C           I95TCN    IFEQ '7'
+025500970630IF  3C           §15CPR    IFEQ 'S'                        *NAZ.CON PRV DA CONTROLL.
+025600970605     C                     EXSR CHKPRV
+025700970630X   3C                     ELSE
+025800970630     C                     MOVEL*BLANKS   I95PRV
+025900970630E   3C                     ENDIF
+026000971024X   2C                     ELSE
+026100971024IF  3C           I95PRV    IFNE *BLANKS
+026200971024     C           §15CPR    ANDEQ'S'                        *NAZ.CON PRV DA CONTROLL.
+026300971024     C                     EXSR CHKPRV
+026400971024E   3C                     ENDIF
+026500971024E   2C                     ENDIF
+026600970630E   1C                     ENDIF
+026700970523     C*
+026800970627     C* RECUPERO VERSIONE DALLA DATA DI RIFERIMENTO
+026900970523IF  1C           $ERR      IFEQ 'N'
+027000970523     C                     EXSR CHKVER
+027100970523E   1C                     ENDIF
+027200971105     C*
+027300971105     C* OTTIMIZZA LA LOCALITA' (TOGLIE SPAZI,CARATTERI STRANI..)
+027400000727IF  1C           $ERR      IFEQ 'N'                        *LANCIO X SCRIVERE J95LOC
+027500000727     C                     MOVEL'J'       TLAN    1
+027600971105     C                     EXSR OTTLOC
+027700971105E   1C                     ENDIF
+027800000727IF  1C           $ERR      IFEQ 'N'                        *LANCIO X SCRIVERE Y95LOC
+027900000727     C                     MOVEL'Y'       TLAN    1
+028000000727     C                     EXSR OTTLOC
+028100000727E   1C                     ENDIF
+028200970516     C*
+028300970516     C                     ENDSR
+028400970604     C*------------------------------------------------------------------------*
+028500970604     C* TCN1   - GESTIONE TIPO CONTROLLO 1 (CONTR.FORMALE CAP)
+028600970604     C*------------------------------------------------------------------------*
+028700970604     C           TCN1      BEGSR
+028800970604     C*
+028900970604     C* CONTROLLO FORMALE DEL CAP (SE IN INPUT)
+029000970604     C           $ERR      IFEQ 'N'
+029100970604     C                     EXSR CHKFOR                     *CONTROLLO FORMALE
+029200150203     C                     EXSR CHKCFC                     *CONTROLLO FORMATO
+029300970604     C                     ENDIF
+029400970604     C*
+029500970604     C                     ENDSR
+029600970604     C*------------------------------------------------------------------------*
+029700970604     C* TCN3   - GESTIONE TIPO CONTROLLO 3 (CONTR.CAP/LOC)
+029800970604     C*------------------------------------------------------------------------*
+029900970604     C           TCN3      BEGSR
+030000970605     C*
+030100970703     C* RECUPERA IL CAP FITTIZIO DEL CAP IN INPUT
+030200970710     C   99N99             EXSR CERFIT
+030300970710     C                     EXSR CHKFOR
+030400150203     C                     EXSR CHKCFC
+030500970604     C*
+030600970627IF  0C           $ERR      IFEQ 'N'
+030700970605     C*
+030800970604     C* PRIMO TENTATIVO CON CAP COMPLETO
+030900970703     C                     Z-ADD*ZEROS    AFFLS
+031000970605     C                     MOVELI95CAP    WCAP
+031100970604     C                     EXSR LETCAP
+031200970604     C*
+031300970604IF  1C           TROCAP    IFEQ 'S'                        *CAP TROVATO
+031400970604     C*
+031500970604     C                     EXSR CAPOUT                     *DATI CAPPARIO IN OUT
+031600010713     C* Effettuo 1° tentativo con località di input non "normalizzata"
+031700010713     C           I95LOC    IFNE *BLANKS
+031800061030     C* Cerco localita/sinonimi solo se nazione Italia
+031900061030IFNARC           I95NAR    IFEQ *BLANKS
+032000010713     C                     MOVELCPCCAP    WCAP
+032100010713     C                     MOVELI95LOC    WLOC
+032200010713     C                     EXSR LETLOC                     *CERCA LOC X CAP/LOC
+032300010713     C           TROLOC    IFEQ 'S'
+032400010713     C                     EXSR LOCOUT                     *DATI LOC -> OUT
+032500010713     C                     Z-ADD1         AFFLS
+032600010713     C                     ELSE                            *LOC. NON TROV.
+032700010713     C                     MOVELWLOC      WSIN
+032800010713     C                     EXSR CERSIN                     *PROVO CON SINONIMI
+032900010713IF  4C           NUMSIN    IFEQ 1                          *NUM.SIN.TROVATI
+033000010713     C                     EXSR SINOUT                     *DATI SIN. -> OUT
+033100010713     C                     MOVELCPSLOC    WLOC             *LEGGE LOC. DEL SIN.
+033200010713     C                     EXSR LETLOC                     *CHAIN LOC.
+033300010713     C                     EXSR LOCOUT                     *DATI LOC -> OUT
+033400010713     C                     Z-ADD1         AFFLS
+033500010713X   4C                     ELSE                            *SIN NON TROV
+033600010713IF  5C           NUMSIN    IFEQ 0                          *NUM.SIN.TROVATI
+033700010713     C                     MOVELMSG,13    $MSG             *LOC NON TROV. NEL CAP
+033800010713     C                     EXSR MESSAG
+033900010713X   5C                     ELSE                            *NUM.SIN. > 1
+034000010713     C                     MOVELMSG,17    $MSG             *LOC ESIST. MA NON UNIVOCA
+034100010713     C                     EXSR MESSAG
+034200010713E   5C                     ENDIF
+034300010713E   4C                     ENDIF
+034400010713E   3C                     ENDIF
+034500061030     C* SE ESTERO ASSUMO SEMPRE X BUONA LA LOCALITA
+034600061030  NARC                     ELSE
+034700061030  NARC                     Z-ADD1         AFFLS
+034800061030E NARC                     ENDIF
+034900010713E   2C                     ENDIF
+035000010713     C*
+035100010713     C* Se a questo punto non ho ottenuto un risultato di OK =>
+035200010713     C           TROLOC    IFNE 'S'
+035300010713     C           NUMSIN    ANDNE1
+035400010713     C* => Effettuo 2° tentativo con località di input "normalizzata"
+035500971105IF  2C           J95LOC    IFNE *BLANKS                    *LOC. NON IN INPUT
+035600061030     C* Cerco localita/sinonimi solo se nazione Italia
+035700061030IFNARC           I95NAR    IFEQ *BLANKS
+035800010713     C                     MOVELCPCCAP    WCAP
+035900971105     C                     MOVELJ95LOC    WLOC
+036000970627     C                     EXSR LETLOC                     *CERCA LOC X CAP/LOC
+036100970627IF  3C           TROLOC    IFEQ 'S'                        *LOC. TROV.
+036200970627     C                     EXSR LOCOUT                     *DATI LOC -> OUT
+036300970703     C                     Z-ADD1         AFFLS
+036400970627X   3C                     ELSE                            *LOC. NON TROV.
+036500010713     C                     MOVELWLOC      WSIN
+036600970627     C                     EXSR CERSIN                     *PROVO CON SINONIMI
+036700970627IF  4C           NUMSIN    IFEQ 1                          *NUM.SIN.TROVATI
+036800970627     C                     EXSR SINOUT                     *DATI SIN. -> OUT
+036900970627     C                     MOVELCPSLOC    WLOC             *LEGGE LOC. DEL SIN.
+037000970627     C                     EXSR LETLOC                     *CHAIN LOC.
+037100970627     C                     EXSR LOCOUT                     *DATI LOC -> OUT
+037200970703     C                     Z-ADD1         AFFLS
+037300970703X   4C                     ELSE                            *SIN NON TROV
+037400971125IF  5C           NUMSIN    IFEQ 0                          *NUM.SIN.TROVATI
+037500970605     C                     MOVELMSG,13    $MSG             *LOC NON TROV. NEL CAP
+037600970605     C                     EXSR MESSAG
+037700971125X   5C                     ELSE                            *NUM.SIN. > 1
+037800971125     C                     MOVELMSG,17    $MSG             *LOC ESIST. MA NON UNIVOCA
+037900971125     C                     EXSR MESSAG
+038000971125E   5C                     ENDIF
+038100970627E   4C                     ENDIF
+038200970627E   3C                     ENDIF
+038300061030     C* SE ESTERO ASSUMO SEMPRE X BUONA LA LOCALITA
+038400061030  NARC                     ELSE
+038500061030  NARC                     Z-ADD1         AFFLS
+038600061030E NARC                     ENDIF
+038700970627E   2C                     ENDIF
+038800010713     C                     ENDIF
+038900970604     C*
+039000970604X   1C                     ELSE                            *CAP NON TROVATO
+039100970604     C*
+039200970604     C* FACCIO SECONDO TENTATIVO CON CAP FITTIZIO
+039300970604     C                     MOVELWCAPFI    WCAP
+039400970604     C                     EXSR LETCAP
+039500970604IF  2C           TROCAP    IFEQ 'S'                        *TROVATO CAP FITTIZIO
+039600970604     C                     EXSR CAPOUT                     *DATI CAPPARIO IN OUT
+039700970604X   2C                     ELSE                            *NON TROV.CAP FITTIZIO
+039800970604     C                     MOVELMSG,8     $MSG             *CAP INESISTENTE
+039900970604     C                     EXSR ERRORE
+040000970604E   2C                     ENDIF
+040100970604     C*
+040200970604E   1C                     ENDIF
+040300970604     C*
+040400970604     C* SE IN INPUT ANCHE LA PROVINCIA CONTROLLA CONGRUENZA CON PRV DEL CAP
+040500970627IF  1C           $ERR      IFEQ 'N'
+040600970627     C           O95CAP    ANDNE*BLANKS                    *CAP TROVATO
+040700970630     C           §15CPR    ANDEQ'S'                        *NAZ.CON PRV DA CONTROLL.
+040800970627     C           I95PRV    ANDNE*BLANKS
+040900970627IF  2C           I95PRV    IFEQ O95PRV
+041000970618     C           I95PRV    OREQ O95PRA
+041100970627     C           O95PRA    ANDNE*BLANKS
+041200970703     C                     ADD  1         AFFLS
+041300970627X   2C                     ELSE
+041400970604     C                     MOVELMSG,14    $MSG             *PRV IN <> PRV CAP
+041500051130     C***                  EXSR MESSAG
+041600051130     C                     EXSR ERRORE
+041700970627E   2C                     ENDIF
+041800970627E   1C                     ENDIF
+041900970703     C*
+042000970703     C* CONTROLLA LIVELLO AFFIDABILITA' RISCONTRATO
+042100970703     C           $ERR      IFEQ 'N'
+042200970703     C                     EXSR GESLIA
+042300970703     C                     ENDIF
+042400970604     C*
+042500970627E   0C                     ENDIF
+042600970605     C*
+042700970604     C                     ENDSR
+042800970604     C*------------------------------------------------------------------------*
+042900970604     C* TCN4   - GESTIONE TIPO CONTROLLO 4 (CONTR.LOC/CAP)
+043000970604     C*------------------------------------------------------------------------*
+043100970604     C           TCN4      BEGSR
+043200061030     C*
+043300061030     C* QUESTO CONTROLLO HA SENSO SOLO X NAZIONE DESTINO ITALIA
+043400061030     C           I95NAR    IFEQ *BLANKS                    * SOLO NAZ ITALIA
+043500970605     C*
+043600970627     C* DEVE ESISTERE UNA LOCALITA' IN INPUT
+043700971105     C           J95LOC    IFEQ *BLANKS
+043800970605     C                     MOVELMSG,18    $MSG             *LOC. OBBLIGATORIA
+043900970605     C                     EXSR ERRORE
+044000970605     C                     ENDIF
+044100970604     C*
+044200010713     C* ESEGUO RICERCA LOCALITA/SINONIMO
+044300970605     C           $ERR      IFEQ 'N'
+044400010713     C* Effettuo 1° tentativo con località di input non "normalizzata"
+044500010713     C                     MOVELI95LOC    WLOC
+044600010713     C                     EXSR CERLS
+044700010713     C* SE HO TROVATO UNA SOLA LOC/SIN RECUPERO CAP E LOC
+044800010713     C           NUMLS     IFEQ 1
+044900010713 xxx C                     MOVELWOCAP     WCAP
+045000010713     C                     EXSR LETCAP
+045100010713     C                     EXSR CAPOUT
+045200010713     C                     MOVELWOLOC     WLOC
+045300010713     C                     EXSR LETLOC
+045400010713     C                     EXSR LOCOUT
+045500010713     C           SINLOC    IFEQ 'S'                        *TROV. SINONIMO
+045600010713     C                     MOVELWOSIN     WSIN
+045700010713     C                     EXSR LETSIN
+045800010713     C                     EXSR SINOUT
+045900010713     C                     ENDIF
+046000010713     C                     ENDIF
+046100010713     C*
+046200010713     C* Se a questo punto non ho ottenuto un risultato di OK =>
+046300010713     C           NUMLS     IFNE 1
+046400010713     C           SINLOC    ANDNE'S'
+046500010713     C* => Effettuo 2° tentativo con località di input "normalizzata"
+046600971105     C                     MOVELJ95LOC    WLOC
+046700970627     C                     EXSR CERLS
+046800970627     C* SE HO TROVATO UNA SOLA LOC/SIN RECUPERO CAP E LOC
+046900970627     C           NUMLS     IFEQ 1
+047000970627     C                     MOVELWOCAP     WCAP
+047100970627     C                     EXSR LETCAP
+047200970627     C                     EXSR CAPOUT
+047300970627     C                     MOVELWOLOC     WLOC
+047400970627     C                     EXSR LETLOC
+047500970627     C                     EXSR LOCOUT
+047600970627     C           SINLOC    IFEQ 'S'                        *TROV. SINONIMO
+047700970627     C                     MOVELWOSIN     WSIN
+047800970627     C                     EXSR LETSIN
+047900970627     C                     EXSR SINOUT
+048000970627     C                     ENDIF
+048100970627     C                     ENDIF
+048200970605     C                     ENDIF
+048300010713     C                     ENDIF
+048400970605     C*
+048500970605     C* DEVE ESISTERE LA LOCALITA'
+048600970605     C           $ERR      IFEQ 'N'
+048700970630     C           I95TCN    ANDEQ'4'
+048800970627     C           NUMLS     IFGT 1
+048900970606     C                     MOVELMSG,17    $MSG             *LOC.ESIT. MA NON UNIVOCA
+049000970606     C                     EXSR ERRORE
+049100970627     C                     ENDIF
+049200970627     C           NUMLS     IFEQ *ZEROS
+049300970605     C                     MOVELMSG,11    $MSG             *LOC. INESISTENTE
+049400970605     C                     EXSR ERRORE
+049500970605     C                     ENDIF
+049600970605     C                     ENDIF
+049700061030     C*
+049800061030     C                     ENDIF                           * SOLO NAZ ITALIA
+049900970616     C*
+050000970618     C* CONTROLLO SE PROVINCIA CONGRUENTE CON LOCALITA
+050100970616     C           $ERR      IFEQ 'N'
+050200970627     C           O95CAP    IFNE *BLANKS
+050300970630     C           §15CPR    ANDEQ'S'                        *NAZ.CON PRV DA CONTROLL.
+050400970627     C           I95PRV    ANDNE*BLANKS
+050500970627IF  2C           I95PRV    IFEQ O95PRV
+050600970627     C           I95PRV    OREQ O95PRA
+050700970627     C           O95PRA    ANDNE*BLANKS
+050800970616     C                     ELSE
+050900970618     C                     MOVELMSG,9     $MSG             *PRV INPUT <> PRV LOC
+051000970616     C                     EXSR MESSAG
+051100970616     C                     ENDIF
+051200970616     C                     ENDIF
+051300970616     C                     ENDIF
+051400970703     C*
+051500970703     C* CONTROLLA LIVELLO AFFIDABILITA' RISCONTRATO
+051600970703     C           $ERR      IFEQ 'N'
+051700970703     C                     EXSR GESLIA
+051800970703     C                     ENDIF
+051900970604     C*
+052000970604     C                     ENDSR
+052100970627     C*------------------------------------------------------------------------*
+052200970627     C* TCN7   - GESTIONE TIPO CONTROLLO 7 (CONTR.X INS.BOLLE)
+052300970627     C*------------------------------------------------------------------------*
+052400970627     C           TCN7      BEGSR
+052500970627     C*
+052600970627     C* PRIMO TENTATIVO CON CAP/LOC
+052700970627     C                     EXSR TCN3
+052800970627     C*
+052900970627IF  1C           $ERR      IFEQ 'N'
+053000970627IF  2C           O95LIA    IFNE '3'
+053100970630     C                     MOVEL*BLANKS   O95LID
+053200970630     C                     MOVEL*BLANKS   O95MSG
+053300970627     C                     MOVELI95CAP    DEPCAP  9
+053400970627     C                     MOVEL*BLANKS   I95CAP
+053500970627     C                     EXSR AZZCAP
+053600970627     C                     EXSR AZZLOC
+053700970627     C                     EXSR AZZSIN
+053800970627     C                     EXSR TCN4
+053900970630     C                     EXSR GESLID
+054000970630     C                     MOVELDEPCAP    I95CAP
+054100970627IF  3C           $ERR      IFEQ 'N'
+054200970627IF  4C           O95LID    IFEQ '3'
+054300970627     C           O95LIA    ANDEQ'2'
+054400970630IF  4C           O95LID    OREQ '4'
+054500970630     C           O95LIA    ANDEQ'2'
+054600970627X   4C                     ELSE
+054700970630     C                     MOVEL*BLANKS   O95MSG
+054800970627     C                     EXSR AZZCAP
+054900970627     C                     EXSR AZZLOC
+055000970627     C                     EXSR AZZSIN
+055100970627     C                     EXSR TCN3
+055200970627E   4C                     ENDIF
+055300970627E   3C                     ENDIF
+055400970627E   2C                     ENDIF
+055500970627E   1C                     ENDIF
+055600970627     C*
+055700970627     C                     ENDSR
+055800970523     C*------------------------------------------------------------------------*
+055900970523     C* CHKVER - RECUPERA LA VERSIONE DALLA DATA RIFERIMENTO
+056000970523     C*------------------------------------------------------------------------*
+056100970523     C           CHKVER    BEGSR
+056200970523     C*
+056300970523     C                     MOVEL'N'       $ERR
+056400970523     C                     MOVEL*OFF      *IN99
+056500970523     C                     MOVELI95DAT    CPRDDE
+056600970523     C           KCPR      SETGTAZCPR02L
+056700970530     C                     READPAZCPR02L                 99
+056800970523IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+056900970523     C           CPRATB    ORNE *BLANKS                    *ANNULLATO
+057000970523     C           CPRDSC    ORLT I95DAT                     *GIA' SCADUTO
+057100970523     C                     MOVELMSG,16    $MSG             *VERSIONE NON TROVATA
+057200970523     C                     EXSR ERRORE
+057300970523X   1C                     ELSE                            *VERS.TROVATA
+057400970523     C                     EXSR VEROUT
+057500970523E   1C                     ENDIF
+057600970523     C*
+057700970523     C                     ENDSR
+057800970523     C*------------------------------------------------------------------------*
+057900970523     C*   VEROUT - PORTA CAMPI DA FILE VERSIONI A DS OUTPUT VERSIONI
+058000970523     C*------------------------------------------------------------------------*
+058100970523     C           VEROUT    BEGSR
+058200970523     C*
+058300970530     C                     Z-ADDCPRVER    O95VER
+058400970530     C                     Z-ADDCPRDDE    O95RDE
+058500970530     C                     Z-ADDCPRDSC    O95RSC
+058600970530     C                     MOVELCPRDES    O95RDS
+058700970523     C*
+058800970523     C                     ENDSR
+058900970424     C*------------------------------------------------------------------------*
+059000970515     C* CHKNAR - CONTROLLA NAZIONE
+059100970424     C*------------------------------------------------------------------------*
+059200970515     C           CHKNAR    BEGSR
+059300941227     C*
+059400970515     C* CONTROLLO ESISTENZA NAZIONE SU TABELLA 15
+059500970407     C                     Z-ADDCODUT     KTBUTE
+059600970515     C                     MOVEL'15'      KTBCOD
+059700970407     C                     MOVEL*BLANKS   KTBKEY
+059800970516     C                     MOVELI95NAR    KTBKEY
+059900970409     C           KEYTAB    CHAINTABEL00F             99
+060000970515     C           *IN99     IFEQ '1'
+060100970515     C           TBLFLG    ORNE *BLANKS
+060200970515     C                     MOVELMSG,1     $MSG             *NAZIONE INESISTENTE
+060300970409     C                     EXSR ERRORE
+060400970515     C                     ELSE
+060500970515     C                     MOVELTBLUNI    DS15
+060600970704     C                     EXSR NAROUT
+060700970515     C                     ENDIF
+060800970407     C*
+060900941227     C                     ENDSR
+061000970519     C*------------------------------------------------------------------------*
+061100970519     C* CHKPRV - CONTROLLA PROVINCIA
+061200970519     C*------------------------------------------------------------------------*
+061300970519     C           CHKPRV    BEGSR
+061400970519     C*
+061500970519     C* CONTROLLO ESISTENZA PROVINCIA SU TABELLA PR
+061600970519     C                     Z-ADDCODUT     KTBUTE
+061700970519     C                     MOVEL'PR'      KTBCOD
+061800970519     C                     MOVEL*BLANKS   KTBKEY
+061900970519     C                     MOVELI95PRV    KTBKEY
+062000970519     C           KEYTAB    CHAINTABEL00F             99
+062100970519     C           *IN99     IFEQ '1'
+062200970519     C           TBLFLG    ORNE *BLANKS
+062300970519     C                     MOVELMSG,12    $MSG             *PROVINCIA INESISTENTE
+062400970519     C                     EXSR ERRORE
+062500970519     C                     ELSE
+062600970519     C                     MOVELTBLUNI    DSPR
+062700970519     C                     MOVELI95PRV    O95PRV
+062800970519     C                     ENDIF
+062900970519     C*
+063000970519     C                     ENDSR
+063100970627     C*------------------------------------------------------------------------*
+063200970627     C* CERLS  - CERCA LOCALITA/SINONIMI
+063300970627     C*        * INPUT : WLOC  (+I95CAP,I95PRV)
+063400970627     C*        * OUTPUT: NUMLS  (NUM. DI LOC/SIN TROVATI)
+063500970627     C*                  AFFLS  (AFFIDAB. LOC/SIN TROVATI)
+063600970627     C*                  WOCAP  (CAP TROVATO)
+063700970627     C*                  WOLOC  (LOC TROVATA)
+063800970627     C*                  WOSIN  (SIN TROVATO)
+063900970627     C*                  SINLOC (L=TROV.LOC.,S=TROV.SIN.)
+064000970627     C*------------------------------------------------------------------------*
+064100970627     C           CERLS     BEGSR
+064200970627     C*
+064300970627     C                     MOVEL'N'       TROLS   1        *TROVATA LOC/SIN UNIVOCA
+064400970627     C                     MOVEL*BLANKS   SINLOC  1        *TROVATO L=LOC,S=SIN
+064500970627     C                     Z-ADD*ZEROS    NUMLS   30       *NUM. LOC/SIN TROVATI
+064600970627     C                     Z-ADD*ZEROS    AFFLS   30       *AFFIDABILITA LOC/SIN
+064700970627     C                     MOVEL*BLANKS   WOCAP
+064800970627     C                     MOVEL*BLANKS   WOLOC
+064900970627     C                     MOVEL*BLANKS   WOSIN
+065000000727     C                     MOVEL*BLANKS   LSIN
+065100970627     C*
+065200970627     C* PRIMA CERCA SULLE LOCALITA
+065300970627     C                     MOVEL*OFF      *IN99
+065400970627     C                     Z-ADDO95VER    CPLVER
+065500970627     C                     MOVELO95NAR    CPLNAR
+065600970627     C                     MOVELWLOC      CPLLOC
+065700970627     C           KCPL2     SETLLAZCPL02L             99
+065800970627     C           KCPL2     READEAZCPL02L                 99
+065900970627DO  1C           *IN99     DOWEQ*OFF
+066000970627IF  2C           CPLATB    IFEQ *BLANKS                    *NON ANNULL.
+066100970917IF  2C           CPLFI1    ANDEQ*BLANKS                    *NON OBSOLETO
+066200970627     C                     MOVELCPLCAP    WCAP
+066300970627     C                     EXSR LETCAP
+066400970627     C                     EXSR CHKCP                      *CONTR.CAP E PRV
+066500970627IF  3C           WAFFID    IFEQ AFFLS
+066600970627     C                     ADD  1         NUMLS
+066700970627     C                     MOVEL'L'       SINLOC
+066800970627     C                     MOVELCPLCAP    WOCAP
+066900970627     C                     MOVELCPLLOC    WOLOC
+067000970627     C                     ENDIF
+067100970627IF  3C           WAFFID    IFGT AFFLS
+067200970627     C                     Z-ADD1         NUMLS
+067300970627     C                     MOVEL'L'       SINLOC
+067400970627     C                     Z-ADDWAFFID    AFFLS
+067500970627     C                     MOVELCPLCAP    WOCAP
+067600970627     C                     MOVELCPLLOC    WOLOC
+067700970627E   3C                     ENDIF
+067800970627E   2C                     ENDIF
+067900970627     C           KCPL2     READEAZCPL02L                 99
+068000970627E   1C                     ENDDO
+068100000727     C*
+068200010713     C* POI CERCA SUI SINONIMI -CON LOCALITA' "PASSATA"-
+068300000727     C                     MOVELWLOC      LSIN             *LOCALITA' OTTIMIZZATA
+068400000727     C                     EXSR LETCPS                     *LEGGE SINONIMI
+068500970627     C*
+068600000727     C* POI CERCA SUI SINONIMI -CON LA LOCALITA' NON OTTIMIZZATA (INPUT)-
+068700000727IF  1C           NUMLS     IFEQ *ZEROS                     *TROVATO NIENTE
+068800000727     C                     MOVELY95LOC    LSIN             *LOCALITA' IN INPUT
+068900000727     C                     EXSR LETCPS                     *LEGGE SINONIMI
+069000000727E   1C                     ENDIF
+069100000727     C*
+069200000727     C                     ENDSR
+069300000727     C*------------------------------------------------------------------------*
+069400000727     C* LETCPS - LEGGE I SINONIMI DELLA LOCALITA'
+069500000727     C*        * INPUT : LSIN  (LOCALITA' DA CERCARE COME SINONIMO)
+069600000727     C*        * OUTPUT: NUMLS (NUM. DI LOC/SIN TROVATI)
+069700000727     C*------------------------------------------------------------------------*
+069800000727     C           LETCPS    BEGSR
+069900000727     C*
+070000970627     C                     MOVEL*OFF      *IN99
+070100970627     C                     Z-ADDO95VER    CPSVER
+070200970627     C                     MOVELO95NAR    CPSNAR
+070300000727     C                     MOVELLSIN      CPSSIN
+070400970627     C           KCPS2     SETLLAZCPS02L             99
+070500970627     C           KCPS2     READEAZCPS02L                 99
+070600970627DO  1C           *IN99     DOWEQ*OFF
+070700970627IF  2C           CPSATB    IFEQ *BLANKS                    *NON ANNULL.
+070800970627     C                     MOVELCPSCAP    WCAP
+070900970917     C                     MOVELCPSLOC    WLOC
+071000970917     C                     EXSR LETLOC
+071100970917IF 2AC           CPLFI1    IFEQ *BLANKS                    *LOC. NON OBSOLETA
+071200970627     C                     EXSR LETCAP
+071300970627     C                     EXSR CHKCP                      *CONTR.CAP E PRV
+071400970627IF  3C           WAFFID    IFEQ AFFLS
+071500970627     C                     ADD  1         NUMLS
+071600970627     C                     MOVEL'S'       SINLOC
+071700970627     C                     MOVELCPSCAP    WOCAP
+071800970627     C                     MOVELCPSLOC    WOLOC
+071900970627     C                     MOVELCPSSIN    WOSIN
+072000970627     C                     ENDIF
+072100970627IF  3C           WAFFID    IFGT AFFLS
+072200970627     C                     Z-ADD1         NUMLS
+072300970627     C                     MOVEL'S'       SINLOC
+072400970627     C                     Z-ADDWAFFID    AFFLS
+072500970627     C                     MOVELCPSCAP    WOCAP
+072600970627     C                     MOVELCPSLOC    WOLOC
+072700970627     C                     MOVELCPSSIN    WOSIN
+072800970627E   3C                     ENDIF
+072900970917E  2AC                     ENDIF
+073000970917E   2C                     ENDIF
+073100970627     C           KCPS2     READEAZCPS02L                 99
+073200970627E   1C                     ENDDO
+073300000727     C*
+073400000727     C                     ENDSR
+073500970627     C*------------------------------------------------------------------------*
+073600970627     C* CERSIN - CERCA SINONIMI
+073700970627     C*        * INPUT : WCAP,WSIN
+073800970627     C*        * OUTPUT: NUMSIN (NUM. DI SIN TROVATI)
+073900970627     C*------------------------------------------------------------------------*
+074000970627     C           CERSIN    BEGSR
+074100970627     C*
+074200000727     C                     MOVEL*BLANKS   LSIN
+074300000727     C*
+074400000727     C* CERCA SUI SINONIMI -CON LA LOCALITA' OTTIMIZZATA-
+074500000727     C                     MOVELWSIN      LSIN              *LOCALITA' OTTIMIZZATA
+074600000727     C                     EXSR LE2CPS                     *LEGGE SINONIMI
+074700000727     C*
+074800000727     C* POI CERCA SUI SINONIMI -CON LA LOCALITA' NON OTTIMIZZATA (INPUT)-
+074900000727IF  1C           NUMSIN    IFEQ *ZEROS                     *TROVATO NIENTE
+075000000727     C                     MOVELY95LOC    LSIN             *LOCALITA' IN INPUT
+075100000727     C                     EXSR LE2CPS                     *LEGGE SINONIMI
+075200000727E   1C                     ENDIF
+075300000727     C*
+075400000727     C                     ENDSR
+075500000727     C*------------------------------------------------------------------------*
+075600000727     C* LE2CPS - LEGGE I SINONIMI DELLA LOCALITA'
+075700000727     C*        * INPUT : LSIN  (LOCALITA' DA CERCARE COME SINONIMO)
+075800000727     C*        * OUTPUT: NUMSIN (NUM. DI SIN TROVATI)
+075900000727     C*------------------------------------------------------------------------*
+076000000727     C           LE2CPS    BEGSR
+076100000727     C*
+076200970627     C                     Z-ADD*ZEROS    NUMSIN  30       *NUM. SIN TROVATI
+076300970627     C                     MOVEL*OFF      *IN99
+076400970627     C                     Z-ADDO95VER    CPSVER
+076500970627     C                     MOVELO95NAR    CPSNAR
+076600970627     C                     MOVELWCAP      CPSCAP
+076700000727     C                     MOVELLSIN      CPSSIN
+076800970627     C           KCPS4     SETLLAZCPS04L             99
+076900970627     C           KCPS4     READEAZCPS04L                 99
+077000970627DO  1C           *IN99     DOWEQ*OFF
+077100970627IF  2C           CPSATB    IFEQ *BLANKS                    *NON ANNULL.
+077200970627     C                     ADD  1         NUMSIN
+077300970627E   2C                     ENDIF
+077400970627     C           KCPS4     READEAZCPS04L                 99
+077500970627E   1C                     ENDDO
+077600970627     C*
+077700970627     C                     ENDSR
+077800970627     C*------------------------------------------------------------------------*
+077900970627     C* CHKCP  - CONTROLLA CAP E PROVINCIA
+078000970627     C*------------------------------------------------------------------------*
+078100970627     C           CHKCP     BEGSR
+078200970627     C*
+078300970627     C                     Z-ADD*ZEROS    WAFFID  30
+078400970627IF  1C           I95CAP    IFEQ *BLANKS
+078500970627     C           I95PRV    ANDEQ*BLANKS
+078600970627X   1C                     ELSE
+078700970627IF  2C           I95CAP    IFNE *BLANKS
+078800970627     C           I95CAP    ANDEQCPCCAP
+078900970627     C                     ADD  1         WAFFID
+079000970627E   2C                     ENDIF
+079100970627IF  2C           I95PRV    IFNE *BLANKS
+079200970627     C           §15CPR    ANDEQ'S'                        *NAZ.CON PRV DA CONTROLL.
+079300970627IF  3C           CPCPRV    IFNE *BLANKS
+079400970627     C           I95PRV    ANDEQCPCPRV
+079500970627     C                     ADD  1         WAFFID
+079600970627E   3C                     ENDIF
+079700970627IF  3C           CPCPRA    IFNE *BLANKS
+079800970627     C           I95PRV    ANDEQCPCPRA
+079900970627     C                     ADD  1         WAFFID
+080000970627E   3C                     ENDIF
+080100970627E   2C                     ENDIF
+080200970627E   1C                     ENDIF
+080300970627     C*
+080400970627     C                     ENDSR
+080500970627     C*------------------------------------------------------------------------*
+080600970627     C* LETCAP - LETTURA ARCHIVIO CAP
+080700970627     C*        * INPUT : WCAP
+080800970627     C*        * OUTPUT: TROCAP = S/N
+080900970627     C*------------------------------------------------------------------------*
+081000970627     C           LETCAP    BEGSR
+081100970627     C*
+081200970627     C                     MOVEL'S'       TROCAP  1
+081300970627     C                     MOVEL*OFF      *IN99
+081400970627     C                     Z-ADDO95VER    CPCVER
+081500970627     C                     MOVELO95NAR    CPCNAR
+081600970627     C                     MOVELWCAP      CPCCAP
+081700970627     C           KCPC      CHAINAZCPC01L             99
+081800970627     C           *IN99     IFEQ *ON                        *NON TROVATO
+081900970627     C           CPCATB    ORNE *BLANKS                    *ANNULLATO
+082000970627     C                     MOVEL'N'       TROCAP           *NON TROVATO
+082100970627     C                     ENDIF
+082200970627     C*
+082300970627     C                     ENDSR
+082400970604     C*------------------------------------------------------------------------*
+082500970604     C* LETLOC - LETTURA ARCHIVIO LOCALITA CON CAP
+082600970604     C*        * INPUT : WCAP,WLOC
+082700970604     C*        * OUTPUT: TROLOC ('S'=TROVATO)
+082800970604     C*------------------------------------------------------------------------*
+082900970604     C           LETLOC    BEGSR
+083000970604     C*
+083100970604     C                     MOVEL'S'       TROLOC  1
+083200970604     C                     MOVEL*OFF      *IN99
+083300970604     C                     Z-ADDO95VER    CPLVER
+083400970604     C                     MOVELO95NAR    CPLNAR
+083500970604     C                     MOVELWCAP      CPLCAP
+083600970604     C                     MOVELWLOC      CPLLOC
+083700970627     C           KCPL1     CHAINAZCPL01L             99
+083800970627     C           *IN99     IFEQ *ON                        *NON TROVATO
+083900970627     C           CPLATB    ORNE *BLANKS                    *ANNULLATO
+084000970604     C                     MOVEL'N'       TROLOC           *NON TROVATA
+084100970604     C                     ENDIF
+084200970604     C*
+084300970604     C                     ENDSR
+084400970627     C*------------------------------------------------------------------------*
+084500970627     C* LETSIN - LETTURA ARCHIVIO SINONIMO CON CAP
+084600970627     C*        * INPUT : WCAP,WLOC,WSIN
+084700970627     C*        * OUTPUT: TROLOC ('S'=TROVATO)
+084800970627     C*------------------------------------------------------------------------*
+084900970627     C           LETSIN    BEGSR
+085000970627     C*
+085100970627     C                     MOVEL'S'       TROSIN  1
+085200970627     C                     MOVEL*OFF      *IN99
+085300970627     C                     Z-ADDO95VER    CPSVER
+085400970627     C                     MOVELO95NAR    CPSNAR
+085500970627     C                     MOVELWCAP      CPSCAP
+085600970627     C                     MOVELWLOC      CPSLOC
+085700970627     C                     MOVELWSIN      CPSSIN
+085800970627     C           KCPS1     CHAINAZCPS01L             99
+085900970627     C           *IN99     IFEQ *ON                        *NON TROVATO
+086000970627     C           CPSATB    ORNE *BLANKS                    *ANNULLATO
+086100970627     C                     MOVEL'N'       TROSIN           *NON TROVATA
+086200970627     C                     ENDIF
+086300970627     C*
+086400970627     C                     ENDSR
+086500970703     C*------------------------------------------------------------------------*
+086600970703     C* CERFIT - CERCA CAP FITTIZIO DEL CAP IN INPUT
+086700970703     C*------------------------------------------------------------------------*
+086800970703     C           CERFIT    BEGSR
+086900970703     C*
+087000970703     C                     MOVEAI95CAP    CAP
+087100970703     C                     Z-ADD§15PCF    P       20
+087200970703     C                     CLEARCAF
+087300970703     C                     MOVEACAP,P     CAF,P
+087400970703     C                     ADD  §15ECF    P                *CARATT.DA TENERE
+087500970703     C           P         IFLT 10
+087600970703     C                     MOVEA*BLANKS   CAF,P
+087700970703     C                     ENDIF
+087800970703     C                     MOVEACAF       WCAPFI  9        *MEM CAP FITTIZIO
+087900970703     C*
+088000970703     C                     ENDSR
+088100970627     C*------------------------------------------------------------------------*
+088200970627     C* CHKFOR - CONTROLLO FORMALE DEL CAP IN INPUT
+088300970627     C*------------------------------------------------------------------------*
+088400970627     C           CHKFOR    BEGSR
+088500970627     C*---
+088600970627     C* RIASSUMO I CARATTERI DI CONTROLLO PREVISTI;
+088700970627     C*  "N" - SOLO NUMERI
+088800970627     C*  "L" - SOLO LETTERE
+088900970627     C*  "A" - CAMPO ALFANUMERICO     (NUMERI LETTERE)
+089000970627     C*  " " - CAMPO DA NON IMMETTERE
+089100970627     C*  "O" - OPZIONALE ALFANUMERICO (NUMERI LETTERE E BLANK)
+089200970627     C*  "Q" - OPZIONALE SOLO LETTERE (       LETTERE E BLANK)
+089300970627     C*  "0" - OPZIONALE NUMERICO     (NUMERI         E BLANK)
+089400970627     C*---
+089500970627     C                     MOVEAI95CAP    CAP
+089600970627     C                     MOVEA§15CAP    CCP
+089700970627     C*
+089800970627     C* RECUPERO CAP FITTIZIO PER EVENTUALE TENTATIVO SUCCESSIVO
+089900970627     C                     Z-ADD§15PCF    P       20
+090000970627     C                     CLEARCAF
+090100970627     C                     MOVEACAP,P     CAF,P
+090200970627     C                     ADD  §15ECF    P                *CARATT.DA TENERE
+090300970627     C           P         IFLT 10
+090400970627     C                     MOVEA*BLANKS   CAF,P
+090500970627     C                     ENDIF
+090600970627     C                     MOVEACAF       WCAPFI  9        *MEM CAP FITTIZIO
+090700970627     C*
+090800970627     C*
+090900970627     C                     Z-ADD1         X       20
+091000970627     C                     SETOF                     90
+091100970627     C*
+091200970627    1C           X         DOWLE9
+091300970627     C*
+091400970627     C* CARATTERE  D A   N O N   I M M E T T E R E
+091500970627    2C           CCP,X     IFEQ ' '
+091600970627     C           CAP,X     ANDNE' '
+091700970627     C                     SETON                     90
+091800970627    2C                     ENDIF
+091900970627     C*
+092000970627     C* CARATTERE  N U M E R I C O
+092100970627    2C           CCP,X     IFEQ 'N'
+092200970627     C           CCP,X     OREQ 'A'
+092300970627     C           CCP,X     OREQ 'O'
+092400970627     C           CCP,X     OREQ '0'
+092500970627     C           CAP,X     LOKUPNUM                      30
+092600970627     C*
+092700970627     C* 30 OFF- NON TROVATO: PER "N" ERRORE SUBITO
+092800970627     C  N30                SETON                     90
+092900970627     C*
+093000970627     C* 30 OFF- NON TROVATO: PER "0" ERRORE SE NON E' NEMMENO ' '
+093100970627    3C           *IN90     IFEQ *ON
+093200970627     C           CCP,X     ANDEQ'0'
+093300970627     C           CAP,X     ANDEQ' '
+093400970627     C                     SETOF                     90
+093500970627    3C                     ENDIF
+093600970627    2C                     ENDIF
+093700970627     C*
+093800970627     C* CARATTERE  A L F A N U M E R I C O
+093900970627    2C           CCP,X     IFEQ 'L'
+094000970627     C           CCP,X     OREQ 'A'
+094100970627     C           *IN90     ANDEQ*ON
+094200970627     C           CCP,X     OREQ 'O'
+094300970627     C           *IN90     ANDEQ*ON
+094400970627     C           CCP,X     OREQ 'Q'
+094500970627     C           CAP,X     LOKUPLET                      30
+094600970627     C*---
+094700970627     C* 30 OFF- NON TROVATO: PER "L" ERRORE SUBITO
+094800970627     C* 30 OFF- NON TROVATO: PER "A" ERRORE SUBITO
+094900970627     C*                      XCHE' NON TROVATO NEMMENO NEI NUMERICI
+095000970627     C*---
+095100970627     C  N30                SETON                     90
+095200970627     C   30                SETOF                     90
+095300970627     C*
+095400970627     C* 30 OFF- NON TROVATO: PER "O" E "Q" ERRORE SE NON E' NEMMENO ' '
+095500970627    3C           *IN90     IFEQ *ON
+095600970627     C           CAP,X     ANDEQ' '
+095700970627     C*
+095800970627    4C           CCP,X     IFEQ 'O'
+095900970627     C           CCP,X     OREQ 'Q'
+096000970627     C                     SETOF                     90
+096100970627    4C                     ENDIF
+096200970627    3C                     ENDIF
+096300970627    2C                     ENDIF
+096400970627     C*
+096500970627    2C           *IN90     IFEQ *ON
+096600970627     C                     Z-ADD10        X
+096700970627     C                     MOVELMSG,2     $MSG             *CAP FORMALMENTE ERRATO
+096800970627     C                     EXSR ERRORE
+096900970627    2C                     ENDIF
+097000970627     C                     ADD  1         X
+097100970627    1C                     ENDDO
+097200970627     C*
+097300970627     C                     ENDSR
+097400150203     C*------------------------------------------------------------------------*
+097500150203     C* CHKCFC - CONTROLLO FORMATO DEL CAP IN INPUT
+097600150203     C*------------------------------------------------------------------------*
+097700150203     C           CHKCFC    BEGSR
+097800150203     C*
+097900150209     C* NORMALIZZO IL CAP DESTINATARIO (TOLGO SPAZI AL INTERNO)
+098000150209     C                     EXSR NORCAP
+098100150209     C*
+098200150203     C* CODICE CONTROLLO CAP 'GB ' (OVVERO FORMATO TIPO GRAN BRETAGNA)
+098300150203     C           §15CFC    IFEQ 'GB'
+098400150203     C                     EXSR CFCGB
+098500150203     C                     ENDIF
+098600150203     C*
+098700150203     C                     ENDSR
+098800150209     C*------------------------------------------------------------------------*
+098900150209     C* NORCAP - NORMALIZZA CAP
+099000150209     C*------------------------------------------------------------------------*
+099100150209     C           NORCAP    BEGSR
+099200150209     C*
+099300150209     C* NORMALIZZO IL CAP DI INPUT ELIMINANDO GLI SPAZI IN MEZZO
+099400150209     C                     MOVEAI95CAP    CAP
+099500150209     C                     MOVEA*BLANKS   CAPN
+099600150209     C                     Z-ADD1         X       20
+099700150209     C                     Z-ADD1         Y       20
+099800150209     C           X         DOWLE9
+099900150209     C           CAP,X     IFEQ ' '
+100000150209     C                     ELSE
+100100150209     C                     MOVE CAP,X     CAPN,Y
+100200150209     C                     ADD  1         Y
+100300150209     C                     ENDIF
+100400150209     C                     ADD  1         X
+100500150209     C                     ENDDO
+100600150209     C*
+100700150209     C                     ENDSR
+100800150203     C*------------------------------------------------------------------------*
+100900150203     C* CFCGB  - CODICE FORMATO 'GB '
+101000150203     C*------------------------------------------------------------------------*
+101100150203     C           CFCGB     BEGSR
+101200150204     C*
+101300150204     C* INIZIALIZZAZIONI
+101400150204     C                     SETOF                     91
+101500150204     C                     Z-ADD*ZEROS    WLENG   10
+101600150203     C*---
+101700150203     C* CHECK PER MASCHERA 'AA9A9AA'
+101800150203     C*
+101900150204     C           *IN91     IFEQ *OFF
+102000150203     C                     MOVEL*BLANKS   WMASK   9
+102100150203     C                     MOVEL'AA9A9AA' WMASK
+102200150204     C                     Z-ADD4         WLENG
+102300150209     C                     EXSR CHKMSK
+102400150203     C                     ENDIF
+102500150203     C*
+102600150203     C*---
+102700150203     C* CHECK PER MASCHERA 'A9A9AA'
+102800150203     C*
+102900150204     C           *IN91     IFEQ *OFF
+103000150203     C                     MOVEL*BLANKS   WMASK   9
+103100150203     C                     MOVEL'A9A9AA'  WMASK
+103200150204     C                     Z-ADD3         WLENG
+103300150209     C                     EXSR CHKMSK
+103400150209     C                     ENDIF
+103500150203     C*
+103600150203     C*---
+103700150203     C* CHECK PER MASCHERA 'A99AA'
+103800150203     C*
+103900150204     C           *IN91     IFEQ *OFF
+104000150203     C                     MOVEL*BLANKS   WMASK   9
+104100150203     C                     MOVEL'A99AA'   WMASK
+104200150204     C                     Z-ADD2         WLENG
+104300150209     C                     EXSR CHKMSK
+104400150209     C                     ENDIF
+104500150203     C*
+104600150203     C*---
+104700150203     C* CHECK PER MASCHERA 'A999AA'
+104800150203     C*
+104900150204     C           *IN91     IFEQ *OFF
+105000150203     C                     MOVEL*BLANKS   WMASK   9
+105100150203     C                     MOVEL'A999AA'  WMASK
+105200150204     C                     Z-ADD3         WLENG
+105300150209     C                     EXSR CHKMSK
+105400150209     C                     ENDIF
+105500150203     C*
+105600150203     C*---
+105700150203     C* CHECK PER MASCHERA 'AA99AA'
+105800150203     C*
+105900150204     C           *IN91     IFEQ *OFF
+106000150203     C                     MOVEL*BLANKS   WMASK   9
+106100150203     C                     MOVEL'AA99AA'  WMASK
+106200150204     C                     Z-ADD3         WLENG
+106300150209     C                     EXSR CHKMSK
+106400150209     C                     ENDIF
+106500150203     C*
+106600150203     C*---
+106700150203     C* CHECK PER MASCHERA 'AA999AA'
+106800150203     C*
+106900150204     C           *IN91     IFEQ *OFF
+107000150203     C                     MOVEL*BLANKS   WMASK   9
+107100150203     C                     MOVEL'AA999AA' WMASK
+107200150204     C                     Z-ADD4         WLENG
+107300150209     C                     EXSR CHKMSK
+107400150209     C                     ENDIF
+107500150203     C*---
+107600150204     C*
+107700150204     C           *IN91     IFEQ *OFF
+107800150204     C                     MOVELMSG,2     $MSG             *CAP FORMALMENTE ERRATO
+107900150204     C                     EXSR ERRORE
+108000150204     C                     ELSE
+108100150204     C*
+108200150204     C* AL TERMINE SE OK CONSIDERO I PRIMI <N> CARATTERI PER IL CONTROLLO DEL CAP FITTIZIO
+108300150204     C                     MOVEACAP       CAF              *MEM CAP FITTIZIO
+108400150204     C                     Z-ADD1         Y       20
+108500150204     C           Y         DOWLE9
+108600150204     C           Y         IFLE WLENG
+108700150204     C                     ELSE
+108800150204     C                     MOVE *BLANK    CAF,Y
+108900150204     C                     ENDIF
+109000150204     C                     ADD  1         Y
+109100150204     C                     ENDDO
+109200150204     C                     ENDIF
+109300150203     C*
+109400150203     C                     ENDSR
+109500150209     C*------------------------------------------------------------------------*
+109600150209     C* CHKMSK - VERIFICA MASCHERA
+109700150209     C*------------------------------------------------------------------------*
+109800150209     C           CHKMSK    BEGSR
+109900150209     C*
+110000150209     C*---
+110100150209     C* LEGENDA CODIFICA FOORMATI:
+110200150209     C*  "A" - SOLO LETTERE
+110300150209     C*  "9" - SOLO NUMERI
+110400150209     C*---
+110500150209     C                     SETOF                     90
+110600150209     C                     MOVEACAPN      CAP
+110700150209     C                     MOVEAWMASK     CCP
+110800150209     C*
+110900150209     C* CICLO SUI CARATTERI DEL CAP IN INPUT E CONTROLLO CORRETTEZZA FORMATO
+111000150209     C                     Z-ADD1         X       20
+111100150209     C           X         DOWLE9
+111200150209     C*
+111300150209     C* CARATTERE  N U M E R I C O
+111400150209     C           *IN90     IFEQ *OFF
+111500150209     C           CCP,X     IFEQ '9'
+111600150209     C           CAP,X     LOKUPNUM                      30
+111700150209     C* SE NON TROVATO => NON E' NUMERO
+111800150209     C  N30                SETON                     90
+111900150209     C                     ENDIF
+112000150209     C                     ENDIF
+112100150209     C*
+112200150209     C* CARATTERE  A L F A B E T I C O
+112300150209     C           *IN90     IFEQ *OFF
+112400150209     C           CCP,X     IFEQ 'A'
+112500150209     C           CAP,X     LOKUPLET                      30
+112600150209     C* SE NON TROVATO => NON E' LETTTERA
+112700150209     C  N30                SETON                     90
+112800150209     C                     ENDIF
+112900150209     C                     ENDIF
+113000150209     C*
+113100150209     C                     ADD  1         X
+113200150209     C                     ENDDO
+113300150209     C*
+113400150209     C           *IN90     IFEQ *OFF
+113500150209     C                     SETON                     91
+113600150209     C                     ENDIF
+113700150209     C*
+113800150209     C                     ENDSR
+113900971103     C*------------------------------------------------------------------------*
+114000971103     C*   OTTLOC - OTTIMIZZA LOCALITA' (TOGLIE SPAZI,MINUSCOLE,CARATT.STRANI,..)
+114100971103     C*------------------------------------------------------------------------*
+114200971103     C           OTTLOC    BEGSR
+114300971103     C*
+114400971104     C* CICLO PER TUTTI I CARATTERI DELLA LOCALITA'
+114500971104     C                     MOVEAI95LOC    LOI
+114600971105     C                     CLEARLOO
+114700971105     C                     Z-ADD*ZEROS    NSPAZI  30
+114800971105     C                     MOVEL'N'       FINLOC  1
+114900971105     C                     Z-ADD*ZEROS    O       30
+115000971104     C*
+115100971105DO  1C                     DO   35        L       30
+115200971105IF  2C           FINLOC    IFEQ 'N'
+115300971104     C                     MOVELLOI,L     CARATT  1
+115400971105     C                     MOVEL'N'       SCARTO  1
+115500971104     C*
+115600971104     C* SE MINUSOLO TRASFORMA IN MAIUSOLO
+115700971105     C                     Z-ADD1         I       30
+115800971104     C           CARATT    LOKUPLEM,I                    99*CERCA IL TIPO BOLLA
+115900971104     C           *IN99     IFEQ '1'                        *E' MINUSOLO
+116000971104     C                     MOVELLET,I     CARATT
+116100971104     C                     END
+116200971104     C*
+116300971104     C* SE VIRGOLA SOSTITUISCE CON SPAZIO
+116400971104     C           CARATT    IFEQ ','
+116500971104     C                     MOVEL*BLANKS   CARATT
+116600971104     C                     ENDIF
+116700971105     C*
+116800971105     C* SE HO GIA' CONTATO ALMENO UNO SPAZIO E QUESTO E' IL SECONDO, SCARTO
+116900971105     C* SE PERO' DEVO INCONTRARE ANCORA UN CARATT. DIVERSO DA SPAZIO, SCARTO
+117000971105IF  3C           CARATT    IFEQ *BLANKS
+117100971105IF  4C           O         IFEQ *ZEROS
+117200971105     C                     MOVEL'S'       SCARTO
+117300971105X   4C                     ELSE
+117400971105     C           NSPAZI    IFEQ 0
+117500971105     C                     Z-ADD1         NSPAZI
+117600971105     C                     ELSE
+117700971105     C                     MOVEL'S'       SCARTO
+117800971105     C                     ENDIF
+117900971105E   4C                     ENDIF
+118000971105     C* CARATTERE DIVERSO DA SPAZIO AZZERO CONTATORE SPAZI
+118100971105X   3C                     ELSE
+118200971105     C                     Z-ADD*ZEROS    NSPAZI
+118300971105E   3C                     ENDIF
+118400971104     C*
+118500971105     C* SE TROVO CARATTERE STRANO, SCARTO TUTTO CIO' CHE SI TROVA DOPO
+118600000727     C           CARATT    IFEQ '-'
+118700000727     C*---       CARATT    OREQ '/'
+118800971104     C           CARATT    OREQ '('
+118900971104     C           CARATT    OREQ '*'
+119000971105     C                     MOVEL'S'       FINLOC
+119100971104     C                     ENDIF
+119200000727IF  3C           TLAN      IFEQ 'J'                        *OTTIMIZZA X J95LOC
+119300000727     C           CARATT    ANDEQ'/'
+119400000727     C                     MOVEL'S'       FINLOC
+119500000727E   3C                     ENDIF
+119600971105     C*
+119700971105     C* SE NON DEVO ESCLUDERE TUTTO IL RESTO DELLA LOCALITA'
+119800971105     C* OPPURE NON DEVO SCARTARE, TRASFERISCO CARATTERE
+119900971105     C           FINLOC    IFEQ 'N'
+120000971105     C           SCARTO    ANDEQ'N'
+120100971105     C                     ADD  1         O
+120200971105     C                     MOVELCARATT    LOO,O
+120300971105     C                     ENDIF
+120400971104     C*
+120500971105E   2C                     ENDIF
+120600971105E   1C                     ENDDO
+120700140212     C*
+120800140212     C* SE COME ULTIMO CARATTERE TROVO UN "." --> LO ELIMINO
+120900140212     C                     MOVEL'N'       FINLOC  1
+121000140212     C                     Z-ADD35        L
+121100140212DO  1C                     DO   35
+121200140212IF  2C           FINLOC    IFEQ 'N'
+121300140212     C                     MOVELLOO,L     CARATT  1
+121400140212     C           CARATT    IFNE ' '
+121500140212     C                     MOVEL'S'       FINLOC
+121600140212     C           CARATT    IFEQ '.'
+121700140212     C                     MOVEL' '       LOO,L
+121800140212     C                     ENDIF
+121900140212     C*
+122000140212     C                     ENDIF
+122100140212     C                     ENDIF
+122200140212     C                     SUB  1         L
+122300140212     C                     ENDDO
+122400971105     C*
+122500000727IF  1C           TLAN      IFEQ 'J'                        *OTTIMIZZA X J95LOC
+122600971105     C                     MOVEALOO       J95LOC
+122700000727X   1C                     ELSE                            *OTTIMIZZA X Y95LOC
+122800000727     C                     MOVEALOO       Y95LOC
+122900000727E   1C                     ENDIF
+123000000727     C*
+123100971103     C                     ENDSR
+123200970627     C*------------------------------------------------------------------------*
+123300970627     C*   CAPOUT - PORTA CAMPI DA FILE CAPPARIO A DS OUTPUT CAP
+123400970627     C*------------------------------------------------------------------------*
+123500970627     C           CAPOUT    BEGSR
+123600970627     C*
+123700970627     C**********           MOVELCPCNAR    O95NAR
+123800970627     C                     MOVELCPCCAP    O95CAP
+123900970627     C                     Z-ADDCPCLNA    O95CLA
+124000970627     C                     Z-ADDCPCZNC    O95CZC
+124100970627     C                     MOVELCPCPRV    O95PRV
+124200970627     C                     MOVELCPCPRA    O95PRA
+124300970627     C                     MOVELCPCFLG    O95FLG
+124400970627     C                     MOVELCPCFIT    O95FIT
+124500970627     C                     MOVELCPCISO    O95CIS
+124600970627     C                     Z-ADDCPCZFD    O95CZF
+124700970627     C                     Z-ADDCPCLKG    O95CLK
+124800970627     C                     Z-ADDCPCLMC    O95CLM
+124900970627     C                     Z-ADDCPCLOL    O95CLO
+125000970627     C                     Z-ADDCPCZOL    O95CZO
+125100970627     C                     Z-ADDCPCLKS    O95CKS
+125200970627     C                     Z-ADDCPCLMS    O95CMS
+125300970627     C                     Z-ADDCPCLOS    O95CLS
+125400970627     C                     Z-ADDCPCZOS    O95CZS
+125500970627     C                     Z-ADDCPCLK2    O95CK2
+125600970627     C                     Z-ADDCPCLM2    O95CM2
+125700970627     C                     Z-ADDCPCLO2    O95CL2
+125800970627     C                     Z-ADDCPCZO2    O95CZ2
+125900970627     C                     MOVELCPCCTS    O95CCT
+126000970627     C                     MOVELCPCCTE    O95CCE
+126100970627     C                     Z-ADDCPCTTC    O95CTC
+126200970627     C                     MOVELCPCPII    O95CPI
+126300970627     C                     MOVELCPCPID    O95CPD
+126400970627     C                     MOVELCPCPIS    O95CPS
+126500970627     C                     MOVELCPCGDD    O95CGD
+126600970627     C                     MOVELCPCESE    O95ESE
+126700970627     C                     MOVELCPCESL    O95ESL
+126800970627     C                     MOVELCPCFI1    O95CF1
+126900970627     C                     MOVELCPCFI2    O95CF2
+127000970627     C*
+127100970627     C                     ENDSR
+127200970521     C*------------------------------------------------------------------------*
+127300970604     C*   LOCOUT - PORTA CAMPI DA FILE LOCALITA A DS OUTPUT LOCALITA
+127400970521     C*------------------------------------------------------------------------*
+127500970604     C           LOCOUT    BEGSR
+127600970521     C*
+127700970516     C                     MOVELCPLLOC    O95LOC
+127800970516     C                     MOVELCPLLIV    O95LIV
+127900970520     C                     MOVELCPLDLV    O95DLV
+128000970520     C                     Z-ADDCPLLNA    O95LLA
+128100970520     C                     Z-ADDCPLZNC    O95LZC
+128200970520     C                     MOVELCPLISO    O95LIS
+128300970520     C                     Z-ADDCPLZFD    O95LZF
+128400970520     C                     Z-ADDCPLLKG    O95LLK
+128500970520     C                     Z-ADDCPLLMC    O95LLM
+128600970520     C                     Z-ADDCPLLOL    O95LLO
+128700970520     C                     Z-ADDCPLZOL    O95LZO
+128800970604     C                     Z-ADDCPLLKS    O95LKS
+128900970604     C                     Z-ADDCPLLMS    O95LMS
+129000970604     C                     Z-ADDCPLLOS    O95LLS
+129100970604     C                     Z-ADDCPLZOS    O95LZS
+129200970604     C                     Z-ADDCPLLK2    O95LK2
+129300970604     C                     Z-ADDCPLLM2    O95LM2
+129400970604     C                     Z-ADDCPLLO2    O95LL2
+129500970604     C                     Z-ADDCPLZO2    O95LZ2
+129600970520     C                     MOVELCPLCTS    O95LCT
+129700970520     C                     MOVELCPLCTE    O95LCE
+129800970520     C                     Z-ADDCPLTTC    O95LTC
+129900970520     C                     MOVELCPLPII    O95LPI
+130000970520     C                     MOVELCPLPID    O95LPD
+130100970520     C                     MOVELCPLPIS    O95LPS
+130200970520     C                     MOVELCPLGDD    O95LGD
+130300970520     C                     MOVELCPLESS    O95ESS
+130400970530     C                     MOVELCPLESV    O95ESV
+130500970520     C                     MOVELCPLFI1    O95LF1
+130600970520     C                     MOVELCPLFI2    O95LF2
+130700970516     C*
+130800970516     C                     ENDSR
+130900970520     C*------------------------------------------------------------------------*
+131000970520     C*   SINOUT - PORTA CAMPI DA FILE SINONIMI A DS OUTPUT
+131100970520     C*------------------------------------------------------------------------*
+131200970520     C           SINOUT    BEGSR
+131300970520     C*
+131400970520     C                     MOVELCPSSIN    O95SIN
+131500970520     C*
+131600970520     C                     ENDSR
+131700970704     C*------------------------------------------------------------------------*
+131800970704     C*   NAROUT - PORTA CAMPI DA TAB 15 NAZIONI A DS OUTPUT
+131900970704     C*------------------------------------------------------------------------*
+132000970704     C           NAROUT    BEGSR
+132100970704     C*
+132200970704     C                     MOVELI95NAR    O95NAR
+132300970704     C                     MOVEL§15DES    O95NDE
+132400970704     C                     MOVEL§15UCF    O95NUF
+132500970704     C                     MOVEL§15ITA    O95NIT
+132600970704     C                     MOVEL§15CPR    O95NCP
+132700970704     C*
+132800970704     C                     ENDSR
+132900970604     C*------------------------------------------------------------------------*
+133000970604     C*   OUTGEN - PORTA CAMPI DA CAP OUT O LOC OUT AI CAMPI OUT GENERALI
+133100970604     C*------------------------------------------------------------------------*
+133200970604     C           OUTGEN    BEGSR
+133300970604     C*
+133400970604     C* SE TROVATA LOCALITA' E LIVELLO GESTIONE = LOCALITA',
+133500970604     C* PORTO I DATI LOC. IN OUT GENERALE
+133600970605IF  1C           O95LOC    IFNE *BLANKS
+133700970604     C           O95LIV    ANDEQ'L'
+133800970604     C*
+133900970605     C                     Z-ADDO95LLA    O95LNA           *LINEA ARR.
+134000970605     C                     Z-ADDO95LZC    O95ZNC           *ZONA CONS.
+134100970606     C                     MOVEL*BLANKS   O95LIL           *LIV.LNA/ZNC
+134200010903     C                     MOVELO95LF2    O95GF2           *CODICE TEMPO RITIRO
+134300971126     C* CONTROLLO FERMO DEPOSITO
+134400971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+134500971126     C           I95FFD    ANDEQ'S'                        *SI FERMO DEP.
+134600970606     C                     MOVEL'F'       O95LIL           *LIV.LNA/ZNC: F.DEP
+134700970605     C                     Z-ADDO95LZF    O95ZNC           *ZONA CONS.
+134800971126     C                     ENDIF
+134900971126     C* CONTROLLO LIMITE OLTRE
+135000091002     C           I95TSP    IFNE 'E'                        *MAI OLTRE SE "E"
+135100091002     C           I95TSP    ANDNE'H'                        *MAI OLTRE SE "H"
+135200971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+135300971126     C           I95LKG    IFNE *ZEROS                     *LIMITE KG OLTRE
+135400970605     C           O95LLK    ANDNE*ZEROS
+135500970605     C           I95LKG    ANDGTO95LLK
+135600970604     C           I95LMC    ORNE *ZEROS                     *LIMITE MC OLTRE
+135700970605     C           O95LLM    ANDNE*ZEROS
+135800970605     C           I95LMC    ANDGTO95LLM
+135900970606     C                     MOVEL'O'       O95LIL           *LIV.LNA/ZNC: CON OLTRE
+136000970605     C                     Z-ADDO95LLO    O95LNA
+136100970605     C                     Z-ADDO95LZO    O95ZNC
+136200971126     C                     ENDIF
+136300971126     C                     ENDIF
+136400080219     C                     ENDIF
+136500971126     C* CONTROLLO LIMITE SOTTO
+136600971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+136700971126     C           I95LKG    IFNE *ZEROS                     *LIMITE KG SOTTO
+136800970605     C           O95LKS    ANDNE*ZEROS
+136900970617     C           I95LKG    ANDLTO95LKS
+137000970604     C           I95LMC    ORNE *ZEROS                     *LIMITE MC SOTTO
+137100970605     C           O95LMS    ANDNE*ZEROS
+137200970617     C           I95LMC    ANDLTO95LMS
+137300970606     C                     MOVEL'S'       O95LIL           *LIV.LNA/ZNC: CON SOTTO
+137400970606     C                     Z-ADDO95LLS    O95LNA
+137500970606     C                     Z-ADDO95LZS    O95ZNC
+137600971126     C                     ENDIF
+137700971126     C                     ENDIF
+137800971126     C* ALTRI DATI LOCALITA'
+137900970616     C                     Z-ADDO95LTC    O95TTC
+138000970606     C                     MOVELO95LIS    O95ISO
+138100970606     C                     MOVELO95LCT    O95CTS
+138200970606     C                     MOVELO95LCE    O95CTE
+138300970606     C                     MOVELO95LPI    O95PII
+138400970606     C                     MOVELO95LPD    O95PID
+138500970606     C                     MOVELO95LPS    O95PIS
+138600970606     C                     MOVELO95LGD    O95GDD
+138700970618     C           O95LNA    IFNE O95LLA
+138800970618     C                     MOVEL'S'       O952LN
+138900970618     C                     ENDIF
+139000020603     C*
+139100080219     C* SE CONSEGNA PARTICOLARE SUPERMERCATI, FORZA SEMPRE LINEA/ZONA OLTRE
+139200020603IF  2C           I95FI2    IFNE *BLANKS
+139300020715     C           O95LLO    ANDGT*ZEROS
+139400020603     C                     MOVELI95FI2    A1S     1        *ALFA 1 SX
+139500020603     C                     MOVE I95FI2    A1D     1        *ALFA 1 DX
+139600020603IF  3C           A1S       IFEQ 'S'                        *SOLO SE SUPERMERCATI
+139700020603     C           A1D       OREQ 'S'
+139800020603     C                     MOVEL'O'       O95LIL           *LIV.LNA/ZNC: CON OLTRE
+139900020603     C                     Z-ADDO95LLO    O95LNA
+140000020612     C                     Z-ADDO95LZO    O95ZNC
+140100020603E   3C                     ENDIF
+140200020603E   2C                     ENDIF
+140300970604     C*
+140400970604X   1C                     ELSE
+140500970604     C*
+140600970605     C* SE TROVATO CAP LO PORTO IN OUT GEN
+140700971126IF  2C           O95CAP    IFNE *BLANKS
+140800970606     C                     Z-ADDO95CLA    O95LNA           *LINEA ARR.
+140900970606     C                     Z-ADDO95CZC    O95ZNC           *ZONA CONS.
+141000970606     C                     MOVEL*BLANKS   O95LIL           *LIV.LNA/ZNC
+141100010903     C                     MOVELO95CF2    O95GF2           *CODICE TEMPO RITIRO
+141200971126     C* CONTROLLO FERMO DEPOSITO
+141300971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+141400971126     C           I95FFD    ANDEQ'S'                        *SI FERMO DEP.
+141500970606     C                     MOVEL'F'       O95LIL           *LIV.LNA/ZNC: F.DEP
+141600970606     C                     Z-ADDO95CZF    O95ZNC           *ZONA CONS.
+141700971126     C                     ENDIF
+141800971126     C* CONTROLLO LIMITE OLTRE
+141900091002     C           I95TSP    IFNE 'E'                        *MAI OLTRE SE "E"
+142000091002     C           I95TSP    ANDNE'H'                        *MAI OLTRE SE "H"
+142100971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+142200971126     C           I95LKG    IFNE *ZEROS                     *LIMITE KG OLTRE
+142300970606     C           O95CLK    ANDNE*ZEROS
+142400970606     C           I95LKG    ANDGTO95CLK
+142500970604     C           I95LMC    ORNE *ZEROS                     *LIMITE MC OLTRE
+142600970606     C           O95CLM    ANDNE*ZEROS
+142700970606     C           I95LMC    ANDGTO95CLM
+142800970606     C                     MOVEL'O'       O95LIL           *LIV.LNA/ZNC: OLTRE
+142900970606     C                     Z-ADDO95CLO    O95LNA
+143000970606     C                     Z-ADDO95CZO    O95ZNC
+143100971126     C                     ENDIF
+143200971126     C                     ENDIF
+143300080219     C                     ENDIF
+143400971126     C* CONTROLLO LIMITE SOTTO
+143500971126     C           O95LIL    IFEQ *BLANKS                    *NON ANCORA SCELTO LIMITE
+143600971126     C           I95LKG    IFNE *ZEROS                     *LIMITE KG SOTTO
+143700970606     C           O95CKS    ANDNE*ZEROS
+143800970617     C           I95LKG    ANDLTO95CKS
+143900970604     C           I95LMC    ORNE *ZEROS                     *LIMITE MC SOTTO
+144000970606     C           O95CMS    ANDNE*ZEROS
+144100970617     C           I95LMC    ANDLTO95CMS
+144200970606     C                     MOVEL'S'       O95LIL           *LIV.LNA/ZNC: SOTTO
+144300970606     C                     Z-ADDO95CLS    O95LNA
+144400970606     C                     Z-ADDO95CZS    O95ZNC
+144500971126     C                     ENDIF
+144600971126     C                     ENDIF
+144700971126     C* ALTRI DATI CAPPARIO
+144800970616     C                     Z-ADDO95CTC    O95TTC
+144900970606     C                     MOVELO95CIS    O95ISO
+145000970606     C                     MOVELO95CCT    O95CTS
+145100970606     C                     MOVELO95CCE    O95CTE
+145200970606     C                     MOVELO95CPI    O95PII
+145300970606     C                     MOVELO95CPD    O95PID
+145400970606     C                     MOVELO95CPS    O95PIS
+145500970606     C                     MOVELO95CGD    O95GDD
+145600970618     C           O95LNA    IFNE O95CLA
+145700970618     C                     MOVEL'S'       O952LN
+145800970618     C                     ENDIF
+145900971126E   2C                     ENDIF
+146000020603     C*
+146100080219     C* SE CONSEGNA PARTICOLARE SUPERMERCATI, FORZA SEMPRE LINEA/ZONA OLTRE
+146200020603IF  2C           I95FI2    IFNE *BLANKS
+146300020715     C           O95CLO    ANDGT*ZEROS
+146400020603     C                     MOVELI95FI2    A1S              *ALFA 1 SX
+146500020603     C                     MOVE I95FI2    A1D              *ALFA 1 DX
+146600020603IF  3C           A1S       IFEQ 'S'                        *SOLO SE SUPERMERCATI
+146700020603     C           A1D       OREQ 'S'
+146800020603     C                     MOVEL'O'       O95LIL           *LIV.LNA/ZNC: CON OLTRE
+146900020603     C                     Z-ADDO95CLO    O95LNA
+147000020612     C                     Z-ADDO95CZO    O95ZNC
+147100020603E   3C                     ENDIF
+147200020603E   2C                     ENDIF
+147300970604     C*
+147400970604E   1C                     ENDIF
+147500970630     C*
+147600970630     C                     ENDSR
+147700970630     C*------------------------------------------------------------------------*
+147800990607     C* GESLID - DETERMINA VALORE CAMPO OUT O95LID (LIVELLO DATI)
+147900970630     C*------------------------------------------------------------------------*
+148000970630     C           GESLID    BEGSR
+148100970604     C*
+148200970630IF  1C           O95FIT    IFEQ 'S'
+148300970630     C                     MOVEL'1'       O95LID
+148400970627X   1C                     ELSE
+148500970627     C                     MOVEL*BLANKS   O95LID
+148600970627IF  2C           O95SIN    IFNE *BLANKS
+148700970627     C                     MOVEL'4'       O95LID
+148800970627X   2C                     ELSE
+148900970627IF  3C           O95LOC    IFNE *BLANKS
+149000970627     C                     MOVEL'3'       O95LID
+149100970627X   3C                     ELSE
+149200970627IF  4C           O95CAP    IFNE *BLANKS
+149300970627     C                     MOVEL'2'       O95LID
+149400970627E   4C                     ENDIF
+149500970627E   3C                     ENDIF
+149600970627E   2C                     ENDIF
+149700970627E   1C                     ENDIF
+149800970627     C*
+149900970604     C                     ENDSR
+150000970703     C*------------------------------------------------------------------------*
+150100970703     C* GESLIA - DETERMINA VALORE CAMPO OUT O95LIA (AFFIDABILITA')
+150200970703     C*------------------------------------------------------------------------*
+150300970703     C           GESLIA    BEGSR
+150400970703     C*
+150500970710     C                     MOVEL*BLANKS   O95LIA
+150600970703     C* SE TROVATO CAP FITTIZIO
+150700970703     C*    SE LA NAZIONE CONSENTE CAP FITTIZI: AFFIDABILITA' 2 (MEDIA)
+150800970703     C*    SE LA NAZIONE NON CONSENTE CAP FITTIZI: AFFIDABILITA' 0 (BASSA)
+150900970703IF  1C           O95FIT    IFEQ 'S'
+151000970703IF  2C           §15UCF    IFEQ 'S'
+151100970703     C                     MOVEL'2'       O95LIA
+151200970703X   2C                     ELSE
+151300970703     C                     MOVEL'0'       O95LIA
+151400970703E   2C                     ENDIF
+151500970703E   1C                     ENDIF
+151600970703     C*
+151700970703     C* SE IL CAP TROVATO RICHIEDE LA LOCALITA E QUESTA NON E' STATA TROVATA
+151800970703     C* AFFIDABILITA' 1 (CAP RICHIEDE LOC)
+151900970703IF  1C           O95LIA    IFEQ *BLANKS
+152000970703     C           O95ESL    ANDEQ'S'
+152100970703     C           O95LOC    ANDEQ*BLANKS
+152200970703     C                     MOVEL'1'       O95LIA
+152300970703E   1C                     ENDIF
+152400970703     C*
+152500970703     C* SE TROVATO ALMENO UN DATO COERENTE (ES. CAP E PRV) AFF.=1 , SE TROVATI 2 DATI
+152600970703     C* COERENTI (CAP,LOC,PRV) AFFIDABILITA' 3 (ALTA)
+152700970703IF  1C           O95LIA    IFEQ *BLANKS
+152800970710     C                     MOVEL'0'       O95LIA
+152900970703IF  2C           AFFLS     IFEQ 1
+153000970703     C                     MOVEL'2'       O95LIA
+153100970703E   2C                     ENDIF
+153200970703IF  2C           AFFLS     IFEQ 2
+153300970703     C                     MOVEL'3'       O95LIA
+153400970703E   2C                     ENDIF
+153500970703E   1C                     ENDIF
+153600970703     C*
+153700970703     C                     ENDSR
+153800970519     C*------------------------------------------------------------------------*
+153900970519     C* CHKCPT - CONTROLLO ESISTENZA TEMPI CONSEGNA
+154000970519     C*------------------------------------------------------------------------*
+154100970519     C           CHKCPT    BEGSR
+154200970519     C*
+154300970519     C                     MOVEL'N'       $ERR
+154400970519     C                     MOVEL*OFF      *IN99
+154500970523     C                     Z-ADDO95VER    CPTVER
+154600970519     C                     MOVELO95TTC    CPTTTC
+154700970519     C                     MOVELI95TSP    CPTTSP
+154800970523     C           KCPT      CHAINAZCPT01L             99
+154900970519IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+155000970519     C           CPTATB    ORNE *BLANKS                    *ANNULLATO
+155100970519     C                     MOVELMSG,15    $MSG             *T.TEMPO/SERV. NON TROV.
+155200970519     C                     EXSR ERRORE
+155300970519X   1C                     ELSE                            *T.TEMPO TROVATO
+155400970520     C                     EXSR TEMOUT
+155500970519E   1C                     ENDIF
+155600970519     C*
+155700970519     C                     ENDSR
+155800970520     C*------------------------------------------------------------------------*
+155900970520     C*   TEMOUT - PORTA CAMPI DA FILE TEMPI ALLA DS OUTPUT
+156000970520     C*------------------------------------------------------------------------*
+156100970520     C           TEMOUT    BEGSR
+156200970520     C*
+156300970520     C* ----TEMPI----
+156400970520     C                     Z-ADDCPTTTC    O95TTC
+156500970520     C                     MOVELCPTDTC    O95DTC
+156600970701     C                     MOVELCPTTSP    O95TSP
+156700970520     C                     Z-ADDCPT0IN    O950IN
+156800970520     C                     Z-ADDCPT0CN    O950CN
+156900970520     C                     Z-ADDCPT1IN    O951IN
+157000970520     C                     Z-ADDCPT1CN    O951CN
+157100970520     C                     Z-ADDCPTTIS    O95TIS
+157200970520     C                     Z-ADDCPTTCS    O95TCS
+157300970520     C                     Z-ADDCPTTLD    O95TLD
+157400970520     C*
+157500970520     C                     ENDSR
+157600970519     C*------------------------------------------------------------------------*
+157700970520     C* CHKCPE - CONTROLLO ECCEZIONI LINEE/ZONE
+157800970519     C*------------------------------------------------------------------------*
+157900970519     C           CHKCPE    BEGSR
+158000970519     C*
+158100970519     C                     MOVEL'N'       $ERR
+158200970519     C                     MOVEL*OFF      *IN99
+158300970523     C                     Z-ADDO95VER    CPEVER
+158400970519     C                     MOVELO95NAR    CPENAR
+158500970519     C                     MOVELO95CAP    CPECAP
+158600970519     C                     MOVELI95TFP    CPETFP
+158700970523     C           KCPE      CHAINAZCPE01L             99
+158800970519IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+158900970519     C           CPEATB    ORNE *BLANKS                    *ANNULLATO
+159000970519X   1C                     ELSE
+159100970520     C                     EXSR ECCOUT
+159200970519E   1C                     ENDIF
+159300970519     C*
+159400970519     C                     ENDSR
+159500970520     C*------------------------------------------------------------------------*
+159600970520     C*   ECCOUT - PORTA CAMPI DA FILE ECCEZIONI ALLA DS OUTPUT
+159700970520     C*------------------------------------------------------------------------*
+159800970520     C           ECCOUT    BEGSR
+159900970520     C*
+160000970520     C* ----GENERALI----
+160100020603     C* NON FA LE SOSTITUZIONE
+160200020603     C* SE ESISTONO CONSEGNE PARTICOLARI, NON FA LE SOSTITUZIONE PER LE ECCEZIONI
+160300020603     C                     MOVELI95FI2    A1S
+160400020603     C                     MOVE I95FI2    A1D
+160500020603IF  0C           A1S       IFEQ 'S'                        *SOLO SE SUPERMERCATI
+160600020715     C           O95LIL    ANDEQ'O'
+160700020603     C           A1D       OREQ 'S'
+160800020715     C           O95LIL    ANDEQ'O'
+160900020603X   0C                     ELSE
+161000970616     C* SE LIV. SCELTA LNA/ZNC E' FERMO DEPOSITO NON CONSIDERO LNA/ZNC ECCEZIONE
+161100970616IF  1C           O95LIL    IFNE 'F'                        *SE LIV. LNA/ZNC <> F.DEP.
+161200970520     C                     Z-ADDCPELNA    O95LNA           *LINEA ARR.
+161300970520     C                     Z-ADDCPEZNC    O95ZNC           *ZONA CONS.
+161400970606IF  2C           O95LIL    IFEQ 'O'                        *SE LIV. LNA/ZNC OLTRE
+161500970617     C           CPELOL    ANDNE*ZEROS                     *LNA <> 0
+161600970520     C                     Z-ADDCPELOL    O95LNA           *LINEA ARRIVO
+161700970520     C                     Z-ADDCPEZOL    O95ZNC           *ZONA CONSEGNA
+161800970520E   2C                     ENDIF
+161900970606IF  2C           O95LIL    IFEQ 'S'                        *SE LIV. LNA/ZNC SOTTO
+162000970617     C           CPELOS    ANDNE*ZEROS                     *LNA <> 0
+162100970616     C                     Z-ADDCPELOS    O95LNA           *LINEA ARRIVO
+162200970616     C                     Z-ADDCPEZOS    O95ZNC           *ZONA CONSEGNA
+162300970606E   2C                     ENDIF
+162400970606E   1C                     ENDIF
+162500020603E   0C                     ENDIF
+162600970520     C* ---ECCEZIONI---
+162700970520     C                     Z-ADDCPETFP    O95TFP
+162800970520     C                     Z-ADDCPELNA    O95ELA
+162900970520     C                     Z-ADDCPEZNC    O95EZC
+163000970606     C                     Z-ADDCPELOL    O95ELO
+163100970606     C                     Z-ADDCPEZOL    O95EZO
+163200970606     C                     Z-ADDCPELOS    O95ELS
+163300970606     C                     Z-ADDCPEZOS    O95EZS
+163400970703     C                     Z-ADDCPELO2    O95EL2
+163500970703     C                     Z-ADDCPEZO2    O95EZ2
+163600970520     C*
+163700970520     C                     ENDSR
+163800000419     C*------------------------------------------------------------------------*
+163900000419     C* REPERISCE INSTRADAMENTO POSTE
+164000000419     C*------------------------------------------------------------------------*
+164100000419     C           REPRDS    BEGSR
+164200000419     C*
+164300000629     C* NON REPERISCE L'INSTRADAMENTO POSTE SE CONTROLLO FORMALE CAP E
+164400000629     C* SE IL CAP O LA LOCALITA' -SE DIVERSA DAL CAP- SONO OBSOLETI
+164500000419IF  1C           I95TCN    IFNE '1'
+164600000629IF  2C           O95CF1    IFEQ 'O '                       *CAP OBSOLETO o
+164700000629     C           O95LIV    OREQ 'L'                        *LOCALITA' <> CAP e
+164800000629     C           O95LF1    ANDEQ'O '                       *LOCALITA' OBSOLETA
+164900000629X   2C                     ELSE
+165000000419     C                     MOVEL'S'       $LPRDS  1        *PGM LANCIATO (' '/S)
+165100000419     C                     CLEARTISI98                     *AZZERA DS PARAMETRI
+165200000419     C                     MOVELI95TLA    I98TLA
+165300000421     C                     MOVELI95TCN    I98TCN
+165400000419     C                     MOVELI95FFD    I98FFD
+165500000420     C                     Z-ADDI95DAT    I98DAT
+165600000419     C                     MOVELO95NAR    I98NAR
+165700000419     C                     Z-ADDO95VER    I98VER
+165800000419     C                     MOVELO95CAP    I98CAP
+165900000419     C                     MOVELO95LOC    I98LOC
+166000000419     C                     MOVELO95LIV    I98LIV
+166100000612     C                     MOVELI95FRE    I98FRE
+166200000612     C                     Z-ADDI95TFP    I98TFP
+166300000612     C                     MOVELO95ESE    I98ESE
+166400000612     C                     MOVELO95LID    I98LID
+166500000612     C                     MOVELO95LIL    I98LIL
+166600000419     C                     CALL 'TISI98R'
+166700000419     C                     PARM           TISI98
+166800000629IF  3C           O98ERR    IFNE *BLANKS                    *ERRORE
+166900000516     C                     MOVELO98MSG    $MSG
+167000000419     C                     EXSR ERRORE
+167100000421     C                     CLEARDRDS                       *IMPOSTA OUTPUT
+167200000629E   3C                     ENDIF
+167300000419     C                     EXSR RDSOUT                     *IMPOSTA OUTPUT
+167400000629E   2C                     ENDIF
+167500000629E   1C                     ENDIF
+167600000419     C*
+167700000419     C                     ENDSR
+167800000419     C*------------------------------------------------------------------------*
+167900000419     C* PORTA CAMPI OUTPUT DELLA TISI98DS NELLA DESCRIZIONE VERSIONE
+168000000419     C*------------------------------------------------------------------------*
+168100000419     C           RDSOUT    BEGSR
+168200000419     C*
+168300000419     C*
+168400000419     C* ----GENERALI----
+168500000419     C                     Z-ADDO98LNA    O95LNA           *LINEA ARRIVO
+168600000419     C                     Z-ADDO98ZNC    O95ZNC           *ZONA CONSEGNA
+168700000419     C*
+168800000419     C* ----INSTRADAMENTO POSTE----
+168900000419     C                     CLEARDRDS                       *AZZERA DS
+169000000419     C                     Z-ADDO98LNA    RDSLNA            -LINEA ARRIVO
+169100000419     C                     Z-ADDO98ZNC    RDSZNC            -ZONA CONSEGNA
+169200000419     C                     Z-ADDO98ZFD    RDSZFD            -FERMO DEPOSITO
+169300000419     C                     Z-ADDO98UPI    RDSUPI            -UFFICIO POSTALE
+169400000419     C                     Z-ADDO98RS2    RDSRS2            -RAGGRUPPAMENTO 2
+169500000419     C                     MOVELO98RS1    RDSRS1            -RAGGRUPPAMENTO 1
+169600000419     C                     MOVELDRDS      O95RDS    P      *DESCRIZIONE VERSIONE
+169700000419     C*
+169800000419     C                     ENDSR
+169900021028     C*------------------------------------------------------------------------*
+170000021028     C*   OUTDPD - PORTA CAMPI INSTRADAMENTO DPD IN OUT GENERALI
+170100021028     C*------------------------------------------------------------------------*
+170200021028     C           OUTDPD    BEGSR
+170300021028     C*
+170400021028     C* SOSTITUISCE LA LINEA DI ARRIVO GENERAE CON QUELLA DELLA TABELLA NAZIONI
+170500021028     C                     Z-ADD§15LAD    O95LNA           *LINEA ARRIVO
+170600021028     C*
+170700021028     C                     ENDSR
+170800020211     C*------------------------------------------------------------------------*
+170900020211     C*   OUTFED - PORTA CAMPI INSTRADAMENTO FEDEX IN OUT GENERALI
+171000020211     C*------------------------------------------------------------------------*
+171100020211     C           OUTFED    BEGSR
+171200020211     C*
+171300020211     C* AZZERA I CAMPI DI OUT DELLA DS SPECIFICI DEI SINGOLI ARCHVI
+171400020211     C                     EXSR AZZCAP                     *AZZERA OUT CAP
+171500020211     C                     EXSR AZZLOC                     *AZZERA OUT LOC
+171600020211     C                     EXSR AZZECC                     *AZZERA OUT ECC
+171700020211     C                     EXSR AZZSIN                     *AZZERA OUT SIN
+171800020211     C*
+171900020211     C* PRENDE I DATI DATTA TABELLA NAZIONI
+172000020211     C                     MOVEL§15LAF    O95LNA           *LINEA ARRIVO
+172100020211IF  1C           I95TPO    IFEQ 'F'                        -FRANCO
+172200020211     C                     MOVEL01        O95ZNC           *ZONA CONSEGNA
+172300020211X   1C                     ELSE                            -ASSEGNATO
+172400020211     C                     MOVEL02        O95ZNC           *ZONA CONSEGNA
+172500020211E   1C                     ENDIF
+172600020211     C                     MOVEL§15TTC    O95TTC           *TIPO TEMPO CONSEGNA
+172700020211     C                     MOVEL§15INL    O95ISO           *FLAG INOLTRO
+172800020211     C                     MOVEL§15CTS    O95CTS           *CODICE TASSAZIONE
+172900020211     C                     MOVEL'S'       O95PII
+173000020211     C                     MOVEL'S'       O95PID
+173100020211     C                     MOVEL'S'       O95PIS
+173200020211     C                     MOVEL'N'       O95GDD
+173300020211     C*
+173400020211     C* SE RICHIESTO RECUPERO TEMPI CONSEGNA
+173500020211IF  1C           $ERR      IFEQ 'N'
+173600020211IF  2C           I95FRT    IFEQ 'S'                        *RICH.TEMPI CONS.
+173700020211     C           O95TTC    ANDNE*ZEROS
+173800020211     C                     EXSR CHKCPT
+173900020211E   2C                     ENDIF
+174000020211E   1C                     ENDIF
+174100020211     C*
+174200020211     C                     ENDSR
+174300970519     C*------------------------------------------------------------------------*
+174400970519     C*   AZZERA - AZZERA O ABBLENCA(?) TUTTI I CAMPI IN OUTPUT DELLA ROUTINE
+174500970519     C*------------------------------------------------------------------------*
+174600970519     C           AZZERA    BEGSR
+174700970604     C                     EXSR AZZCAP                     *AZZERA OUT CAP
+174800970604     C                     EXSR AZZLOC                     *AZZERA OUT LOC
+174900970606     C                     EXSR AZZECC                     *AZZERA OUT ECC
+175000970605     C                     EXSR AZZSIN                     *AZZERA OUT SIN
+175100970519     C                     CLEARO95ERR
+175200970519     C                     CLEARO95MSG
+175300970606     C                     CLEARO95LID
+175400970606     C                     CLEARO95LIL
+175500970627     C                     CLEARO95LIA
+175600970618     C                     CLEARO952LN
+175700970519     C                     CLEARO95NAR
+175800970519     C                     CLEARO95CAP
+175900970519     C                     CLEARO95LNA
+176000970519     C                     CLEARO95ZNC
+176100970519     C                     CLEARO95ISO
+176200970519     C                     CLEARO95CTS
+176300970519     C                     CLEARO95CTE
+176400970519     C                     CLEARO95PII
+176500970519     C                     CLEARO95PID
+176600970519     C                     CLEARO95PIS
+176700970519     C                     CLEARO95GDD
+176800980602     C                     CLEARO95FL1
+176900980602     C                     CLEARO95FL2
+177000980602     C                     CLEARO95GF1
+177100980602     C                     CLEARO95GF2
+177200980602     C                     CLEARO95GF3
+177300980602     C                     CLEARO95GF4
+177400970530     C                     CLEARO95VER
+177500970530     C                     CLEARO95RDE
+177600970530     C                     CLEARO95RSC
+177700970530     C                     CLEARO95RDS
+177800970519     C                     CLEARO95TTC
+177900970519     C                     CLEARO95DTC
+178000970521     C                     CLEARO95TSP
+178100970519     C                     CLEARO950IN
+178200970519     C                     CLEARO950CN
+178300970519     C                     CLEARO951IN
+178400970519     C                     CLEARO951CN
+178500970519     C                     CLEARO95TIS
+178600970519     C                     CLEARO95TCS
+178700970519     C                     CLEARO95TLD
+178800970521     C                     CLEARO95TF1
+178900970521     C                     CLEARO95TF2
+179000970519     C                     CLEARO95IND
+179100970519     C                     ENDSR
+179200970604     C*------------------------------------------------------------------------*
+179300970604     C*   AZZCAP - AZZERA TUTTI I CAMPI OUTPUT CAPPARIO
+179400970604     C*------------------------------------------------------------------------*
+179500970604     C           AZZCAP    BEGSR
+179600970604     C                     CLEARO95CLA
+179700970604     C                     CLEARO95CZC
+179800970604     C                     CLEARO95PRV
+179900970604     C                     CLEARO95PRA
+180000970604     C                     CLEARO95FLG
+180100970604     C                     CLEARO95FIT
+180200970604     C                     CLEARO95CIS
+180300970604     C                     CLEARO95CZF
+180400970604     C                     CLEARO95CLK
+180500970604     C                     CLEARO95CLM
+180600970604     C                     CLEARO95CLO
+180700970604     C                     CLEARO95CZO
+180800970604     C                     CLEARO95CCT
+180900970604     C                     CLEARO95CCE
+181000970604     C                     CLEARO95CTC
+181100970604     C                     CLEARO95CPI
+181200970604     C                     CLEARO95CPD
+181300970604     C                     CLEARO95CPS
+181400970604     C                     CLEARO95CGD
+181500970604     C                     CLEARO95ESE
+181600970604     C                     CLEARO95ESL
+181700970604     C                     CLEARO95CF1
+181800970604     C                     CLEARO95CF2
+181900970604     C                     ENDSR
+182000970604     C*------------------------------------------------------------------------*
+182100970604     C*   AZZLOC - AZZERA TUTTI I CAMPI OUTPUT LOCALITA
+182200970604     C*------------------------------------------------------------------------*
+182300970604     C           AZZLOC    BEGSR
+182400970604     C                     CLEARO95LOC
+182500970604     C                     CLEARO95LIV
+182600970604     C                     CLEARO95DLV
+182700970604     C                     CLEARO95LLA
+182800970604     C                     CLEARO95LZC
+182900970604     C                     CLEARO95LIS
+183000970604     C                     CLEARO95LZF
+183100970604     C                     CLEARO95LLK
+183200970604     C                     CLEARO95LLM
+183300970604     C                     CLEARO95LLO
+183400970604     C                     CLEARO95LZO
+183500970604     C                     CLEARO95LKS
+183600970604     C                     CLEARO95LMS
+183700970604     C                     CLEARO95LLS
+183800970604     C                     CLEARO95LZS
+183900970604     C                     CLEARO95LK2
+184000970604     C                     CLEARO95LM2
+184100970604     C                     CLEARO95LL2
+184200970604     C                     CLEARO95LZ2
+184300970604     C                     CLEARO95LCT
+184400970604     C                     CLEARO95LCE
+184500970604     C                     CLEARO95LTC
+184600970604     C                     CLEARO95LPI
+184700970604     C                     CLEARO95LPD
+184800970604     C                     CLEARO95LPS
+184900970604     C                     CLEARO95LGD
+185000970604     C                     CLEARO95ESS
+185100970604     C                     CLEARO95ESV
+185200970604     C                     CLEARO95LF1
+185300970604     C                     CLEARO95LF2
+185400970604     C                     ENDSR
+185500970606     C*------------------------------------------------------------------------*
+185600970606     C*   AZZECC - AZZERA CAMPI ECCEZIONI DS OUTPUT
+185700970606     C*------------------------------------------------------------------------*
+185800970606     C           AZZECC    BEGSR
+185900970606     C                     CLEARO95TFP
+186000970606     C                     CLEARO95ELA
+186100970606     C                     CLEARO95EZC
+186200970606     C                     CLEARO95ELO
+186300970606     C                     CLEARO95EZO
+186400970606     C                     CLEARO95ELS
+186500970606     C                     CLEARO95EZS
+186600970703     C                     CLEARO95EL2
+186700970703     C                     CLEARO95EZ2
+186800970703     C                     ENDSR
+186900970605     C*------------------------------------------------------------------------*
+187000970605     C*   AZZSIN - AZZERA CAMPI SINONIMI DS OUTPUT
+187100970605     C*------------------------------------------------------------------------*
+187200970605     C           AZZSIN    BEGSR
+187300970605     C                     CLEARO95SIN
+187400970605     C                     ENDSR
+187500970605     C*------------------------------------------------------------------------*
+187600970604     C*   MESSAG - ROUTINE GESTIONE MESSAGGI MA NON ERRORI
+187700970604     C*------------------------------------------------------------------------*
+187800970604     C           MESSAG    BEGSR
+187900970604     C*
+188000970605     C******************** MOVEL'S'       $ERR
+188100970604     C           O95MSG    IFEQ *BLANKS
+188200970604     C                     MOVEL$MSG      O95MSG
+188300970604     C                     ENDIF
+188400970604     C*
+188500970604     C                     ENDSR
+188600970516     C*------------------------------------------------------------------------*
+188700970409     C*   ERRORE - ROUTINE GESTIONE ERRORI
+188800970516     C*------------------------------------------------------------------------*
+188900970409     C           ERRORE    BEGSR
+189000970408     C*
+189100970409     C                     MOVEL'S'       $ERR
+189200970604     C                     EXSR AZZERA                     *AZZ.TUTTI CAMPI OUT
+189300970516     C                     MOVEL$MSG      O95MSG
+189400000419     C                     MOVE $MSG      O95ERR
+189500970408     C*
+189600970408     C                     ENDSR
+189700000419     C*------------------------------------------------------------------------*
+189800000419     C* OPERAZIONI FINALI
+189900000419     C*------------------------------------------------------------------------*
+190000000419     C           FINSR     BEGSR
+190100000419     C*
+190200000419     C* LANCIA IN CHIUSURA I PGM (SOLO SE CHIAMATI)
+190300000419IF  1C           $LPRDS    IFEQ 'S'                        *PGM LANCIATO
+190400000419     C                     CLEARTISI98                     *AZZERA DS PARAMETRI
+190500000419     C                     MOVELI95TLA    I98TLA
+190600000419     C                     CALL 'TISI98R'
+190700000419     C                     PARM           TISI98
+190800000419E   1C                     ENDIF
+190900000419     C*
+191000000419     C                     ENDSR
+191100970516     C*------------------------------------------------------------------------*
+191200930414     C*   RUTINZ - ROUTINE INIZIALE
+191300970516     C*------------------------------------------------------------------------*
+191400930414     C           RUTINZ    BEGSR
+191500930414     C*
+191600930414     C* PARAMETRI IN INPUT ALLA ROUTINE
+191700930414     C           *ENTRY    PLIST
+191800970516     C                     PARM           TISI95
+191900040528     C*
+192000040528     C* CONVERTO SUBITO IN MAIUSCOLO LA LOCALITA IN INPUT
+192100040528     C                     MOVEALEM       MINU   32
+192200040528     C                     MOVEALET       MAIU   32
+192300040528     C           MINU:MAIU XLATEI95LOC    I95LOC
+192400970523     C*
+192500970530     C* CHIAVE LETTURA AZCPR02L - COMPLETA
+192600970523     C           KCPR      KLIST
+192700970523     C                     KFLD           CPRDDE
+192800941227     C*
+192900970515     C* CHIAVE LETTURA AZCPC01L - COMPLETA
+193000970516     C           KCPC      KLIST
+193100970523     C                     KFLD           CPCVER
+193200970515     C                     KFLD           CPCNAR
+193300970515     C                     KFLD           CPCCAP
+193400970516     C*
+193500970516     C* CHIAVE LETTURA AZCPL01L - COMPLETA
+193600970605     C           KCPL1     KLIST
+193700970523     C                     KFLD           CPLVER
+193800970516     C                     KFLD           CPLNAR
+193900970516     C                     KFLD           CPLCAP
+194000970516     C                     KFLD           CPLLOC
+194100970605     C* CHIAVE LETTURA AZCPL02L - COMPLETA
+194200970605     C           KCPL2     KLIST
+194300970605     C                     KFLD           CPLVER
+194400970605     C                     KFLD           CPLNAR
+194500970605     C                     KFLD           CPLLOC
+194600970516     C*
+194700970605     C* CHIAVE LETTURA AZCPS04L - COMPLETA
+194800970605     C           KCPS4     KLIST
+194900970523     C                     KFLD           CPSVER
+195000970516     C                     KFLD           CPSNAR
+195100970516     C                     KFLD           CPSCAP
+195200970516     C                     KFLD           CPSSIN
+195300970605     C* CHIAVE LETTURA AZCPS02L - COMPLETA
+195400970605     C           KCPS2     KLIST
+195500970605     C                     KFLD           CPSVER
+195600970605     C                     KFLD           CPSNAR
+195700970605     C                     KFLD           CPSSIN
+195800970627     C* CHIAVE LETTURA AZCPS01L - COMPLETA
+195900970627     C           KCPS1     KLIST
+196000970627     C                     KFLD           CPSVER
+196100970627     C                     KFLD           CPSNAR
+196200970627     C                     KFLD           CPSCAP
+196300970627     C                     KFLD           CPSLOC
+196400970627     C                     KFLD           CPSSIN
+196500970516     C*
+196600970516     C* CHIAVE LETTURA AZCPE01L - COMPLETA
+196700970519     C           KCPE      KLIST
+196800970523     C                     KFLD           CPEVER
+196900970519     C                     KFLD           CPENAR
+197000970519     C                     KFLD           CPECAP
+197100970519     C                     KFLD           CPETFP
+197200970516     C*
+197300970519     C* CHIAVE LETTURA AZCPT01L - COMPLETA
+197400970519     C           KCPT      KLIST
+197500970523     C                     KFLD           CPTVER
+197600970519     C                     KFLD           CPTTTC
+197700970519     C                     KFLD           CPTTSP
+197800930414     C*
+197900930414     C* CHIAVE LETTURA TABEL00F - COMPLETA
+198000930414     C           KEYTAB    KLIST
+198100930414     C                     KFLD           KTBUTE
+198200930414     C                     KFLD           KTBCOD
+198300930414     C                     KFLD           KTBKEY
+198400930414     C*
+198500930414     C* DEFINISCO CAMPI CHIAVE
+198600930414     C           *LIKE     DEFN TBLKUT    KTBUTE
+198700930414     C           *LIKE     DEFN TBLCOD    KTBCOD
+198800930414     C           *LIKE     DEFN TBLKEY    KTBKEY
+198900970605     C           *LIKE     DEFN CPCCAP    WCAP
+199000970605     C           *LIKE     DEFN CPLLOC    WLOC
+199100970605     C           *LIKE     DEFN CPSSIN    WSIN
+199200970627     C           *LIKE     DEFN CPCCAP    WOCAP
+199300970627     C           *LIKE     DEFN CPLLOC    WOLOC
+199400970627     C           *LIKE     DEFN CPSSIN    WOSIN
+199500970630     C           *LIKE     DEFN I95PRV    J95PRV
+199600970630     C           *LIKE     DEFN I95TCN    J95TCN
+199700971105     C           *LIKE     DEFN I95LOC    J95LOC
+199800000727     C           *LIKE     DEFN I95LOC    Y95LOC
+199900000727     C           *LIKE     DEFN CPSSIN    LSIN
+200000930414     C*
+200100930414     C* RECUPERO IL CODICE DELL'AZIENDA
+200200930414     C                     Z-ADD1         CODUT   10
+200300970519     C                     MOVEL'N'       $ERR    1
+200400970409     C                     MOVEL*BLANKS   $MSG   78
+200500970605     C                     MOVEL*BLANKS   WCAP
+200600970605     C                     MOVEL*BLANKS   WLOC
+200700970605     C                     MOVEL*BLANKS   WSIN
+200800970703     C*
+200900970703     C* IMPOSTO A ZERO I CAMPI NUMERICI IN INPUT NON OBBLIGATORI
+201000970703     C                     MOVE *ZEROS    W8      8
+201100970703     C                     MOVE I95LKG    W8
+201200970703     C                     TESTN          W8         99
+201300970703     C  N99                Z-ADD*ZEROS    I95LKG
+201400970703     C                     MOVE *ZEROS    W8      8
+201500970703     C                     MOVE I95LMC    W8
+201600970703     C                     TESTN          W8         99
+201700970703     C  N99                Z-ADD*ZEROS    I95LMC
+201800970703     C                     MOVE *ZEROS    W8      8
+201900970703     C                     MOVE I95TFP    W8
+202000970703     C                     TESTN          W8         99
+202100970703     C  N99                Z-ADD*ZEROS    I95TFP
+202200930414     C*
+202300930414     C* AZZERO I CAMPI IN OUTPUT DEL PGM
+202400970521     C                     EXSR AZZERA
+202500970630     C*
+202600970630     C* SALVO CAMPI IN INPUT CHE POTREBBERO ESSERE MODIFICATI PER POTER REIMPOSTARLI
+202700970630     C* ALLA FINE DEL PGM
+202800970630     C                     MOVELI95PRV    J95PRV
+202900970630     C                     MOVELI95TCN    J95TCN
+203000930414     C*
+203100930414     C                     ENDSR
+203200970516     O*------------------------------------------------------------------------*
+203300970516** MSG - MESSAGGI
+203400970516TISI95R- Nazione inesistente.                                                1 1
+203500970516TISI95R- CAP formalmente errato.                                             2 2
+203600980602TISI95R- Richiesti tempi di consegna senza inserire il tipo servizio.        3 3
+203700980602TISI95R- Richiesto controllo eccezioni senza AS di partenza.                 4 4
+203800970630TISI95R- 5                                                                   5 5
+203900970630TISI95R- 6                                                                   6 6
+204000970630TISI95R- 7                                                                   7 7
+204100970630TISI95R- CAP inesistente.                                                    8 8
+204200970630TISI95R- Provincia diversa dalla provincia della località.                   9 9
+204300970630TISI95R- Tipo controllo errato.                                              A10
+204400970630TISI95R- Località inesistente.                                               B11
+204500970630TISI95R- Provincia inesistente.                                              C12
+204600970630TISI95R- Località inesistente in questo CAP.                                 D13
+204700970630TISI95R- Provincia diversa da quella del CAP.                                E14
+204800970630TISI95R- Tipo tempo/tipo servizio non trovati.                               F15
+204900970630TISI95R- Versione cappario non trovata.                                      G16
+205000970630TISI95R- Località esistente ma non univoca.                                  H17
+205100970630TISI95R- Località obbligatoria.                                              I18
+205200970630TISI95R- 19                                                                  L19
+205300970630TISI95R- Errore generico.                                                    M20
+205400150203** LET
+205500040528ABCDEFGHIJKLMNOPQRSTUVWXYZOAUEEI
+205600150203** LEM
+205700040528abcdefghijklmnopqrstuvwxyzòàùèéì
+205800150203** NUM
+2059009705160123456789

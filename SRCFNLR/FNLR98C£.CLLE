@@ -1,0 +1,33 @@
+000100950524             PGM        PARM(&KPJBA)
+000200950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000300030722             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000400030722             RTVJOBA    JOB(&DSP)
+000500950911
+000600030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+000700030722/* procedura/programma fosse finita in maniera anomala occorre */
+000800030722/* parare il colpo riducendo il male al male minore ossia      */
+000900030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+001000030722/* metà piuttosto che confermarle. E ripartendo da una         */
+001100030722/* situazione pulita.                                          */
+001200030708             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001300030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+001400030722             ENDCMTCTL
+001500030722             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001600030722             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001700030722             ENDDO
+001800030708
+001900950524        /*   Eseguo CALL a pgm preparazione distinta da spunte   */
+002000030730             CALL       PGM(FNLR98R) PARM(&KPJBA)
+002100030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+002200030708             ROLLBACK
+002300030730             SNDBRKMSG  MSG('ERRORE Il programma è +
+002400030730                          terminato in modo anomalo. +
+002500030722                          Segnalare il +
+002600030722                          problema alla persona responsabile della +
+002700030730                          sua manutenzione.') TOMSGQ(&DSP)
+002800030728             RCLRSC     LVL(*CALLER)
+002900030708             ENDDO
+003000030722
+003100030722             ENDCMTCTL
+003200950911
+003300950524             ENDPGM

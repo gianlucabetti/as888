@@ -1,0 +1,51 @@
+000100971127/*----------------------------------------------------------------------------*/
+000200111010/* AVVIA PGM Abilitazione bolle alla consegna                                 */
+000300111007/*           senza fare SMBJOB ma call diretta                                */
+000400971127/*----------------------------------------------------------------------------*/
+000500971127             PGM
+000600040402             DCL        VAR(&NOLIB) TYPE(*CHAR) LEN(1) VALUE('S')
+000700111007             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+000800111114             DCL        VAR(&SITRASM) TYPE(*CHAR) LEN(1) VALUE('S')
+000900111007             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+001000111114             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+001100111114             DCL        VAR(&SYS5) TYPE(*CHAR) LEN(5)
+001200111114
+001300111114             RTVNETA    SYSNAME(&SYSNAM)
+001400111114             CHGVAR     VAR(&SYS5) VALUE(%SST(&SYSNAM  1 5))
+001500971127
+001600971127/* IMPOSTA LA PRIORITA' DEL JOB */
+001700971127             CHGJOB     RUNPTY(20)
+001800040621
+001900040621/* se sono su As di backup esco dal pgm  */
+002000040621             CHKOBJ     OBJ(QGPL/MIMIXBACK) OBJTYPE(*DTAARA)
+002100040621             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOBACK))
+002200040621             goto       fine
+002300040621NOBACK:
+002400040507
+002500111114/* Se sottosistema non è SETRAS --> ambiente di prova           */
+002600111114
+002700111114             IF         COND(&SYS5   *EQ 'AS888') THEN(do)
+002800111007
+002900111007             CALL       PGM(TRUL07C) PARM('FILTRAPFP ')
+003000040507
+003100111007             GOTO       CMDLBL(GUFO)
+003200040507             enddo
+003300040402
+003400111114/* Se sottosistema     è SETRAS -->                             */
+003500111114             IF         COND(&SYS5   *NE 'AS888') THEN(do)
+003600111007             CALL       PGM(TRUL07C) PARM('FILTRA201 ')
+003700111007             ENDDO
+003800111007
+003900111007 GUFO:
+004000111109             CALL       PGM(FNLR27R2) PARM(&sitrasm)
+004100111109             CALL       PGM(FNLR27R) PARM(&KPJBA &CHIUDI &sitrasm)
+004200111114
+004300111114             CHGVAR     VAR(&SITRASM) VALUE('N')
+004400111007
+004500111007             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(FINE))
+004600111007
+004700111114             DLYJOB     DLY(25)
+004800111007             GOTO       CMDLBL(GUFO)
+004900111007
+005000111007 FINE:
+005100111007             ENDPGM

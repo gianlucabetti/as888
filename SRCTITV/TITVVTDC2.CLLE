@@ -1,0 +1,109 @@
+000100121221/*PARMS ACTGRP(*CALLER)                                                       */
+000200121221/*PARMS                                                                       */
+000300121221/*PARMS                                                                       */
+000400121221/*PARMS                                                                       */
+000500121221/*PARMS                                                                       */
+000600010202             PGM        PARM(&CCM &MBR &OPZ)
+000700990908
+000800010202             DCL        VAR(&CCM) TYPE(*CHAR) LEN(8)
+000900010202             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001000010202             DCL        VAR(&OPZ) TYPE(*CHAR) LEN(1)
+001100990921
+001200000710
+001300990908
+001400010202             IF         COND(&OPZ = '1') THEN(DO)
+001500990913/* Aggiungo il membro al file di arrivo -----------------------------*/
+001600021017             CHKOBJ     OBJ(FIVATWWR) OBJTYPE(*FILE) MBR(&MBR)
+001700001013             MONMSG     MSGID(CPF9815) EXEC(DO)
+001800021017             ADDPFM     FILE(FIVATWWR) MBR(&MBR) TEXT(&CCM)
+001900001013             MONMSG     MSGID(CPF0000) EXEC(DO)
+002000001013             DLYJOB     DLY(300)
+002100021017             ADDPFM     FILE(FIVATWWR) MBR(&MBR) TEXT(&CCM)
+002200001013             ENDDO
+002300121107             ENDDO
+002400121107/* Aggiungo il membro al file di arrivo -----------------------------*/
+002500121107             CHKOBJ     OBJ(EDIVABWR) OBJTYPE(*FILE) MBR(&MBR)
+002600121107             MONMSG     MSGID(CPF9815) EXEC(DO)
+002700121107             ADDPFM     FILE(EDIVABWR) MBR(&MBR) TEXT(&CCM)
+002800121107             MONMSG     MSGID(CPF0000) EXEC(DO)
+002900121107             DLYJOB     DLY(300)
+003000121107             ADDPFM     FILE(EDIVABWR) MBR(&MBR) TEXT(&CCM)
+003100121107             ENDDO
+003200001013             ENDDO
+003300121221/* Aggiungo il membro al file di arrivo -----------------------------*/
+003400121221             CHKOBJ     OBJ(EDIVADWR) OBJTYPE(*FILE) MBR(&MBR)
+003500121221             MONMSG     MSGID(CPF9815) EXEC(DO)
+003600121221             ADDPFM     FILE(EDIVADWR) MBR(&MBR) TEXT(&CCM)
+003700121221             MONMSG     MSGID(CPF0000) EXEC(DO)
+003800121221             DLYJOB     DLY(300)
+003900121221             ADDPFM     FILE(EDIVADWR) MBR(&MBR) TEXT(&CCM)
+004000121221             ENDDO
+004100121221             ENDDO
+004200001013
+004300010202/* Alloco il membro nel file ----------------------------------------*/
+004400001214/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+004500021017             ALCOBJ     OBJ((FIVATWWR *FILE *EXCL &MBR))
+004600121107             ALCOBJ     OBJ((EDIVABWR *FILE *EXCL &MBR))
+004700121221             ALCOBJ     OBJ((EDIVADWR *FILE *EXCL &MBR))
+004800990910
+004900001214/* Punto al membro e sostituisco a 1 il "Force-RCcord-RATIO" --------*/
+005000021017             OVRDBF     FILE(FIVATWWR) MBR(&MBR) FRCRATIO(1) +
+005100001214                          OVRSCOPE(*JOB)
+005200121107             OVRDBF     FILE(EDIVABWR) MBR(&MBR) FRCRATIO(1) +
+005300121107                          OVRSCOPE(*JOB)
+005400121221             OVRDBF     FILE(EDIVADWR) MBR(&MBR) FRCRATIO(1) +
+005500121221                          OVRSCOPE(*JOB)
+005600010202             ENDDO
+005700990915
+005800010202
+005900010202
+006000010202
+006100010202             IF         COND(&OPZ = '2') THEN(DO)
+006200041206/* Cancello le override ---------------------------------------------*/
+006300041206             DLTOVR     FILE(FIVATWWR) LVL(*JOB)
+006400121107             DLTOVR     FILE(EDIVABWR) LVL(*JOB)
+006500121221             DLTOVR     FILE(EDIVADWR) LVL(*JOB)
+006600041206
+006700990910/* Disalloco i membri -----------------------------------------------*/
+006800041206             DLCOBJ     OBJ((FIVATWWR *FILE *EXCL &MBR))
+006900121107             DLCOBJ     OBJ((EDIVABWR *FILE *EXCL &MBR))
+007000121221             DLCOBJ     OBJ((EDIVADWR *FILE *EXCL &MBR))
+007100041206
+007200041206/* Elimino il membro del file (di output) tradotto/inviato ----------*/
+007300040512             RMVM       FILE(FIVATWWR) MBR(&MBR)
+007400121107             RMVM       FILE(EDIVABWR) MBR(&MBR)
+007500121221             RMVM       FILE(EDIVADWR) MBR(&MBR)
+007600010202             ENDDO
+007700110627
+007800110627
+007900110627
+008000110627
+008100110627             IF         COND(&OPZ = '3') THEN(DO)
+008200110627/* Cancello le override ---------------------------------------------*/
+008300110627             DLTOVR     FILE(FIVATWWR) LVL(*JOB)
+008400110627             MONMSG     MSGID(CPF0000)
+008500121107             DLTOVR     FILE(EDIVABWR) LVL(*JOB)
+008600121107             MONMSG     MSGID(CPF0000)
+008700121221             DLTOVR     FILE(EDIVADWR) LVL(*JOB)
+008800121221             MONMSG     MSGID(CPF0000)
+008900110627
+009000110627/* Disalloco i membri -----------------------------------------------*/
+009100110627             DLCOBJ     OBJ((FIVATWWR *FILE *EXCL &MBR))
+009200110627             MONMSG     MSGID(CPF0000)
+009300121107             DLCOBJ     OBJ((EDIVABWR *FILE *EXCL &MBR))
+009400121107             MONMSG     MSGID(CPF0000)
+009500121221             DLCOBJ     OBJ((EDIVADWR *FILE *EXCL &MBR))
+009600121221             MONMSG     MSGID(CPF0000)
+009700110627
+009800110627/* Elimino il membro del file (di output) tradotto/inviato ----------*/
+009900110627             RMVM       FILE(FIVATWWR) MBR(&MBR)
+010000110627             MONMSG     MSGID(CPF0000)
+010100121107             RMVM       FILE(EDIVABWR) MBR(&MBR)
+010200121107             MONMSG     MSGID(CPF0000)
+010300121221             RMVM       FILE(EDIVADWR) MBR(&MBR)
+010400121221             MONMSG     MSGID(CPF0000)
+010500110627             ENDDO
+010600990908
+010700010202
+010800010202
+010900990907             ENDPGM

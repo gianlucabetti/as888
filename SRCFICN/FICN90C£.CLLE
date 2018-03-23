@@ -1,0 +1,36 @@
+000100000000     /****************************************************************/
+000200000000     /*                                                              */
+000300011031     /*  Nome programma:  FICN90C                                    */
+000400000000     /*  Descrizione   :  Riorganizzazione tariffe padroncini        */
+000500000000     /*                   Programma di esecuzione                    */
+000600000000     /*                                                              */
+000700000000     /****************************************************************/
+000800000000             PGM        PARM(&KPJBA)
+000900000000
+001000000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001100000000
+001200000000     /*-------------          F A S E    U N O          -------------*/
+001300000000
+001400000000             OVRPRTF    FILE(QSYSPRT) USRDTA('Riorg.tar.')
+001500000000
+001600000000     /* Eseguo la chiamata al primo programma che annulla logicamente */
+001700000000     /* i record dagli archivi                                       */
+001800011031             CALL       PGM(FICN90R) PARM(&KPJBA)
+001900000000             MONMSG     MSGID(CPF0000)
+002000000000
+002100000000     /*-------------          F A S E    D U E          -------------*/
+002200000000
+002300000000     /* Seleziono solo gli annullati                                 */
+002400011031             OPNQRYF    FILE((FIFGT01L)) OPTION(*ALL) +
+002500000000                          QRYSLT('FGTATB=''A''') KEYFLD((FGTPDR) +
+002600940926                          (FGTSML) (FGTTSR) (FGTCTR) (FGTPRG))
+002700011031             OVRDBF     FILE(FIFGT01L) SHARE(*YES)
+002800000000
+002900000000     /* Eseguo la chiamata al secondo programma che cancella fisica-  */
+003000000000     /* mente i record dagli archivi                                 */
+003100011031             CALL       PGM(FICN91R) PARM(&KPJBA)
+003200000000             MONMSG     MSGID(CPF0000)
+003300000000
+003400011031             CLOF       OPNID(FIFGT01L)
+003500000000
+003600000000             ENDPGM

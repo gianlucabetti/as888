@@ -1,0 +1,162 @@
+000100960221     H              J
+000200960221?     *--------------------------------------------------------------*
+000300960221      * BAR801R                                                      *
+000400960221      *  *---------------------------------------------------------* *
+000500960221      *    STAMPA RELAZIONI AZIONI/MENU'  -> MENU'PRINCIP./PROFILO   *
+000600960221      *                       ESEGUE STAMPA                          *
+000700960221      *  *---------------------------------------------------------* *
+000800960221      *                                                              *
+000900960221?     *--------------------------------------------------------------*
+001000960222     FKPPRF01LIF  E           K        DISK
+001100960221     F*--------
+001200960221     FKPMNU02LIF  E           K        DISK
+001300960221     F*--------
+001400960222     FKPMNUW0FIF  E           K        DISK
+001500960222     F            KPMNUW00                          KRENAMEKPMNUW
+001600960222     F*--------
+001700960222     FKPMNUW1LUF  E           K        DISK                      A
+001800960222     F*--------
+001900960221     FBAR801P O   E             01     PRINTER
+002000960221?     *--------------------------------------------------------------*
+002100960221?     *  DS                                                          *
+002200960221?     *--------------------------------------------------------------*
+002300960221     IKPJBA     E DS
+002400960221     IUTEDSE    E DSUT§DSE0F
+002500960221     ICNCR80    E DS
+002600960221     IBAR800    E DSBAR800DS
+002700960221     I           SDS
+002800960221     I                                        1  10 NOMPGM
+002900960221?     *--------------------------------------------------------------*
+003000960221?     *  CICLO PRINCIPALE                                            *
+003100960221?     *--------------------------------------------------------------*
+003200960221      *  Imposta chiave iniziale x posizionamento e lettura
+003300960221      *  azione/menù richiesto
+003400960221     C                     MOVELD00AZM    KAZM
+003500960221     C                     MOVELD00TAM    WTIP
+003600960222     C           KAZM      CHAINKPMNU02L             31
+003700960221      *  Se trovato menù/azione interessata cerco i menù mamma
+003800960221     C           *IN31     DOWEQ'0'
+003900960221      *  Loop per codice mnu.
+004000960221     C                     EXSR LEGGI
+004100960221     C                     END
+004200960221      *
+004300960221      *  Procedo alla lettura dei menù mamma
+004400960221     C                     MOVEL'M'       WTIP
+004500960222     C                     READ KPMNUW0F                 30
+004600960221     C           *IN30     DOWEQ'0'
+004700960221      *  Imposta chiave iniziale x posizionamento
+004800960222     C                     MOVELMNUMAM    KAZM
+004900960221     C           KAZM      CHAINKPMNU02L             31
+005000960221      *  Se trovato menù/azione interessata cerco i menù mamma
+005100960221     C           *IN31     DOWEQ'0'
+005200960221      *  Loop per codice mnu.
+005300960221     C                     EXSR LEGGI
+005400960221     C                     END
+005500960222     C                     READ KPMNUW0F                 30
+005600960221     C                     END
+005700960221      *
+005800960221      *  Rileggo i profili e controllo se menù principale
+005900960221      *  è nella mia lista.
+006000960222     C                     READ KPPRF01L                 32
+006100960221     C           *IN32     DOWEQ'0'
+006200960221     C                     EXSR STAMPA
+006300960221     C                     END
+006400960221      *
+006500960221     C           FINE      TAG
+006600960221     C                     SETON                     LR
+006700960221?     *--------------------------------------------------------------*
+006800960221?     *  Lettura file menù                                           *
+006900960221?     *--------------------------------------------------------------*
+007000960221     C           LEGGI     BEGSR
+007100960221      *  Imposta chiave iniziale x posizionamento
+007200960222     C           MNUTIP    IFEQ WTIP
+007300960221      *  Se il tipo di azione/menù corrisponde ricerco menù che lo/a
+007400960221      *  richiama
+007500960221     C                     MOVELMNUAZM    KFIG
+007600960221     C                     MOVELMNUCOD    KMAM
+007700960222     C           KMNU      CHAINKPMNUW1L             32
+007800960222     C           *IN32     IFEQ '1'
+007900960221     C                     MOVELMNUAZM    MNUFIG
+008000960221     C                     MOVELMNUCOD    MNUMAM
+008100960221     C                     WRITEKPMNUW00
+008200960221     C                     END
+008300960221     C                     END
+008400960221      *  Leggo menù successivo
+008500960221     C           KAZM      READEKPMNU02L                 31
+008600960221      *
+008700960221     C                     ENDSR
+008800960221?     *--------------------------------------------------------------*
+008900960221?     *  Stampa                                                      *
+009000960221?     *--------------------------------------------------------------*
+009100960221     C           STAMPA    BEGSR
+009200960222      *
+009300960221     C                     MOVELPRFNMI    KMAM
+009400960222     C           KMAM      CHAINKPMNUW1L             31
+009500960222      *  Se non esiste come mamma lo cerco come menù di ingresso
+009600960222     C           *IN31     IFEQ '1'
+009700960222     C           D00TAM    ANDEQ'M'
+009800960222     C           D00AZM    ANDEQPRFNMI
+009900960222     C                     SETOF                     31
+010000960222     C                     END
+010100960222      *
+010200960221     C           *IN31     IFEQ '0'
+010300960221      *  Prima volta
+010400960221     C           WPRIMA    IFNE 'N'
+010500960221     C                     WRITETESTA
+010600960221     C           D00TAM    IFEQ 'A'
+010700960222     C                     MOVELD00AZM    STPAZN
+010800960221     C                     WRITETESAZ
+010900960221     C                     ELSE
+011000960222     C                     MOVELD00AZM    STPMNU
+011100960221     C                     WRITETESMN
+011200960221     C                     END
+011300960221     C                     MOVEL'N'       WPRIMA  1
+011400960221     C                     END
+011500960221      *  Nuova pagina
+011600960221     C           *IN01     IFEQ '1'
+011700960221     C                     WRITETESTA
+011800960221     C           D00TAM    IFEQ 'A'
+011900960221     C                     WRITETESAZ
+012000960221     C                     ELSE
+012100960221     C                     WRITETESMN
+012200960221     C                     END
+012300960221     C                     SETOF                     01
+012400960221     C                     END
+012500960221      *  Stampo singola riga
+012600960222     C                     MOVELPRFNMI    STPPMN
+012700960222     C                     MOVELPRFNMU    STPPRF
+012800960222     C                     MOVELPRFTXT    STPDEC
+012900960221     C                     WRITEDETTA
+013000960221     C                     END
+013100960221      *  Lettura successiva
+013200960222     C                     READ KPPRF01L                 32
+013300960221      *
+013400960221     C                     ENDSR
+013500960221?     *--------------------------------------------------------------*
+013600960221?     *  *INZSR: Operazioni iniziali                                 *
+013700960221?     *--------------------------------------------------------------*
+013800960221     C           *INZSR    BEGSR
+013900960221      *
+014000960221     C           *ENTRY    PLIST
+014100960221     C                     PARM           KPJBA
+014200960221     C                     MOVELKPJBU     BAR800
+014300960221      *  Richiamo XPARUT
+014400960221     C                     Z-ADD1         CODUT
+014500960221     C                     CALL 'X§PARUT'
+014600960221     C                     PARM           UTEDSE
+014700960221     C                     MOVELREC80     CNCR80
+014800960222     C                     MOVELRAGUT     RSUT
+014900960222     C                     MOVEL*ALL'-'   CMP132
+015000960222     C                     MOVEL*ALL'-'   CM1132
+015100960221      *  Chiavi
+015200960221     C           KMNU      KLIST
+015300960221     C                     KFLD           KMAM
+015400960221     C                     KFLD           KFIG
+015500960221      *  Definizione delle variabili
+015600960221     C           *LIKE     DEFN MNUFIG    KFIG
+015700960221     C           *LIKE     DEFN MNUMAM    KMAM
+015800960221     C           *LIKE     DEFN MNUAZM    KAZM
+015900960221     C           *LIKE     DEFN MNUAZM    WAZM
+016000960221     C           *LIKE     DEFN MNUTIP    WTIP
+016100960221      *
+016200960221     C                     ENDSR

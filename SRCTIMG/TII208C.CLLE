@@ -1,0 +1,35 @@
+000100000000          PGM        PARM(&KPJBA)
+000200000000
+000300000000  /*-MPH306C-------------------------------------------------------*/
+000400000000  /*                                                               */
+000500000000  /*        - PILOTA STAMPA RIEPILOGO MAGAZZINO A VALORE -         */
+000600000000  /*        ----------------------------------------------         */
+000700000000  /*                                                     AZ.: H306 */
+000800000000  /*---------------------------------------------------------------*/
+000900000000
+001000000000
+001100000000             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+001200000000
+001300000000  /*--------- ALLOCAZIONE FILE DI LAVORO --------------------------*/
+001400990125ALCOBJ     OBJ((*LIBL/TMPIL00F *FILE *EXCL))
+001500000000             MONMSG     MSGID(CPF1002) EXEC(DO)
+001600891127             CHGVAR     (%SST(&KPJBA 40 7)) VALUE('KPJB207')
+001700000000             CHGVAR     VAR(%SST(&KPJBA 453 50)) VALUE('*- Stampa : +
+001800990317                          TII208R1, non eseguibile -RIPROVARE- *')
+001900000000             GOTO       CMDLBL(FINE)
+002000000000             ENDDO
+002100000000
+002200000000  /*--------- CREAZIONE FILE GUIDA --------------------------------*/
+002300990125CLRPFM     FILE(*LIBL/TMPIL00F)
+002400990317CALL       PGM(*LIBL/TII208R) PARM(&KPJBA)
+002500000000
+002600000000  /*--------- EMISSIONE STAMPA ------------------------------------*/
+002700891127IF         COND((%SST(&KPJBA 40 7)) *EQ '       ') THEN(CALL +
+002800990317             PGM(*LIBL/TII208R1) PARM(&KPJBA))
+002900000000
+003000990125CLRPFM     FILE(*LIBL/TMPIL00F)
+003100990125DLCOBJ     OBJ((*LIBL/TMPIL00F *FILE *EXCL))
+003200000000             MONMSG     MSGID(CPF0000)
+003300000000
+003400000000  /*--- USCITA PROGRAMMA ------------------------------------------*/
+003500000000 FINE:       ENDPGM

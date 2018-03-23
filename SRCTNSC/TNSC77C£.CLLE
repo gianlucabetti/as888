@@ -1,0 +1,53 @@
+000100030324 TNSC77C:    PGM        PARM(&KPJBA)
+000200000303             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+000300000303             DCL        VAR(&KNSIF)  TYPE(*CHAR) LEN(10)
+000400910403
+000500030326 /* alloco file di lavoro per essere sicuro che va sempre un solo */
+000600030326 /* job alla volta                                                */
+000700030326             ALCOBJ     OBJ((TNCSBM1K *FILE *EXCL))
+000800030326             MONMSG     MSGID(CPF0000) EXEC(DO)
+000900030326             SNDMSG     MSG('''ERRORE Esiste una allocazione sul +
+001000030326                          file TNCSBM1K. Non è possibile continuare +
+001100030326                          l''elaborazione. Avvisare la persona +
+001200030326                          responsabile della manutenzione del +
+001300030326                          programma.''') TOUSR(QSYSOPR)
+001400030326             GOTO       CMDLBL(ENDPGM)
+001500030326             ENDDO
+001600030326
+001700030324             CLRPFM     FILE(TNCSBM1K)
+001800930319
+001900030324             CALL       PGM(TNSC77R) PARM(&KPJBA)
+002000930319
+002100030326             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002200030326             MONMSG     MSGID(CPF8351) EXEC(DO)
+002300030326             ENDCMTCTL
+002400030326             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+002500030326             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002600030326             ENDDO
+002700030326
+002800030326             CALL       PGM(TNSC76R) PARM(&KPJBA)
+002900030326             MONMSG     MSGID(CPF0000) EXEC(DO)
+003000030326             ROLLBACK
+003100030326             SNDMSG     MSG('ERRORE La procedura di RECAPITO +
+003200030326                          CONTRASSEGNI si è chiusa in modo anomalo. +
+003300030326                          Segnalare il problema alla persona +
+003400030326                          responsabile della manutenzione del +
+003500030326                          programma.') TOUSR(QSYSOPR)
+003600030326             ENDDO
+003700030326
+003800030326             DLCOBJ     OBJ((TNCSBM1K *FILE *EXCL))
+003900030326             ENDCMTCTL
+004000030326/* trasmette FIVABCAF a 001                                              */
+004100030326             CALL       PGM(TNSC78R) PARM(&KPJBA)
+004101040831
+004300030508             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+004400000320             IF         COND(&KNSIF *NE 'GAITRAPSP ') THEN(DO)
+004401040831/* Sistema membri TNVAS nei vari sitemi informativi                      */
+004500040831/*           CALL       PGM(TRTC45C) PARM(&KPJBA)          */
+004501040831
+004600040831 /* PREPARA GLI ARCHIVI X Clienti */
+004700040910 /*          CALL       PGM(TRTC00C1)   */
+004701040910             SBMJOB     CMD(CALL PGM(TRTC00C1)) JOBQ(KSDIFFEPT)
+004800000320             ENDDO
+004900000303
+005000910621ENDPGM:      ENDPGM

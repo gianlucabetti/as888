@@ -1,0 +1,242 @@
+000100000000     H              J
+000200911003     H* TRVR45R *----------------------------------------------------*
+000300000000     H*---------------*
+000400911001     F*  BATCH - STAMPA CLIENTI CON PERSONALIZZ. C/E (TNL)            *
+000500000000     F*---------------------------------------------------------------*H
+000600910930     FCEPCC00FIF  E           K        DISK
+000700900831     FTFTAM01LIF  E           K        DISK
+000800911001     FCNACO00FIF  E           K        DISK
+000900900831     FAZORG01LIF  E           K        DISK
+001000910930     FQSYSPRT O   F     132     OF     PRINTER
+001100000000     E                    TCU        50  6               TAB FLAG CNT
+001200000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001300911001     E                    CAR        10  3               COD.TAR TAM
+001400911001     E                    KPM         5  5 1             KG X MC SU TAR
+001500911001     E                    TIN         5  1               TIPO VOL AUT
+001600910930     E                    TAR        10  3               COD.TAR PCC
+001700910930     E                    RID        10  5 2             RID.TAR PCC
+001800000000     E                    SK      1  20 66               SCHIERE STAMPA
+001900000000     I*----------------------------------------------------------------
+002000900831     ITCUDS       DS
+002100900831     I                                        1   1 F1
+002200900831     I                                        3   3 F3
+002300900831     I                                        2   2 F2
+002400900831     I                                        4   4 F4
+002500900831     I                                        5   6 F56
+002600000000     IPARAM       DS
+002700910930     I                                        1   70VIDCL1
+002800910930     I                                        8  140VIDCL2
+002900900901     ICNCR80    E DS
+003000900901     IKPJBA     E DS
+003100900901     IUT§DSE    E DSUT§DSE0F
+003200900831     I                                      398 697 TCU
+003300900831     I                                    P 698 847 KCU
+003400000000     I*-------------
+003500000000     C           *ENTRY    PLIST
+003600000000     C                     PARM           KPJBA
+003700900831     C                     MOVELKPJBU     PARAM
+003800891228     C                     Z-ADD1         CODUT
+003900900901     C                     CALL 'X§PARUT'
+004000900901     C                     PARM           UT§DSE
+004100000000     C           CODUT     CABEQ-1        FINE
+004200000000     C                     MOVELRAGUT     RSUT   20
+004300900901     C                     MOVELREC80     CNCR80
+004400900901     C                     TIME           HHMMSS  60
+004500900831     C*--- RICERCA CAPOCONTI------------------------------------------*
+004600910927     C                     DO   50        X       30
+004700900831     C                     MOVE TCU,X     TCUDS
+004800900831     C           F56       CABNE'CG'      END1
+004900900831     C           F4        COMP '1'                      21
+005000900831     C           F4        COMP '2'                      22
+005100900831     C           F4        COMP '3'                      23
+005200900831     C           F4        COMP '6'                      27
+005300900831     C** 1 CLIENTI   21
+005400900831     C** 2 FORNITORI 22
+005500900831     C** 3 AGENTI    23
+005600900831     C           F3        COMP '0'                  242425
+005700900831     C           F3        COMP 'I'                      26
+005800900831     C** 0 ITALIA   25
+005900900831     C** 1 ESTERO   24
+006000900901     C** I CAPO CONTO IVA
+006100900831     C   21 24             Z-ADDKCU,X     KCE     40
+006200900831     C   21 25             Z-ADDKCU,X     KCI     40
+006300900831     C   22 24             Z-ADDKCU,X     KFE     40
+006400900831     C   22 25             Z-ADDKCU,X     KFI     40
+006500900831     C   23 24             Z-ADDKCU,X     KAE     40
+006600900831     C   23 25             Z-ADDKCU,X     KAI     40
+006700900831     C   26                Z-ADDKCU,X     KIVA    40
+006800900831     C   27                Z-ADDKCU,X     KBNA    40
+006900900831     C           END1      TAG
+007000900831     C                     END
+007100900831     C*
+007200911001     C                     Z-ADD0         SAVFIL  30
+007300911001     C*
+007400900831     C* DEFINIZIONI
+007500000000     C*
+007600910930     C           *LIKE     DEFN TAMKSC    §KSCP
+007700900831     C                     MOVE *BLANK    §CTR    3
+007800900831     C*
+007900900831     C* DEFINIZIONE CHIAVI
+008000900831     C*
+008100900831     C           KTAM      KLIST                           *
+008200910930     C                     KFLD           CODUT
+008300900831     C                     KFLD           FCL     10       *
+008400910930     C                     KFLD           §KSCP
+008500900831     C                     MOVE *ZERO     FCL
+008600911001     C           CHIACO    KLIST
+008700911001     C                     KFLD           CODUT
+008800911001     C                     KFLD           KCI
+008900911001     C                     KFLD           §KSCP
+009000911001     C*
+009100000000     C*
+009200900831     C*   POSIZIONAMENTO PER LETTURA
+009300900831     C*
+009400910930     C           VIDCL1    SETLLCEPCC00F
+009500900831     C*
+009600900831     C           LOOP2     TAG
+009700900901     C                     SETOF                     58
+009800910930     C                     READ CEPCC00F                 58
+009900910930     C   58                GOTO FINE
+010000910930     C           PCCPTN    CABEQ*ZERO     LOOP2
+010100911001     C                     MOVELPCCKSC    FIL     30
+010200911001     C*
+010300910930     C           PCCKSC    IFNE §KSCP
+010400910930     C                     EXSR STAMPA
+010401911003     C           PCCKSC    CABGTVIDCL2    FINE
+010500911002     C* ROTTURA FILIALE
+010600911002     C           SAVFIL    IFNE FIL
+010700911002     C           FIL       CHAINAZORG                21
+010800911002     C   21                MOVEL*BLANKS   DESFIL 20
+010900911002     C  N21                MOVELORGDES    DESFIL
+011000911002     C                     EXCPTTESTA
+011100911002     C                     MOVELFIL       SAVFIL
+011200911002     C                     END
+011300910930     C                     MOVELPCCKSC    §KSCP
+011400910930     C                     END
+011500910930     C                     ADD  1         W
+011600910930     C                     MOVE PCCCTR    TAR,W
+011700910930     C           PCCSTN    IFEQ '-'
+011800910930     C           PCCPTN    MULT -1        RID,W
+011900910930     C                     ELSE
+012000910930     C                     Z-ADDPCCPTN    RID,W
+012100910930     C                     END
+012200910930     C*
+012400910930     C                     GOTO LOOP2
+012500911002     C                     EXSR STAMPA
+012600910930     C*
+012700000000     C           FINE      TAG
+012800000000     C                     SETON                     LR
+012900900831     C*
+013000910930     C/SPACE
+013100910930     C***---------------------------------
+013200910930     C** CONFRONTI E STAMPA
+013300910930     C***---------------------------------
+013400910930     C           STAMPA    BEGSR
+013500910930     C           §KSCP     IFGT *ZERO
+013600910930     C                     EXSR CARTAM
+013700910930     C* ESEGUO STAMPA DETTAGLIO
+013800911001     C           CHIACO    CHAINCNACO00F             85
+013900911001     C   85                MOVEL*BLANKS   DESRAG 35
+014000911001     C  N85                MOVELACORAG    DESRAG
+014100911002     C                     SETOF                     87
+014101911003     C                     SETOF                     50
+014200911002     C   OF                EXCPTTESTA
+014300911001     C                     EXCPTDETCLI
+014400911001     C*
+014500911001     C                     DO   10        X
+014600911001     C           CAR,X     IFNE *BLANKS
+014700911001     C                     Z-ADD1         W
+014800911001     C  N58      CAR,X     LOKUPTAR,W                    58
+014900911001     C                     Z-ADD1         W
+015000911001     C  N58      '999'     LOKUPTAR,W                    58
+015100911001     C*
+015200910930     C                     EXCPTDETT
+015300911002     C      OF             EXCPTTESTA
+015400910930     C                     END
+015500911001     C                     END
+015600911002     C           CAR,1     COMP *BLANKS                  87
+015700911002     C      87             EXCPTDETT
+015800911002     C   OF 87             EXCPTTESTA
+015900911001     C                     END
+016000910930     C*
+016100910930     C                     MOVE *ZERO     W       30
+016200910930     C                     MOVE *ZERO     RID
+016300910930     C                     MOVE *BLANK    TAR
+016400910930     C                     ENDSR
+016500900831     C/SPACE
+016600900831     C***---------------------------------
+016700900831     C** CARICAMENTO SCHIERA TARIFFE
+016800900831     C***---------------------------------
+016900900831     C           CARTAM    BEGSR
+017000910930     C                     SETOF                     3054
+017100911001     C                     MOVE *ZERO     X
+017200911001     C                     MOVE *ZERO     KPM
+017300911002     C                     MOVEL*BLANKS   TIN
+017400911002     C                     MOVEL*BLANKS   CAR
+017500900831     C           KTAM      SETGTTFTAM
+017600900831     C                     DO   *HIVAL
+017700900831     C                     READPTFTAM                    30
+017800910930     C  N30      TAMKSC    IFEQ §KSCP
+017900900901     C*
+018000900901     C  N30      TAMATB    IFNE 'A'                        ANNULLATO
+018100900831     C                     MOVE TAMCTR    §CTR
+018200900901     C           §CTR      LOKUPCAR                      54
+018300900901     C  N54                DO
+018400900831     C                     ADD  1         X
+018500911001     C                     MOVE TAMCTR    CAR,X
+018600911001     C                     Z-ADDTAMKPM    KPM,X
+018700911001     C                     MOVELTAMTIN    TIN,X
+018800911001     C  N34      TAMKPM    COMP *ZERO                    34
+018900911001     C  N33      TAMKPM    COMP *ZERO                33
+019000910930     C           X         COMP 10                   30
+019100900831     C                     END
+019200900831     C                     END
+019300900901     C                     END
+019400910930     C  N30      TAMKSC    COMP §KSCP                3030
+019500900831     C        N30          END
+019600911001     C           KPM,1     IFNE 0
+019700911001     C           TIN,1     COMP 'C'                      50
+019800911001     C                     END
+019900900831     C                     ENDSR
+020000911001     OQSYSPRT E  202           TESTA
+020100911001     O                         SK,1      66
+020200911001     O                         SK,2     132
+020300911001     O                         RSUT      22
+020400911002     O                                   90 'del '
+020500911002     O                         UDATE Y   98
+020600911003     O                                  110 '"TRVR45R"'
+020700911002     O                         PAGE  Z  126
+020800900831     O        E  2             TESTA
+020900911001     O                                   20 'LINEA DI PARTENZA:'
+021000911002     O                         FIL       24
+021100911001     O                         DESFIL    46
+021200911002     O        E  1             TESTA
+021300900901     O                         SK,3      66
+021400900901     O                         SK,4     132
+021500900901     O        E  1             TESTA
+021600911001     O                         SK,5      66
+021700911001     O                         SK,6     132
+021800911001     O        E  1             TESTA
+021900911001     O                         SK,3      66
+022000911001     O                         SK,4     132
+022100900901     O*
+022200911002     O        E 10             DETCLI
+022300911001     O                         ACOKSC     8
+022400911002     O                         DESRAG    46
+022500911002     O        E  1             DETT
+022600911002     O                N87      CAR,X     51
+022700911002     O                N87      TIN,X     60
+022800911002     O                N87N50   KPM,X 2   67
+022900911002     O                N87 50   KPM,X     67 '0 ,   '
+023000911002     O                N87      RID,W K   82
+023100911003     O                    87   TAR,1     51
+023200911003     O                    87   RID,1 K   82
+023300911003     O                    87            114 'NON PRESENTI TARIFFE'
+023400911001     O*
+023500000000**   SK
+023600911002                          ***  ELENCO CLIENTI CON PERSONALIZZAZION  01
+023700911002NE C/E  (TNL)  ***                                  PAG.            02
+023800911001+---------+---------------------------------+---------+-----------  03
+023900911001------+--------------+                                              04
+024000911001  CODICE  '  RAGIONE SOCIALE                ' TARIFFA '  VOLUME AU  05
+024100911001TOM.  '  RIDUZ. TNL  '                                              06

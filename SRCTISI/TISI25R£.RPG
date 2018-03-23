@@ -1,0 +1,874 @@
+000100970910     H*------------------------------------------------------------------------*
+000200970619     H* CAPPARIO - STAMPA TEMPI DI TRAZIONE - RICHIESTA PARAMETRI
+000300970910     H*------------------------------------------------------------------------*
+000400970910     H              J
+000500970910     F*------------------------------------------------------------------------*
+000600970910     F* DATA BASE
+000700970910     F*------------------------------------------------------------------------*
+000800970619     FTISI25D CF  E                    WORKSTN      KINFDS DEVDS1
+000900970619     F                                        MSGULTKSFILE SI25DMS
+001000970910     FAZORG01LIF  E           K        DISK
+001100970910     E*------------------------------------------------------------------------*
+001200970910     E* SCHIERE
+001300970910     E*------------------------------------------------------------------------*
+001400970910     E*------------
+001500970910     E* MESSAGGI
+001600970910     E*------------
+001700970910     E                    MSG     1  20 78
+001800970910     E*------------
+001900970910     E* COMANDI
+002000970910     E*------------
+002100970910     E                    CMD     1   5 80
+002200970910     E*------------
+002300970910     E* DESCRIZIONI TASTI FUNZIONALI
+002400970910     E*------------
+002500970910     E                    FUD     1  24 80
+002600970910     E*------------
+002700970910     E* FUNZIONI DA CARICARE A VIDEO
+002800970910     E*------------
+002900970910     E                    FUV        24 19
+003000970910     I*------------------------------------------------------------------------*
+003100970910     I* INPUT
+003200970910     I*------------------------------------------------------------------------*
+003300970910     I*------------
+003400970910     I* RIDEFINIZIONE FUNZIONI VIDEO
+003500970910     I*------------
+003600970910     IFUDDS       DS
+003700970910     I                                        1   1 FUDDE1
+003800970910     I                                        2   3 FUDFUN
+003900970910     I                                        4  19 FUDDE2
+004000970910     I                                       20  34 FUDFI0
+004100970910     I                                       35  35 FUDATT
+004200970910     I                                       36  80 FUDFI1
+004300970910     I                                        1  19 FUDDES
+004400970910     I                                        1  80 FUDRIG
+004500970910     I*------------
+004600970910     I* DS GESTIONE TASTI FUNZIONALI
+004700970910     I*------------
+004800970910     IDSKEY     E DS
+004900970910     IDEVDS1      DS
+005000970910     I                                      369 369 KEY
+005100970910     I*------------
+005200970910     I* DS "XMSG" - GESTIONE MESSAGGI
+005300970910     I*------------
+005400970910     IDSMSG     E DS
+005500970910     I*------------
+005600970910     I* DS "XFIL" - REPERIMENTO DATI UTENTE
+005700970910     I*------------
+005800970910     IDSFIL     E DS
+005900970910     I*------------
+006000970910     I* DS DI PROCEDURA
+006100970910     I*------------
+006200970910     IDSSI00    E DSTISI00DS
+006300970910     I*------------
+006400970910     I* DS PARAMETRI DI LANCIO
+006500970910     I*------------
+006600970610     IPARAM      IDS
+006700970910     I                                        1   1 PARTOR
+006800970619     I                                        2   2 PARPTA
+006900970619     I                                        3   50PARLP1
+007000970619     I                                        6   80PARLP2
+007100970619     I                                        9  110PARLA1
+007200970619     I                                       12  140PARLA2
+007300970910     I*-------------
+007400970910     I* ARCHITETTURA
+007500970910     I*------------
+007600970910     IKPJBA     E DS
+007700970910     C*------------------------------------------------------------------------*
+007800970910     C* MAIN LINES
+007900970910     C*------------------------------------------------------------------------*
+008000970910     C*
+008100970910     C* NON CI SONO ERRORI IN ENTRATA
+008200970910IF  1C           ERRL00    IFEQ '0'
+008300970910     C*
+008400970910     C* CICLO FINO A CHE NON VIENE PREMUTO F03 O F12
+008500970910DO  2C           F03L00    DOUEQ'1'                        *F03 PREMUTO
+008600970910     C           F12L00    OREQ '1'                        *F12 PREMUTO
+008700970910     C           FINL00    OREQ '1'                        *FINE PGM
+008800970910     C*
+008900970910     C* EMETTE FORMATO VIDEO
+009000970910     C                     EXSR BUTFMR
+009100970910     C*
+009200970910     C* GESTIONE TASTI FUNZIONALI
+009300970910     C                     EXSR FUNCON
+009400970910E   2C                     ENDDO
+009500970910     C*
+009600970910     C* CI SONO ERRORI IN ENTRATA
+009700970910X   1C                     ELSE
+009800970910     C                     MOVEL'1'       D00ERR
+009900970910     C                     MOVELDSMSMS    D00MSG
+010000970910E   1C                     ENDIF
+010100970910     C* FINE PGM
+010200970910     C                     SETON                     LR
+010300970910     C*------------------------------------------------------------------------*
+010400970910     C* BUTFMR - EMISSIONE FORMATO A VIDEO
+010500970910     C*------------------------------------------------------------------------*
+010600970910     C           BUTFMR    BEGSR
+010700970910     C*
+010800970910     C* EMETTE LA TESTATA
+010900970619     C                     WRITESI25D01
+011000970910     C*
+011100970910     C* SPEDISCE EVENTUALE MESSAGGIO
+011200970910     C                     EXSR SNDMSG
+011300970910     C*
+011400970910     C* EMETTE LE FUNZIONI
+011500970619     C                     WRITESI25D02
+011600970910     C*
+011700970910     C* EMETTE IL VIDEO
+011800970619     C                     EXFMTSI25D03
+011900970910     C*
+012000970910     C* REIMPOSTA FLAG DI ERRORE
+012100970910     C                     MOVEL'0'       ERRL00
+012200970910     C*
+012300970910     C* REIMPOSTA INDICATORI DI ERRORE
+012400970910     C                     SETOF                       5859
+012500970910     C                     SETOF                     606162
+012600970910     C                     SETOF                     636465
+012700970910     C                     SETOF                     666768
+012800970910     C                     SETOF                     697071
+012900970910     C                     SETOF                     727374
+013000970910     C                     SETOF                     757677
+013100970910     C                     SETOF                     787980
+013200970910     C                     SETOF                     818283
+013300970910     C                     SETOF                     848586
+013400970910     C                     SETOF                     878889
+013500970910     C*
+013600970910     C                     ENDSR
+013700970910     C*------------------------------------------------------------------------*
+013800970910     C* SNDMSG - SPEDISCE EVENTUALE MESSAGGIO
+013900970910     C*------------------------------------------------------------------------*
+014000970910     C           SNDMSG    BEGSR
+014100970910     C*
+014200970910     C* PULISCE IL SFILE MESSAGGI
+014300970910     C                     MOVEL'1'       *IN40
+014400970619     C                     WRITESI25DMC
+014500970910     C                     MOVEL'0'       *IN40
+014600970910     C*
+014700970910     C* VISUALIZZA IL MESSAGGIO
+014800970910     C                     Z-ADD*ZEROS    MSGULT  40
+014900970910     C                     CALL 'XMSG'    XMSGPA
+015000970910IF  1C           DSMSER    IFEQ *ZEROS
+015100970910     C                     MOVELDSMSKE    MSGKEY
+015200970910E   1C                     ENDIF
+015300970910     C                     Z-ADD1         MSGULT
+015400970619     C                     WRITESI25DMS
+015500970619     C                     WRITESI25DMC
+015600970910     C*
+015700970910     C* MANDA MESSAGGIO A *BLANKS PER PULIRLO
+015800970910     C                     MOVEL*BLANKS   DSMSMS
+015900970910     C*
+016000970910     C                     ENDSR
+016100970910     C*------------------------------------------------------------------------*
+016200970910     C* ENTGES - GESTIONE ENTER -> INVIO
+016300970910     C*------------------------------------------------------------------------*
+016400970910     C           ENTGES    BEGSR
+016500970910     C*
+016600970910     C* CONTROLLA I CAMPI IMMESSI
+016700970910     C                     EXSR DECODI
+016800970910     C*
+016900970910     C                     ENDSR
+017000970910     C*------------------------------------------------------------------------*
+017100970910     C* F03GES - GESTIONE F03 -> FINE
+017200970910     C*------------------------------------------------------------------------*
+017300970910     C           F03GES    BEGSR
+017400970910     C*
+017500970910     C* IMPOSTA "PREMUTO F03"
+017600970910     C                     MOVEL'1'       F03L00           *A PROGRAMMA
+017700970910     C                     MOVEL'1'       D00F03           *DI PROCEDURA
+017800970910     C*
+017900970910     C                     ENDSR
+018000970910     C*------------------------------------------------------------------------*
+018100970910     C* F06GES - GESTIONE F06 -> AGGIORNAMENTO
+018200970910     C*------------------------------------------------------------------------*
+018300970910     C           F06GES    BEGSR
+018400970723     C*
+018500970723     C* CONTROLLA I CAMPI IMMESSI
+018600970723     C                     EXSR DECODI
+018700970910     C*
+018800970910     C* LANCIA IL PROGRAMMA DI STAMPA
+018900970723IF  1C           ERRL00    IFEQ '0'                        *NO ERRORI
+019000970910     C                     MOVELV1CTOR    PARTOR
+019100970619     C                     MOVELV1CPTA    PARPTA
+019200970619     C                     MOVELLP1V1C    PARLP1
+019300970619     C                     MOVELLP2V1C    PARLP2
+019400970619     C                     MOVELLA1V1C    PARLA1
+019500970619     C                     MOVELLA2V1C    PARLA2
+019600970910     C                     MOVELPARAM     KPJBU
+019700970619     C                     MOVEL'SI26'    KCOAZ
+019800970612     C                     CALL 'BCH10'
+019900970910     C                     PARM           KPJBA
+020000970619     C                     MOVEL'1'       FINL00
+020100970723E   1C                     ENDIF
+020200970910     C*
+020300970910     C                     ENDSR
+020400970910     C*------------------------------------------------------------------------*
+020500970910     C* F12GES - GESTIONE F12 -> RITORNO
+020600970910     C*------------------------------------------------------------------------*
+020700970910     C           F12GES    BEGSR
+020800970910     C*
+020900970910     C* IMPOSTA "PREMUTO F12"
+021000970910     C                     MOVEL'1'       F12L00           *A PROGRAMMA
+021100970910     C                     MOVEL'1'       D00F12           *DI PROCEDURA
+021200970910     C*
+021300970910     C                     ENDSR
+021400970910     C*------------------------------------------------------------------------*
+021500970910     C* F22GES - GESTIONE F22 -> GESTIONE STAMPE
+021600970910     C*------------------------------------------------------------------------*
+021700970910     C           F22GES    BEGSR
+021800970910     C*
+021900970910     C                     Z-ADD80        LENGH  155
+022000970910     C                     CALL 'QCAEXEC'                  *LANCIA PGM
+022100970910     C                     PARM           CMD,1
+022200970910     C                     PARM           LENGH
+022300970910     C*
+022400970910     C                     ENDSR
+022500970910     C*------------------------------------------------------------------------*
+022600970910     C* F24GES - GESTIONE F24 -> ALTRE FUNZIONI
+022700970910     C*------------------------------------------------------------------------*
+022800970910     C           F24GES    BEGSR
+022900970910     C*
+023000970910     C                     EXSR FUNGES                     *GESTIONE FUNZIONI
+023100970910     C*
+023200970910     C                     ENDSR
+023300970910     C*------------------------------------------------------------------------*
+023400970910     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+023500970910     C*------------------------------------------------------------------------*
+023600970910     C           DECODI    BEGSR
+023700970910     C*--------------------
+023800970910     C* ORDINAMENTO
+023900970910     C*--------------------
+024000970910IF  1C           ERRL00    IFEQ '0'
+024100970619IF  2C           V1CTOR    IFEQ 'P'
+024200970619     C           V1CTOR    OREQ 'A'
+024300970910X   2C                     ELSE
+024400970619     C                     SETON                     58
+024500970910     C                     MOVELMSG,11    DSMSMS
+024600970910     C                     MOVEL'1'       ERRL00
+024700970910E   2C                     ENDIF
+024800970910E   1C                     ENDIF
+024900970619     C*--------------------
+025000970619     C* TIPO TEMPO
+025100970619     C*--------------------
+025200970619IF  1C           ERRL00    IFEQ '0'
+025300970619IF  2C           V1CPTA    IFEQ 'P'
+025400970619     C           V1CPTA    OREQ 'T'
+025500970619     C           V1CPTA    OREQ 'A'
+025600970619     C           V1CPTA    OREQ *BLANKS
+025700970619X   2C                     ELSE
+025800970619     C                     SETON                     59
+025900970619     C                     MOVELMSG,11    DSMSMS
+026000970619     C                     MOVEL'1'       ERRL00
+026100970619E   2C                     ENDIF
+026200970619E   1C                     ENDIF
+026300970910     C*--------------------
+026400970619     C* LINEA PARTENZA DAL
+026500970910     C*--------------------
+026600970619     C           *LIKE     DEFN V1CLP1    LP1V1C
+026700970619     C                     MOVEL*ZEROS    LP1V1C
+026800970910IF  1C           ERRL00    IFEQ '0'
+026900970619     C                     MOVEL*BLANKS   V1DLP1
+027000970619IF  2C           V1CLP1    IFNE *BLANKS
+027100970619     C                     MOVELV1CLP1    WLIN
+027200970910     C                     MOVEL*BLANKS   WDLIN
+027300970910     C                     EXSR CHKLIN
+027400970619     C                     MOVELWLIN      V1CLP1
+027500970619     C                     MOVELWDLIN     V1DLP1
+027600970619     C                     MOVELV1CLP1    LP1V1C
+027700970910IF  3C           ERRL00    IFEQ '1'
+027800970619     C                     SETON                     60
+027900970619     C                     MOVELMSG,13    DSMSMS
+028000970910E   3C                     ENDIF
+028100970910E   2C                     ENDIF
+028200970910E   1C                     ENDIF
+028300970910     C*--------------------
+028400970619     C* LINEA PARTENZA AL
+028500970910     C*--------------------
+028600970619     C           *LIKE     DEFN V1CLP2    LP2V1C
+028700970619     C                     MOVEL*ZEROS    LP2V1C
+028800970619IF  1C           ERRL00    IFEQ '0'
+028900970619     C                     MOVEL*BLANKS   V1DLP2
+029000970619IF  2C           V1CLP2    IFNE *BLANKS
+029100970619     C                     MOVELV1CLP2    WLIN
+029200970619     C                     MOVEL*BLANKS   WDLIN
+029300970619     C                     EXSR CHKLIN
+029400970619     C                     MOVELWLIN      V1CLP2
+029500970619     C                     MOVELWDLIN     V1DLP2
+029600970619     C                     MOVELV1CLP2    LP2V1C
+029700970619IF  3C           ERRL00    IFEQ '1'
+029800970619     C                     SETON                     61
+029900970619     C                     MOVELMSG,13    DSMSMS
+030000970619E   3C                     ENDIF
+030100970619E   2C                     ENDIF
+030200970619E   1C                     ENDIF
+030300970910     C*--------------------
+030400970619     C* LINEA PARTENZA DAL+AL
+030500970910     C*--------------------
+030600970910     C* SE DAL ANCHE AL E VICEVERSA
+030700970910IF  1C           ERRL00    IFEQ '0'
+030800970619IF  2C           V1CLP1    IFNE *BLANKS
+030900970619     C           V1CLP2    ANDEQ*BLANKS
+031000970619     C           V1CLP2    ORNE *BLANKS
+031100970619     C           V1CLP1    ANDEQ*BLANKS
+031200970619     C                     SETON                     6061
+031300970910     C                     MOVELMSG,14    DSMSMS
+031400970910     C                     MOVEL'1'       ERRL00
+031500970910E   2C                     ENDIF
+031600970910E   1C                     ENDIF
+031700970910     C* DAL <= AL
+031800970910IF  1C           ERRL00    IFEQ '0'
+031900970619IF  2C           V1CLP1    IFNE *BLANKS
+032000970619IF  3C           V1CLP1    IFGT V1CLP2
+032100970619     C                     SETON                     6061
+032200970910     C                     MOVELMSG,15    DSMSMS
+032300970910     C                     MOVEL'1'       ERRL00
+032400970910E   3C                     ENDIF
+032500970910E   2C                     ENDIF
+032600970910E   1C                     ENDIF
+032700970619     C*--------------------
+032800970619     C* LINEA ARRIVO DAL
+032900970619     C*--------------------
+033000970619     C           *LIKE     DEFN V1CLA1    LA1V1C
+033100970619     C                     MOVEL*ZEROS    LA1V1C
+033200970619IF  1C           ERRL00    IFEQ '0'
+033300970619     C                     MOVEL*BLANKS   V1DLA1
+033400970619IF  2C           V1CLA1    IFNE *BLANKS
+033500970619     C                     MOVELV1CLA1    WLIN
+033600970619     C                     MOVEL*BLANKS   WDLIN
+033700970619     C                     EXSR CHKLIN
+033800970619     C                     MOVELWLIN      V1CLA1
+033900970619     C                     MOVELWDLIN     V1DLA1
+034000970619     C                     MOVELV1CLA1    LA1V1C
+034100970619IF  3C           ERRL00    IFEQ '1'
+034200970619     C                     SETON                     62
+034300970619     C                     MOVELMSG,13    DSMSMS
+034400970619E   3C                     ENDIF
+034500970619E   2C                     ENDIF
+034600970619E   1C                     ENDIF
+034700970619     C*--------------------
+034800970619     C* LINEA PARTENZA AL
+034900970619     C*--------------------
+035000970619     C           *LIKE     DEFN V1CLA2    LA2V1C
+035100970619     C                     MOVEL*ZEROS    LA2V1C
+035200970619IF  1C           ERRL00    IFEQ '0'
+035300970619     C                     MOVEL*BLANKS   V1DLA2
+035400970619IF  2C           V1CLA2    IFNE *BLANKS
+035500970619     C                     MOVELV1CLA2    WLIN
+035600970619     C                     MOVEL*BLANKS   WDLIN
+035700970619     C                     EXSR CHKLIN
+035800970619     C                     MOVELWLIN      V1CLA2
+035900970619     C                     MOVELWDLIN     V1DLA2
+036000970619     C                     MOVELV1CLA2    LA2V1C
+036100970619IF  3C           ERRL00    IFEQ '1'
+036200970619     C                     SETON                     63
+036300970619     C                     MOVELMSG,13    DSMSMS
+036400970619E   3C                     ENDIF
+036500970619E   2C                     ENDIF
+036600970619E   1C                     ENDIF
+036700970619     C*--------------------
+036800970619     C* LINEA PARTENZA DAL+AL
+036900970619     C*--------------------
+037000970619     C* SE DAL ANCHE AL E VICEVERSA
+037100970619IF  1C           ERRL00    IFEQ '0'
+037200970619IF  2C           V1CLA1    IFNE *BLANKS
+037300970619     C           V1CLA2    ANDEQ*BLANKS
+037400970619     C           V1CLA2    ORNE *BLANKS
+037500970619     C           V1CLA1    ANDEQ*BLANKS
+037600970619     C                     SETON                     6263
+037700970619     C                     MOVELMSG,14    DSMSMS
+037800970619     C                     MOVEL'1'       ERRL00
+037900970619E   2C                     ENDIF
+038000970619E   1C                     ENDIF
+038100970619     C* DAL <= AL
+038200970619IF  1C           ERRL00    IFEQ '0'
+038300970619IF  2C           V1CLA1    IFNE *BLANKS
+038400970619IF  3C           V1CLA1    IFGT V1CLA2
+038500970619     C                     SETON                     6263
+038600970619     C                     MOVELMSG,15    DSMSMS
+038700970619     C                     MOVEL'1'       ERRL00
+038800970619E   3C                     ENDIF
+038900970619E   2C                     ENDIF
+039000970619E   1C                     ENDIF
+039100970910     C*
+039200970910     C                     ENDSR
+039300970910     C*------------------------------------------------------------------------*
+039400970910     C* CHKLIN - CONTROLLA LA LINEA DI ARRIVO
+039500970910     C*------------------------------------------------------------------------*
+039600970910     C           CHKLIN    BEGSR
+039700970910     C*
+039800970619     C           *LIKE     DEFN V1CLP1    WLIN
+039900970619     C           *LIKE     DEFN V1DLP1    WDLIN
+040000970910     C*
+040100970910     C* RICHIESTO ELENCO
+040200970910     C                     SETOF                         99
+040300970910     C           '?'       SCAN WLIN                     99
+040400970910IF  1C           *IN99     IFEQ *ON
+040500970910     C                     MOVEL*BLANKS   §COD1   3
+040600970910     C                     MOVEL*BLANKS   §TIP    1
+040700970910     C                     MOVEL*BLANKS   §DES1  25
+040800971203     C                     MOVEL*BLANKS   §PRA    3
+040900971203     C                     CALL 'TNSD24R'
+041000970910     C                     PARM           §COD1
+041100970910     C                     PARM           §TIP
+041200970910     C                     PARM           §DES1
+041300971203     C                     PARM           §PRA
+041400970910     C                     MOVEL§COD1     WLIN
+041500970910     C                     MOVEL§DES1     WDLIN
+041600970910E   1C                     ENDIF
+041700970910     C*
+041800970910     C* SOLO CARATTERI NUMERICI
+041900970910     C                     SETOF                     99
+042000970910     C                     TESTN          WLIN       99
+042100970910IF  1C           *IN99     IFEQ *OFF                       *NON E'NUMERO
+042200970910     C                     MOVEL'1'       ERRL00
+042300970910X   1C                     ELSE                            *E'NUMERO DA TESTN
+042400970910     C                     MOVE WLIN      W001    1
+042500970910IF  2C           W001      IFLT '0'                        *TROVATA UN LETTERA
+042600970910     C                     MOVEL'1'       ERRL00
+042700970910X   2C                     ELSE                            *NUMERO
+042800970910     C*
+042900970910     C* CONTROLLA ESISTENZA CODICE
+043000970910     C                     MOVELWLIN      KORFIL
+043100970910     C           KEYORG    CHAINAZORG01L             99
+043200970910IF  3C           *IN99     IFEQ *OFF                       *TROVATA
+043300970910     C           ORGFVA    ANDEQ*BLANKS                    *NON ANNULLATA
+043400970910     C           ORGFAG    ANDNE'V'                        *NO VARIE
+043500970910     C                     MOVELORGDES    WDLIN            *DESCRIZIONE
+043600970910X   3C                     ELSE
+043700970910     C                     MOVEL'1'       ERRL00
+043800970910E   3C                     ENDIF
+043900970910E   2C                     ENDIF
+044000970910E   1C                     ENDIF
+044100970910     C*
+044200970910     C                     ENDSR
+044300970910     C*------------------------------------------------------------------------*
+044400970910     C* AZZVID - AZZERA I CAMPI DEL VIDEO
+044500970910     C*------------------------------------------------------------------------*
+044600970910     C           AZZVID    BEGSR
+044700970910     C* CAMPI
+044800970619     C                     MOVEL'P'       V1CTOR
+044900970619     C                     MOVEL'P'       V1CPTA
+045000970619     C                     MOVEL*BLANKS   V1CLP1
+045100970619     C                     MOVEL*BLANKS   V1CLP2
+045200970619     C                     MOVEL*BLANKS   V1CLA1
+045300970619     C                     MOVEL*BLANKS   V1CLA2
+045400970910     C* DECODIFICHE
+045500970619     C                     MOVEL*BLANKS   V1DLP1
+045600970619     C                     MOVEL*BLANKS   V1DLP2
+045700970619     C                     MOVEL*BLANKS   V1DLA1
+045800970619     C                     MOVEL*BLANKS   V1DLA2
+045900970910     C*
+046000970910     C                     ENDSR
+046100970910     C*------------------------------------------------------------------------*
+046200970910     C* *INZSR - OPERAZIONI INIZIALI
+046300970910     C*------------------------------------------------------------------------*
+046400970910     C           *INZSR    BEGSR
+046500970910     C*---
+046600970910     C* RICEVIMENTO PARAMETRI
+046700970910     C*---
+046800970910     C           *ENTRY    PLIST
+046900970612     C                     PARM           KPJBA
+047000970612     C                     PARM           DSSI00
+047100970910     C*
+047200970910     C* DS PARAMETRI PER "XMSG" - MESSAGGI PGM
+047300970910     C           XMSGPA    PLIST
+047400970910     C                     PARM           DSMSMS
+047500970910     C                     PARM           DSMSPG
+047600970910     C                     PARM           DSMSKE
+047700970910     C                     PARM           DSMSER
+047800970910     C*
+047900970910     C* IMPOSTA LA DS -TASTI PREMUTI-
+048000970910     C                     CALL 'XKEY'
+048100970910     C                     PARM           DSKEY
+048200970910     C*---
+048300970910     C* VARIABILI NON RIFERITE AL DATA BASE
+048400970910     C*---
+048500970910     C           *LIKE     DEFN FUDFUN    FUNKEY
+048600970910     C           *LIKE     DEFN D00OP0    DEPOP0
+048700970910     C           *LIKE     DEFN D00OP1    DEPOP1
+048800970910     C           *LIKE     DEFN D00OP0    WOP0
+048900970910     C           *LIKE     DEFN D00OP1    WOP1
+049000970910     C*---
+049100970910     C* VARIABILI DI CONTROLLO
+049200970910     C*---
+049300970910     C                     MOVEL'0'       FINL00  1        *FINE PROGRAMMA
+049400970910     C                     MOVEL'0'       F03L00  1        *PREMUTO F03
+049500970910     C                     MOVEL'0'       F12L00  1        *PREMUTO F12
+049600970910     C                     MOVEL'0'       ERRL00  1        *ERRORE
+049700970910     C*
+049800970910     C* IMPOSTA LA DS -INVIO MESSAGGI-
+049900970619     C                     MOVEL'TISI25R' DSMSPG
+050000970619     C                     MOVEL'TISI25R' MSGQUE
+050100970910     C                     MOVEL*BLANKS   MSGKEY
+050200970910     C                     MOVEL*BLANKS   DSMSMS
+050300970910     C*---
+050400970910     C* VARIABILI RIFERITE AL DATA BASE
+050500970910     C*---
+050600970910     C           *LIKE     DEFN ORGFIL    KORFIL           *AZORG00F
+050700970910     C*---
+050800970910     C* CHIAVI DI LETTURA
+050900970910     C*---
+051000970910     C* LETTURA AZORG01L - COMPLETA
+051100970910     C           KEYORG    KLIST
+051200970910     C                     KFLD           KORFIL           *FILIALE
+051300970613     C*
+051400970910     C* REPERIMENTO DATI UTENTE
+051500970910     C                     CALL 'XFIL'
+051600970910     C                     PARM           DSFIL
+051700970910     C*
+051800970910     C* DEPOSITA LE OPZIONI DI ENTRATA
+051900970910     C                     MOVELD00OP0    DEPOP0           *LIVELLO PROCEDURA
+052000970910     C                     MOVELD00OP1    DEPOP1           *LIVELLO PROGRAMMA
+052100970619     C*
+052200970619     C* CALCOLA LA DATA CORRENTE
+052300970619     C                     TIME           WN14   140       *ORA (6)+ DATA (8)
+052400970619     C                     MOVE WN14      CORDAT  80       *DATA (8) IN G/M/AA
+052500970910     C*
+052600970910     C* GESTIONE TASTI FUNZIONALI A VIDEO
+052700970910     C                     Z-ADD*ZEROS    FUNGRU  50
+052800970910     C                     EXSR FUNGES
+052900970910     C*
+053000970910     C* IMPOSTO LA VIDEATA
+053100970910     C                     EXSR AZZVID
+053200970910     C*
+053300970910     C                     ENDSR
+053400970910     C*------------------------------------------------------------------------*
+053500970910     C* FUNGES - GESTIONE TASTI FUNZIONALI DEL PROGRAMMA
+053600970910     C*------------------------------------------------------------------------*
+053700970910     C           FUNGES    BEGSR
+053800970910     C*
+053900970910     C* PULISCO CAMPI DI LAVORO
+054000970910     C                     Z-ADD0         W       50
+054100970910     C*
+054200970910     C* RICERCO QUANTE FUNZIONI SONO ATTIVE
+054300970910     C* E CARICO TABELLA FUNZIONI ATTIVE
+054400970910     C           1         DO   24        I
+054500970910     C                     MOVELFUD,I     FUDRIG
+054600970910     C*
+054700970910     C* PULIZIA FUNZIONI PRECEDENTI
+054800970910     C                     MOVEL*BLANKS   FUV,I
+054900970910     C*
+055000970910     C* IMPOSTA FUNZIONI ATTIVE IN TABELLA
+055100970910     C* (SALTA F24)
+055200970910     C           FUDATT    IFEQ 'S'
+055300970910     C           FUDFUN    ANDNE'24'
+055400970910     C                     ADD  1         W
+055500970910     C                     MOVELFUDDES    FUV,W
+055600970910     C                     END
+055700970910     C                     END                             DO WHILE
+055800970910     C*
+055900970910     C* SE VI SONO PIU' DI 6 FUNZIONI ATTIVE, ATTIVO FUNZIONE F24
+056000970910     C* ALTRIMENTI DISATTIVO F24
+056100970910     C           1         DO   24        I
+056200970910     C                     MOVELFUD,I     FUDRIG
+056300970910     C*
+056400970910     C           FUDFUN    IFEQ '24'
+056500970910     C           W         IFGT 6
+056600970910     C                     MOVEL'S'       FUDATT
+056700970910     C                     ELSE
+056800970910     C                     MOVEL*BLANKS   FUDATT
+056900970910     C                     END                             W GT 8
+057000970910     C                     MOVELFUDRIG    FUD,I
+057100970910     C                     END
+057200970910     C                     END                             DO WHILE
+057300970910     C*
+057400970910     C* IMPOSTO QUANTI GRUPPI DI 6 FUNZIONI SI POSSONO VISUALIZZARE
+057500970910     C           W         DIV  6         I
+057600970910     C                     MVR            Z
+057700970910     C*
+057800970910     C           Z         IFNE 0
+057900970910     C           I         ADD  1         Z
+058000970910     C                     ELSE
+058100970910     C                     Z-ADDI         Z       50
+058200970910     C                     END
+058300970910     C*
+058400970910     C* IMPOSTO SUCCESSIVE 6 FUNZIONI ATTIVE A VIDEO
+058500970910     C                     ADD  1         FUNGRU
+058600970910     C           FUNGRU    IFGT Z
+058700970910     C           FUNGRU    ORLT 1
+058800970910     C                     Z-ADD1         FUNGRU
+058900970910     C                     END
+059000970910     C*
+059100970910     C* PRIMO GRUPPO DI 6 FUNZIONI
+059200970910     C           FUNGRU    IFEQ 1
+059300970910     C                     MOVELFUV,1     FUN001
+059400970910     C                     MOVELFUV,2     FUN002
+059500970910     C                     MOVELFUV,3     FUN003
+059600970910     C                     MOVELFUV,4     FUN004
+059700970910     C                     MOVELFUV,5     FUN005
+059800970910     C                     MOVELFUV,6     FUN006
+059900970910     C                     END
+060000970910     C*
+060100970910     C* SECONDO GRUPPO DI 6 FUNZIONI
+060200970910     C           FUNGRU    IFEQ 2
+060300970910     C                     MOVELFUV,7     FUN001
+060400970910     C                     MOVELFUV,8     FUN002
+060500970910     C                     MOVELFUV,9     FUN003
+060600970910     C                     MOVELFUV,10    FUN004
+060700970910     C                     MOVELFUV,11    FUN005
+060800970910     C                     MOVELFUV,12    FUN006
+060900970910     C                     END
+061000970910     C*
+061100970910     C* TERZO GRUPPO DI 6 FUNZIONI
+061200970910     C           FUNGRU    IFEQ 3
+061300970910     C                     MOVELFUV,13    FUN001
+061400970910     C                     MOVELFUV,14    FUN002
+061500970910     C                     MOVELFUV,15    FUN003
+061600970910     C                     MOVELFUV,16    FUN004
+061700970910     C                     MOVELFUV,17    FUN005
+061800970910     C                     MOVELFUV,18    FUN006
+061900970910     C                     END
+062000970910     C*
+062100970910     C* QUARTO GRUPPO DI 6 FUNZIONI
+062200970910     C           FUNGRU    IFEQ 4
+062300970910     C                     MOVELFUV,19    FUN001
+062400970910     C                     MOVELFUV,20    FUN002
+062500970910     C                     MOVELFUV,21    FUN003
+062600970910     C                     MOVELFUV,22    FUN004
+062700970910     C                     MOVEL*BLANKS   FUN005
+062800970910     C                     MOVEL*BLANKS   FUN006
+062900970910     C                     END
+063000970910     C*
+063100970910     C* F24 SE C'E' VIENE SEMPRE VISUALIZZATO
+063200970910     C                     MOVEL*BLANKS   FUN007
+063300970910     C                     MOVEL*BLANKS   FUN008
+063400970910     C*
+063500970910     C           1         DO   24        I
+063600970910     C                     MOVELFUD,I     FUDRIG
+063700970910     C           FUDFUN    IFEQ '24'
+063800970910     C           FUDATT    ANDEQ'S'
+063900970910     C                     MOVELFUDDES    FUN008
+064000970910     C                     END
+064100970910     C                     END                             DO
+064200970910     C*
+064300970910     C                     ENDSR
+064400970910     C*------------------------------------------------------------------------*
+064500970910     C* FUNCON - GESTIONE TASTI FUNZIONALI DELL'UTENTE
+064600970910     C*------------------------------------------------------------------------*
+064700970910     C           FUNCON    BEGSR
+064800970910     C*
+064900970910     C* TRADUCE TASTI FUNZIONALI IN VARIABILE -FUNKEY-
+065000970910     C                     EXSR FUNVAR
+065100970910     C*
+065200970910     C* PULISCO CAMPI DI LAVORO
+065300970910     C                     Z-ADD0         I       50
+065400970910     C                     Z-ADD0         W       50
+065500970910     C*
+065600970910     C* RICERCA FUNZIONE (DIVERSA DA ENTER) SCELTA IN TABELLA FUNZIONI
+065700970910     C           FUNKEY    IFNE *BLANKS
+065800970910     C           1         DO   24        I
+065900970910     C                     MOVELFUD,I     FUDRIG
+066000970910     C*
+066100970910     C* SALVO INDICE DI FUNZIONE TROVATA ED ATTIVA (W)
+066200970910     C           FUNKEY    IFEQ FUDFUN
+066300970910     C           FUDATT    ANDEQ'S'
+066400970910     C                     Z-ADDI         W
+066500970910     C                     END
+066600970910     C                     END                             DO WHILE
+066700970910     C*
+066800970910     C* FUNZIONE NON ATTIVA (ERRORE)
+066900970910     C           W         IFEQ 0
+067000970910     C*
+067100970910     C* EMISSIONE MESSAGGIO DI ERRORE
+067200970910     C                     MOVELMSG,1     DSMSMS
+067300970910     C*
+067400970910     C                     END                             W=0
+067500970910     C                     END                             FUNKEY NE *BLANKS
+067600970910     C*
+067700970910     C* FUNZIONE ATTIVA (PROCEDI ...)
+067800970910     C           W         IFNE 0
+067900970910     C           FUNKEY    OREQ *BLANKS
+068000970910     C           FUNKEY    IFEQ *BLANKS
+068100970910     C                     EXSR ENTGES
+068200970910     C                     END
+068300970910     C           FUNKEY    IFEQ '03'
+068400970910     C                     EXSR F03GES
+068500970910     C                     END
+068600970910     C           FUNKEY    IFEQ '06'
+068700970910     C                     EXSR F06GES
+068800970910     C                     END
+068900970910     C           FUNKEY    IFEQ '12'
+069000970910     C                     EXSR F12GES
+069100970910     C                     END
+069200970910     C           FUNKEY    IFEQ '24'
+069300970910     C                     EXSR F24GES
+069400970910     C                     END
+069500970910     C                     END
+069600970910     C*
+069700970910     C                     ENDSR
+069800970910     C*------------------------------------------------------------------------*
+069900970910     C* FUNVAR -TRADUCE GLI INDICATORI DI TASTO FUNZIONALE IN VARIABILE
+070000970910     C*------------------------------------------------------------------------*
+070100970910     C           FUNVAR    BEGSR
+070200970910     C*
+070300970910     C* INIZIALIZZA VARIABILE -FUNKEY-
+070400970910     C*
+070500970910     C* FUNKEY=*BLANKS SIGNIFICA ENTER
+070600970910     C           KEY       IFEQ ENTER
+070700970910     C                     MOVEL*BLANKS   FUNKEY
+070800970910     C                     END
+070900970910     C           KEY       IFEQ F1
+071000970910     C                     MOVEL'01'      FUNKEY
+071100970910     C                     END
+071200970910     C           KEY       IFEQ F2
+071300970910     C                     MOVEL'02'      FUNKEY
+071400970910     C                     END
+071500970910     C           KEY       IFEQ F3
+071600970910     C                     MOVEL'03'      FUNKEY
+071700970910     C                     END
+071800970910     C           KEY       IFEQ F4
+071900970910     C                     MOVEL'04'      FUNKEY
+072000970910     C                     END
+072100970910     C           KEY       IFEQ F5
+072200970910     C                     MOVEL'05'      FUNKEY
+072300970910     C                     END
+072400970910     C           KEY       IFEQ F6
+072500970910     C                     MOVEL'06'      FUNKEY
+072600970910     C                     END
+072700970910     C           KEY       IFEQ F7
+072800970910     C                     MOVEL'07'      FUNKEY
+072900970910     C                     END
+073000970910     C           KEY       IFEQ F8
+073100970910     C                     MOVEL'08'      FUNKEY
+073200970910     C                     END
+073300970910     C           KEY       IFEQ F9
+073400970910     C                     MOVEL'09'      FUNKEY
+073500970910     C                     END
+073600970910     C           KEY       IFEQ F10
+073700970910     C                     MOVEL'10'      FUNKEY
+073800970910     C                     END
+073900970910     C           KEY       IFEQ F11
+074000970910     C                     MOVEL'11'      FUNKEY
+074100970910     C                     END
+074200970910     C           KEY       IFEQ F12
+074300970910     C                     MOVEL'12'      FUNKEY
+074400970910     C                     END
+074500970910     C           KEY       IFEQ F13
+074600970910     C                     MOVEL'13'      FUNKEY
+074700970910     C                     END
+074800970910     C           KEY       IFEQ F14
+074900970910     C                     MOVEL'14'      FUNKEY
+075000970910     C                     END
+075100970910     C           KEY       IFEQ F15
+075200970910     C                     MOVEL'15'      FUNKEY
+075300970910     C                     END
+075400970910     C           KEY       IFEQ F16
+075500970910     C                     MOVEL'16'      FUNKEY
+075600970910     C                     END
+075700970910     C           KEY       IFEQ F17
+075800970910     C                     MOVEL'17'      FUNKEY
+075900970910     C                     END
+076000970910     C           KEY       IFEQ F18
+076100970910     C                     MOVEL'18'      FUNKEY
+076200970910     C                     END
+076300970910     C           KEY       IFEQ F19
+076400970910     C                     MOVEL'19'      FUNKEY
+076500970910     C                     END
+076600970910     C           KEY       IFEQ F20
+076700970910     C                     MOVEL'20'      FUNKEY
+076800970910     C                     END
+076900970910     C           KEY       IFEQ F21
+077000970910     C                     MOVEL'21'      FUNKEY
+077100970910     C                     END
+077200970910     C           KEY       IFEQ F22
+077300970910     C                     MOVEL'22'      FUNKEY
+077400970910     C                     END
+077500970910     C           KEY       IFEQ F23
+077600970910     C                     MOVEL'23'      FUNKEY
+077700970910     C                     END
+077800970910     C           KEY       IFEQ F24
+077900970910     C                     MOVEL'24'      FUNKEY
+078000970910     C                     END
+078100970910     C           KEY       IFEQ ROLLUP
+078200970910     C                     MOVEL'RU'      FUNKEY
+078300970910     C                     END
+078400970910     C           KEY       IFEQ HELP
+078500970910     C                     MOVEL'HP'      FUNKEY
+078600970910     C                     END
+078700970910     C                     ENDSR
+078800970910     C*------------------------------------------------------------------------*
+078900970910     C* NOTE COSTRUZIONE SCHIERE
+079000970910     C*------------------------------------------------------------------------*
+079100970910     C*
+079200970910     C* -MSG-MESSAGGI
+079300970910     C* INSERIRE I VARI MESSAGGI EMESSI DAL PGM
+079400970910     C* (NON TOCCARE MSG,1 E MSG,2)
+079500970910     C*
+079600970910     C* -CMD-COMANDI
+079700970910     C* INSERIRE I VARI COMANDI DI SISTEMA RICHIESTI NEL PGM
+079800970910     C*
+079900970910     C* -OPD-OPZIONI
+080000970910     C* INSERIRE LE VARIE OPZIONI GESTITE DAL PGM
+080100970910     C*  . SI PUO' USARE LA OPZIONE ALTERNATIVA PER GESTIRE
+080200970910     C*    I CASI DI OPZIONI CON UN SOLO CARATTERE
+080300970910     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+080400970910     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+080500970910     C*  . POSSONO ESSERE IN ORDINE SPARSO
+080600970910     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+080700970910     C*    VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO
+080800970910     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA
+080900970910     C*    VIENE VISUALIZZATA A VIDEO MA IL PGM NON FA NULLA
+081000970910     C*
+081100970910     C* -FUD-FUNZIONI
+081200970910     C* INSERIRE LE VARIE FUNZIONI GESTITE DAL PGM
+081300970910     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+081400970910     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+081500970910     C*  . POSSONO ESSERE IN ORDINE SPARSO
+081600970910     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+081700970910     C*    VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO
+081800970910     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA
+081900970910     C*    VIENE VISUALIZZATA A VIDEO MA IL PGM DICE "NON GESTITA"
+082000970910     C*  . METTERE F23 E F24 CON S/N=S (RICALCOLATE DAL PGM)
+082100970910     C*  . SEGUIRE LE NOTE MESSE NELLA SCHIERA
+082200970910     O*------------------------------------------------------------------------*
+082300970910** MSG - MESSAGGI
+082400970619TISI25R- Opzione non gestita                                                   1
+082500970619TISI25R- Tasto funzionale non gestito                                          2
+082600970619TISI25R- 3
+082700970619TISI25R- 4
+082800970619TISI25R- 5
+082900970619TISI25R- 6
+083000970619TISI25R- 7
+083100970619TISI25R- 8
+083200970619TISI25R- 9
+083300970619TISI25R- 10
+083400970619TISI25R- Immettere uno dei valori possibili                                   11
+083500970619TISI25R- Data errata                                                          12
+083600970619TISI25R- Linea errata                                                         13
+083700970619TISI25R- Se richiesto il Dal immettere anche l'AL e viceversa                 14
+083800970619TISI25R- Il Dal deve essere inferiore o uguale all'AL                         15
+083900970619TISI25R- 16
+084000970619TISI25R- 17
+084100970619TISI25R- 18
+084200970619TISI25R- 19
+084300970619TISI25R- Stampa lanciata ...                                                  20
+084400970610** CMD - COMANDI CL
+084500970610WRKSPLF
+084600970610
+084700970610
+084800970610
+084900970610
+085000970910** FUD - FUNZIONI
+085100970910                   -        (S/N)=N                        funz.01¬
+085200970910                   -        (S/N)=N                        funz.02¬
+085300970910F03=Fine           -        (S/N)=S  <== S-FISSO           funz.03¬
+085400970910                   -        (S/N)=N                        funz.04¬
+085500970910                   -        (S/N)=N                        funz.05¬
+085600970610F06=Conferma       -        (S/N)=S                        funz.06¬
+085700970910                   -        (S/N)=N                        funz.07¬
+085800970910                   -        (S/N)=N                        funz.08¬
+085900970910                   -        (S/N)=N                        funz.09¬
+086000970910                   -        (S/N)=N                        funz.10¬
+086100970910                   -        (S/N)=N                        funz.11¬
+086200970910F12=Ritorno        -        (S/N)=S  <= S-FISSO            funz.12¬
+086300970910                   -        (S/N)=N                        funz.13¬
+086400970910                   -        (S/N)=N                        funz.14¬
+086500970910                   -        (S/N)=N                        funz.15¬
+086600970910                   -        (S/N)=N                        funz.16¬
+086700970910                   -        (S/N)=N                        funz.17¬
+086800970910                   -        (S/N)=N                        funz.18¬
+086900970910                   -        (S/N)=N                        funz.19¬
+087000970910                   -        (S/N)=N                        funz.20¬
+087100970910                   -        (S/N)=N                        funz.21¬
+087200970910                   -        (S/N)=N                        funz.22¬
+087300970910                   -        (S/N)=N                        funz.23¬
+087400970910F24=Altri tasti    -        (S/N)=S  <== S-FISSO           funz.24¬

@@ -1,0 +1,131 @@
+000100940914             PGM        PARM(&KPJBA)
+000200940927 /*  ******************************************************  */
+000300940927 /*  **  Variabili usate                                 **  */
+000400940927 /*  ******************************************************  */
+000500940927 /*  ******************************************************  */
+000600940927 /*  **  &RICHI  = Indica se la manutenzione delle gia-  **  */
+000700940927 /*  **            cenze è chiamata da altri programmi   **  */
+000800940927 /*  **            (&RICHI = 'S') oppure viene richiama- **  */
+000900940927 /*  **            ta direttamente da menù (&RICHI = ' ')**  */
+001000940927 /*  **            Nel caso in cui la funzione sia ri-   **  */
+001100940927 /*  **            chiamata da menù devono essere ese-   **  */
+001200940927 /*  **            guiti sia il comando OVRDBF che la    **  */
+001300940927 /*  **            DLTOVR                                **  */
+001400940927 /*  **  &TIPRIC = Viene impostato solo nel caso in cui  **  */
+001500940927 /*  **            la manutenzione/apertura giacenze sia **  */
+001600940927 /*  **            richiamato da altri pgm. e può assu-  **  */
+001700940927 /*  **            mere i seguenti valori:               **  */
+001800940927 /*  **            1)  P =Il programma è richiamato per  **  */
+001900940927 /*  **                   la prima volta. In questo caso **  */
+002000940927 /*  **                   e necessario eseguire OVRDBF   **  */
+002100940927 /*  **                   sui file delle giacenze prima  **  */
+002200940927 /*  **                   di procedere al richiamo del   **  */
+002300940927 /*  **                   pgm FNLG05R.                   **  */
+002400940927 /*  **            2)  U =Il programma è richiamato per  **  */
+002500940927 /*  **                   l'ultima volta: deve essere    **  */
+002600940927 /*  **                   eseguito il comando di CALL e  **  */
+002700940927 /*  **                   quello di  OVRDBF.             **  */
+002800940927 /*  **            3) ' '=Chiamata normale. Deve essere  **  */
+002900950104 /*  **                   eseguita CALL al pgm di scelta **  */
+003000950104 /*  **                   delle stampanti per gestire un **  */
+003100950104 /*  **                   eventuale successivo richiamo  **  */
+003200950104 /*  **                   all'esecuzione disposizioni    **  */
+003300950104 /*  **                   + chiamata al pgm FNLG05R      **  */
+003400940927 /*  ******************************************************  */
+003500940927             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+003600940927             DCL        VAR(&TIPRIC) TYPE(*CHAR) LEN(1)
+003700940927             DCL        VAR(&RICHI)  TYPE(*CHAR) LEN(1)
+003800050315             DCL        VAR(&commit)  TYPE(*CHAR) LEN(1)
+003900950104             DCL        VAR(&KPJBU)  TYPE(*CHAR) LEN(256)
+004000950104             DCLF       FILE(FNLG05DS)
+004100030716/* RICHIAMO PGM SCELTA STAMPANTI                */
+004200030716                      /* Imposto richiesta stampante ETICHETTE e LDV */
+004300030716             DCL        VAR(&TRUL90DS) TYPE(*CHAR) LEN(186) +
+004400030716                          VALUE('SS') /* Imposto richiesta +
+004500030716                          stampante ETICHETTE e LDV */
+004600030716/* RICHIAMO PGM SCELTA STAMPANTI                */
+004700030716             DCL        VAR(&D90F3) TYPE(*CHAR) LEN(1) VALUE(' ') +
+004800030716                      /* Torna con F3 */
+004900050401/* attributi del lavoro per invio messaggio     */
+005000050401             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+005100050401             RTVJOBA    JOB(&DSP)
+005200940914 /*--------------------------------------------------------------------*/
+005300950104             CHGVAR     VAR(&RICHI)  VALUE(%SUBSTRING(&KPJBA 248 1))
+005400950104             CHGVAR     VAR(&TIPRIC) VALUE(%SUBSTRING(&KPJBA 249 1))
+005500950104 /*--------------------------------------------------------------------*/
+005600950104 /*  Se il programma è richiamato direttamente da menù gestisco reper. */
+005700950104 /*  moduli e stampanti                                                */
+005800950104             IF         COND(&RICHI = ' ') THEN(DO)
+005900950104
+006000030716             CALL       PGM(TRUL90R) PARM(&KPJBA &TRUL90DS)
+006100030716             CHGVAR     VAR(&D90F3)   VALUE(%SST(&TRUL90DS 85  1))
+006200030716/* CMD3 - FINE LAVORO                           */
+006300030716             IF         COND(&D90F3 *EQ '1') THEN(GOTO CMDLBL(ENDF))
+006400950104
+006500950104             /* IMPOSTO  FNLG05DS X PASSAGGIO PARAMETRI            */
+006600030716             CHGVAR     VAR(&D05MOB) VALUE(%SST(&TRUL90DS 15 10))
+006700030716             CHGVAR     VAR(&D05PRB) VALUE(%SST(&TRUL90DS 65 10))
+006800030716             CHGVAR     VAR(&D05MOE) VALUE(%SST(&TRUL90DS  5 10))
+006900030716             CHGVAR     VAR(&D05PRE) VALUE(%SST(&TRUL90DS 55 10))
+007000030716             CHGVAR     VAR(&D05PSS) VALUE(%SST(&TRUL90DS 35 10))
+007100030716             CHGVAR     VAR(&D05MDB4) VALUE(%SST(&TRUL90DS 127 10))
+007200030716             CHGVAR     VAR(&D05MDB5) VALUE(%SST(&TRUL90DS 137 10))
+007300030716             CHGVAR     VAR(&D05BSL) VALUE(%SST(&TRUL90DS 147 1))
+007400030716             CHGVAR     VAR(&D05PSL) VALUE(%SST(&TRUL90DS 148 10))
+007500030716             CHGVAR     VAR(&D05PRB4) VALUE(%SST(&TRUL90DS 158 10))
+007600030716             CHGVAR     VAR(&D05PRB5) VALUE(%SST(&TRUL90DS 168 10))
+007700950104
+007800950104             /* FILE DI STAMPA                   */
+007900950104
+008000950104                        OVRPRTF FILE(FNLV22P) OUTQ(&D05PRE) +
+008100950104                                FORMTYPE(&D05MOE) SHARE(*YES)
+008200030716
+008300030716             OVRPRTF    FILE(FNLSB5PA4) OUTQ(&D05PRB4) +
+008400030716                                FORMTYPE(&D05MDB4) SHARE(*YES)
+008500030716
+008600030716             OVRPRTF    FILE(FNLSB5PA5) OUTQ(&D05PRB5) +
+008700030716                                FORMTYPE(&D05MDB5) SHARE(*YES)
+008800950104
+008900950104                        CHGVAR VAR(%SUBSTRING(&KPJBA 247 256)) VALUE(&KPJBU)
+009000990726                        CHGVAR VAR(%SUBSTRING(&KPJBA 309 10)) VALUE(&D05MOB)
+009100990726                        CHGVAR VAR(%SUBSTRING(&KPJBA 319 10)) VALUE(&D05PRB)
+009200990726                        CHGVAR VAR(%SUBSTRING(&KPJBA 329 10)) VALUE(&D05MOE)
+009300990726                        CHGVAR VAR(%SUBSTRING(&KPJBA 339 10)) VALUE(&D05PRE)
+009400990726                        CHGVAR VAR(%SUBSTRING(&KPJBA 349 10)) VALUE(&D05PSS)
+009500030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 359 10)) VALUE(&D05MDB4)
+009600030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 369 10)) VALUE(&D05MDB5)
+009700030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 379 1)) VALUE(&D05BSL)
+009800030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 380 10)) VALUE(&D05PSL)
+009900030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 390 10)) VALUE(&D05PRB4)
+010000030716             CHGVAR     VAR(%SUBSTRING(&KPJBA 400 10)) VALUE(&D05PRB5)
+010100050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 413  1)) VALUE('S')
+010200950104             ENDDO
+010300950104 /*--------------------------------------------------------------------*/
+010400950104 /*  Valorizzazione variabili                                          */
+010500950104             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 1)) VALUE('A')
+010600050217 /*  In arrivo leggo la 21L per bolla ARRIVO                           */
+010700050217             OVRDBF     FILE(tigcp01l) TOFILE(tigcp21l)
+010800050315 /*--------------------------------------------------------------------*/
+010900050315 /*  Verifico se devo attivare lo start del commit                     */
+011000050315             STRCMTCTL  LCKLVL(*CHG)
+011100050315             MONMSG     MSGID(CPF8351)
+011200050315 /*--------------------------------------------------------------------*/
+011300050315 /*  Richiamo pgm manutenzione giacenze in ARRIVO                      */
+011400050315             CALL       PGM(FNLG05R) PARM(&KPJBA)
+011500050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+011600050401             ROLLBACK
+011700050401             SNDBRKMSG  MSG('ERRORE il programma è terminato in modo +
+011800050401                          anomalo. Segnalare il problema alla +
+011900050401                          persona responsabile della manutenzione +
+012000050401                          del programma.') TOMSGQ(&DSP)
+012100050401             RCLRSC     LVL(*CALLER)
+012200050401             ENDDO
+012300050401
+012400050315 /*--------------------------------------------------------------------*/
+012500050315
+012600050315             IF         COND(&commit = 'S') THEN(DO)
+012700050315             ENDCMTCTL
+012800050315             MONMSG     MSGID(CPF8356)
+012900050315             enddo
+013000940914
+013100950104 ENDF:       ENDPGM

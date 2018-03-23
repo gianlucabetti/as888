@@ -1,0 +1,60 @@
+000100061025 =====================================================================
+000200061025 |Aut.|Data Mod.| Descrizione Modifica                               |
+000300061025 =====================================================================
+000400061025 : AB :08/09/00 : Aggiunta la gestione DEPOT DPD tabella DEP per poter
+000500061025 :    :         : definire la linea 190, 191 o 195.
+000600061025 : AB :16/07/02 : In vista dell'AS Unico tolta la vista logica AZORG05L
+000700061025 :    :         : e attivata la nuova routine TRUL26R per reperire in
+000800061025 :    :         : modo logico e non più fisico l'area di appartenenza
+000900061025 :    :         : dei vecchi singoli AS400. con ciò si aggancia la
+001000061025 :    :         : filiale e si controlla le linee DPD tramite il Network
+001100061025 :    :         : sull'organigramma.
+001200061025 : WB :01/08/02 : Non funzionava perchè testava §OGNTW dell'ultimo
+001300061025 :    :         : record letto dell'organigramma che non era DPD e quin
+001400061025 :    :         : di non elaborava niente
+001500061025 : AB :19/09/02 : x AS Unico  la procedura non è più lanciata con il profilo
+001600061025 :    :         : generico EDPCED ma deve essere EDPCED043 per poter capire
+001700061025 :    :         : se il terminal ha in gestione la DPD. questo avviene con il
+001800061025 :    :         : il TRUL06R (aggiunto) per prendere tutti le linee gestite dal
+001900061025 :    :         : terminal fra le quali capire se c'è un PO con la DPD.
+002000061025 :    :         : Se il terminal non gestisce la DPD il pgm va a fine.
+002100061025 | AB |10/09/04 | Non Deve inviare lo SCAN se la data rilevata è superiore
+002200061025 |    |         | ossia futura rispetto alla data di invio dello SCAN stesso
+002300061025 |    |         | poichè sarebbe rifiutato dal sistema DPD.
+002400061025 | mm |09/03/04 | Progetto 538 giacenze in uni modificato il file
+002500061031 | AB |31/10/06 | Aggiunto il test x CCA ='7' non si devono inviare eventi a DPD
+002600131119 _    _         _
+002700131119 + AB +10/09/13 + x ASUnico modifiche per richiamare la procedura una volta sola
+002800131119 |    |         | e smettere di lanciarla per terminal.
+002900131119 |    |         | Essendo ARB aggiornato prima di BLP invertita la CHAIN x
+003000131119 |    |         | reperire l'anomalia.
+003100131119 _    _         _
+003200131114| AB | 13/11/13 | Sostituite le letture dell'EVB in base alle nuove regole del
+003300131114|    |          | PDA con più eventi giornalieri da scaricare e mostrare.
+003400131114|    |          | Per fare questo esiste il flag progressivo §NOTPRG contiene
+003500131114|    |          | 3 valori:  Blank, 'U'=Ultimo e P='Primo
+003600131114|    |          | Deve leegere l'"U" o il blank  poichè al perchè al max.possono
+003700131114|    |          | essere al massimo 2 sul PDA o uno unico che sarà blk.
+003800151211 _    _         _
+003900151211| AB | 11/12/15 | Modificato il TIDP300F aggiunta la data spedizione e campo
+004000151211|    |          | FILLER x contenere lo SCAN che si invierà
+004100160114| ES | 08/01/16 | Per MIC e NIC uso data e ora immissione evento per scrivere lo
+004200160114                  SCAN se data evento = data immissione
+004300160114| ES | 08/01/16 | Per MIC se bolla già consegnata, la data e ora immissione non
+004400160114                  devono essere > della data e ora consegna: in qeusto caso uso
+004500160114                  data e ora evento
+004600160114                  per MIC/NIC di dist fittizia uso data/ora immiss evento   se
+004700160114                  data evento = data immisisone evento
+004800160518 + AB +18/05/16 + X poter Gestire l'invio dell'ALERT SCAN 18 E25/S25 come chiede
+004900160518 |    |         | DPD ossia con la stessa DATA del MIC o della CONSEGNA  occorre
+005000160518 |    |         | avere scritto dei records SCAN 18 con una data evento FUTURA
+005100160518 |    |         | fittizia e qui, come nel FIEU19R SCAN fissi,aggiornarla con la
+005200160518 |    |         | la stessa data del giorno in cui si vuole mostrare sul T&T DPD
+005300160518 |    |         | l'alert assieme al MIC (SCAN 03) e/o la Consegna (SCAN 13)
+005400160518 |    |         | Con la spedizione si chiama il FIEU17R1 che in presenza dello
+005500160518 |    |         | SCAN 18 dell'alert aggiornerà la data/ora evento.
+005600160518 |    |         | il FIEU16R con una data corretta e, NON futura, manderà via lo
+005700160518 |    |         | SCAN 18 a DPD regolarmente.
+005800160519 + AB +19/05/16 + Attenzione il TIDP301L era aperto in UPDATE allocando casualme
+005900160519 |    |         | nte proprio il record che il FIEU17R1 deve aggiornare allocava
+006000160519 |    |         | il record. FARE ATTENZIONE alle allocazioni x FUTURE MODIFICHE

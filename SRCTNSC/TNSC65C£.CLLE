@@ -1,0 +1,84 @@
+000100890707             PGM        PARM(&KPJBA)
+000200890707
+000300890707             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400950302             DCL        VAR(&D64BOL) TYPE(*CHAR) LEN(10)
+000401120326             DCL        VAR(&D64mul) TYPE(*CHAR) LEN(10)
+000500950302             DCL        VAR(&D64VAR) TYPE(*CHAR) LEN(10)
+000600950302             DCL        VAR(&D64PUL) TYPE(*CHAR) LEN(2)
+000700971230             DCL        VAR(&D64LIB) TYPE(*CHAR) LEN(10)
+000800940712             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+000900940316             DCL        VAR(&MSG) TYPE(*CHAR) LEN(200) VALUE('(C G) +
+001000940316                          Montare nastro su unità TAP03 per scarico +
+001100940316                          archivi pulizia Contrassegni di sede')
+001200940712/*---------------------------------------------------------------------*/
+001300940712/*  Reperisco parametri scarico dati archivi C/A                       */
+001400940712/*---------------------------------------------------------------------*/
+001500950302             CHGVAR     VAR(&D64BOL) VALUE(%SUBSTRING(&KPJBA 247 10))
+001600950302             CHGVAR     VAR(&D64VAR) VALUE(%SUBSTRING(&KPJBA 257 10))
+001700950302             CHGVAR     VAR(&D64PUL) VALUE(%SUBSTRING(&KPJBA 267 2))
+001800971230             CHGVAR     VAR(&D64LIB) VALUE(%SUBSTRING(&KPJBA 269 10))
+001801120326             CHGVAR     VAR(&D64mul) VALUE(%SUBSTRING(&KPJBA 279 10))
+001900890707
+002000940712/*---------------------------------------------------------------------*/
+002100940712/*  Se nomi archivi diversi da quelli originari eseguo duplicazione    */
+002200940712/*  dati                                                               */
+002300940712/*---------------------------------------------------------------------*/
+002400950302             IF         COND(&D64BOL *NE 'TNCPB00F') THEN(CRTDUPOBJ +
+002500971230                          OBJ(TNCPB00F) FROMLIB(&D64LIB) +
+002600950302                          OBJTYPE(*FILE) NEWOBJ(&D64BOL) DATA(*YES))
+002601120326
+002602120326             IF         COND(&D64MUL *NE 'TNCPM00F') THEN(CRTDUPOBJ +
+002603120326                          OBJ(TNCPM00F) FROMLIB(&D64LIB) +
+002604120326                          OBJTYPE(*FILE) NEWOBJ(&D64MUL) DATA(*YES))
+002700940712
+002800950302             IF         COND(&D64VAR *NE 'TNCPV00F') THEN(CRTDUPOBJ +
+002900971230                          OBJ(TNCPV00F) FROMLIB(&D64LIB) +
+003000950302                          OBJTYPE(*FILE) NEWOBJ(&D64VAR) DATA(*YES))
+003100940712
+003200940315/*---------------------------------------------------------------------*/
+003300940315/*  Inizio scarico: invio messaggio coda operatore x montare nastro    */
+003400940315/*---------------------------------------------------------------------*/
+003500890707             SNDUSRMSG  MSG(&MSG) VALUES(C G) DFT(C) TOMSGQ(QSYSOPR) +
+003600890707                          MSGRPY(&RISP)
+003700890707             IF         COND((&RISP *EQ 'C') *OR (&RISP *EQ 'c')) +
+003800890707                          THEN(GOTO CMDLBL(ENDPGM))
+003900890707
+004000940315/*---------------------------------------------------------------------*/
+004100940315/*  Inizializzo il nastro sull'unità TAP03                             */
+004200940315/*---------------------------------------------------------------------*/
+004300940315             INZTAP     DEV(TAP03) NEWVOL(SAVCA) NEWOWNID(*BLANK) +
+004400940315                          CHECK(*NO) CLEAR(*NO)
+004500940315
+004600940315/*---------------------------------------------------------------------*/
+004700940315/*  Scarico su nastro archivio bolle/variazioni Contrassegni           */
+004800940315/*---------------------------------------------------------------------*/
+004900120326             SAVOBJ     OBJ(&D64BOL &D64VAR &D64MUL) LIB(&D64LIB) +
+004901120326                          DEV(TAP03)
+005000940315             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDPGM))
+005100940315
+005200940315/*---------------------------------------------------------------------*/
+005300940315/*  Mando in stampa contenuto dei dati salvati                         */
+005400940315/*---------------------------------------------------------------------*/
+005500940315             DSPTAP     DEV(TAP03) DATA(*SAVRST) OUTPUT(*PRINT)
+005600940315
+005700940315/*---------------------------------------------------------------------*/
+005800940712/*  Se archivi di salvataggio diversi procedo alla loro cancellazione  */
+005900940315/*---------------------------------------------------------------------*/
+006000950302             IF         COND(&D64BOL *NE 'TNCPB00F') THEN(DLTF +
+006100950302                          FILE(&D64BOL))
+006200940712
+006201120326             IF         COND(&D64MUL *NE 'TNCPM00F') THEN(DLTF +
+006202120326                          FILE(&D64MUL))
+006203120326
+006300950302             IF         COND(&D64VAR *NE 'TNCPV00F') THEN(DLTF +
+006400950302                          FILE(&D64VAR))
+006500940315/*---------------------------------------------------------------------*/
+006600940712/*  Se ho richiesto la pulizia la eseguo                               */
+006700940315/*---------------------------------------------------------------------*/
+006800950302             IF         COND(&D64PUL *EQ 'SI') THEN(DO)
+006900980105                        CLRPFM     FILE(D64LIB/TNCPB00F)
+006901120326                        CLRPFM     FILE(D64LIB/TNCPM00F)
+007000980105                        CLRPFM     FILE(D64LIB/TNCPV00F)
+007100940712                        ENDDO
+007200940712
+007300890707 ENDPGM:     ENDPGM

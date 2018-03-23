@@ -1,0 +1,9 @@
+000100090306       // - Parametri per XCHKCHAR
+000200090306     d TxtInOut        s           2048    inz
+000300090306     d ElencoChar      s            256    inz
+000400090306     d TipoElenco      s              1    inz
+000500090306     d CharSost        s              1    inz
+000600090306     d UpperCase       s              1    inz
+000700090306     d ChkNull         s              1    inz
+000800090306     d CharNull        s              1    inz
+000900090306     d Esito           s              1    inz

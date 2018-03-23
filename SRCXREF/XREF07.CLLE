@@ -1,0 +1,41 @@
+000100990514/*PARMS DFTACTGRP(*YES)                                                       */
+000200990514/*PARMS                                                                       */
+000300990514/*PARMS                                                                       */
+000400990514/*PARMS                                                                       */
+000500990514/*PARMS                                                                       */
+000600990524             PGM        PARM(&XRFLIB)
+000700990524             DCLF       FILE(QAFDMBRL)
+000800990524             DCL        VAR(&XRFLIB) TYPE(*CHAR) LEN(10)
+000900051017
+001000990524             DSPFD      FILE(&XRFLIB/*ALL) TYPE(*MBRLIST) +
+001100990524                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+001200990524                          OUTFILE(QTEMP/QAFDMBRL)
+001300051017             MONMSG     MSGID(CPF0000) EXEC(DO)
+001400051017             GOTO       CMDLBL(ENDPGM)
+001500051017             ENDDO
+001600051017
+001700051017             SNDPGMMSG  MSGID(CPA2401) MSGF(QCPFMSG) MSGDTA('Ricerca +
+001800051017                          sorgenti nella libreria' *BCAT &XRFLIB +
+001900051017                          *TCAT ' . . .') TOPGMQ(*EXT) MSGTYPE(*STATUS)
+002000051017
+002100990524             OVRDBF     FILE(QAFDMBRL) TOFILE(QTEMP/QAFDMBRL) +
+002200990524                          OVRSCOPE(*CALLLVL)
+002300990524 RCVF:       RCVF
+002400990525             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDRCVF))
+002500990526
+002600990526             IF         COND(%SST(&MLNAME 1 2) *NE 'RR') THEN(DO)
+002700990531             IF         COND((%SST(&MLSEU2 1 3) *EQ 'RPG') +
+002800990531                        *OR (%SST(&MLSEU2 1 6) *EQ 'SQLRPG') +
+002900990531                        *OR (&MLSEU2 *EQ 'PF')) +
+003000990531                        THEN(DO)
+003100990525             CALL       PGM(XREF08) PARM(&MLLIB &MLFILE &MLNAME +
+003200990525                          &MLSEU2 &MLMTXT)
+003300990526             ENDDO
+003400990524             ENDDO
+003500990526
+003600990524             GOTO       CMDLBL(RCVF)
+003700990525 ENDRCVF:
+003800990525
+003900990525             RCLRSC
+004000990525
+004100990524 ENDPGM:     ENDPGM

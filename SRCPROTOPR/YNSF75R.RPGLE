@@ -1,0 +1,3 @@
+000100081002     D chkVoceInContoEconomico...
+000101081002     D                 PR                  EXTPGM('YNSF75R')
+000102081002     D  kpjba                              LIKEDS(kpjba)

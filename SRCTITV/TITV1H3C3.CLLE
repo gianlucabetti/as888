@@ -1,0 +1,50 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200140730/*PARMS                                                                       */
+000300140730/*PARMS                                                                       */
+000400140730/*PARMS                                                                       */
+000500140730/*PARMS                                                                       */
+000600080128             PGM        PARM(&KPJBA)
+000700990908
+000800050607
+000900080804             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+001000080128             DCL        VAR(&ESITO)  TYPE(*CHAR) LEN(1) VALUE(' ')
+001100080804             DCL        VAR(&LISTACLI) TYPE(*CHAR) LEN(70) +
+001200180108                          VALUE('0025183')
+001300060905
+001400060905
+001500060905
+001600050607/* AVVIO IL CONTROLLO SINCRONIA ------------------------------------*/
+001700080212             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001800050606             MONMSG     MSGID(CPF8351)
+001900050531
+002000050531
+002100050531
+002200050531/* AVVIO L'ELABORAZIONE DEI RECORD (TRADUZIONE/COPY FILE) ----------*/
+002300080804             CALL       PGM(TITV1H3R) PARM(&LISTACLI &ESITO)
+002400050606             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500050606             ROLLBACK
+002600050606             RCLRSC     LVL(*CALLER)
+002700050607             GOTO       CMDLBL(FINE)
+002800050606             ENDDO
+002900050607
+003000050607
+003100050607/* VERIFICO L'ESITO DELL'ELABORAIZONE ------------------------------*/
+003200080128             IF         COND(&ESITO *NE '1')  THEN(DO)
+003300050607             ROLLBACK
+003400050607             RCLRSC     LVL(*CALLER)
+003500050607             GOTO       CMDLBL(FINE)
+003600050607             ENDDO
+003700050607
+003800050607
+003900050607/* SANCISCO IL COMMIT ----------------------------------------------*/
+004000050607             COMMIT
+004100050607
+004200050606
+004300050606
+004400050607/* STOPPO IL CONTROLLO SINCRONIA -----------------------------------*/
+004500080131 FINE:       ENDCMTCTL
+004600050606             MONMSG     MSGID(CPF8356)
+004700060908
+004800080130
+004900080130
+005000050606             ENDPGM

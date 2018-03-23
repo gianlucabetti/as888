@@ -1,0 +1,175 @@
+000100000000     H              J
+000200001122      *
+000300001122      * TNTA44R *----------------------------------------------------*
+000400001122      *-----------------*                                            *
+000500001122      *   ANNULLAMENTO TARIFFE / VISITE / SALDI ATTIVITA' COMM.LE    *
+000600001122      *--------------------------------------------------------------*
+000700001122      *
+000800930416     FTABEL00FIF  E           K        DISK
+000900001122      *
+001000001122      * RICHIAMO PGM PULIZIA TARIFFE SCADUTE           - TNTA46R -
+001100000000     IPARAM       DS
+001200001122      * DATA IN AAAA/MM/GG
+001300940722     I                                        1   80PARAMG
+001400001122      * DATA IN GG/MM/AAAAA
+001500940722     I                                        9  160PARVID
+001600001122      * STAMPA PROGRESSIVI = S (FORZATO)
+001700940722     I                                       17  17 PARSTA
+001800001122      *
+001900001122      * RICHIAMO PGM PULIZIA VISITE                    - TNTA48R -
+002000100823     I***PARAM2      DS
+002100001122      * DATA IN AAAA/MM/GG
+002200100823     I***                                       18  250PARVIS
+002300001122      *
+002400001122      * RICHIAMO PGM PULIZIA SALDI STAT. ATT. COMM.LE  - TNTA71R -
+002500041007     I***PARAM3      DS
+002600001122      * DATA IN AAAA/MM
+002700041007     I***                                    26  310PARSAL
+002800001122      *
+002900930416     IWLBDAT      DS
+003000940722     I                                        1   80G02DAT
+003100940722     I                                        9  160G02INV
+003200940722     I                                       17  17 G02ERR
+003300940722     I                                       18  220G02TGI
+003400930416     IWGIDAT      DS
+003500940722     I                                        1   80GIODAT
+003600940722     I                                        9  160GIOINV
+003700940722     I                                       17  210GIOTGI
+003800041007     I***         DS
+003900041007     I***                                     1   40COMANN
+004000041007     I***                                     5   60COMMES
+004100041007     I***                                     1   60COMSAL
+004200930416     IDS5A      E DS
+004300041007     I***DS5A2     E DS
+004400000000     IKPJBA     E DS
+004500930416     IUT§DSE    E DSUT§DSE0F
+004600001122      *
+004700001122      *---------------------------------------------------------------*
+004800001122      *
+004900000000     C           *ENTRY    PLIST
+005000000000     C                     PARM           KPJBA
+005100930416     C                     Z-ADD1         CODUT   10
+005200940330     C                     CALL 'X§PARUT'
+005300921026     C                     PARM           UT§DSE
+005400001122     C                     MOVELRAGUT     RSUT   20
+005500001122      *
+005600001122      *---------------------------------------------------------------*
+005700001122      *
+005800001122      * ACCESSO TABEL00F
+005900001122      *
+006000930416     C           KTAB      KLIST
+006100930416     C                     KFLD           CODUT
+006200940329     C                     KFLD           COD
+006300940329     C                     KFLD           KEY
+006400001122      *
+006500001122      * DEFINIZIONE VARIABILI
+006600001122      *
+006700940329     C           *LIKE     DEFN TBLCOD    COD
+006800940329     C           *LIKE     DEFN TBLKEY    KEY
+006900001122      *
+007000001122      *---------------------------------------------------------------*
+007100001122      * IMPOSTAZIONE PARAMETRI:
+007200001122      *---------------------------------------------------------------*
+007300001122      *
+007400001122      * STAMPA PROGRESSIVI (FORZO SEMPRE "S")
+007500001122      *
+007600001122     C                     MOVEL'S'       PARSTA
+007700001122      *
+007800001122      * LA DATA DEL GIORNO LA PRENDO DA TIME
+007900001122      *
+008000940722     C                     TIME           W0120  120
+008100940722     C                     MOVE W0120     WDAT    60
+008200001122      *
+008300940722     C                     Z-ADDWDAT      G02DAT
+008400930416     C                     MOVEL*BLANK    G02ERR
+008500940722     C                     CALL 'XSRDA8'
+008600930416     C                     PARM           WLBDAT
+008700001122      *
+008800001122      * DATE PULIZIE: REPERISCO GIORNI DA DS5A
+008900001122      *
+009000930416     C                     MOVEL'5A'      COD
+009100930416     C                     MOVEL'1       'KEY
+009200930416     C           KTAB      CHAINTABEL                30
+009300930416     C        N30          MOVELTBLUNI    DS5A
+009400930416     C         30          MOVEL*ZEROS    DS5A
+009500001122      *
+009600001122      * PULIZIA TARIFFE: SOTTRAGGO §5ATAM AI GIORNI
+009700001122      *
+009800930416     C           G02TGI    SUB  §5ATAM    GIOTGI
+009900001122      *
+010000940722     C                     CALL 'XSRGI8'
+010100930416     C                     PARM           WGIDAT
+010200001122     C                     Z-ADDGIODAT    PARVID
+010300001122     C                     Z-ADDGIOINV    PARAMG
+010400001122      *
+010500001122      * PULIZIA VISITE: SOTTRAGGO §5AVIS AI GIORNI
+010600001122      *
+010700100823     C***        G02TGI    SUB  §5AVIS    GIOTGI
+010800001122      *
+010900100823     C***                  CALL 'XSRGI8'
+011000100823     C***                  PARM           WGIDAT
+011100100823     C***                  Z-ADDGIOINV    PARVIS
+011200001122      *
+011300001122      * DATE PULIZIE: REPERISCO GIORNI DA DS5A2
+011400001122      *
+011500041007     C***                  MOVEL'5A'      COD
+011600041007     C***                  MOVEL'2       'KEY
+011700041007     C***        KTAB      CHAINTABEL                30
+011800041007     C***     N30          MOVELTBLUNI    DS5A2
+011900041007     C***      30          CLEARDS5A2
+012000001122      *
+012100001122      * PULIZIA SALDI: SOTTRAGGO §5ASAC AI GIORNI
+012200001122      *
+012300041007     C***        G02TGI    SUB  §5ASAC    GIOTGI
+012400001122      *
+012500041007     C***                  CALL 'XSRGI8'
+012600041007     C***                  PARM           WGIDAT
+012700041007     C***                  MOVELGIOINV    COMSAL
+012800041007     C***        COMMES    SUB  1         COMMES
+012900001122      * MESE CORRENTE GENNAIO: VADO A DICEMBRE DELL'ANNO PRECEDENTE
+013000041007     C***        COMMES    IFEQ 0
+013100041007     C***                  Z-ADD12        COMMES
+013200041007     C***                  SUB  1         COMANN
+013300041007     C***                  ENDIF
+013400041007     C***                  Z-ADDCOMSAL    PARSAL
+013500001122      *
+013600001122      *---------------------------------------------------------------*
+013700001122      * ESECUZIONE PULIZIE:
+013800001122      *---------------------------------------------------------------*
+013900001122      *
+014000001122      * T A R I F F E
+014100001122      *
+014200001122     C           PARVID    IFNE 0
+014300001122      * PULIZIA FISICA TARIFFA
+014400921118     C                     MOVELPARAM     KPJBU
+014500001122     C                     CALL 'TNTA10R'
+014600001122     C                     PARM           KPJBA
+014700001122      * ANNULLAMENTO TARIFFE SCADUTE
+014800921118     C                     MOVELPARAM     KPJBU
+014900001122     C                     CALL 'TNTA46R'
+015000921118     C                     PARM           KPJBA
+015100940329     C                     ENDIF
+015200001122      *
+015300001122      * V I S I T E
+015400001122      *
+015500100823     C**         PARVIS    IFNE 0
+015600100823     C**                   MOVELPARAM2    KPJBU
+015700100823     C**                   CALL 'TNTA48R'
+015800100823     C**                   PARM           KPJBA
+015900100823     C**                   ENDIF
+016000001122      *
+016100001122      * S A L D I    S T A T I S T I C A
+016200001122      *
+016300041007     C***        PARSAL    IFNE 0
+016400041007     C***                  MOVELPARAM3    KPJBU
+016500041007     C***                  CALL 'TNTA71R'
+016600041007     C***                  PARM           KPJBA
+016700041007     C***                  ENDIF
+016800001122      *
+016900001122      * P O T E N Z I A L I
+017000001122      *
+017100001122     C                     CALL 'TRMK42R'
+017200001122     C                     PARM           KPJBA
+017300010131     C*
+017400001122      *
+017500000000     C                     SETON                     LR

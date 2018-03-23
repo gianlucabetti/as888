@@ -1,0 +1,254 @@
+000100920316     H
+000200920316      *---------------------------------------------------------------*
+000300920317      *  Manutenzione causali operative x primanota generica          *
+000400920316      *                                                               *
+000500920317      *  Daniele Greggio  -  Gruppo Pro Milano  -  17/03/92           *
+000600920316      *---------------------------------------------------------------*
+000700920316      *                                                               *
+000800920317      *  FUNZIONI.  Gestisce la manutenzione delle causali operative  *
+000900920317      *  per la parte della prima nota generica.                      *
+001000920316      *---------------------------------------------------------------*
+001100920317     FCNOPE01LUF  E           K        DISK                      A
+001200920317     FCNC032D0CF  E                    WORKSTN
+001300920318     E                    MS      1   5 15
+001400920316     I* DS PER PGM XPARUT                                              TO
+001500920316     IPARUT     E DSUTEDSE0F
+001600920316     IKPJBA     E DS
+001700920317      *-- ds per campi file CNOPE00F
+001800920317     ICNC030    E DS
+001900920317      *-- ds per campi a dettaglio P.N. generica
+002000920317     ICNC031    E DS
+002100920317      *-- ds per passaggio parametri
+002200920317     ICNC034    E DS
+002300920602     I*----------------------------------------------------
+002400920602     I* PAR036:  parametri per CNC036R-Gestione Block Notes
+002500920602     I*----------------------------------------------------
+002600920602     IPAR036      DS
+002700920602     I                                        1   4 COD036
+002800920602     I                                        5   5 STA036
+002900920602     I                                        6   6 VIS036
+003000920602     I*----------------------------------------------------
+003100920316      *-- DS x Nome programma
+003200920316     I           SDS
+003300920316     I                                        1   8 NOMPG
+003400920316     I            DS
+003500920316     I                                        1  11 NOMPGM
+003600920316     I I            '*'                       1   1 AST1
+003700920316     I                                        3  10 NOMPG1
+003800920316     I I            '*'                      11  11 AST2
+003900920316      *-- Definizione costanti
+004000920316     I              '1'                   C         $ON
+004100920316     I              '0'                   C         $OFF
+004200920316      *--------------------------------------------------------*
+004300920316      *-- Impostazioni iniziali
+004400920316     C                     EXSR DEFCAM
+004500920319      *-- Solo visualizzazione
+004600920319     C           P34VIS    IFEQ 'S'
+004700920319     C                     EXSR GESVIS
+004800920319     C                     END
+004900920316      *-- Gestione Video
+005000920316     C           $FINE     DOWNE'1'
+005100920317      *--
+005200920317     C           $GES      IFEQ 'D1'
+005300920316     C                     EXSR GESD1
+005400920317     C                     END
+005500920317      *--
+005600920317     C           $GES      IFEQ 'D2'
+005700920317     C                     EXSR GESD2
+005800920317     C                     END
+005900920317      *--
+006000920316     C                     END
+006100920316      *-- Fine Programma
+006200920316     C                     SETON                     LR
+006300920316      *--
+006400920316      *=======
+006500920316      *-- Gestione Exfmt e relativi CMD
+006600920316      *=======
+006700920316     C           GESD1     BEGSR
+006800920317     C                     EXFMTC032D01
+006900920316     C                     EXSR SETOF
+007000920317      *-- Fine
+007100920317     C           *INKC     IFEQ $ON
+007200920316     C                     MOVEL'1'       $FINE
+007300920317     C                     GOTO ENDGE1
+007400920316     C                     END
+007500920602      *-- Block Notes
+007600920602     C           *INKN     IFEQ $ON
+007700920602     C                     MOVE '1'       STA036
+007800920602     C                     MOVELKPJBU     WKPJBU
+007900920602     C                     MOVE *BLANKS   KPJBU
+008000920602     C                     MOVELPAR036    KPJBU
+008100000201     C********             CALL 'CNC036R'
+008200000201     C*********            PARM           KPJBA
+008300920602     C                     MOVELKPJBU     PAR036
+008400920602     C                     MOVELWKPJBU    KPJBU
+008500920602     C           STA036    COMP '1'                      98 TROVATI
+008600920602     C                     GOTO ENDGE1
+008700920602     C                     END
+008800920602     C*
+008900920317     C                     EXSR CTRD1
+009000920317     C  N90                MOVEL'D2'      $GES
+009100920317     C   90                MOVEL'D1'      $GES
+009200920317     C           ENDGE1    ENDSR
+009300920316      *=======
+009400920316      *-- Controlli video e messaggi errore
+009500920316      *=======
+009600920316     C           CTRD1     BEGSR
+009700920316     C                     ENDSR
+009800920317      *=======
+009900920317      *-- Gestione Exfmt e relativi CMD
+010000920317      *=======
+010100920317     C           GESD2     BEGSR
+010200920317     C                     EXFMTC032D02
+010300920317     C                     EXSR SETOF
+010400920317      *-- Fine
+010500920317     C           *INKC     IFEQ $ON
+010600920317     C                     MOVEL'1'       $FINE
+010700920317     C                     GOTO ENDGE2
+010800920317     C                     END
+010900930823     C*§
+011000930823     C                     MOVE *ZEROS    OPEDTR
+011100930823     C                     MOVE *BLANK    OPEFTR
+011200930823     C*§
+011300920317      *-- Annullamento
+011400920318     C  N70      *INKQ     IFEQ $ON
+011500920318     C                     MOVEL'*'       OPEFLG
+011600920318     C                     MOVELMS,3      MESSA1
+011700920318     C                     UPDATCNOPE000
+011800920318     C           P34COD    CHAINCNOPE01L             21
+011900920317     C                     END
+012000920317      *-- Ripristino
+012100920318     C  N70      *INKE     IFEQ $ON
+012200920318     C                     MOVEL' '       OPEFLG
+012300920318     C                     MOVELMS,4      MESSA1
+012400920318     C                     UPDATCNOPE000
+012500920318     C           P34COD    CHAINCNOPE01L             21
+012600920317     C                     END
+012700920317      *-- Ritorno prima mappa
+012800920317     C           *INKL     IFEQ $ON
+012900920317     C                     MOVEL'D1'      $GES
+013000920317     C                     GOTO ENDGE2
+013100920317     C                     END
+013200920317     C                     EXSR CTRD2
+013300920318      *-- Scrittura dati e uscita se N90 (no errori a video)
+013400920317     C  N90      *INKF     IFEQ $ON
+013500920318     C                     MOVEL'1'       $FINE
+013600920318     C                     MOVELCNC031    CNC030
+013700920317     C           *IN70     IFEQ $ON
+013800920318     C                     Z-ADDKNRAZ     OPENRJ
+013900920318     C                     MOVELP34COD    OPECOD
+014000920330     C                     MOVELP34DES    OPEDES
+014100920318     C                     MOVELCODUT     OPEKUT
+014200920330     C                     MOVELP34CD1    OPECD1
+014300920318     C                     MOVEL'0'       OPEP0
+014400920318     C                     MOVEL*BLANK    OPEFLG
+014500920318     C                     MOVEL*BLANK    OPETRB
+014600920318     C                     MOVEL*BLANK    OPEATB
+014700920317     C                     WRITECNOPE000
+014800920317     C                     ELSE
+014900920330     C                     MOVELP34DES    OPEDES
+015000920317     C                     UPDATCNOPE000
+015100920317     C                     END
+015200920317     C                     END
+015300920317     C           ENDGE2    ENDSR
+015400920317      *=======
+015500920317      *-- Controlli video e messaggi errore su seconda mappa
+015600920317      *=======
+015700920317     C           CTRD2     BEGSR
+015800920317     C                     ENDSR
+015900920319      *=======
+016000920319      *-- Gestione sola visualizzazione
+016100920319      *=======
+016200920319     C           GESVIS    BEGSR
+016300920323     C                     SETON                     77
+016400920319     C                     MOVELMS,5      MESSAG
+016500920319     C           $FINE     DOWNE'1'
+016600920319      *-- Prima mappa
+016700920319     C           $GES      IFEQ 'D1'
+016800920319     C                     WRITEC032D01
+016900920319     C                     EXFMTC032D03
+017000920319      *-- Fine con F3 premuto su prima mappa
+017100920319     C           *INKC     IFEQ $ON
+017200920319     C                     MOVEL'1'       $FINE
+017300920319     C                     ELSE
+017400920319     C                     MOVEL'D2'      $GES
+017500920319     C                     END
+017600920319     C                     END
+017700920319      *-- Seconda mappa
+017800920319     C           $GES      IFEQ 'D2'
+017900920319     C                     WRITEC032D02
+018000920319     C                     EXFMTC032D04
+018100920319      *-- Ritorno prima mappa con F12
+018200920319     C           *INKL     IFEQ $ON
+018300920319     C                     MOVEL'D1'      $GES
+018400920319     C                     END
+018500920319      *-- Fine con F3 su seconda Mappa
+018600920319     C           *INKC     IFEQ $ON
+018700920319     C                     MOVEL'1'       $FINE
+018800920319     C                     END
+018900920319     C                     END
+019000920319      *--
+019100920319     C                     END
+019200920319      *-- Fine Programma
+019300920319     C                     SETON                     LR
+019400920319     C                     ENDSR
+019500920316      *=======
+019600920316      *-- Setof indicatori
+019700920316      *=======
+019800920316     C           SETOF     BEGSR
+019900920316     C                     ENDSR
+020000920316      *========
+020100920316      *-- Impostazioni iniziali; klist variabili e altro
+020200920316      *========
+020300920316     C           DEFCAM    BEGSR
+020400920316     C           *ENTRY    PLIST
+020500920316     C                     PARM           KPJBA
+020600920317     C                     MOVELKPJBU     CNC034
+020700920317      *--
+020800920317     C                     SETOF                     90
+020900920316     C                     MOVELNOMPG     NOMPG1           Nome Pgm
+021000920316     C                     MOVEL'0'       $FINE   1
+021100920317     C                     MOVEL'D1'      $GES    2
+021200920316      *-- Controllo su xparut per autorizzazione e per estrarre rag soc
+021300920316     C                     Z-ADD1         CODUT   10
+021400920316     C                     CALL 'XPARUT'
+021500920316     C                     PARM           PARUT
+021600920316     C           CODUT     IFEQ -1
+021700920316     C                     MOVEL'1'       $FINE
+021800920316     C                     END
+021900920316     C                     MOVELRAGUT     RSUT
+022000920317      *-- Verifica se causale gia' presente
+022100920318     C           P34COD    CHAINCNOPE01L             70
+022200920317      *--
+022300920318     C           *IN70     IFEQ $ON
+022400920317     C                     MOVEL*BLANKS   CNC031
+022500920319     C                     MOVEL'0'       G00101
+022600920318     C                     MOVELMS,1      MESSAG
+022700920317     C                     ELSE
+022800920317     C                     MOVELCNC030    CNC031
+022900920318     C                     MOVELMS,2      MESSAG
+023000920318      *-- Se rk annullato segnalo con messaggio 'annullato'
+023100920318     C           OPEFLG    IFEQ '*'
+023200920318     C                     MOVELMS,3      MESSA1
+023300920318     C                     END
+023400920317     C                     END
+023500920602      *-- Block Notes
+023600920602     C           *IN70     IFEQ $OFF
+023700920602     C                     MOVE P34COD    COD036
+023800920602     C                     MOVE '0'       STA036
+023900920602     C                     MOVELKPJBU     WKPJBU256
+024000920602     C                     MOVE *BLANKS   KPJBU
+024100920602     C                     MOVELPAR036    KPJBU
+024200000201     C*******              CALL 'CNC036R'
+024300000201     C********             PARM           KPJBA
+024400920602     C                     MOVELKPJBU     PAR036
+024500920602     C                     MOVELWKPJBU    KPJBU
+024600920602     C           STA036    COMP '0'                      98 TROVATI
+024700920602     C                     END
+024800920316     C                     ENDSR
+024900920318** Messaggi da visualizzare a video per indicazione se ins/var o ann.
+025000920318INSERIMENTO
+025100920318VARIAZIONE
+025200920318CAUS. ANNULLATA
+025300920318CAUS. RIPRIST.
+025400920319VISUALIZZAZIONE

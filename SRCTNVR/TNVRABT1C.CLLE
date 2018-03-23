@@ -1,0 +1,73 @@
+000100120608             PGM
+000200111123
+000300120608             DCL        VAR(&AGGIORNA) TYPE(*CHAR) LEN(1) VALUE('S')
+000400120608             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(9)
+000500120531
+000600120531             DCL        VAR(&ESITOT1) TYPE(*CHAR) LEN(9)
+000700120531             DCL        VAR(&ESITOT2) TYPE(*CHAR) LEN(9)
+000800111123
+000900120604             IF         COND(&AGGIORNA *EQ 'S') THEN(DO)
+001000120604
+001100120604             CRTLIB     LIB(EDPABTST)
+001200120604
+001300120604             MONMSG     MSGID(CPF0000) EXEC(DO)
+001400120604             DLTLIB     LIB(EDPABTST)
+001500120604             CRTLIB     LIB(EDPABTST)
+001600120604             ENDDO
+001700120604
+001800120604/*  Salva i files prima di allinearli                          */
+001900120604             CPYF       FROMFILE(AIATS00F) TOFILE(edpabtst/SVATS00F) +
+002000120604                          MBROPT(*ADD) CRTFILE(*YES)
+002100120604
+002200120604             CPYF       FROMFILE(FIADT00F) TOFILE(edpabtst/SVADT00F) +
+002300120604                          MBROPT(*ADD) CRTFILE(*YES)
+002400120604
+002500120604             CLRPFM     FILE(WFADTXXF)
+002600120604             CLRPFM     FILE(WXADT00S)
+002700120604
+002800120604             ENDDO
+002900120604
+003000111123/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003100111123/* procedura/programma fosse finita in maniera anomala occorre */
+003200111123/* parare il colpo riducendo il male al male minore ossia      */
+003300111123/* con un rollback chiudere le precedenti transazioni fatte a  */
+003400111123/* metà piuttosto che confermarle. E ripartendo da una         */
+003500111123/* situazione pulita.                                          */
+003600120531
+003700111123             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003800111123             MONMSG     MSGID(CPF8351) EXEC(DO)
+003900111123             ENDCMTCTL
+004000111123             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004100111123             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004200111123             ENDDO
+004300120604
+004400111123/*  controlla se ci sono tariffe successive             */
+004500120604             CALL       PGM(TNVRABT1R) PARM(&AGGIORNA &ESITO)
+004600120531             MONMSG     MSGID(CPF0000) EXEC(DO)
+004700120531             ROLLBACK
+004800120531             GOTO       CMDLBL(FINEPGM)
+004900120531             ENDDO
+005000120531
+005100120604             CHGVAR     VAR(&ESITOT1) VALUE(&ESITO)
+005200120531             IF         COND(&ESITOT1 *NE ' ') THEN(DO)
+005300111123             CHGVAR     VAR(&AGGIORNA) VALUE(' ')
+005400111123             ENDDO
+005500111123
+005600111128
+005700120604             CALL       PGM(TNVRABT2R) PARM(&AGGIORNA &ESITO)
+005800111128             MONMSG     MSGID(CPF0000) EXEC(DO)
+005900111123             ROLLBACK
+006000111128             GOTO       CMDLBL(FINEPGM)
+006100111123             ENDDO
+006200111123
+006300120531
+006400111201             COMMIT
+006500111201
+006600111123 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006700111123 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006800111123 /* in modo pulito senza lasciare transazioni a metà.            */
+006900111128finepgm:
+007000111123             ENDCMTCTL
+007100111123             MONMSG     MSGID(CPF8350)
+007200111123
+007300050510             ENDPGM

@@ -1,0 +1,172 @@
+000100941019     H* FNLGZ0R *----------------------------------------------------*
+000200940224     H              J
+000300000000     H*-----------------*                                            *
+000400900515     H*         - RICHIESTA PULIZIA GIACENZE - FILTRO -              *
+000500000000     H*--------------------------------------------------------------*
+000600940224     H*  01 = IMPOSSIBILE MODIFICARE DATE PULIZIA: CAMPI PROTETTI    *
+000700940224     H*  10 = CHAIN SU TABEL                                         *
+000800940224     H*  21 = DATA ERRARA O LIMITE DATA ERRATA                       *
+000900940224     H*  22 = TEST FLAG VALIDITA' DATA: G02ERR                       *
+001000940224     H*  47 = LETTURA DATA AREA §§§EDP                               *
+001100940224     H*--------------------------------------------------------------*
+001200930330     FTABEL00FIF  E           K        DISK
+001300000626     FTNVRAB7DCF  E                    WORKSTN                        UC
+001400941019     I*--------------------------------------------------------------*
+001500941019     IFNLGZ0    E DSFNLGZ0DS
+001600900131     IUTEDSE    E DSUTEDSE0F
+001700941019     IWLBDA8      DS
+001800941019     I                                        1   80G02DAT
+001900941019     I                                        9  160G02INV
+002000941019     I                                       17  17 G02ERR
+002100941019     I                                       18  220G02TGI
+002200941019     IWGIDAT      DS
+002300941019     I                                        1   80GI8DAT
+002400941019     I                                        9  160GI8INV
+002500941019     I                                       17  210GI8TGI
+002600910327     I§§§EDP    E DS
+002700930422     IDS5A      E DS
+002800900131     IKPJBA     E DS
+002900900131     I                                       92 101 LIBSYS
+003000900131     I                                      453 502 MSGERR
+003100900131     C*---------------------------------------------------------------*
+003200000626     C* PER ELABORAZIONE INTERATTIVA
+003300000626     C           BATCH     IFEQ *BLANK
+003400000626     C                     OPEN TNVRAB7D
+003500000626     C                     END
+003600000626     C*
+003700900620     C* PROPONGO UDATE - 3 MESE
+003800000000     C           INIZIO    TAG
+003900000616     C*
+004000000616     C* SOLO SE CHIAMATO INTERATTIVAMENTE
+004100000626     C           BATCH     IFEQ *BLANK
+004200000616     C*
+004300941019     C                     EXFMTLGZ0D01
+004400900423     C      KC             GOTO FINE
+004500910327     C* PAROLA CHIAVE
+004600910327     C           VIDKEY    IFEQ §§§BLP
+004700910327     C                     SETON                     01
+004800910327     C                     END
+004900000616     C*
+005000930422     C                     MOVE VGMAP     G02DAT
+005100900515     C                     MOVEL*BLANK    G02ERR
+005200941019     C                     CALL 'XSRDA8'
+005300941019     C                     PARM           WLBDA8
+005400941019     C                     MOVE G02INV    DZ0DTP
+005500941019     C                     MOVE G02DAT    VGMAP
+005600900515     C           G02ERR    COMP '1'                      21
+005700900515     C   21                GOTO INIZIO
+005800930422     C* ARRIVO
+005900930422     C                     MOVE VGMAA     G02DAT
+006000930422     C                     MOVEL*BLANK    G02ERR
+006100941019     C                     CALL 'XSRDA8'
+006200941019     C                     PARM           WLBDA8
+006300941019     C                     MOVE G02INV    DZ0DTA
+006400941019     C                     MOVE G02DAT    VGMAA
+006500930422     C           G02ERR    COMP '1'                      22
+006600930422     C   22                GOTO INIZIO
+006700900515     C  NKF                GOTO INIZIO
+006800000616     C*
+006900000616     C                     ENDIF
+007000000616     C*
+007100000000     C* PASSAGGIO PARAMETRI IN KBJBU E LANCIO BATCH DI STAMPA LETTERE
+007200000626     C                     GOTO FINE
+007300000626     C*
+007400000616     C           *INKF     IFEQ *ON
+007500000626     C           BATCH     OREQ 'S'
+007600000616     C*
+007700930430     C                     MOVEL'KSSPECL' KQIEB
+007800941019     C                     MOVELFNLGZ0    KPJBU
+007900941019     C                     MOVEL'LGZ1'    KCOAZ
+008000000616     C*
+008100900131     C           KNMUS     IFNE *ALL'1'
+008200900131     C                     CALL 'BCH10'
+008300000000     C                     PARM           KPJBA
+008400000616     C*
+008500000417     C* SOTTOMETTO POI LA PULIZIA DELLO STORICO ESITI DISPOSIZ.
+008600000417     C* GIACENZA RICEVUTE DA CLIENTI
+008700000417     C                     MOVEL'LGZ4'    KCOAZ
+008800000417     C                     CALL 'BCH10'
+008900000417     C                     PARM           KPJBA
+009000000616     C*
+009100900131     C                     ELSE
+009200000616     C*
+009300941019     C                     CALL 'FNLGZ1C'
+009400000000     C                     PARM           KPJBA
+009500890905     C                     END
+009600000616     C*
+009700900508     C                     GOTO FINE
+009800000000     C                     END
+009900000616     C*
+010000000000     C           FINE      TAG
+010100000000     C                     SETON                     LR
+010200941019     C*-----------------------------------------------------*
+010300941019     C*  OPERAZIONI INIZIALI
+010400941019     C*-----------------------------------------------------*
+010500941019     C           *INZSR    BEGSR
+010600941019     C*
+010700941019     C           *ENTRY    PLIST
+010800941019     C                     PARM           KPJBA
+010900000626     C                     MOVE KPJBU     BATCH   1
+011000000616     C*
+011100941019     C                     Z-ADD1         CODUT
+011200941019     C                     CALL 'XPARUT'
+011300941019     C                     PARM           UTEDSE
+011400941019     C           CODUT     CABEQ-1        FINE
+011500941019     C                     MOVELRAGUT     RSUT   20
+011600000616     C*
+011700941019     C*-----------------------------------------------------*
+011800941019     C           *LIKE     DEFN G02TGI    GGUDAT
+011900941019     C           *LIKE     DEFN G02TGI    GGDELT
+012000941019     C           *LIKE     DEFN G02TGI    SAVTGI
+012100941019     C*-----------------------------------------------------*
+012200941019     C           KTAB      KLIST
+012300941019     C                     KFLD           CODUT
+012400941019     C                     KFLD           COD     2
+012500941019     C                     KFLD           KEY     8
+012600941019     C                     MOVEL'5A'      COD
+012700941019     C                     MOVEL*BLANKS   KEY
+012800941019     C                     MOVEL'1'       KEY
+012900941019     C*----------------------------------------------------*
+013000000616     C*
+013100941019     C           *NAMVAR   DEFN           §§§EDP           *
+013200941019     C           SUDT7     TAG                             *
+013300941019     C                     IN   §§§EDP                 47  *
+013400941019     C   47                GOTO SUDT7                      *
+013500941019     C*
+013600941019     C           KTAB      CHAINTABEL                10
+013700941019     C  N10                MOVELTBLUNI    DS5A
+013800941019     C  N10                Z-ADD§5AGCP    GIORNP  30
+013900941019     C  N10                Z-ADD§5AGCA    GIORNA  30
+014000941019     C   10                Z-ADD90        GIORNP
+014100941019     C   10                Z-ADD90        GIORNA
+014200941019     C*
+014300941019     C                     CLEARFNLGZ0
+014400941019     C                     CLEARWLBDA8
+014500941019     C                     CLEARWGIDAT
+014600941019     C* Data pulizia giacenze in partenza
+014700941019     C                     TIME           WHHDAT 140
+014800941019     C                     MOVE WHHDAT    G02DAT
+014900941019     C                     MOVEL*BLANK    G02ERR
+015000941019     C                     CALL 'XSRDA8'
+015100941019     C                     PARM           WLBDA8
+015200941019     C                     Z-ADDG02TGI    GGUDAT            UDATE
+015300941019     C                     MOVE G02TGI    SAVTGI
+015400941019     C           G02TGI    SUB  GIORNP    G02TGI
+015500941019     C                     MOVE *ZEROS    GI8DAT
+015600941019     C                     MOVE *ZEROS    GI8INV
+015700941019     C                     Z-ADDG02TGI    GI8TGI
+015800941019     C                     CALL 'XSRGI8'
+015900941019     C                     PARM           WGIDAT
+016000941019     C                     MOVE GI8DAT    VGMAP
+016100000616     C                     Z-ADDGI8INV    DZ0DTP
+016200941019     C* Data pulizia giacenze in arrivo
+016300941019     C           SAVTGI    SUB  GIORNA    G02TGI
+016400941019     C                     MOVE *ZEROS    GI8DAT
+016500941019     C                     MOVE *ZEROS    GI8INV
+016600941019     C                     Z-ADDG02TGI    GI8TGI
+016700941019     C                     CALL 'XSRGI8'
+016800941019     C                     PARM           WGIDAT
+016900941019     C                     MOVE GI8DAT    VGMAA
+017000000616     C                     MOVE GI8INV    DZ0DTA
+017100941019     C*
+017200941019     C                     ENDSR

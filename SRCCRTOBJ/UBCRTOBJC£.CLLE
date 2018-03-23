@@ -1,0 +1,87 @@
+000100091022/*PRM  dftactgrp(*no)                                                */
+000200090925/*END                                                                */
+000300100414/*===================================================================*/
+000400100414/*?          Compilatore SETRAS (BARTOLINI)                         ?*/
+000500100414/*?          1° passo: verifica esistenza oggetto   e               ?*/
+000600100414/*?                    richiamo o sottomissione compilazione        ?*/
+000700100414/*===================================================================*/
+000800090925
+000900091022             pgm        parm(&SrcFile &SrcMbr &MbrType &ObjLib +
+001000091026                             &Batch   &JobD)
+001100090925
+001200091022             dcl        var(&SrcFile)   type(*char)   len( 20)
+001300091022             dcl        var(&SrcMbr)    type(*char)   len( 10)
+001400091022             dcl        var(&MbrType)   type(*char)   len( 10)
+001500091022             dcl        var(&ObjLib)    type(*char)   len( 10)
+001600091022             dcl        var(&Batch)     type(*char)   len( 05)
+001700091026             dcl        var(&JobD)      type(*char)   len( 20)
+001800091026             dcl        var(&JobD_N)    type(*char)   len( 10)
+001900091026             dcl        var(&JobD_L)    type(*char)   len( 10)
+002000100413             dcl        var(&Replace)   type(*lgl)             value('0')
+002100091022             dcl        var(&Err)       type(*int)    len(  4) value(0)
+002200091022             dcl        var(&MsgTxt)    type(*char)   len(160) value(' ')
+002300100419             dcl        var(&User)      type(*char)   len( 10)
+002400100413
+002500100413             /*?Verifica esistenza oggetto da compilare             ?*/
+002600100413             call     pgm(UBCRTOBJR1) +
+002700100413                      parm(&SrcFile &SrcMbr &MbrType &ObjLib  +
+002800100413                           &Replace &Err    &MsgTxt)
+002900100413
+003000100413             select
+003100100413               /*?Sottomissione compilazione oggetto                ?*/
+003200100413               when     cond(&Err *eq 0) then(do)
+003300100413                 enddo
+003400100413               /*?Emissione messaggio bloccante                     ?*/
+003500100413               when     cond(&Err *lt 0) then(do)
+003600100413                 sndpgmmsg  msgid(CPF9898)  msgf(QCPFMSG) +
+003700100413                            msgdta(&MsgTxt) msgtype(*escape)
+003800100413                 enddo
+003900100413               /*?Emissione messaggio di avvertimento               ?*/
+004000100413               when     cond(&Err *gt 0) then(do)
+004100100413                 sndpgmmsg  msgid(CPF9898)  msgf(QCPFMSG) +
+004200100413                            msgdta(&MsgTxt) msgtype(*escape)
+004300100413                 enddo
+004400100413             endselect
+004500100413
+004600090925
+004700091026
+004800091026             IF         cond(&Batch *eq '*NO ')  then(do)
+004900091026
+005000100413               /*?Compilazione in diretta                           ?*/
+005100100414               call     pgm(UBCRTOBJC1) +
+005200100413                        parm(&SrcFile &SrcMbr &MbrType &ObjLib  +
+005300100413                             &Replace &Err    &MsgTxt)
+005400091022               monmsg   msgid(CPF9898)  exec( sndpgmmsg +
+005500091022                        msgid(CPF9898)  msgf(QCPFMSG) +
+005600091022                        msgdta(&MsgTxt) msgtype(*escape) )
+005700100419
+005800091022               enddo
+005900091026
+006000091026             ELSE       cmd(do)
+006100091026
+006200100413               /*?Sottomissione compilazione batch                  ?*/
+006300100419               rtvjoba  user(&User)
+006400091026               if       cond(&JobD *eq '*USRPRF') then(do)
+006500091026                 rtvusrprf  jobd(&JobD_N) jobdlib(&JobD_L)
+006600091026                 enddo
+006700091026               else     cmd(do)
+006800091026                 chgvar   var(&JobD_N)    value(%sst(&JobD  1 10))
+006900091026                 chgvar   var(&JobD_L)    value(%sst(&JobD 11 10))
+007000091026                 enddo
+007100100413
+007200100414               sbmjob   cmd( call       pgm(UBCRTOBJC1) +
+007300100413                        parm(&SrcFile &SrcMbr &MbrType &ObjLib +
+007400100413                             &Replace &Err    &MsgTxt) ) +
+007500100419                        job(&SrcMbr)    jobd(&JobD_L/&JobD_N) +
+007600100419                        inllibl(*current)
+007700091026
+007800100419               sndmsg   msg('Il lavoro' *bcat '.../' *tcat +
+007900100419                            &User *tcat '/' *tcat &SrcMbr *bcat +
+008000100419                            'è stato sottomesso in batch.') +
+008100100419                        tousr(&User)
+008200100419               monmsg   msgid(CPF0000)
+008300100419
+008400091026               enddo
+008500091020
+008600091026
+008700091020             endpgm

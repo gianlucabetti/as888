@@ -1,0 +1,83 @@
+000100000000     H*--------------------------------------------------------------
+000200981212     H*  LANCIO AZIONI DI PREPARAZIONE CODIFICATE
+000300871008     H*  LEGGO LE AZIONI SU TFAZI00F
+000400981212     H*  USO DI BCH10 PER IL LANCIO IMPOSTANDO EVENTUALI FORZATURE
+000500000000     H*--------------------------------------------------------------
+000600871008     FTFAZI01LIP  E           K        DISK
+000700871023     E                    CMD     1   1 80               X QCAEXEC OVRDOB
+000800981212     IWLBDAT     IDS
+000900981212     I                                        1   80G02DAT
+001000981212     I                                        9  160G02INV
+001100981212     I                                       17  17 G02ERR
+001200981212     I                                       18  220G02TGI
+001300981212     I* PARAMETRI PER TRASFORM GIORNI IN DATA             - XSRDGI -
+001400981212     I***
+001500981212     IWGIDAT     IDS
+001600981212     I                                        1   80GIODAT
+001700981212     I                                        7   80GIOAA
+001800981212     I                                        9  160GIOINV
+001900981212     I                                       17  210GIOTGI
+002000871125     IKPJBA     E DS
+002100981212     I* DATA E ORA SCHEDULAZIONE
+002200981212     ISCHEDS      DS
+002300981212     I                                        1   6 D1DATS
+002400981212     I                                        7  10 D1ORAS
+002500871023     I            DS
+002600871023     I                                        1  80 CMD
+002700900118     I                                       18  26 CMDSIS
+002800900614     C  N90                DO
+002900900614     C*-FORZO LIBRERIA AZIONI
+003000981202     C                     MOVEL'GAITRAOB'AZISI2  9
+003100981202     C                     MOVE 'J'       AZISI2
+003200981212     C*-RICAVO DATA "DOMANI"
+003300981212     C                     TIME           W0140  140
+003400981212     C* UDATE IN GGMMAAAA
+003500981212     C                     MOVE W0140     WDTGIO  80
+003600981212     C*
+003700981212     C* UDATE IN AAAAMMGG
+003800981212     C                     Z-ADDWDTGIO    G02DAT
+003900981212     C                     MOVEL*BLANK    G02ERR
+004000981212     C                     CALL 'XSRDA8'
+004100981212     C                     PARM           WLBDAT
+004200981212     C           G02TGI    ADD  1         GIOTGI
+004300981212     C                     CALL 'XSRGI8'
+004400981212     C                     PARM           WGIDAT
+004500981212     C*
+004600900614      *
+004700871125     C           *ENTRY    PLIST
+004800871125     C                     PARM           KPJBA
+004900900614     C                     SETON                     90
+005000900614     C                     END
+005100981212      *-- SOTTOMETTO AZIONE
+005200871023     C                     MOVEL*BLANK    KNSIF
+005300871023     C                     MOVEL*BLANK    CMDSIS
+005400900118     C                     MOVE AZISI2    CMDSIS
+005500900118     C                     MOVELAZISIS    KNSIF
+005600871008     C                     MOVE AZIAZI    KCOAZ
+005700871008     C                     MOVE 'P5'      KCOJB
+005800991120     C***                  MOVE 'P5'      KJDES
+005801991120     C                     MOVE *BLANK    KQIEB
+005900960205     C                     MOVEL'KSNOTTE' KQIEB
+006000981212     C                     MOVEL*BLANK    D1DATS
+006100981212     C                     MOVEL*BLANK    D1ORAS
+006200981212     C           AZIPTY    IFNE *BLANK
+006300981212     C                     MOVE AZIPTY    KCOJB
+006400991120     C***                  MOVE AZIPTY    KJDES
+006500981212     C                     ENDIF
+006600981212     C           AZIJBQ    IFNE *BLANK
+006700981212     C                     MOVE AZIJBQ    KQIEB
+006800981212     C                     ENDIF
+006900981212     C           AZIHSC    IFGT *ZERO
+007000981212     C                     MOVELAZIHSC    D1ORAS
+007100981212     C                     MOVELGIODAT    D1DATS
+007200981212     C                     MOVE GIOAA     D1DATS
+007300981212     C                     ENDIF
+007400981212     C                     MOVELSCHEDS    KBUFF
+007500981212     C*
+007600900118     C                     CALL 'QCMDEXC'              22
+007700871023     C                     PARM           CMD    80
+007800871023     C                     PARM 80        LEN    155
+007900871008     C                     CALL 'BCH10'
+008000871125     C                     PARM           KPJBA
+008100871023**
+008200900118OVRDBF KFAZM10C           /KFAZM10C

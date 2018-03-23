@@ -1,0 +1,389 @@
+000100891030     H            Y                                                       CN0500
+000200940304     F* TRTB53R *-----------------------------------------------------*
+000300920723     F*-----------------*                                             *
+000400940304     F*     GESTIONE TABELLA "1X"  -  TEMPI CALCOLO DELIVERY          *
+000500920723     F*---------------------------------------------------------------*
+000600940304     FTRTB53D CF  E                    WORKSTN
+000700940304     F                                        NRR   KSFILE TB53DSF
+000800891030     FTABEL00FUF  E           K        DISK                      A
+000900940304     FAZORG01LIF  E           K        DISK
+001000940304     IDS1X      E DS
+001100930322     IKPJBA     E DS
+001200920723     I                                       92 100 LIBSYS
+001300920723     IUT§DSE    E DSUT§DSE0F
+001400980130     IUL12DS    E DSTRUL12DS
+001500940304     I              'STANDARD'            C         CFIL
+001600920731     C*****************************************************************
+001700920731     C*  RIEPILOGO INDICATORI
+001800920731     C*****************************************************************
+001900940304     C* 01    - RECORD IN INSERIMENTO
+002000940304     C* 02    - RECORD IN VARIAZIONE
+002100940304     C* 03    - RECORD ANNULLATO
+002200930610     C* 35    - PULIZIA SUBFILE
+002300940304     C* 40/48 - ERRORE
+002400940304     C* 90    - ERRORE GENERICO
+002500920731     C*****************************************************************
+002600920731     C*
+002700891030     C           *ENTRY    PLIST
+002800891030     C                     PARM           KPJBA
+002900891030     C                     Z-ADD1         CODUT
+003000920723     C                     CALL 'X§PARUT'
+003100920723     C                     PARM           UT§DSE
+003200891030     C                     MOVELRAGUT     RSUT
+003300980130     C*
+003400980130     C* CONTROLLA INDICE E MODIFICABILITA' DI UNA TABELLA
+003500980130     C                     CLEARUL12DS
+003600980130     C                     MOVEL'L'       I12TLA           *TIPO LANCIO
+003700980130     C                     MOVEL'1X'      I12COD           *CODICE TABELLA
+003800980130     C                     MOVELKNSIF     I12NSI           *SISTEMA INFORMATIVO
+003900980130     C                     CALL 'TRUL12R'
+004000980130     C                     PARM           UL12DS
+004100980130     C           O12ERR    IFEQ '1'                        *TABELLA NON MODIFIC.
+004200980130     C                     GOTO FINE
+004300980130     C                     ENDIF
+004400920723     C*---------------------------------------------------------------*
+004500940304     C* ACCESSO TABEL00F
+004600920731     C           KTAB      KLIST
+004700920731     C                     KFLD           CODUT
+004800940304     C                     KFLD           COD
+004900940304     C                     KFLD           KEY
+005000930610     C           KTAB2     KLIST
+005100930610     C                     KFLD           CODUT
+005200930610     C                     KFLD           COD
+005300940304     C*
+005400940304     C* DEFINIZIONE VARIABILI
+005500940304     C           *LIKE     DEFN TBLCOD    COD
+005600940304     C           *LIKE     DEFN TBLKEY    KEY
+005700920723     C*---------------------------------------------------------------*
+005800940304     C*
+005900940304     C                     MOVEL'1X'      COD
+006000930610     C*
+006100940304     C           INIZIO    TAG
+006200940304     C* PULIZIA CAMPI FORMATO
+006300940304     C                     MOVEL'?  '     VIDFIL
+006400940304     C                     MOVEL*BLANKS   VIDTPT
+006500940304     C                     MOVEL*BLANKS   VIDDES
+006600940304     C*
+006700940304     C           FOR01     TAG
+006800940304     C                     EXFMTTB53D01
+006900940304     C*
+007000940304     C** CMD3  - FINE LAVORO
+007100940304     C   KC                GOTO FINE
+007200940304     C*
+007300940304     C* CONTROLLI FORMATO
+007400940304     C                     EXSR CONTR1
+007500940304     C         90          GOTO FOR01
+007600940304     C*
+007700940304     C* GESTIONE 2° FORMATO
+007800940304     C                     EXSR VIDEO2
+007900940304     C*
+008000940304     C           *INKL     IFEQ *ON
+008100940304     C           *INKQ     OREQ *ON
+008200940304     C           *INKE     OREQ *ON
+008300940304     C           *INKF     OREQ *ON
+008400940304     C                     GOTO INIZIO
+008500940304     C                     ENDIF
+008600940304     C*
+008700940304     C           FINE      TAG
+008800940304     C                     SETON                     LR
+008900940304     C*
+009000940304     C*--- CONTROLLO DATI FORMATO ------------------------------------*
+009100940304     C           CONTR1    BEGSR
+009200940304     C                     SETOF                     9007
+009300940304     C*
+009400940304     C****  FILIALE  ****
+009500940304     C           '?'       SCAN VIDFIL                   90
+009600940304     C*
+009700940304    1C           *IN90     IFEQ *ON
+009800940304     C* CARICO SUBFILE
+009900940304     C                     EXSR CARSFL
+010000940304     C                     GOTO ENDCT1
+010100940304    1C                     ENDIF
+010200940304     C*
+010300940304     C* SE IMMESSA CONTROLLO VALIDITA' DELLA FILIALE
+010400940304    1C           VIDFIL    IFNE *BLANKS
+010500940304     C           VIDFIL    ANDNE*ZEROS
+010600940304     C                     MOVELVIDFIL    COMFIL  30
+010700940304     C*
+010800940304     C           COMFIL    CHAINAZORG                30
+010900940304     C         30          SETON                     4090
+011000940304     C         30          GOTO ENDCT1
+011100940304     C* DESCRIZIONE FILIALE
+011200940304     C                     MOVELORGDES    DE3FIL
+011300940304     C*
+011400940304   X1C                     ELSE
+011500940304     C* FILIALE = 0  ====>  METTO "STANDARD" NELLA DESCRIZIONE FILIALE
+011600940304     C                     MOVEL*BLANKS   VIDFIL
+011700940304     C                     MOVEL*BLANKS   DE3FIL
+011800940304     C                     MOVELCFIL      DE3FIL
+011900940304     C* 07 ON  - SE FILIALE = BLANK ===> NON SI PUO' ANNULARE IL RECORD
+012000940304     C                     SETON                     07
+012100940304     C*
+012200940304     C* SE FILIALE E TIPO TEMPO SONO ENTRAMBI VUOTI ====> ERRORE
+012300940304    2C           VIDTPT    IFEQ *BLANKS
+012400940304     C                     SETON                     4890
+012500940304     C                     GOTO ENDCT1
+012600940304    2C                     ENDIF
+012700940304    1C                     ENDIF
+012800940304     C*
+012900940304     C           ENDCT1    ENDSR
+013000940304     C*
+013100940304     C*--- CARICO DATI IN SUBFILE ------------------------------------*
+013200940304     C           CARSFL    BEGSR
+013300940304     C                     Z-ADD0         NRR     40
+013400940304     C*
+013500940304     C* PULIZIA SUBFILE
+013600940304     C                     SETON                     35
+013700940304     C                     WRITETB53DCT
+013800940304     C                     SETOF                     35
+013900940304     C*
+014000940304     C* CARICO SUBFILE
+014100940304     C           KTAB2     SETLLTABEL
+014200940304     C           KTAB2     READETABEL                    30
+014300940304     C*
+014400940304    1C           *IN30     DOWEQ*OFF
+014500940304     C* ESCLUDO RECORD ANNULLATI
+014600940304    2C           TBLFLG    IFEQ ' '
+014700940304     C                     MOVELTBLKEY    VI2FIL           *FILIALE
+014800940304     C                     MOVE TBLKEY    VI2TPT           *TIPO TEMPO
+014900940304     C                     MOVELTBLUNI    VI2DES
+015000940304     C* CAMPO SELEZIONE
+015100940304     C                     MOVEL' '       VI2SCE
+015200940304     C*
+015300940304     C                     ADD  1         NRR
+015400940304     C                     WRITETB53DSF
+015500940304    2C                     ENDIF
+015600940304     C*
+015700940304     C           KTAB2     READETABEL                    30
+015800940304    1C                     ENDDO
+015900940304     C*
+016000940304     C* EMETTO SUBFILE
+016100940304    1C           NRR       IFGT 0
+016200940304     C*
+016300940304     C           SOPRA     TAG
+016400940304     C                     Z-ADD1         REC
+016500940304     C                     WRITETB53D02
+016600940304     C                     EXFMTTB53DCT
+016700940304     C*
+016800940304     C** CMD12 - RITORNO
+016900940304    2C           *INKL     IFEQ '0'
+017000940304     C*
+017100940304     C* CONTROLLO DATI SUBFILE
+017200940304     C                     READCTB53DSF                  31
+017300940304     C      31             GOTO SOPRA
+017400940304     C*
+017500940304    3C     N31   VI2SCE    IFEQ '1'
+017600940304     C                     MOVELVI2FIL    VIDFIL           *FILIALE
+017700940304     C                     MOVELVI2TPT    VIDTPT           *TIPO TEMPO
+017800940304     C                     MOVELVI2DES    VIDDES
+017900940304   X3C                     ELSE
+018000940304     C                     GOTO SOPRA
+018100940304    3C                     ENDIF
+018200940304     C*
+018300940304   X2C                     ELSE
+018400940304     C                     MOVEL'?  '     VIDFIL           *FILIALE
+018500940304     C                     MOVEL*BLANKS   VIDTPT           *TIPO TEMPO
+018600940304     C                     MOVEL*BLANKS   VIDDES
+018700940304    2C                     ENDIF
+018800940304    1C                     ENDIF
+018900940304     C*
+019000940304     C                     ENDSR
+019100940304     C*
+019200940304     C*--- GESTIONE 2° VIDEATA ---------------------------------------*
+019300940304     C           VIDEO2    BEGSR
+019400940304     C                     SETOF                     010203
+019500940304     C*
+019600940304     C* PULIZIA CAMPI FORMATO
+019700940304     C                     EXSR PULVID
+019800920204     C*
+019900940304     C* CONTROLLO SE IMMSSIONE/VARIAZIONE/ANNULLATO
+020000940304     C                     MOVEL*BLANKS   KEY
+020100940304     C                     MOVELVIDFIL    KEY
+020200940304     C                     MOVE VIDTPT    KEY
+020300940304     C*
+020400940304     C           KTAB      CHAINTABEL                32
+020500940304     C*
+020600940304     C           *IN32     IFEQ *ON
+020700940304     C                     SETON                     01    *IMMISSIONE
+020800940304     C                     MOVELVIDFIL    VI3FIL
+020900940304     C                     MOVELVIDTPT    VI3TPT
+021000940304     C                     MOVEL*BLANKS   DE3TPT
+021100940304     C                     ELSE
+021200940304     C* SE RECORD ESISTENTE MUOVO I CAMPI IN TABELLA A VIDEO
+021300940304     C                     EXSR MOVVID
+021400940304     C                     SETON                     02    *VARIAZIONE
+021500940304     C                     ENDIF
+021600940304     C*
+021700940304     C      02   TBLFLG    IFNE ' '
+021800940304     C                     SETON                     03    *ANNULLATO
+021900940304     C                     ENDIF
+022000940304     C*
+022100940304     C           FOR03     TAG
+022200940304     C                     EXFMTTB53D03
+022300920731     C*
+022400940304     C** CMD3  - FINE LAVORO
+022500940304     C   KC
+022600940304     C** CMD12 - RITORNO
+022700940304     COR KL                GOTO ENDVD2
+022800940304     C*
+022900940304     C**CMD16 -  ANNULLAMENTO
+023000940304     C           *INKQ     IFEQ *ON
+023100940304     C* IMPOSSIBILE ANNULLARE RECORD CHE NON HANNO LA FILIALE
+023200940304     C           *IN07     IFEQ *ON
+023300940304     C                     SETON                     47
+023400940304     C                     GOTO FOR03
+023500940304     C                     ENDIF
+023600940304     C*
+023700940304     C                     MOVEL'*'       TBLFLG
+023800940304     C                     MOVEL' '       TBLFTR
+023900940304     C                     Z-ADD0         TBLDTR
+024000940304     C                     UPDATTABEL
+024100940304     C                     GOTO ENDVD2
+024200940304     C                     ENDIF
+024300940304     C*
+024400940304     C**CMD5  -  RIATTIVAZIONE
+024500940304     C           *INKE     IFEQ *ON
+024600940304     C                     MOVEL' '       TBLFLG
+024700940304     C                     MOVEL' '       TBLFTR
+024800940304     C                     Z-ADD0         TBLDTR
+024900940304     C                     UPDATTABEL
+025000940304     C                     GOTO ENDVD2
+025100940304     C                     ENDIF
+025200940304     C*
+025300940304     C* CONTROLLI FORMATO
+025400940304     C                     EXSR CONTR2
+025500920910     C*
+025600920910     C   90
+025700940304     CORNKF                GOTO FOR03
+025800920910     C*
+025900930324     C** CMD6 - AGGIORNAMENTO
+026000920910     C                     EXSR SCRIVI
+026100920731     C*
+026200940304     C           ENDVD2    ENDSR
+026300920731     C*
+026400940304     C*--- PULIZIA CAMPI FORMATO -------------------------------------*
+026500940304     C           PULVID    BEGSR
+026600940304     C*
+026700940304     C                     CLEARVI3HHG
+026800940304     C                     CLEARVI3HOO
+026900940304     C                     CLEARVI3HMM
+027000940304     C                     CLEARVI3HHM
+027100940304     C                     CLEARVI3HHI
+027200940304     C                     CLEARVI3HHP
+027300940304     C                     CLEARVI3HHS
+027400940304     C*
+027500940304     C                     ENDSR
+027600940304     C*
+027700940304     C*--- MUOVO I CAMPI A VIDEO -------------------------------------*
+027800940304     C           MOVVID    BEGSR
+027900940304     C                     MOVELTBLKEY    VI3FIL
+028000940304     C                     MOVE TBLKEY    VI3TPT
+028100940304     C                     MOVELTBLUNI    DS1X
+028200940304     C*
+028300940304     C                     MOVEL§1XDES    DE3TPT
+028400940304     C                     Z-ADD§1XHHG    VI3HHG
+028500940304     C                     MOVEL§1XHHO    VI3HOO
+028600940304     C                     MOVE §1XHHO    VI3HMM
+028700940304     C                     Z-ADD§1XHHM    VI3HHM
+028800940304     C                     Z-ADD§1XHHI    VI3HHI
+028900940304     C                     Z-ADD§1XHHP    VI3HHP
+029000940304     C                     Z-ADD§1XHHS    VI3HHS
+029100940304     C                     ENDSR
+029200940304     C*
+029300940304     C*--- CONTROLLO DATI FORMATO ------------------------------------*
+029400940304     C           CONTR2    BEGSR
+029500940304     C                     SETOF                     90
+029600940304     C*
+029700920910     C                     MOVEL*BLANKS   KEY
+029800920731     C*
+029900940304     C****  NUMERO ORE PER GIORNATA  ****
+030000940304     C* IL NUMERO DI ORE PER GIORNATA PUO' ESSERE  0  O MULTIPLO DI  12
+030100940304     C           VI3HHG    IFGT 0
+030200940304     C           VI3HHG    DIV  12        DIVIS   30
+030300940304     C                     MVR            RESTO   30
+030400940304     C           RESTO     IFGT 0
+030500940304     C                     SETON                     4190
+030600940304     C                     GOTO ENDCT2
+030700940304     C                     ENDIF
+030800940304     C                     ENDIF
+030900920731     C*
+031000940304     C****  ORA DI SOGLIA  ****
+031100940304     C           VI3HOO    IFGT 23                         *ORE
+031200940304     C           VI3HMM    ORGT 59                         *MINUTI
+031300940304     C                     SETON                     4290
+031400940304     C                     GOTO ENDCT2
+031500940304     C                     ENDIF
+031600940304     C*
+031700940304     C****  NUMERO ORE MATTINO  ****
+031800940304     C* IL NUMERO DI ORE MATTINO PUO' ESSERE  0  O MULTIPLO DI  12
+031900940304     C           VI3HHM    IFGT 0
+032000940304     C           VI3HHM    DIV  12        DIVIS   30
+032100940304     C                     MVR            RESTO   30
+032200940304     C           RESTO     IFGT 0
+032300940304     C                     SETON                     4390
+032400940304     C                     GOTO ENDCT2
+032500940304     C                     ENDIF
+032600940304     C                     ENDIF
+032700940304     C*
+032800940304     C****  NUMERO ORE PER FINE GIORNATA ****
+032900940304     C* IL NUMERO ORE FINE GIORNATA PUO' ESSERE  0  O MULTIPLO DI  12
+033000940304     C           VI3HHI    IFGT 0
+033100940304     C           VI3HHI    DIV  12        DIVIS   30
+033200940304     C                     MVR            RESTO   30
+033300940304     C           RESTO     IFGT 0
+033400940304     C                     SETON                     4490
+033500940304     C                     GOTO ENDCT2
+033600940304     C                     ENDIF
+033700940304     C                     ENDIF
+033800940304     C*
+033900940304     C****  NUMERO ORE POMERIGGIO  ****
+034000940304     C* IL NUMERO DI ORE POMERIGGIO PUO' ESSERE  0  O MULTIPLO DI  12
+034100940304     C           VI3HHP    IFGT 0
+034200940304     C           VI3HHP    DIV  12        DIVIS   30
+034300940304     C                     MVR            RESTO   30
+034400940304     C           RESTO     IFGT 0
+034500940304     C                     SETON                     4590
+034600940304     C                     GOTO ENDCT2
+034700940304     C                     ENDIF
+034800940304     C                     ENDIF
+034900940304     C*
+035000940304     C****  NUMERO ORE PER FINE GIORNATA ****
+035100940304     C* IL NUMERO ORE FINE GIORNATA PUO' ESSERE  0  O MULTIPLO DI  12
+035200940304     C           VI3HHS    IFGT 0
+035300940304     C           VI3HHS    DIV  12        DIVIS   30
+035400940304     C                     MVR            RESTO   30
+035500940304     C           RESTO     IFGT 0
+035600940304     C                     SETON                     4690
+035700940304     C                     GOTO ENDCT2
+035800940304     C                     ENDIF
+035900940304     C                     ENDIF
+036000940304     C*
+036100940304     C           ENDCT2    ENDSR
+036200940304     C*
+036300940304     C*--- AGGIORNAMENTO --------------------------------------------**
+036400891030     C           SCRIVI    BEGSR
+036500920731     C                     MOVELCODUT     TBLKUT
+036600940304     C                     MOVELCOD       TBLCOD
+036700920902     C                     MOVEL*BLANKS   TBLKEY
+036800940304     C                     MOVELVI3FIL    TBLKEY
+036900940304     C                     MOVE VI3TPT    TBLKEY
+037000940304     C                     MOVELDE3TPT    §1XDES
+037100940304     C                     Z-ADDVI3HHG    §1XHHG
+037200940304     C                     MOVELVI3HOO    §1XHHO
+037300940304     C                     MOVE VI3HMM    §1XHHO
+037400940304     C                     Z-ADDVI3HHM    §1XHHM
+037500940304     C                     Z-ADDVI3HHI    §1XHHI
+037600940304     C                     Z-ADDVI3HHP    §1XHHP
+037700940304     C                     Z-ADDVI3HHS    §1XHHS
+037800930324     C                     MOVEL' '       TBLFLG
+037900940304     C                     MOVELDS1X      TBLUNI
+038000920731     C*
+038100920731     C                     MOVEL'1'       TBLFTT            A TUTTI
+038200920731     C                     MOVEL*ZEROS    TBLFLT            FILIALE
+038300920731     C                     MOVEL' '       TBLFTR            TIPO TRASM.
+038400920731     C                     Z-ADD0         TBLDTR            N.TRASM.
+038500920731     C*
+038600940304     C   32                WRITETABEL                  98
+038700940304     C  N32                UPDATTABEL                  98
+038800920731     C*
+038900891030     C                     ENDSR

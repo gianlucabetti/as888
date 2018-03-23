@@ -1,0 +1,3 @@
+000100101006     DProj_BlackList_Estrazione...
+000101101006     D                 PR                  EXTPGM('PJCI1O3/NDCP06R')
+000102101006     D kpjba                               LIKEDS(kpjba)

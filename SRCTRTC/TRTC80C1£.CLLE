@@ -1,0 +1,131 @@
+000100880609/********************************************************************/
+000200880609/*                                                                  */
+000300960527/*       CONTROLLA SE RICEVUTI RECORD ED EVENTUALMENTE TRASCODIFICA */
+000400960527/*                  LETTERE DI VETTURA - ESTERO -                   */
+000500930507/*                                                                  */
+000600880609/********************************************************************/
+000700041202             PGM        PARM(&KPJBA)
+000800980609
+000900041202             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001000041206             DCL        VAR(&SAVKPJBA) TYPE(*CHAR) LEN(502)
+001100021008
+001200021008 /* Parametri per il TRULOUTQ */
+001300021008             DCL        VAR(&TYPCALL) TYPE(*CHAR) LEN(1) VALUE('L')
+001400021008             DCL        VAR(&FGS) TYPE(*CHAR) LEN(3)
+001500021008             DCL        VAR(&TYPCODA) TYPE(*CHAR) LEN(1) VALUE('0')
+001600021008             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001700021008             DCL        VAR(&LIBCODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001800021008             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1) VALUE('0')
+001900040322             DCL        VAR(&ERRMSG) TYPE(*CHAR) LEN(1) VALUE(' ')
+002000040322             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE(' ')
+002100021008 /* Parametri per il CNCR80 da UT§DES0F */
+002200021008             DCL        VAR(&SIMPOU) TYPE(*DEC) LEN(3 0) VALUE(0)
+002300021008             DCL        VAR(&PAR1591) TYPE(*CHAR) LEN(1591)
+002400041202             DCL        VAR(&VAVANTI) TYPE(*CHAR) LEN(2)
+002500041202             DCL        VAR(&NAMSYS) TYPE(*CHAR) LEN(10)
+002600980609
+002700041206 /* Salva la KPJBA                                                   */
+002800041206             CHGVAR     VAR(&SAVKPJBA) VALUE(&KPJBA)
+002900041202             RTVNETA    SYSNAME(&NAMSYS)
+003000041202
+003100050826/* secondo Char AREA DATI           x attivare messaggio di avviso   */
+003200050826/*           RTVDTAARA  DTAARA(EDFLATIN2/ACTERRMSG (2 1)) +          */
+003300050826/*                        RTNVAR(&ERRMSG)                            */
+003400050826/*           MONMSG     MSGID(CPF0000)                               */
+003500050826/*                                                                   */
+003600050826/* USER su AREA DATI           a cui mandare messaggio di avviso     */
+003700050826/*           IF         COND(&ERRMSG *EQ 'S') THEN(DO)               */
+003800050826/*           RTVDTAARA  DTAARA(EDFLATIN2/ACTERRMSG (5 10)) +         */
+003900050826/*                        RTNVAR(&USRMSG)                            */
+004000050826/*           MONMSG     MSGID(CPF0000)                               */
+004100050826/*           ENDDO                                                   */
+004200050826
+004300050826/* ?Reperisce lo User a cui inviare msg di avviso                    */
+004400050826             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+004500050826             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+004600050826             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+004700050826             CHGVAR     VAR(&ERRMSG) VALUE(%SST(&KPJBA 248 1))
+004800050826/* ?Reimposta KPJBA poichè aveva sporcato la KPJBU                   */
+004900050826             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+005000021008
+005100021008 /* Ricerca del P.O.x OUTQ    */
+005200021008             CHGVAR     VAR(%SST(&PAR1591 1 1)) VALUE('0')
+005300021008             CALL       PGM(X§PARUT) PARM(&PAR1591)
+005400021008             CHGVAR     VAR(&SIMPOU) VALUE(%SST(&PAR1591 1509 3))
+005500021008
+005600021008 /* Ricerca la coda x OUTQ    */
+005700021008             CHGVAR     VAR(&FGS) VALUE(&SIMPOU)
+005800021008             CALL       PGM(TRULOUTQ) PARM(&TYPCALL &FGS &TYPCODA +
+005900021008                          &CODA &LIBCODA &ESITO)
+006000021008             IF         COND(&ESITO = '1') THEN(CHGVAR VAR(&CODA) +
+006100021008                          VALUE('QPRINTS   '))
+006200021008
+006300021008 /* Controlla esistenza della coda in filiale            */
+006400021008 /*  se non c'è --> allora imposta QPRINTS di default    */
+006500021018             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+006600021008             MONMSG     MSGID(CPF9801) EXEC(DO)
+006700021008             CHGVAR     VAR(&CODA) VALUE('QPRINTS   ')
+006800021017
+006900021017 /*  x la filiale trasferita su As Unico di sede */
+007000021017 /*  se non c'è --> allora imposta il default    */
+007100021017             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+007200021017             MONMSG     MSGID(CPF9801) EXEC(DO)
+007300021017             CHGVAR     VAR(&CODA) VALUE('QDKT      ')
+007400021017             ENDDO
+007500021017
+007600021008             RTVOBJD    OBJ(&CODA) OBJTYPE(*OUTQ) RTNLIB(&LIBCODA)
+007700021008             ENDDO
+007800021008
+007900021003             ADDLIBLE   LIB(GAITRAOBJ) POSITION(*LAST)
+008000021003             MONMSG     MSGID(CPF0000)
+008100960802
+008200041202/*-----------------------------------------------------------------------*/
+008300041202/* X assurdo cancella da QTEMP il file che andrà a creare                */
+008400041202/*-----------------------------------------------------------------------*/
+008500041202             DLTF       FILE(QTEMP/EDIFCSUM)
+008600041202             MONMSG     MSGID(CPF0000)
+008700041202
+008800041202/*-----------------------------------------------------------------------*/
+008900041202/* Crea in Qtemp il file per la trascodifica dei dati in formato FLAT    */
+009000041202/* prendendo l'immagine dal EDIFCSUM di INTESA                           */
+009100041202/*-----------------------------------------------------------------------*/
+009200041202             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+009300041202                          TOLIB(QTEMP)
+009400041202
+009500041202/*-----------------------------------------------------------------------*/
+009600041202/* Scrive il file x elaborare le BOLLE                                   */
+009700041202/* ATTENZIONE i numeratori li deve prendere dalle tabelle di sede        */
+009800041202/*-----------------------------------------------------------------------*/
+009900041202             IF         COND(&NAMSYS *EQ 'SETRAS') THEN(DO)
+010000041202             OVRDBF     FILE(EDTAB01L) TOFILE(GAITRAGRU/EDTAB01L)
+010100041202             ENDDO
+010200041202             IF         COND(&NAMSYS *EQ 'AS888') THEN(DO)
+010300041202             OVRDBF     FILE(EDTAB01L) TOFILE(GAITRAGRPS/EDTAB01L)
+010400041202             ENDDO
+010500041202             CALL       PGM(TRTC80R2) PARM(&KPJBA)
+010600041202             CHGVAR     VAR(&VAVANTI) VALUE(%SST(&KPJBA 247 2))
+010700041202             DLTOVR     FILE(EDTAB01L)
+010800041202
+010900041206/*  Se tutto OK senza errori procede                           */
+011000041202             IF         COND(&VAVANTI *EQ 'OK') THEN(DO)
+011100041202
+011200041202/*  Eseguo OVRDBF e richiamo pgm per trascodifica date consegna */
+011300041202             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUM)
+011400021008             OVRPRTF    FILE(QSYSPRT) OUTQ(&LIBCODA/&CODA) +
+011500021008                          HOLD(*YES) SAVE(*YES)
+011600050905             MONMSG     MSGID(CPF0000)
+011700021008             OVRPRTF    FILE(SYSPRT) OUTQ(&LIBCODA/&CODA) HOLD(*YES) +
+011800021008                          SAVE(*YES)
+011900050905             MONMSG     MSGID(CPF0000)
+012000980609
+012100040322             CALL       PGM(TRTC80R) PARM(&USRMSG)
+012200041206
+012300041206/*  Se rimasti dei records su EDIFCSUM in QTEMP a causa di problemi nel  */
+012400041206/*  decodificare la tabella PT deve riportare l'errore sul RCVIFCSUM     */
+012500041206             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+012600041206             CALL       PGM(TRTC80R3) PARM(&KPJBA)
+012700041206
+012800980609             DLTOVR     FILE(*ALL)
+012900041202             ENDDO
+013000940329
+013100960528FINE:        ENDPGM

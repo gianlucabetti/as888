@@ -1,0 +1,50 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200180203/* TICFQ5C - Crea w-file per confronto fatturazione                           */
+000300000000/*----------------------------------------------------------------------------*/
+000400180203 TICFQ5C:    PGM        PARM(&KPJBA)
+000500000000
+000600040416             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000800121217             DCL        VAR(&LIBRERIA) TYPE(*CHAR) LEN(10)
+000900130208             DCL        VAR(&WLIB) TYPE(*CHAR) LEN(10)
+001000121217
+001002180307/* Preparo la libreria di salvataggio */
+001003180307             CALL       PGM(TICFQ4R1) PARM(&KPJBA)
+001004180307
+001100121217/* Imposto le variabili */
+001300140408             CHGVAR     VAR(&LIBRERIA) VALUE(%SST(&KPJBA 279 10))
+001400140410             CHGVAR     VAR(&WLIB) VALUE(%SST(&KPJBA 289 10))
+001500121217
+001600050609/* pulizia Work-file                  */
+001700130123             CLRPFM     FILE(&LIBRERIA/WFCFT00F)
+001800130123             CLRPFM     FILE(&LIBRERIA/WFCFT10F)
+001900130123             CLRPFM     FILE(&LIBRERIA/WFCFT20F)
+002000130123             CLRPFM     FILE(&LIBRERIA/WFCFT30F)
+002100141218             CLRPFM     FILE(&LIBRERIA/WFCFS00F)
+002200060914
+002300060915    /* aggiungo libreria bolle + file work */
+002400140408             ADDLIBLE   LIB(&LIBRERIA)
+002500050608
+002600130123/* lancio pgm di scrittura file per memorizzazione dettaglio */
+002700180203             CALL       PGM(TICFQ5R) PARM(&KPJBA)
+002701180307
+002702180307/* lancio pgm di scrittura file per memorizzazione totali */
+002703180307             CALL       PGM(TICFQ1R) PARM(&KPJBA)
+002704180307
+002705180307/* lancio pgm di scrittura file per memorizzazione totali per unificante */
+002706180307             CALL       PGM(TICFQ6R) PARM(&KPJBA)
+002707180307
+002800050608
+002801180307/* Copio file nella libreria di salvataggio */
+002802180307             CPYF       FROMFILE(&LIBRERIA/WFCFT00F) +
+002803180307                          TOFILE(&WLIB/WFCFT00F) CRTFILE(*YES)
+002804180307             CPYF       FROMFILE(&LIBRERIA/WFCFT10F) +
+002805180307                          TOFILE(&WLIB/WFCFT10F) CRTFILE(*YES)
+002806180307             CPYF       FROMFILE(&LIBRERIA/WFCFT20F) +
+002807180307                          TOFILE(&WLIB/WFCFT20F) CRTFILE(*YES)
+002808180307             CPYF       FROMFILE(&LIBRERIA/WFCFT30F) +
+002809180307                          TOFILE(&WLIB/WFCFT30F) CRTFILE(*YES)
+002812180307
+005000050607             DLTOVR     FILE(*ALL)
+005100160224
+005800160224
+005900050613             ENDPGM

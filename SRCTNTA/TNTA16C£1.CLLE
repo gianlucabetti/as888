@@ -1,0 +1,36 @@
+000100100308/*PARMS DFTACTGRP(*NO) ACTGRP('TNTA16')                                       */
+000200100308
+000300100308             PGM        PARM(&KPJBA &TNTA16DS)
+000400091218
+000500091218             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600100308             DCL        VAR(&TNTA16DS) TYPE(*CHAR) LEN(200)
+000700100301             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000800100301             RTVJOBA    JOB(&DSP)
+000900091218
+001000091218/* Avvio il controllo di sincronia */
+001100091218             STRCMTCTL  LCKLVL(*CHG)
+001200091218             MONMSG     MSGID(CPF8351)
+001300091218
+001400091218/* controllo di sincronia già attivo */
+001500091218             MONMSG     MSGID(CPF8351) EXEC(DO)
+001600091218             ENDCMTCTL
+001700091218             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001800091218             STRCMTCTL  LCKLVL(*CHG)
+001900091218             ENDDO
+002000091218
+002100091218/* Richiamo programma */
+002200100308             CALL       PGM(TNTA16R) PARM(&KPJBA &TNTA16DS)
+002300091218             MONMSG     MSGID(CPF0000) EXEC(DO)
+002400091218             ROLLBACK
+002500100308             SNDBRKMSG  MSG('ERRORE Il programma Annullamento+
+002600100308                          Trattativa +
+002700100304                          terminato in modo anomalo. +
+002800100301                          Segnalare il +
+002900100301                          problema alla persona responsabile della +
+003000100301                          manutenzione del programma.') TOMSGQ(&DSP)
+003100091218             ENDDO
+003200091218
+003300091218/* Stoppo il controllo di sincronia */
+003400091218             ENDCMTCTL
+003500091218
+003600091218             ENDPGM

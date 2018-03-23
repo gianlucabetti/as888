@@ -1,0 +1,90 @@
+000100170329/*PARMS DFTACTGRP(*NO) ACTGRP(BARTVAS)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600140804             PGM        PARM(&PROC &DELAY)
+000700090522
+000800140801             DCL        VAR(&PROC)         TYPE(*CHAR) LEN(2)
+000900140804             DCL        VAR(&DELAY)        TYPE(*CHAR) LEN(3)
+001000140801
+001100140804             DCL        VAR(&DELAYSEC)     TYPE(*DEC)  LEN(3 0)
+001200140804             DCL        VAR(&CONTA)        TYPE(*DEC)  LEN(3 0)
+001300140804
+001400130625             DCL        VAR(&InJobName)    TYPE(*CHAR) LEN(10)
+001500130625             DCL        VAR(&InJobUNam)    TYPE(*CHAR) LEN(10)
+001600130625             DCL        VAR(&InJobNbr)     TYPE(*CHAR) LEN(06)
+001700130625             DCL        VAR(&InOption)     TYPE(*CHAR) LEN(10)
+001800130625             DCL        VAR(&InFltrLib)    TYPE(*CHAR) LEN(10)
+001900130625             DCL        VAR(&InFltrFil)    TYPE(*CHAR) LEN(10)
+002000130625             DCL        VAR(&InFltrMbr)    TYPE(*CHAR) LEN(10)
+002100130625             DCL        VAR(&InFltrTyp)    TYPE(*CHAR) LEN(10)
+002200130625             DCL        VAR(&InFltrLck)    TYPE(*CHAR) LEN(10)
+002300130625             DCL        VAR(&OutLstAlc)    TYPE(*CHAR) LEN(20480)
+002400130625             DCL        VAR(&OutErrCod)    TYPE(*CHAR) LEN(10)
+002500130625             DCL        VAR(&OutErrMsg)    TYPE(*CHAR) LEN(80)
+002600140804
+002700140804
+002800140804 /* ATTESA IN START-UP */
+002900170818             DLYJOB     DLY(60)
+003000140804
+003100140804
+003200140804 /* OPERAZIONI INIZIALI */
+003300140804             CHGVAR     VAR(&CONTA)        VALUE(0)
+003400140804
+003500140804             IF         COND(&DELAY = ' ') THEN(DO)
+003600140804             CHGVAR     VAR(&DELAY)        VALUE('001')
+003700140804             ENDDO
+003800140804
+003900140804             CHGVAR     VAR(&DELAYSEC)     VALUE(&DELAY)
+004000140804             MONMSG     MSGID(CPF0000) EXEC(DO)
+004100140804             CHGVAR     VAR(&DELAYSEC)     VALUE(1)
+004200140804             ENDDO
+004300991111
+004400140804
+004500140804 /* ATTESA PARAMETRICA */
+004600140804             DLYJOB     DLY(&DELAYSEC)
+004700140804
+004800140804
+004900140804 /* CICLO DI ELABORAZIONE */
+005000140801 GUFO:       CALL       PGM(TIS700QR00)    PARM(&PROC)
+005100991111             MONMSG     MSGID(CPF0000)
+005200090522
+005300140804
+005400140804 /* GARBAGE-COLLECTION */
+005500130625             CHGVAR     VAR(&InOption)      VALUE('*DEALLOC')
+005600130625             CHGVAR     VAR(&InFltrTyp)     VALUE('*QDDS*')
+005700130625             CHGVAR     VAR(&InFltrLck)     VALUE('*EXCL*')
+005800130614
+005900130625             CALL       PGM(UBJOBLCK)      +
+006000130625                        PARM(&InJobName    +
+006100130625                             &InJobUNam    +
+006200130625                             &InJobNbr     +
+006300130625                             &InOption     +
+006400130625                             &InFltrLib    +
+006500130625                             &InFltrFil    +
+006600130625                             &InFltrMbr    +
+006700130625                             &InFltrTyp    +
+006800130625                             &InFltrLck    +
+006900130625                             &OutLstAlc    +
+007000130625                             &OutErrCod    +
+007100130625                             &OutErrMsg)
+007200130625             MONMSG     MSGID(CPF0000)
+007300130614
+007400130617             RCLACTGRP  ACTGRP(*ELIGIBLE)
+007500140804             RCLRSC
+007600090522
+007700140804
+007800140804/* OGNI TOT ITERAZIONI => ATTESA PARAMETRICA */
+007900140804             CHGVAR     VAR(&CONTA) VALUE(&CONTA + 1)
+008000140804             IF         COND(&CONTA = 999) THEN(DO)
+008100140804             DLYJOB     DLY(&DELAYSEC)
+008200140804             CHGVAR     VAR(&CONTA)        VALUE(0)
+008300140804             ENDDO
+008400991111
+008500140804
+008600140804/* ATTESA + ITERAZINE */
+008700170803             DLYJOB     DLY(03)
+008800000621             GOTO       CMDLBL(GUFO)
+008900991111
+009000990907             ENDPGM

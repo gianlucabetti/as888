@@ -1,0 +1,87 @@
+000100000000     H        1     J
+000200890915     F*--------------------------------------------------------------*
+000300890915     F*       - RICERCA GENERICA SU TABEL00F               -         *
+000400000000     F*       ----------------------------------------------         *
+000500000000     F*--------------------------------------------------------------*
+000600890915     FTABEL00FIF  E           K        DISK
+000700900620     FX§TB60D CF  E                    WORKSTN
+000800890915     F                                        REC1  KSFILE TABESF1
+000900000000     C           *ENTRY    PLIST                           *
+001000890915     C                     PARM           §KUT             *
+001100890915     C                     PARM           §COD             *
+001200890915     C                     PARM           §KEY             *
+001300900612     C                     PARM           §DES   60        *
+001400900726     C                     MOVEL§DES      §AN2    2        *
+001500900726     C**
+001600900726     C* SE NELLE PRIME 2 POSIZIONI DEL PARAMETRO §DES
+001700900726     C* SI TROVANO I CARATTERI §§ SI VOGLIONO ANCHE
+001800900726     C* I RECORDS ANNULLATI
+001900000000     C*----------                                          *
+002000890915     C           *LIKE     DEFN TBLKUT    §KUT
+002100890915     C           *LIKE     DEFN TBLCOD    §COD
+002200890915     C           *LIKE     DEFN TBLKEY    §KEY
+002300890915     C           *LIKE     DEFN TBLCOD    §CODK
+002400890915     C           *LIKE     DEFN TBLKEY    §KEYK
+002500890915     C*
+002600890915     C           KEYTAB    KLIST                           *
+002700890915     C                     KFLD           §KUT             *
+002800890915     C                     KFLD           §COD             *
+002900890915     C           KEYTAK    KLIST                           *
+003000890915     C                     KFLD           §KUT             *
+003100890915     C                     KFLD           §CODK            *
+003200890915     C                     KFLD           §KEYK            *
+003300890915     C*
+003400890915     C* DECODIFICO IL CODICE TABELLA   PASSATO
+003500890915     C                     MOVE *BLANK    §CODK
+003600890915     C                     MOVE *ZEROS    §KEYK
+003700890915     C                     MOVE §COD      §KEYK
+003800890915     C                     MOVE *BLANK    DETIPT
+003900900724     C                     MOVE §COD      COTIPT
+004000890915     C           KEYTAK    CHAINTABEL                90
+004100890915     C  N90                MOVELTBLUNI    DETIPT
+004200890915     C   90                MOVEL'ERRORE'  DETIPT
+004300890915     C                     WRITETABED1                     *
+004400000000     C*---------- GESTIONE SUBFILE ------------------------*
+004500890915     C*§
+004600890915     C           KEYTAB    SETLLTABEL00F             90  91*
+004700000000     C  N91                SETON                     90    *
+004800000000     C   90                GOTO FINE                       *
+004900920526     C                     Z-ADD0         REC1    40       *
+005000000000     C                     MOVE *BLANKS   SCELTA           *
+005100000000     C*---------- PULIZIA SLFCT :                          *
+005200000000     C                     SETON                         70*
+005300890915     C                     WRITETABESC1                    *
+005400000000     C                     SETOF                     7071  *
+005500000000     C*---------- CARICAMENTO SFL :                        *
+005600000000     C           SOPRA     TAG                             *
+005700890915     C           KEYTAB    READETABEL                    91*
+005800000000     C   91                GOTO EMISF1                     *
+005900900726     C           TBLFLG    IFEQ '*'                        *
+006000900726     C           §AN2      ANDNE'§§'
+006100900726     C                     GOTO SOPRA                      *
+006200900726     C                     END                             *
+006300890915     C                     MOVELTBLKEY    CODTAB           *
+006400890915     C                     MOVELTBLUNI    DESCRI           *
+006500900724     C                     MOVELTBLFLG    STATTB           *
+006600000000     C           REC1      ADD  1         REC1       71    *
+006700890915     C                     WRITETABESF1                    *
+006800000000     C                     GOTO SOPRA                      *
+006900000000     C*---------- EMISSIONE SFL :                          *
+007000000000     C           EMISF1    TAG                             *
+007100890915     C                     EXFMTTABESC1                    *
+007200000000     C   KC                SETON                         90*
+007300000000     C   KC                GOTO FINE                       *
+007400000000     C*---------- LETTURA RECORD VARIATI :                 *
+007500890915     C   71                READCTABESF1                  91*
+007600000000     C  N71                                                *
+007700000000     COR 91                GOTO EMISF1                     *
+007800000000     C           SCELTA    CABNE'1'       EMISF1           *
+007900890915     C                     MOVE CODTAB    §KEY             *
+008000890915     C                     MOVELDESCRI    §DES             *
+008100000000     C*----------------------------------------------------*
+008200000000     C           FINE      TAG                             *
+008300891121     C   90                MOVE *BLANKS   §KEY             *
+008400890915     C   90                MOVE *BLANKS   §DES             *
+008500890915     C   90                MOVEL'ERRORE'  §DES             *
+008600000000     C                     SETON                         LR*
+008700000000     C*----------------------------------------------------*

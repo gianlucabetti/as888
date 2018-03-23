@@ -1,0 +1,62 @@
+000100120823/*?******************************************************************/
+000200120823/*?  RICEVE ED ELABORA tracciato NETExpress       da UPLOAD         */
+000300120823/*?  Ricezione in Sede tramite server FTP x cliente                 */
+000400120823/*? Come formato .CSV ossia i campi sono separati da (;)            */
+000500120823/*?******************************************************************/
+000600120823
+000700090225
+000800120824             PGM
+000900090225
+001000090225             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+001100090225             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001200090225             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001300090225             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001400090225             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001500090225
+001600090225             CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))
+001700090212
+001800090212
+001900091016             ADDLIBLE   LIB(FILTRAGRPF) POSITION(*AFTER UNITRAGRP)
+002000090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002100090216
+002200091016             ADDLIBLE   LIB(FILTRAPRD) POSITION(*AFTER FILTRAGRPF)
+002300090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002400090216
+002500090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+002600090213/* procedura/programma fosse finita in maniera anomala occorre */
+002700090213/* parare il colpo riducendo il male al male minore ossia      */
+002800090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+002900090213/* metà piuttosto che confermarle. E ripartendo da una         */
+003000090213/* situazione pulita.                                          */
+003100090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003200090213/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+003300090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+003400090213             ENDCMTCTL
+003500090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+003600090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003700090213             ENDDO
+003800120824
+003900120824             CRTDUPOBJ  OBJ(EDGEL00F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004000120824                          TOLIB(QTEMP) NEWOBJ(*SAME)
+004100120824             OVRDBF     FILE(EDGEL00F) TOFILE(QTEMP/EDGEL00F)
+004200120824
+004300090212
+004400120823             CALL       PGM(TRTCT15R) PARM(&ESITO)
+004500090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+004600090213             ROLLBACK
+004700090213             ENDDO
+004800120824
+004900120824             DLTOVR     FILE(EDGEL00F)
+005000120824             DLTF       FILE(QTEMP/EDGEL00F)
+005100090212
+005200090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+005300090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+005400090213 /* in modo pulito senza lasciare transazioni a metà.            */
+005500090213             ENDCMTCTL
+005600090216
+005700091016             rmvLIBLE   LIB(FILTRAGRPF)
+005800090216             MONMSG     MSGID(CPF0000)
+005900091016             rmvLIBLE   LIB(FILTRAPRD)
+006000090216             MONMSG     MSGID(CPF0000)
+006100090216
+006200090212             ENDPGM

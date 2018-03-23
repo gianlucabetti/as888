@@ -1,0 +1,40 @@
+000100021111/*PARMS DFTACTGRP(*NO) ACTGRP(QILE)                                       */
+000200021111/*-------------------------------------------------------------------*/
+000300021111/* LANCIO SPEDIZIONE EFFETTI PASSIVI                                 */
+000400021111/*-------------------------------------------------------------------*/
+000500021111
+000600021111             PGM        PARM(&KPJBA)
+000700021111
+000800021111             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900021111             DCL        VAR(&LIBIN) TYPE(*CHAR) LEN(10)
+001000040723             DCL        VAR(&PARAM) TYPE(*CHAR) LEN(36) /* D1653 */
+001100021111
+001200021111/* REPERISCO LIBRERIA DATI H.B. */
+001300040723/*           CALL       PGM(NDCK80R) PARM(&KPJBA &LIBIN)    D1653 */
+001400040723             CALL       PGM(NDCK80R) PARM(&KPJBA &PARAM) /* D1653 */
+001500040723/* AGGIUNGO LIBRERIA DATI H.B. D1653 */
+001600040723             CHGVAR     VAR(&LIBIN) VALUE(%SST(&PARAM 1 10)) /* +
+001700040723                          D1653 */
+001800021111             IF         COND(&LIBIN = '          ') THEN(GOTO +
+001900021111                          CMDLBL(FINE))
+002000030429
+002100021111/* AGGIUNGO LIBRERIA DATI H.B. */
+002200021111             ADDLIBLE   LIB(&LIBIN) POSITION(*LAST)
+002300021111             MONMSG     MSGID(CPF0000)
+002400021111
+002500021111/* ESEGUO IL PGM DI SPEDIZIONE */
+002600021111             CALL       PGM(NDCK71R1) PARM(&KPJBA)
+002700021111
+002800090504/******************************************************************************/
+002900090504/* Gli effetti passivi non li spedisco con Intesa CBK ma con San Paolo link,  */
+003000090504/* quindi sposto i dati da CBIEPX a IFS.                                      */
+003100090504/******************************************************************************/
+003200090504             RCLRSC
+003300090504             CALL       PGM(YK060000R) PARM(&KPJBA)
+003400090504/******************************************************************************/
+003500090504
+003600021111/* ELIMINO LIBRERIA DATI H.B. */
+003700021111             RMVLIBLE   LIB(&LIBIN)
+003800021111             MONMSG     MSGID(CPF0000)
+003900021111
+004000021111 FINE:       ENDPGM

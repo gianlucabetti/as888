@@ -1,0 +1,896 @@
+000100000000     F* TAADBFVR - Retrieve PF source - Called by TAADBFVC
+000200000000     F*  TEMP132 has DSPFFD output to a spooled file. This has more
+000300000000     F*    info than the DSPFFD outfile
+000400000000     F*  QADSPFFD is the outfile for DSPFFD
+000500000000     F*  QAFDACCP is the outfile for DSPFD for access path info
+000600000000     FTEMP132 IF  F     132            DISK
+000700000000     FQADSPFFDIF  E                    DISK
+000800000000     FQAFDACCPIF  E                    DISK
+000900000000     FSOURCE  O   F      92            DISK
+001000000000     E                    RCD       132  1
+001100000000     E                    VLU       101 15
+001200000000     E                    WRK        15  1
+001300000000     E                    NUM        15  1
+001400000000     E                    KEY      1014  1               KEYWORD output
+001500000000     E                    RFN        10 30   RFC     5 0 Ref file usage
+001600000000     E                    THS        27  1               This key line
+001700000000     E                    STD     1  20 70               Std comments
+001800000000     E                    ST2     1  20 70               Std comments
+001900000000     E                    WK1        50  1   WK2     1   Work arrays
+002000000000     ITEMP132 AA  01
+002100000000     I                                        1 132 RCD
+002200000000     ILST         DS
+002300000000     I                                        11515 VLU
+002400000000     IWR1000      DS                           1000
+002500000000     I                                        1   1 DUMMY1
+002600000000     IREFNAM      DS
+002700000000     I                                        1  10 REFF
+002800000000     I                                       11  20 REFFL
+002900000000     I                                       21  30 REFFMT
+003000000000     C           *ENTRY    PLIST                           Parm list
+003100000000     C                     PARM           FILE   10        File name
+003200000000     C                     PARM           LIB    10        Library name
+003300000000     C                     PARM           MBR    10        Mbr name
+003400000000     C                     PARM           TEXT   50        Text descrp
+003500000000     C                     PARM           FLDREF  4        Field ref
+003600000000     C                     PARM           RTNCDE  8        Rtn code
+003700000000     C* Initialize
+003800000000     C                     TIME           TIME    60       Curr time
+003900000000     C* Read heading information
+004000000000     C           READ1     TAG                             READ1 tag
+004100000000     C                     READ TEMP132                  20 Read file
+004200000000     C* EOF should not be found, set error
+004300000000     C   20                DO                              EOF found
+004400000000     C                     MOVE 'EOFHDG  'RTNCDE           Set for err
+004500000000     C                     GOTO ABORT                      Branch
+004600000000     C                     END                             EOF found
+004700000000     C* Any value in 2 and 3 is a heading, bypass
+004800000000     C                     MOVEARCD,2     TEST2   2        Move 2
+004900000000     C           TEST2     CABNE*BLANKS   READ1            Loop back
+005000000000     C* Check for externally described file
+005100000000     C                     MOVEARCD,4     TEST8   8        Move 8
+005200000000     C           TEST8     IFEQ 'External'                 If External
+005300000000     C           TEST8     OREQ 'EXTERNAL'                   Or Upr cas
+005400000000     C                     GOTO READ1                      Loop back
+005500000000     C                     MOVEARCD,51    TEST4   4        Move 4
+005600000000     C           TEST4     IFNE 'Yes'                      Not Yes
+005700000000     C           TEST4     ORNE 'YES'                        Or Upr cas
+005800000000     C                     MOVE 'FLDLVL  'RTNCDE           Set return
+005900000000     C                     GOTO ABORT                      Branch
+006000000000     C                     END                             Not Yes
+006100000000     C                     END                             If External
+006200000000     C* Look for -Field- as the end of the heading
+006300000000     C           TEST8     IFEQ 'Field   '                 If Field
+006400000000     C           TEST8     OREQ 'FIELD   '                   Or Upr cas
+006500000000     C                     GOTO ENDHDG                     Branch
+006600000000     C                     END                             If Field
+006700000000     C* Loop back for next heading record
+006800000000     C                     GOTO READ1                      If not Field
+006900000000     C* End of heading section
+007000000000     C           ENDHDG    TAG
+007100000000     C* Read all the way thru the QADSPFFD file looking for the
+007200000000     C*   most commonly used items to use at the file level
+007300000000     C           RDFFD1    TAG
+007400000000     C                     READ QWHDRFFD                 20 FFD outfile
+007500000000     C   20                GOTO ENFFD1                     If EOF
+007600000000     C* Determine the most common field reference file
+007700000000     C*   Use an alternating array of 10 elements
+007800000000     C           WHRFIL    IFNE *BLANKS                    Fld Ref file
+007900000000     C*   Make a 30 char name of File/Lib/Format in REFNAM DS
+008000000000     C                     MOVELWHRFIL    REFF             File
+008100000000     C                     MOVE WHRLIB    REFFL            Lib
+008200000000     C                     MOVE WHRFMT    REFFMT           Ref fmt
+008300000000     C* Is it already in the array
+008400000000     C                     Z-ADD1         RX      30       Inlz lookup
+008500000000     C           REFNAM    LOKUPRFN,RX                   20 Lookup
+008600000000     C* If yes, add 1 to the count
+008700000000     C   20                ADD  1         RFC,RX           Count use
+008800000000     C* If no bypass if more than 10 entries. If LT 10, put in array
+008900000000     C  N20                DO                              Not found
+009000000000     C  N20      NXTREF    IFLT 10                         LT 10
+009100000000     C                     ADD  1         NXTREF  30       Next slot
+009200000000     C                     Z-ADDNXTREF    RX               Next slot
+009300000000     C                     MOVE REFNAM    RFN,RX           Move name
+009400000000     C                     ADD  1         RFC,RX           Count use
+009500000000     C                     END                             LT 10
+009600000000     C                     END                             Not found
+009700000000     C                     END                             Fld Ref file
+009800000000     C                     GOTO RDFFD1                     Loop back
+009900000000     C           ENFFD1    TAG                             End FFD outf
+010000000000     C* Determine the most popular field refrence file
+010100000000     C                     MOVE *BLANKS   REFNAM           Inlz
+010200000000     C                     Z-ADD0         REFCNT  50       File ref cnt
+010300000000     C                     DO   10        RX               Do 10 times
+010400000000     C           RFC,RX    IFGT REFCNT                     If GT count
+010500000000     C                     Z-ADDRFC,RX    REFCNT           New count
+010600000000     C                     MOVE RFN,RX    REFNAM           Save name
+010700000000     C                     END                             If GT count
+010800000000     C* The DS fields now have the REF file name to be used
+010900000000     C                     END                             Do 10 times
+011000000000     C* Reposition to first record in DSPFFD outfile
+011100000000     C           1         SETLLQWHDRFFD                   Reset to 1
+011200000000     C* Get standard fields in every DSPFFD record
+011300000000     C                     MOVE WHNAME    FORMAT 10        Format name
+011400000000     C                     MOVE WHTEXT    FMTTXT 50        Format text
+011500000000     C* Read first record from QAFDACCP access path file
+011600000000     C                     READ QWHFDACP                 20 Access path
+011700000000     C   20                DO                              EOF found
+011800000000     C                     MOVE 'EOFACP  'RTNCDE           Set return
+011900000000     C                     GOTO ABORT                      Branch
+012000000000     C                     END                             EOF found
+012100000000     C* Convert MAINT to parameter value for comment section
+012200000000     C           'I'       IFEQ APMANT                     Immed maint
+012300000000     C                     MOVE '*IMMED  'MAINT   8        Maint type
+012400000000     C                     END                             Immed maint
+012500000000     C           'R'       IFEQ APMANT                     Rebld maint
+012600000000     C                     MOVE '*REBLD  'MAINT   8        Maint type
+012700000000     C                     END                             Rebld maint
+012800000000     C           'D'       IFEQ APMANT                     Delay maint
+012900000000     C                     MOVE '*DLY    'MAINT   8        Maint type
+013000000000     C                     END                             Delay maint
+013100000000     C* Convert APKEYO to value for file level
+013200000000     C*   A blank is no key order
+013300000000     C           'L'       IFEQ APKEYO                     If LIFO
+013400000000     C                     MOVE 'LIFO    'KEYORD  8        Set key ordr
+013500000000     C                     END                             If LIFO
+013600000000     C           'F'       IFEQ APKEYO                     If FIFO
+013700000000     C                     MOVE 'FIFO    'KEYORD  8        Set key ordr
+013800000000     C                     END                             If FIFO
+013900000000     C           'C'       IFEQ APKEYO                     If FCFO
+014000000000     C                     MOVE 'FCFO    'KEYORD  8        Set key ordr
+014100000000     C                     END                             If FCFO
+014200000000     C* Extract other needed fields
+014300000000     C                     MOVE APUNIQ    UNIQUE  1        Unique
+014400000000     C                     MOVE APACCP    KEYED   1        Keyed file
+014500000000     C                     MOVE APSELO    SELOMT  1        Select/omit
+014600000000     C* Write comment section
+014700000000     C                     ADD  1         SRCSEQ  62       Bump seq nbr
+014800000000     C                     EXCPTCOMNT1                     Comment 1
+014900000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+015000000000     C                     EXCPTCOMNT2                     Comment 2
+015100000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+015200000000     C                     MOVELFILE      RTVFIL 30        Qlfd name
+015300000000     C           RTVFIL    CAT  ' in':0   RTVFIL           Qlfd name
+015400000000     C           RTVFIL    CAT  LIB:1     RTVFIL           Qlfd name
+015500000000     C                     EXCPTCOMNT3                     Comment 3
+015600000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+015700000000     C                     EXCPTCOMNT4                     Comment 4
+015800000000     C* Write MAINT type if it exists (Arrival seq has no MAINT)
+015900000000     C           MAINT     IFNE *BLANKS                    Not blanks
+016000000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+016100000000     C                     EXCPTCOMNT5                     Comment 5
+016200000000     C                     END                             Not blanks
+016300000000     C* Output the standard comments about REF fields if REF used
+016400000000     C           REFNAM    IFNE *BLANKS                    REF used
+016500000000     C                     DO   20        SX      30       Do N times
+016600000000     C* If FLDREF(*YES) is used, use the STD array
+016700000000     C           FLDREF    IFEQ '*YES'                     If *YES
+016800000000     C                     MOVE STD,SX    STDLIN 70        Std line
+016900000000     C                     END                             If *YES
+017000000000     C* If FLDREF(*NO) is used, use the ST2 array
+017100000000     C           FLDREF    IFEQ '*NO'                      If *NO
+017200000000     C                     MOVE ST2,SX    STDLIN 70        Std line
+017300000000     C                     END                             If *NO
+017400000000     C           STDLIN    IFNE *BLANKS                    Not blank
+017500000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+017600000000     C                     EXCPTSTDCMT                     Comment 5
+017700000000     C                     END                             Not blank
+017800000000     C                     END                             Do N times
+017900000000     C                     END                             REF used
+018000000000     C* Write UNIQUE key file level if any
+018100000000     C           UNIQUE    IFEQ 'Y'                        If UNIQUE
+018200000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+018300000000     C                     EXCPTLUNIQU                     Unique line
+018400000000     C                     END                             If UNIQUE
+018500000000     C* Write Key order file level if any
+018600000000     C*   If UNIQUE exists, no key order should be written
+018700000000     C           UNIQUE    IFEQ 'N'                        Not UNIQUE
+018800000000     C           KEYORD    IFNE *BLANKS                    Not blank
+018900000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+019000000000     C                     EXCPTLKEYOR                     Unique line
+019100000000     C                     END                             Not blank
+019200000000     C                     END                             Not UNIQUE
+019300000000     C* Write file level field reference if any
+019400000000     C*   Prior code has found the most popular one
+019500000000     C           REFNAM    IFNE *BLANKS                    Fld Ref file
+019600000000     C* Assemble name with concatenation
+019700000000     C                     MOVE *BLANKS   WRK100100        Inlz value
+019800000000     C                     MOVEL'REF('    WRK100           Keywrd value
+019900000000     C           WRK100    CAT  REFFL:0   WRK100           Keywrd value
+020000000000     C           WRK100    CAT  '/':0     WRK100           Keywrd value
+020100000000     C           WRK100    CAT  REFF:0    WRK100           Keywrd value
+020200000000     C           WRK100    CAT  ' ':0     WRK100           Keywrd value
+020300000000     C           WRK100    CAT  REFFMT:1  WRK100           Keywrd value
+020400000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+020500000000     C                     MOVEAWRK100    KEY,1            Common array
+020600000000     C                     EXSR KEYOUT                     Exsr subr
+020700000000     C                     END                             Fld Ref file
+020800000000     C* Write format record
+020900000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+021000000000     C                     EXCPTLFORMT                     Format rcd
+021100000000     C* Write format text record if it exists
+021200000000     C           FMTTXT    IFNE *BLANKS                    Format text
+021300000000     C                     MOVE *BLANKS   WRK100           Inlz value
+021400000000     C                     MOVEL'TEXT(''' WRK100           Keywrd value
+021500000000     C           WRK100    CAT  FMTTXT:0  WRK100           Keywrd value
+021600000000     C           WRK100    CAT  ''')':0   WRK100           Keywrd value
+021700000000     C                     MOVEAWRK100    KEY,1            Common array
+021800000000     C                     EXSR KEYOUT                     Exsr subr
+021900000000     C                     END                             Format text
+022000000000     C* Start work on fields in DSPFFD output
+022100000000     C           RDFFD2    TAG
+022200000000     C                     READ QWHDRFFD                 20 FFD outfile
+022300000000     C   20                GOTO ENFFD2                     If EOF
+022400000000     C* Initialize
+022500000000     C                     MOVE *BLANK    REFIND  1        Ref fld ind
+022600000000     C                     MOVE *BLANK    FILREF  1        Use file ref
+022700000000     C                     MOVE *ZEROS    FLDLEN  50       Field length
+022800000000     C                     MOVE *BLANK    REFONL  1        Ref only
+022900000000     C                     MOVE *BLANK    EDTCDE  1        Edit code
+023000000000     C                     SETOF                     8283  Output indic
+023100000000     C* Check if it is the same as the file level REF file
+023200000000     C           WHRFLD    IFNE *BLANK                     Some ref
+023300000000     C                     MOVE 'R'       REFIND           Output fld
+023400000000     C                     END                             Some ref
+023500000000     C           WHRFIL    IFEQ REFF                       If same file
+023600000000     C           WHRLIB    ANDEQREFFL                          same lib
+023700000000     C           WHRFMT    ANDEQREFFMT                         same fmt
+023800000000     C                     MOVE 'X'       FILREF           Use ref file
+023900000000     C                     END                             If same file
+024000000000     C* If Ref file level was used and the field name is the same,
+024100000000     C*   set switch so there is no output other than -R-
+024200000000     C           REFIND    IFEQ 'R'                        Did a ref
+024300000000     C           FILREF    ANDEQ'X'                          was fil lv
+024400000000     C           WHFLDE    IFEQ WHRFLD                     Same field
+024500000000     C                     MOVE 'X'       REFONL           Ref only
+024600000000     C                     END                             Same field
+024700000000     C                     END                             Did a ref
+024800000000     C* If not -Ref only-, used, output the length etc
+024900000000     C           REFONL    IFEQ *BLANK                     No ref only
+025000000000     C           FLDREF    OREQ '*NO'                        Do not use
+025100000000     C                     Z-ADDWHFLDB    FLDLEN           Assume bytes
+025200000000     C                     MOVE WHFLDT    FLDTYP  1        Field type
+025300000000     C* If character, blank the field type
+025400000000     C           WHFLDT    IFEQ 'A'                        If char
+025500000000     C                     MOVE *BLANK    FLDTYP           Field type
+025600000000     C                     END                             If char
+025700000000     C* If Packed, output the length in digits and blank the field type
+025800000000     C           WHFLDT    IFEQ 'P'                        Packed field
+025900000000     C                     Z-ADDWHFLDD    FLDLEN           Nbr of digit
+026000000000     C                     MOVE *BLANK    FLDTYP           Field type
+026100000000     C                     END                             Packed field
+026200000000     C* Set number of decimal positions if packed, zoned or binary
+026300000000     C           WHFLDT    IFEQ 'P'                        Packed field
+026400000000     C           WHFLDT    OREQ 'S'                          Signed
+026500000000     C           WHFLDT    OREQ 'B'                          Binary
+026600000000     C                     SETON                     82    Output dec
+026700000000     C                     END                             Packed field
+026800000000     C* The EDTCDE keyword is the only one output on the same line
+026900000000     C*   as the field. It is two positions in the outfile record
+027000000000     C                     MOVELWHECDE    EDTCDE           Edit code
+027100000000     C           EDTCDE    COMP *BLANK               8383  Edit code
+027200000000     C                     END                             No ref only
+027300000000     C* Output the basic field record
+027400000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+027500000000     C                     EXCPTLFIELD                     Field line
+027600000000     C* All other field keywords are output as separate records
+027700000000     C*
+027800000000     C* REFFLD keyword
+027900000000     C*  If it has referenced a field and not the REF name, output
+028000000000     C           REFIND    IFEQ 'R'                        Has a ref
+028100000000     C           REFONL    ANDEQ*BLANK                       not file
+028200000000     C* If the file name is not blank, the ref comes from a file
+028300000000     C           WHRFIL    IFNE *BLANKS                    File exists
+028400000000     C                     MOVE *BLANKS   WRK100           Inlz value
+028500000000     C                     MOVEL'REFFLD(' WRK100           Keywrd value
+028600000000     C           WRK100    CAT  WHRFMT:0  WRK100           Keywrd value
+028700000000     C           WRK100    CAT  '/':0     WRK100           Keywrd value
+028800000000     C           WRK100    CAT  WHRFLD:0  WRK100           Keywrd value
+028900000000     C           WRK100    CAT  WHRLIB:1  WRK100           Keywrd value
+029000000000     C           WRK100    CAT  '/':0     WRK100           Keywrd value
+029100000000     C           WRK100    CAT  WHRFIL:0  WRK100           Keywrd value
+029200000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+029300000000     C                     END                             File exists
+029400000000     C* If no ref file exists, use *SRC
+029500000000     C           WHRFIL    IFEQ *BLANKS                    No ref file
+029600000000     C                     MOVE *BLANKS   WRK100           Inlz value
+029700000000     C                     MOVEL'REFFLD(' WRK100           Keywrd value
+029800000000     C           WRK100    CAT  WHRFLD:0  WRK100           Keywrd value
+029900000000     C           WRK100    CAT  '*SRC)':1 WRK100           Keywrd value
+030000000000     C                     END                             No ref file
+030100000000     C* Move to common array and output
+030200000000     C                     MOVEAWRK100    KEY,1            Common array
+030300000000     C                     EXSR KEYOUT                     Exsr subr
+030400000000     C                     END                             Has a ref
+030500000000     C*
+030600000000     C* Bypass many keywords it is a Ref only case and FLDREF(*YES)
+030700000000     C           REFONL    IFEQ 'X'                        Ref only
+030800000000     C           FLDREF    ANDEQ'*YES'                       FLDREF yes
+030900000000     C                     GOTO ENDONL                     Branch
+031000000000     C                     END                             Ref only
+031100000000     C* Any apostrophes in the COLHDG or TEXT values are stripped out.
+031200000000     C                     Z-ADD20        WRKLEN  30       Wrk array ln
+031300000000     C                     MOVEA*BLANKS   WK1,1            Inlz
+031400000000     C* Use subr and move back from WK2
+031500000000     C*   First column heading
+031600000000     C                     MOVEAWHCHD1    WK1,1            Move to wrk
+031700000000     C                     EXSR APOS                       Apos subr
+031800000000     C                     MOVEAWK2,1     WHCHD1           Move to hd 1
+031900000000     C*   Second column heading
+032000000000     C                     MOVEAWHCHD2    WK1,1            Move to wrk
+032100000000     C                     EXSR APOS                       Apos subr
+032200000000     C                     MOVEAWK2,1     WHCHD2           Move to hd 2
+032300000000     C*   Third column heading
+032400000000     C                     MOVEAWHCHD3    WK1,1            Move to wrk
+032500000000     C                     EXSR APOS                       Apos subr
+032600000000     C                     MOVEAWK2,1     WHCHD3           Move to hd 3
+032700000000     C*   Text value
+032800000000     C                     Z-ADD50        WRKLEN  30       Wrk array ln
+032900000000     C                     MOVEAWHFTXT    WK1,1            Move to wrk
+033000000000     C                     EXSR APOS                       Apos subr
+033100000000     C                     MOVEAWK2,1     WHFTXT           Move to text
+033200000000     C*
+033300000000     C* DDS will create the COLHDG keyword from the field name
+033400000000     C*   if none exists. The TEXT value will default to the column
+033500000000     C*   headings with spaces in between. Use this same technique
+033600000000     C*   and bypass the COLHDG and TEXT keywords if they will default.
+033700000000     C                     MOVE *BLANKS   WRK50  50        Work field
+033800000000     C           WHCHD1    CAT  WHCHD2:1  WRK50            Work field
+033900000000     C           WRK50     CAT  WHCHD3:1  WRK50            Work field
+034000000000     C* COLHDG keyword
+034100000000     C           WHFLDE    IFNE WRK50                      Diff hdg
+034200000000     C           WHCHD1    IFNE *BLANKS                    Some col hdg
+034300000000     C                     MOVE *BLANKS   WRK100           Inlz value
+034400000000     C                     MOVEL'COLHDG ' WRK100           Keywrd value
+034500000000     C           WRK100    CAT  '(''':0   WRK100           Keywrd value
+034600000000     C           WRK100    CAT  WHCHD1:0  WRK100           Keywrd value
+034700000000     C           WRK100    CAT  '''':0    WRK100           Keywrd value
+034800000000     C           WHCHD2    IFNE *BLANKS                    Col hdg 2
+034900000000     C           WRK100    CAT  ' ''':0   WRK100           Keywrd value
+035000000000     C           WRK100    CAT  WHCHD2:0  WRK100           Keywrd value
+035100000000     C           WRK100    CAT  '''':0    WRK100           Keywrd value
+035200000000     C                     END                             Col hdg 2
+035300000000     C           WHCHD3    IFNE *BLANKS                    Col hdg 3
+035400000000     C           WRK100    CAT  ' ''':0   WRK100           Keywrd value
+035500000000     C           WRK100    CAT  WHCHD3:0  WRK100           Keywrd value
+035600000000     C           WRK100    CAT  '''':0    WRK100           Keywrd value
+035700000000     C                     END                             Col hdg 3
+035800000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+035900000000     C                     MOVEAWRK100    KEY,1            Common array
+036000000000     C                     EXSR KEYOUT                     Exsr subr
+036100000000     C                     END                             Some col hdg
+036200000000     C                     END                             Diff hdg
+036300000000     C* TEXT keyword
+036400000000     C           WHFTXT    IFNE WRK50                      Not same txt
+036500000000     C           WHFTXT    IFNE *BLANKS                    Field text
+036600000000     C                     MOVE *BLANKS   WRK100           Inlz value
+036700000000     C                     MOVEL'TEXT(''' WRK100           Keywrd value
+036800000000     C           WRK100    CAT  WHFTXT:0  WRK100           Keywrd value
+036900000000     C           WRK100    CAT  ''')':0   WRK100           Keywrd value
+037000000000     C                     MOVEAWRK100    KEY,1            Common array
+037100000000     C                     EXSR KEYOUT                     Exsr subr
+037200000000     C                     END                             Field text
+037300000000     C                     END                             Not same txt
+037400000000     C* EDTWRD keyword
+037500000000     C           WHEWRD    IFNE *BLANKS                    Edit word
+037600000000     C                     MOVE *BLANKS   WRK100           Inlz value
+037700000000     C                     MOVEL'EDTWRD(' WRK100           Keywrd value
+037800000000     C           WRK100    CAT  WHEWRD:0  WRK100           Keywrd value
+037900000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+038000000000     C                     MOVEAWRK100    KEY,1            Common array
+038100000000     C                     EXSR KEYOUT                     Exsr subr
+038200000000     C                     END                             Edit word
+038300000000     C* REFSHIFT keyword
+038400000000     C           WHSHFT    IFNE *BLANK                     Ref shift
+038500000000     C                     MOVE *BLANKS   WRK100           Inlz value
+038600000000     C                     MOVEL'REFSHIFT'WRK100           Keywrd value
+038700000000     C           WRK100    CAT  '(':0     WRK100           Keywrd value
+038800000000     C           WRK100    CAT  WHSHFT:0  WRK100           Keywrd value
+038900000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+039000000000     C                     MOVEAWRK100    KEY,1            Common array
+039100000000     C                     EXSR KEYOUT                     Exsr subr
+039200000000     C                     END                             Ref shift
+039300000000     C* ALIAS keyword
+039400000000     C           WHALIS    IFNE *BLANK                     Alias value
+039500000000     C                     MOVE *BLANKS   WRK100           Inlz value
+039600000000     C                     MOVEL'ALIAS('  WRK100           Keywrd value
+039700000000     C           WRK100    CAT  WHALIS:0  WRK100           Keywrd value
+039800000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+039900000000     C                     MOVEAWRK100    KEY,1            Common array
+040000000000     C                     EXSR KEYOUT                     Exsr subr
+040100000000     C                     END                             Alias value
+040200000000     C* DFT keyword
+040300000000     C           WHDFT     IFNE *BLANK                     Default valu
+040400000000     C                     MOVE *BLANKS   WRK100           Inlz value
+040500000000     C                     MOVEL'DFT('    WRK100           Keywrd value
+040600000000     C           WRK100    CAT  WHDFT:0   WRK100           Keywrd value
+040700000000     C           WRK100    CAT  ')':0     WRK100           Keywrd value
+040800000000     C                     MOVEAWRK100    KEY,1            Common array
+040900000000     C                     EXSR KEYOUT                     Exsr subr
+041000000000     C                     END                             Default valu
+041100000000     C* Bypass point if Ref only case
+041200000000     C           ENDONL    TAG                             End Ref only
+041300000000     C* Read from spooled output of DSPFFD to pick up any validity
+041400000000     C*   checking keywords (bypass output if REFONL = X)
+041500000000     C                     EXSR FDSPL                      Spool subr
+041600000000     C* All keywords have been processed
+041700000000     C                     GOTO RDFFD2                     Loop back
+041800000000     C* All fields have been read
+041900000000     C           ENFFD2    TAG                             End of flds
+042000000000     C* Access path key fields first record has already been read
+042100000000     C                     GOTO FSTACP
+042200000000     C           NXTACP    TAG
+042300000000     C                     READ QWHFDACP                 20 Access path
+042400000000     C   20                GOTO ENDACP                     EOF found
+042500000000     C* The key field record also contains DESCEND if it exists
+042600000000     C           FSTACP    TAG                             First AP rcd
+042700000000     C           APKEYF    CABEQ*BLANKS   NXTACP           No key field
+042800000000     C* Check for descending
+042900000000     C           APKSEQ    COMP 'D'                      85 Descending
+043000000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+043100000000     C                     EXCPTKEYF1                      Key field 1
+043200000000     C* All other keywords go out as separate records
+043300000000     C*  Signed or absolute value
+043400000000     C           APKSIN    IFNE 'N'                        Sign or absv
+043500000000     C           APKSIN    IFEQ 'S'                        Signed
+043600000000     C                     MOVE 'SIGNED  'KEYMOD  8        Key word
+043700000000     C                     END                             Signed
+043800000000     C           APKSIN    IFEQ 'A'                        Abs value
+043900000000     C                     MOVE 'ABSVAL  'KEYMOD           Key word
+044000000000     C                     END                             Abs value
+044100000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+044200000000     C                     EXCPTKEYF2                      Key field 1
+044300000000     C                     END                             Sign or absv
+044400000000     C* Zoned or digit
+044500000000     C           APKZD     IFNE 'N'                        Zone or digt
+044600000000     C           APKZD     IFEQ 'Z'                        Zone
+044700000000     C                     MOVE 'ZONE    'KEYMOD  8        Key word
+044800000000     C                     END                             Zone
+044900000000     C           APKZD     IFEQ 'D'                        Digit
+045000000000     C                     MOVE 'DIGIT   'KEYMOD           Key word
+045100000000     C                     END                             Digit
+045200000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+045300000000     C                     EXCPTKEYF2                      Key field 1
+045400000000     C                     END                             Sign or absv
+045500000000     C* If alternate collating was used, write error line
+045600000000     C           APKASQ    IFEQ 'Y'                        Alt collate
+045700000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+045800000000     C                     EXCPTALTCL1                     Altseq text
+045900000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+046000000000     C                     EXCPTALTCL2                     Altseq text
+046100000000     C                     END                             Alt collate
+046200000000     C* End of a keyfield. Go back for more
+046300000000     C                     GOTO NXTACP                     Loop back
+046400000000     C* All access path key fields have been read
+046500000000     C           ENDACP    TAG                             End acc path
+046600000000     C* TEST
+046700000000     C                     GOTO ENDPGM                     End of pgm
+046800000000     C* End of program routine - set return code
+046900000000     C           ENDPGM    TAG                             END tag
+047000000000     C* N70                MOVE 'NONEWRTN'RTNCDE           No rcds wrtn
+047100000000     C           RTNCDE    IFEQ *BLANK                     Blank rtn cd
+047200000000     C                     MOVE 'GOOD    'RTNCDE           Good return
+047300000000     C                     END                             Blank rtn cd
+047400000000     C* Tag to abort the program
+047500000000     C           ABORT     TAG                             Abort pgm
+047600000000     C                     SETON                     LR    Set LR
+047700000000     C                     RETRN                           Return
+047800000000     C****************************************************************
+047900000000     C* KEYOUT does common keyword output and handles overlow
+048000000000     C           KEYOUT    BEGSR                           KEYOUT
+048100000000     C* Output only 26 characters to fit on SEU screen
+048200000000     C                     Z-ADD1         KX      50       Key index
+048300000000     C                     MOVEAKEY,KX    THSKEY 26        This 26
+048400000000     C           KEYLOP    TAG                             Key wrd loop
+048500000000     C           KX        IFLT 1014                       LT Max
+048600000000     C                     ADD  26        KX               Bump index
+048700000000     C                     MOVEAKEY,KX    NXTKEY 26        Next 26
+048800000000     C* If the next line is not all blanks, trim off the value being
+048900000000     C*   output to end on a blank for better readability and put
+049000000000     C*   in a plus sign on the end
+049100000000     C           NXTKEY    IFNE *BLANKS                    Partial valu
+049200000000     C* Move to array and initialize and index
+049300000000     C*  THS array is one byte longer than needed so it will be blank
+049400000000     C                     MOVEATHSKEY    THS,1            Mov to array
+049500000000     C                     Z-ADD27        TX      30       THS index
+049600000000     C           THSBGN    TAG                             Check THS ar
+049700000000     C* If no blank has been found prior to 5, forget it
+049800000000     C           TX        CABEQ5         BMPSEQ           Branch if 5
+049900000000     C                     SUB  1         TX               Decrement
+050000000000     C           THS,TX    CABNE*BLANK    THSBGN           Not a blank
+050100000000     C* Blank was found. If it is pos 26, loop back
+050200000000     C           TX        CABEQ26        THSBGN           If pos 26
+050300000000     C* Blank was found, blank out the excess in THS
+050400000000     C                     ADD  1         TX               1st non blnk
+050500000000     C                     MOVEA*BLANKS   THS,TX           Blank remndr
+050600000000     C                     MOVE '+'       THS,TX           Put in a +
+050700000000     C                     MOVEATHS,1     THSKEY           Trimmed valu
+050800000000     C* Decrement KX index to big keyword area to account for the
+050900000000     C*   the blanked out values and move again to NXTKEY
+051000000000     C           27        SUB  TX        TRIMTX  30       Bytes trimd
+051100000000     C                     SUB  TRIMTX    KX               Decrement
+051200000000     C                     MOVEAKEY,KX    NXTKEY           Next value
+051300000000     C                     END                             Partl valu
+051400000000     C* Bump for next source seq nbr and write out record with THSKEY
+051500000000     C           BMPSEQ    TAG
+051600000000     C                     ADD  1         SRCSEQ           Bump seq nbr
+051700000000     C                     EXCPTKEYWRD                     Comment 3
+051800000000     C* Move for next line
+051900000000     C                     MOVE NXTKEY    THSKEY           This line
+052000000000     C           NXTKEY    CABNE*BLANKS   KEYLOP           Loop back
+052100000000     C                     END                             LT Max
+052200000000     C* Inlz to blanks
+052300000000     C                     MOVEA*BLANKS   KEY,1            Blank out
+052400000000     C                     MOVE *BLANKS   WRK100           Blank out
+052500000000     C                     ENDSR                           KEYOUT
+052600000000     C****************************************************************
+052700000000     C* Read thru the spooled output of DSPFFD
+052800000000     C           FDSPL     BEGSR                           Spooled outp
+052900000000     C* If not first time, the field record has alread been read
+053000000000     C           FSTSPL    CABEQ'X'       SPL2             Branch
+053100000000     C           READ2     TAG                             READ2 tag
+053200000000     C                     READ TEMP132                  20 Read file
+053300000000     C* If EOF, see if there is validity checking keywords to output
+053400000000     C*   for the last field read and then end
+053500000000     C   20                DO                              If EOF
+053600000000     C           VALFND    IFEQ 'X'                        If exists
+053700000000     C                     EXSR CHKOUT                     Keywrd out
+053800000000     C                     END                             If exists
+053900000000     C                     GOTO ENDSPL                     Branch
+054000000000     C                     END                             If EOF
+054100000000     C* Bypass if overflow occurred (1st 2 pos will be non-blank)
+054200000000     C                     MOVEARCD,1     TEST2   2        Move 2
+054300000000     C           TEST2     CABNE*BLANK    READ2            If not blank
+054400000000     C* Bypass if a new column heading appears
+054500000000     C                     MOVEARCD,15    TEST8   8        Move 8
+054600000000     C           TEST8     CABEQ'Data    'READ2            If DATA
+054700000000     C           TEST8     CABEQ'DATA    'READ2            If DATA
+054800000000     C           TEST8     CABEQ'Type    'READ2            If TYPE
+054900000000     C           TEST8     CABEQ'TYPE    'READ2            If TYPE
+055000000000     C* If pos 4 and 5 are blank it may be a validity check line
+055100000000     C                     MOVEARCD,4     TEST2   2        Move 2
+055200000000     C           TEST2     CABEQ*BLANK    CHKVAL           If blank
+055300000000     C* It must be a field line, check previous and output if set
+055400000000     C           VALFND    IFEQ 'X'                        If exists
+055500000000     C                     EXSR CHKOUT                     Exsr CHKOUT
+055600000000     C                     END                             If exists
+055700000000     C* If the FSTSPL switch is on, a new field name has just been
+055800000000     C*   read. Branch to the end to allow the outfile processing
+055900000000     C*   to continue.
+056000000000     C           FSTSPL    CABEQ'X'       ENDSPL           Branch
+056100000000     C* If it is the first time, set the switch and continue
+056200000000     C                     MOVE 'X'       FSTSPL  1        First spl
+056300000000     C* Branch point after the 1st time switch is set
+056400000000     C           SPL2      TAG                             Begin field
+056500000000     C* Move to field name
+056600000000     C                     MOVEARCD,4     SPLFLD 10        Field name
+056700000000     C* If this is not the same as the outfile name, abort
+056800000000     C           WHFLDE    IFNE SPLFLD                     Diff name
+056900000000     C                     MOVE 'WRONGNAM'RTNCDE           Set return
+057000000000     C                     GOTO ABORT                      Abort
+057100000000     C                     END                             Diff name
+057200000000     C* Initialize fields for validity checking
+057300000000     C                     EXSR INZVAL                     Inlz subr
+057400000000     C                     GOTO READ2                      Goto READ2
+057500000000     C* Check for validity check keyword
+057600000000     C           CHKVAL    TAG                             CHKVAL tag
+057700000000     C                     MOVEARCD,6     TEST8            Move 8
+057800000000     C* Bypass if it is a Keyboard shift spec
+057900000000     C           TEST8     CABEQ'Keyboard'READ2            Keyboard shf
+058000000000     C           TEST8     CABEQ'KEYBOARD'READ2            Keyboard shf
+058100000000     C           TEST8     IFEQ 'Validity'                 Val keyword
+058200000000     C           TEST8     OREQ 'VALIDITY'                 Val keyword
+058300000000     C* If validity switch is already set, output the keyword record
+058400000000     C           VALFND    IFEQ 'X'                        If exists
+058500000000     C                     EXSR CHKOUT                     Keywrd out
+058600000000     C                     END                             If exists
+058700000000     C* Set the validity check keyword found indication
+058800000000     C                     MOVE 'X'       VALFND           Val chk fnd
+058900000000     C* Set valid keyword and validity switch
+059000000000     C                     MOVEARCD,51    TEST4   4        Value type
+059100000000     C* COMP keyword
+059200000000     C           TEST4     IFEQ 'COMP'                     COMP
+059300000000     C           TEST4     OREQ 'CMP'                      Comp type
+059400000000     C                     MOVE TEST4     CMPTYP           Comp chk
+059500000000     C                     MOVEARCD,56    CMPOPR           Comp oper
+059600000000     C                     EXSR VALARR                     Val subr
+059700000000     C                     END                             COMP
+059800000000     C* RANGE keyword
+059900000000     C           TEST4     IFEQ 'RANG'                     RANGE
+060000000000     C                     MOVE TEST4     RNGTYP           Range type
+060100000000     C                     EXSR VALARR                     Val subr
+060200000000     C                     END                             RANGE
+060300000000     C* CHECK Keyword
+060400000000     C           TEST4     IFEQ 'CHEC'                     CHECK
+060500000000     C                     MOVEARCD,57    CHKTYP           Check type
+060600000000     C                     END                             CHECK
+060700000000     C* VALUES keyword
+060800000000     C           TEST4     IFEQ 'VALU'                     VALUES
+060900000000     C                     MOVE TEST4     VALKEY           Values type
+061000000000     C                     EXSR VALARR                     Val subr
+061100000000     C                     END                             Values type
+061200000000     C* CHKMSGID keyword
+061300000000     C           TEST4     IFEQ 'CHKM'                     CHKMSGID
+061400000000     C                     MOVE TEST4     CHKMSG           Values type
+061500000000     C                     MOVE 'X'       APOST            Strip apost
+061600000000     C                     EXSR VALARR                     Val subr
+061700000000     C                     END                             Values type
+061800000000     C                     GOTO READ2                      Goto READ2
+061900000000     C                     END                             CHKMSGID
+062000000000     C* Bypass field text descriptions and edit codes and words
+062100000000     C                     MOVEARCD,6     TEST8            Move 8 pos
+062200000000     C           'Field te'CABEQTEST8     READ2            Branch EQ
+062300000000     C           'FIELD TE'CABEQTEST8     READ2            Branch EQ
+062400000000     C                     MOVEARCD,6     TEST4            Move 4 pos
+062500000000     C           'Edit'    CABEQTEST4     READ2            Branch EQ
+062600000000     C           'EDIT'    CABEQTEST4     READ2            Branch EQ
+062700000000     C* Check for additional entries for VALUES keyword
+062800000000     C           RCD,66    IFNE *BLANK                     Value fld
+062900000000     C* If CHKMSGID set to strip apostrophes
+063000000000     C           CHKMSG    IFNE *BLANKS                    CHKMSGID
+063100000000     C                     MOVE 'X'       APOST            Strip apost
+063200000000     C                     END                             CHKMSGMID
+063300000000     C                     EXSR VALARR                     Val subr
+063400000000     C                     END                             Value fld
+063500000000     C                     GOTO READ2                      Goto READ2
+063600000000     C           ENDSPL    ENDSR                           Spooled outp
+063700000000     C****************************************************************
+063800000000     C* Check to see if a validity checking record should be output
+063900000000     C           CHKOUT    BEGSR                           CHKOUT rtn
+064000000000     C* CHECK Keyword
+064100000000     C           CHKTYP    IFNE *BLANKS                    CHECK used
+064200000000     C                     MOVE *BLANKS   WRK100           Work field
+064300000000     C                     MOVEL'CHECK('  WRK100           Work field
+064400000000     C           WRK100    CAT  CHKTYP:0  WRK100           Work field
+064500000000     C           WRK100    CAT  ')':0     WRK100           Work field
+064600000000     C                     MOVEAWRK100    KEY,1            Common area
+064700000000     C                     EXSR KEYOUT                     Exsr subr
+064800000000     C                     END                             CHECK used
+064900000000     C* COMP or CMP keywords
+065000000000     C           CMPTYP    IFNE *BLANKS                    COMP used
+065100000000     C                     MOVE *BLANKS   WRK100           Work field
+065200000000     C                     MOVELCMPTYP    WRK100           Work field
+065300000000     C           WRK100    CAT  '(':0     WRK100           Work field
+065400000000     C           WRK100    CAT  CMPOPR:0  WRK100           Work field
+065500000000     C           WRK100    CAT  VLU,1:1   WRK100           Work field
+065600000000     C           WRK100    CAT  ')':0     WRK100           Work field
+065700000000     C                     MOVEAWRK100    KEY,1            Common area
+065800000000     C                     EXSR KEYOUT                     Exsr subr
+065900000000     C                     END                             Comp used
+066000000000     C* RANGE keyword
+066100000000     C           RNGTYP    IFNE *BLANKS                    RANGE used
+066200000000     C                     MOVE *BLANKS   WRK100           Work field
+066300000000     C                     MOVEL'RANGE('  WRK100           Work field
+066400000000     C           WRK100    CAT  VLU,1:0   WRK100           Work field
+066500000000     C           WRK100    CAT  VLU,2:1   WRK100           Work field
+066600000000     C           WRK100    CAT  ')':0     WRK100           Work field
+066700000000     C                     MOVEAWRK100    KEY,1            Common area
+066800000000     C                     EXSR KEYOUT                     Exsr subr
+066900000000     C                     END                             RANGE used
+067000000000     C* VALUES Keyword
+067100000000     C           VALKEY    IFNE *BLANKS                    VALUES used
+067200000000     C                     MOVE *BLANKS   WR1000           Work field
+067300000000     C                     Z-ADDLX        MAXLX   30       Max LX
+067400000000     C                     MOVEL'VALUES(' WR1000           Work field
+067500000000     C                     DO   MAXLX     LX               Do max times
+067600000000     C           WR1000    CAT  VLU,LX:1  WR1000           Work field
+067700000000     C                     END                             Do max times
+067800000000     C           WR1000    CAT  ')':0     WR1000           Work field
+067900000000     C                     MOVEAWR1000    KEY,1            Common area
+068000000000     C                     EXSR KEYOUT                     Exsr subr
+068100000000     C                     END                             VALUES used
+068200000000     C* CHKMSGID Keyword
+068300000000     C           CHKMSG    IFNE *BLANKS                    CHKMSGID usd
+068400000000     C                     MOVE *BLANKS   WR1000           Work field
+068500000000     C                     Z-ADDLX        MAXLX   30       Max LX
+068600000000     C                     MOVEL'CHKMSGI' WR1000           Work field
+068700000000     C           WR1000    CAT  'D(':0    WR1000           Work field
+068800000000     C* Get the message ID value
+068900000000     C           WR1000    CAT  VLU,1:0   WR1000           Work field
+069000000000     C* If MAXLX is 2, then the second value must be the unqual MSGF.
+069100000000     C*    Add it in and branch to closing paren
+069200000000     C           MAXLX     IFEQ 2                          EQ 2
+069300000000     C           WR1000    CAT  VLU,2:1   WR1000           Work field
+069400000000     C                     GOTO CLSMSG                     Branch
+069500000000     C                     END                             EQ 2
+069600000000     C* If MAXLX is 3, then the 3rd value may be a message variable
+069700000000     C*    field. It must begin with an &
+069800000000     C           MAXLX     IFEQ 3                          EQ 3
+069900000000     C                     MOVE VLU,3     TEST1   1        Get 1st byte
+070000000000     C           TEST1     IFNE '&'                        Not an &
+070100000000     C* It is a qualified message file name
+070200000000     C           WR1000    CAT  VLU,3:1   WR1000           Work field
+070300000000     C           WR1000    CAT  '/':0     WR1000           Work field
+070400000000     C           WR1000    CAT  VLU,2:0   WR1000           Work field
+070500000000     C                     GOTO CLSMSG                     Branch
+070600000000     C                     END                             Not an &
+070700000000     C           TEST1     IFEQ '&'                        Not an &
+070800000000     C* It is an unqualified message name
+070900000000     C           WR1000    CAT  VLU,2:1   WR1000           Work field
+071000000000     C           WR1000    CAT  VLU,3:1   WR1000           Work field
+071100000000     C                     GOTO CLSMSG                     Branch
+071200000000     C                     END                             Not an &
+071300000000     C                     END                             EQ 3
+071400000000     C* If MAXLX is 4, it is a qualified message file with a
+071500000000     C*   message field
+071600000000     C           MAXLX     IFEQ 4                          EQ 4
+071700000000     C           WR1000    CAT  VLU,3:1   WR1000           Work field
+071800000000     C           WR1000    CAT  '/':0     WR1000           Work field
+071900000000     C           WR1000    CAT  VLU,2:0   WR1000           Work field
+072000000000     C           WR1000    CAT  VLU,4:1   WR1000           Work field
+072100000000     C                     END                             EQ 4
+072200000000     C* Put in the closing paren and write out
+072300000000     C           CLSMSG    TAG
+072400000000     C           WR1000    CAT  ')':0     WR1000           Work field
+072500000000     C                     MOVEAWR1000    KEY,1            Common area
+072600000000     C                     EXSR KEYOUT                     Exsr subr
+072700000000     C                     END                             CHKMSGID usd
+072800000000     C* Initialize fields for the next validity check
+072900000000     C                     EXSR INZVAL                     Initialize
+073000000000     C                     ENDSR                           CHKOUT rtn
+073100000000     C****************************************************************
+073200000000     C* Initialize fields for validity checking
+073300000000     C           INZVAL    BEGSR                           INZVAL subr
+073400000000     C                     MOVE *BLANKS   CMPOPR  2        Comp oper
+073500000000     C                     MOVE *BLANKS   LST              Big list
+073600000000     C                     Z-ADD0         LX      30       Inlz lst cnt
+073700000000     C                     MOVE *BLANKS   CMPTYP  4        COMP type
+073800000000     C                     MOVE *BLANKS   CHKTYP  2        CHECK type
+073900000000     C                     MOVE *BLANKS   VALKEY  4        VALUES type
+074000000000     C                     MOVE *BLANKS   CHKMSG  4        CHKMSGID typ
+074100000000     C                     MOVE *BLANKS   RNGTYP  4        RANGE type
+074200000000     C                     MOVE *BLANK    VALFND  1        Val chk fnd
+074300000000     C                     ENDSR                           INZVAL subr
+074400000000     C****************************************************************
+074500000000     C* Move comparison value to the array
+074600000000     C           VALARR    BEGSR                           VALARR subr
+074700000000     C                     MOVEARCD,66    WORK15 15        Move 15
+074800000000     C* If requested, strip off beginning and trailing apostrophes
+074900000000     C           APOST     IFEQ 'X'                        If strip
+075000000000     C                     MOVE *BLANK    APOST   1        Reset
+075100000000     C                     MOVEAWORK15    WRK,1            Move to arr
+075200000000     C                     Z-ADD16        WX      30       Inz 1 GT
+075300000000     C           APSLOP    TAG                             Apos loop
+075400000000     C                     SUB  1         WX               Decrement
+075500000000     C           WX        IFGT 1                          GT 1
+075600000000     C           WRK,WX    CABNE''''      APSLOP           Not apos
+075700000000     C                     MOVE *BLANK    WRK,WX           Blank out
+075800000000     C                     END                             GT 1
+075900000000     C* Right apostrophe has been removed. Remove left apostrophe.
+076000000000     C                     MOVEAWRK,2     WORK14 14        Work 14
+076100000000     C                     MOVE *BLANKS   WORK15           Inlz
+076200000000     C                     MOVELWORK14    WORK15           Move left
+076300000000     C                     END                             If strip
+076400000000     C* Move value into the array
+076500000000     C                     ADD  1         LX               Val lst inx
+076600000000     C                     MOVE WORK15    VLU,LX           Move value
+076700000000     C                     ENDSR                           VALARR subr
+076800000000     C****************************************************************
+076900000000     C* APOS subr to strip off apostrophes of COLHDG or TEXT
+077000000000     C           APOS      BEGSR                           APOS subr
+077100000000     C                     Z-ADD0         YX      30       Inlz from ix
+077200000000     C                     Z-ADD0         ZX      30       Inlz to ix
+077300000000     C           APOSLP    TAG                             Loop point
+077400000000     C                     ADD  1         YX               Bump from ix
+077500000000     C* WRKLEN is set for either COLHDG (20) or TEXT (50)
+077600000000     C           YX        IFLT WRKLEN                     If LT length
+077700000000     C                     MOVEAWK1,YX    CHAR1   1        Move 1 char
+077800000000     C* If it is an apostrophe, skip it
+077900000000     C           ''''      CABEQCHAR1     APOSLP           Loop if apos
+078000000000     C                     ADD  1         ZX               Bump to ix
+078100000000     C                     MOVEACHAR1     WK2,ZX           Move 1 char
+078200000000     C                     GOTO APOSLP                     Loop back
+078300000000     C                     END                             If LT length
+078400000000     C                     ENDSR                           APOS subr
+078500000000     OSOURCE  E                COMNT1
+078600000000     O                         SRCSEQ     6
+078700000000     O                                   19 'A*'
+078800000000     O                         MBR       30
+078900000000     O                         TEXT      82
+079000000000     O        E                COMNT2
+079100000000     O                         SRCSEQ     6
+079200000000     O                                   19 'A*'
+079300000000     O                                 +  3 'Source retrieved by '
+079400000000     O                                      'RTVPFSRC on '
+079500000000     O                         UDATE Y
+079600000000     O                                      ' at '
+079700000000     O                         TIME         '0 :  :  '
+079800000000     O        E                COMNT3
+079900000000     O                         SRCSEQ     6
+080000000000     O                                   19 'A*'
+080100000000     O                                 +  6 'from file '
+080200000000     O                         RTVFIL
+080300000000     O        E                COMNT4
+080400000000     O                         SRCSEQ     6
+080500000000     O                                   19 'A*'
+080600000000     O                                 +  6 'RTVPFSRC FLDREF '
+080700000000     O                                      'value = '
+080800000000     O                         FLDREF
+080900000000     O        E                COMNT5
+081000000000     O                         SRCSEQ     6
+081100000000     O                                   19 'A*'
+081200000000     O                                 +  3 'MAINT - '
+081300000000     O                         MAINT
+081400000000     O        E                STDCMT
+081500000000     O                         SRCSEQ     6
+081600000000     O                         STDLIN    82
+081700000000     O        E                LUNIQU
+081800000000     O                         SRCSEQ     6
+081900000000     O                                   18 'A'
+082000000000     O                                   65 'UNIQUE   '
+082100000000     O        E                LKEYOR
+082200000000     O                         SRCSEQ     6
+082300000000     O                                   18 'A'
+082400000000     O                         KEYORD    64
+082500000000     O        E                LFORMT
+082600000000     O                         SRCSEQ     6
+082700000000     O                                   18 'A'
+082800000000     O                                   29 'R'
+082900000000     O                         FORMAT    40
+083000000000     O        E                KEYWRD
+083100000000     O                         SRCSEQ     6
+083200000000     O                                   18 'A'
+083300000000     O                         THSKEY    82
+083400000000     O        E                LFIELD
+083500000000     O                         SRCSEQ     6
+083600000000     O                                   18 'A'
+083700000000     O                         WHFLDE    40
+083800000000     O                         REFIND    41
+083900000000     O                         FLDLENZ   46
+084000000000     O                 82      WHFLDP1   49
+084100000000     O                         FLDTYP    47
+084200000000     O                 83                63 'EDTCDE('
+084300000000     O                 83      EDTCDE    64
+084400000000     O                 83                65 ')'
+084500000000     O        E                KEYF1
+084600000000     O                         SRCSEQ     6
+084700000000     O                                   18 'A'
+084800000000     O                                   29 'K'
+084900000000     O                         APKEYF    40
+085000000000     O                 85                63 'DESCEND'
+085100000000     O        E                KEYF2
+085200000000     O                         SRCSEQ     6
+085300000000     O                                   18 'A'
+085400000000     O                         KEYMOD    64
+085500000000     O        E                ALTCL1
+085600000000     O                         SRCSEQ     6
+085700000000     O                                   18 'A'
+085800000000     O                                 +  3 'ALTSEQ was used, but '
+085900000000     O                                      'the table name is not '
+086000000000     O                                      'known.'
+086100000000     O        E                ALTCL2
+086200000000     O                         SRCSEQ     6
+086300000000     O                                   18 'A'
+086400000000     O                                 +  6 'Use DSPFD to see '
+086500000000     O                                      'table details.'
+086600000000** STD Standard comments
+086700000000
+086800000000     A*
+086900000000     A*             Notes concerning RTVPFSRC
+087000000000     A*
+087100000000     A*  The most common ref file is made the file level REF keyword.
+087200000000     A*
+087300000000     A*  Field references that use the same field name are assumed
+087400000000     A*    to be the same definition as in the Fld Ref File.
+087500000000     A*  **** Overrides will be lost if the file is recreated ****
+087600000000     A*
+087700000000     A*  Any field references that use a different field name are
+087800000000     A*    fully defined as they exist in the file named on RTVPFSRC.
+087900000000     A*  **** Any changed information in a referenced field will
+088000000000     A*          not be used if the file is recreated ****
+088100000000     A*            (Everything is overridden)
+088200000000     A*
+088300000000** ST2 Standard comments
+088400000000
+088500000000     A*
+088600000000     A*             Notes concerning RTVPFSRC
+088700000000     A*
+088800000000     A*  The most common ref file is made the file level REF keyword.
+088900000000     A*
+089000000000     A*  The actual definitions of the fields as they exist in the
+089100000000     A*    file named on RTVPFSRC are used.
+089200000000     A*  Any references are also included.
+089300000000     A*  **** Any changed information in a referenced field will
+089400000000     A*          not be used if the file is recreated ****
+089500000000     A*            (Everything is overridden)
+089600000000     A*

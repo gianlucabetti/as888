@@ -1,0 +1,246 @@
+000100100507/*------------------------------------------------------------------------------------------------*/
+000200100507
+000300100507/*  ?                                                                               ?             */
+000400100507/*  ?                                                                               ?             */
+000500100507/*  ?              STATISTICA  -  DELTA                                             ?             */
+000600100507/*  ?                          -  DELTA PESI/VOLUMI                                 ?             */
+000700100507/*  ?                          -  CLIENTI PERSI                                     ?             */
+000800100507/*  ?                                                                               ?             */
+000900100507/*  ?                                                                               ?             */
+001000100507
+001100100507/*                  ATTENZIONE  alla LIBRERIA   --> del   BUDGET                                  */
+001200100507
+001300100507/*  ?                                                                               ?             */
+001400100507/*  ?                                                                               ?             */
+001500100507/*  ?    TUTTI i FILES utilizzati dai programmi >> DEVONO ESSERE REPLICATI <<       ?             */
+001600100507/*  ?    ___________________ nella  LIBRERIA  del  BUDGET. __________________       ?             */
+001700100507/*  ?                                                                               ?             */
+001800100507/*  ?                                                                               ?             */
+001900100507
+002000100302/*------------------------------------------------------------------------------------------------*/
+002100100507/* STATISTICHE DELTA - PROCEDURA                                                                  */
+002200000000/*------------------------------------------------------------------------------------------------*/
+002300130131/*  FILE base:   WFDEA00F   -   WFDEAV0F   -   SEPCC00F    -   WADFPV0F                           */
+002400130131/*  FILE   PC:   WADELPCF/E/T/N (x cliente)         WADEAPCI/E/T (x Cli/T_Serv/NTW)               */
+002500130131/*               WADELV0T (varie x cliente) <- al momento x il FUEL a TOTALE                      */
+002600130131/*               WFTISE93F  WFTISE94F  -  WADELCLP   -   SEPCC00F   -   WADFPV0F (pesi/volumi)    */
+002700100511/*                                                                                                */
+002800100507/*------------------------------------------------------------------------------------------------*/
+002900100507/* CHIAMANTE: TISE90R - RICHIESTA PARAMETRI STATISTICHE DELTA                                     */
+003000100507/* LANCIA   : TISE92R - CREAZIONE FILE DI LAVORO                                                  */
+003100100507/*            TISE93R - STATISTICHE DELTA COMMERCIALE                                             */
+003200100507/*            TISE94R - STATISTICA DELTA FILIALE                                                  */
+003300100507/*                                                                                                */
+003400100507/*            TISE91R - CREAZIONE FILE DELTA PER COMMERCIALE X PC                                 */
+003500100507/*            TISE91C1- CREAZIONE FILE DELTA X PC  a TOTALE                                       */
+003600100507/*            TISE91C3- CREAZIONE FILE DELTA X PC  a TOTALE                                       */
+003700100507/*                                                                                                */
+003800100507/*            TISE91R2- CREAZIONE FILE CLIENTI PERSI NEGLI ULTIMI 4 MESI                          */
+003900100507/*                                                                                                */
+004000070418/*          ?   - 18/04/2007 aggiunti 2 WFiles WADELPCF/E come i WFDELPCF/E   ? con campi in +    */
+004100130131/*          ?   - 31/05/2007 aggiunto WADFPV0F da generare con il WFDEL00F    ? a fine procedura  */
+004200070605/*            statistica DELTA viene lanciato lo stesso programma TISE92R generante il WFDEL00F   */
+004300130131/*            per generare il nuovo file WADFPV0F non toccando più il WFDEL00F .                  */
+004400130131/*            Il WADFPV0F formalmente è uguale al WFDEL00F però con in più il Peso ed il  Volume  */
+004500070605/*            CML. La creazione del nuovo file che serve per la statistica delta Fasce PesiVolumi */
+004600130131/*          ?   - WADFPV0F - è SEMPRE a livello di cliente e NON di unificante.       ?           */
+004700100507/*          ?   - quindi è sempre il ciclo dei SALDI letto dal TISE92R  a generarlo.  ?           */
+004800100302/*                                                                                                */
+004900100302/*          ?   - 02/02/2010 aggiunto il nuovo WFDEA00F al posto del WFDEL00F ? con NTW e TIPO    */
+005000100507/*            SERVIZIO in più generato dal nuovo TISE92R  che scrive i nuovi WFDEA00F e WFDEAV0F  */
+005100100302/*            non toccando il vecchio file per generare la Statistica x Fasce di Peso/Volume.     */
+005200100302/*            Si è VOLUTAMENTE deciso di NON modificare anche la base dati dell'altra statistica  */
+005300130131/*            non modificando  il WADFPV0F generato x cliente singolo e MAI x UNIFICANTE.         */
+005400100302/*          ?   - 02/02/2010 aggiunto il nuovo WFDEAV0F x le VARIE "e" / "h"  ? da riportare sui  */
+005500100302/*            nuovi WADEAPCI/E/T ...SOLO x i TIPI servizi E=Priority / H=H10:30.                  */
+005600100302/*          ?   - 02/02/2010 aggiunti WFiles WADEAPCI/E/T come i WADELPCF/E/T ? con campi NTW     */
+005700100302/*            e Tipo Servizio e valorizzato con le VARIE.                                         */
+005800130131/*          ?   - 31/01/2013 aggiunto  File  WADELV0T  totali VARIE           ? x il calcolo del  */
+005900130131/*            FUEL da scorporare ai Ricavi ITALIA e TOTALI. (La varia FUEL dovrebbe essere solo   */
+006000130131/*            applicata su spedizioni ITALIA - solo x questo è possibile dire ITALIA poichè sui   */
+006100130131/*            saldi delle VARIE non vi sono distinzioni fra ITALIA ed ESTERO).                    */
+006200000000/*------------------------------------------------------------------------------------------------*/
+006300020116 TISE91C:    PGM        PARM(&KPJBA)
+006400000000
+006500000000/* DICHIARAZIONI VARIABILI ---------------------------------------------------------------------- */
+006600000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+006700000000             DCL        VAR(&DCK)   TYPE(*CHAR) LEN(1)
+006800000000             DCL        VAR(&DCC)   TYPE(*CHAR) LEN(1)
+006900000000             DCL        VAR(&DCF)   TYPE(*CHAR) LEN(1)
+007000000000             DCL        VAR(&DFF)   TYPE(*CHAR) LEN(1)
+007100000000             DCL        VAR(&STA)   TYPE(*CHAR) LEN(1)
+007200000825             DCL        VAR(&CRE)   TYPE(*CHAR) LEN(1)
+007300030311             DCL        VAR(&FPC)   TYPE(*CHAR) LEN(1)
+007400050224             DCL        VAR(&IOE)   TYPE(*CHAR) LEN(1)
+007500100514             DCL        VAR(&USER)  TYPE(*CHAR) LEN(10)
+007600000000
+007700100507             DCL        VAR(&LISTALIB) TYPE(*CHAR) LEN(2750)
+007800100507             DCL        VAR(&X) TYPE(*DEC) LEN(5 0) VALUE(1)
+007900100507             DCL        VAR(&SYSBUDGET) TYPE(*CHAR) LEN(1) VALUE('N')
+008000100507             DCL        VAR(&MANCAFILE) TYPE(*CHAR) LEN(1) VALUE('N')
+008100100510             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+008200120130             DCL        VAR(&LIBTEST) TYPE(*CHAR) LEN(10) +
+008300120130                          VALUE('EDPABCUR  ')
+008400100507
+008500100514/* in base all'utente non verranno o verranno condizionate delle cose in questo programma ------- */
+008600100514             CHGVAR     VAR(&USER) VALUE(%SUBSTRING(&KPJBA 1 10))
+008700100514
+008800000000/* VALORIZZAZIONE VARIABILI --------------------------------------------------------------------- */
+008900000000             CHGVAR     VAR(&DCK) VALUE(%SUBSTRING(&KPJBA 259 1))
+009000000000             CHGVAR     VAR(&DCC) VALUE(%SUBSTRING(&KPJBA 260 1))
+009100000000             CHGVAR     VAR(&DCF) VALUE(%SUBSTRING(&KPJBA 261 1))
+009200000000             CHGVAR     VAR(&DFF) VALUE(%SUBSTRING(&KPJBA 269 1))
+009300000000             CHGVAR     VAR(&STA) VALUE(%SUBSTRING(&KPJBA 278 1))
+009400050224             CHGVAR     VAR(&IOE) VALUE(%SUBSTRING(&KPJBA 281 1))
+009500000825             CHGVAR     VAR(&CRE) VALUE(%SUBSTRING(&KPJBA 308 1))
+009600030311             CHGVAR     VAR(&FPC) VALUE(%SUBSTRING(&KPJBA 331 1))
+009700120125
+009800120130             CRTDUPOBJ  OBJ(WFDEA00F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+009900120130                          TOLIB(&LIBTEST)
+010000120130             MONMSG     MSGID(CPD2104)
+010100120130
+010200120130             CRTDUPOBJ  OBJ(WFDEAV0F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+010300120130                          TOLIB(&LIBTEST)
+010400120130             MONMSG     MSGID(CPD2104)
+010500120130
+010600130131             CRTDUPOBJ  OBJ(WADFPV0F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+010700120130                          TOLIB(&LIBTEST)
+010800120130             MONMSG     MSGID(CPD2104)
+010900120130
+011000120130             CRTDUPOBJ  OBJ(WADELPCF) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+011100120130                          TOLIB(&LIBTEST)
+011200120130             MONMSG     MSGID(CPD2104)
+011300120130
+011400120130             CRTDUPOBJ  OBJ(WADELPCE) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+011500120130                          TOLIB(&LIBTEST)
+011600120130             MONMSG     MSGID(CPD2104)
+011700120130
+011800120130             CRTDUPOBJ  OBJ(WADELPCT) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+011900120130                          TOLIB(&LIBTEST)
+012000120130             MONMSG     MSGID(CPD2104)
+012100120130
+012200120130             CRTDUPOBJ  OBJ(WADELPCN) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+012300120130                          TOLIB(&LIBTEST)
+012400120130             MONMSG     MSGID(CPD2104)
+012500120130
+012600120130             CRTDUPOBJ  OBJ(WADEAPCI) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+012700120130                          TOLIB(&LIBTEST)
+012800120130             MONMSG     MSGID(CPD2104)
+012900120130
+013000120130             CRTDUPOBJ  OBJ(WADEAPCE) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+013100120130                          TOLIB(&LIBTEST)
+013200120130             MONMSG     MSGID(CPD2104)
+013300120130
+013400120130             CRTDUPOBJ  OBJ(WADEAPCT) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+013500120130                          TOLIB(&LIBTEST)
+013600120130             MONMSG     MSGID(CPD2104)
+013700120130
+013800120130             CRTDUPOBJ  OBJ(WADELCLP) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+013900120130                          TOLIB(&LIBTEST)
+014000120130             MONMSG     MSGID(CPD2104)
+014100120130
+014200120130             CRTDUPOBJ  OBJ(WFTISE93F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+014300120130                          TOLIB(&LIBTEST)
+014400120130             MONMSG     MSGID(CPD2104)
+014500120130
+014600120130             CRTDUPOBJ  OBJ(WFTISE94F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+014700120130                          TOLIB(&LIBTEST)
+014800120130             MONMSG     MSGID(CPD2104)
+014900120130
+015000120130             CRTDUPOBJ  OBJ(SEPCC00F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+015100120130                          TOLIB(&LIBTEST)
+015200120130             MONMSG     MSGID(CPD2104)
+015300120130
+015400120130     /*===================================== */
+015500120130             ADDLIBLE   LIB(&LIBTEST)
+015600120130             MONMSG     MSGID(CPF2103)
+015700120130     /*===================================== */
+015800100507
+015900120130             CRTDUPOBJ  OBJ(WFDEA01L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+016000120130                          TOLIB(&LIBTEST)
+016100120130             MONMSG     MSGID(CPD2104)
+016200120130
+016300120130             CRTDUPOBJ  OBJ(WFDEA02L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+016400120130                          TOLIB(&LIBTEST)
+016500120130             MONMSG     MSGID(CPD2104)
+016600120130
+016700120130             CRTDUPOBJ  OBJ(WFDEA03L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+016800120130                          TOLIB(&LIBTEST)
+016900120130             MONMSG     MSGID(CPD2104)
+017000120130
+017100120130             CRTDUPOBJ  OBJ(WFDEA04L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+017200120130                          TOLIB(&LIBTEST)
+017300120130             MONMSG     MSGID(CPD2104)
+017400120130
+017500120130             CRTDUPOBJ  OBJ(WFDEA05L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+017600120130                          TOLIB(&LIBTEST)
+017700120130             MONMSG     MSGID(CPD2104)
+017800120130
+017900120130             CRTDUPOBJ  OBJ(WFDEAV1L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+018000120130                          TOLIB(&LIBTEST)
+018100120130             MONMSG     MSGID(CPD2104)
+018200120130
+018300120130             CRTDUPOBJ  OBJ(WFDEAV1L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+018400120130                          TOLIB(&LIBTEST)
+018500120130             MONMSG     MSGID(CPD2104)
+018600120130
+018700130131             CRTDUPOBJ  OBJ(WADFPV1L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+018800120130                          TOLIB(&LIBTEST)
+018900120130             MONMSG     MSGID(CPD2104)
+019000120130
+019100130131             CRTDUPOBJ  OBJ(WADFPV4L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+019200120130                          TOLIB(&LIBTEST)
+019300120130             MONMSG     MSGID(CPD2104)
+019400120130
+019500130131             CRTDUPOBJ  OBJ(WADFPV5L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+019600120130                          TOLIB(&LIBTEST)
+019700120130             MONMSG     MSGID(CPD2104)
+019800120130
+019900120130             CRTDUPOBJ  OBJ(WFTISE93L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+020000120130                          TOLIB(&LIBTEST)
+020100120130             MONMSG     MSGID(CPD2104)
+020200120130
+020300120130             CRTDUPOBJ  OBJ(WFTISE94L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+020400120130                          TOLIB(&LIBTEST)
+020500120130             MONMSG     MSGID(CPD2104)
+020600100302
+020700100302
+020800100302/*============================================================================= */
+020900100302/*  ?   - G E N E R A Z I O N E     Base  Dati della STATISTICA    ?            */
+021000100302/*============================================================================= */
+021100050224
+021200100302/*  Se RICHIESTA la RIGENERAZIONE DELLA BASE dati.  ?*/
+021300020827             IF         COND(&CRE *EQ 'S' ) THEN(DO)
+021400100302
+021500100302/*?  PULISCE E CREA IL FILE DI LAVORO  ?WFDEA00F?                                    ? */
+021600100302/*          ?? con i dati sia ITALIA che ESTERO  ?? dai SALDI x cliente o Unificante. ? */
+021700100302
+021800130131/* X generare il WFDEA00F e NON il WADFPV0F ?        il parametro PARWADEL DEVE ESSERE = BLANK?*/
+021900100302/*? questo parametro NON è un flag passato dal pgm chiamante ma gestito interno a questo pgm ?   */
+022000070531             CHGVAR     VAR(%SST(&KPJBA 334 1)) VALUE(' ')
+022100100302
+022200120130             CLRPFM     FILE(&LIBTEST/WFDEAV0F) /*? Pulisce il file +
+022300120130                          GENERALE          ?*/
+022400120130             CLRPFM     FILE(&LIBTEST/WFDEA00F) /*? Pulisce il file +
+022500120130                          GENERALE          ?*/
+022600100302                                                      /*? nel quale ci sono dati di Ita+Est ?*/
+022700100302             CALL       PGM(TISE92R) PARM(&KPJBA)     /*? 1°Giro chiamando il TISE92R.      ?*/
+022800100302
+022900100302/*  i n o l t r e :  ?*/
+023000100302/*?  PULISCE E CREA IL FILE x il PC.   ?SEPCC00F?? con i dati raggruppati x AGENTE Anno/Mese. ? */
+023100100302
+023200120130             CLRPFM     FILE(&LIBTEST/SEPCC00F)
+023300020827             CALL       PGM(TISE91R) PARM(&KPJBA)
+023400100302
+023500020827             ENDDO
+023600000000
+023700100302
+023800100302/*============================================================================= */
+023900100302/*  ?   - C R E A    la Statistica  in 3 Steps + 1 (Commerciale)   ?            */
+024000100302/*============================================================================= */
+024100100302
+024200120130             CALL       PGM(TISE91CT0) PARM(&KPJBA)
+024300120130
+024400000000             RCLRSC     LVL(*CALLER)
+024500000000
+024600000000             ENDPGM

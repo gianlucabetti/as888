@@ -1,0 +1,35 @@
+000100150227/*END                                                                         */
+000200150227             /*------------------------------------------------------*/
+000300150309             /*?Approvazione della parola d'ordine utente quando la ?*/
+000400150309             /*? si modifica tramite *cmd CHGPWD o *api QSYCHGPW.    */
+000500150309             /*------------------------------------------------------*/
+000600150309             /*?Compilare in QUSRSYS ed impostare questo programma  ?*/
+000700150309             /*?nel valore di sistema QPWDVLDPGM.                   ?*/
+000800150227             /*------------------------------------------------------*/
+000900150227
+001000150227             Pgm        parm( &NewPwd &OldPwd &RtnCde &User )
+001100150227
+001200150227             /*?Dichiarazione delle variabili?*/
+001300150227             dcl        var(&NewPwd)     type(*char) len(10)
+001400150227             dcl        var(&OldPwd)     type(*char) len(10)
+001500150227             dcl        var(&RtnCde)     type(*char) len(1)
+001600150227             dcl        var(&User)       type(*char) len(10)
+001700150227
+001800150227             dcl        var(&NewPwd2)    type(*char) len(256)
+001900150227
+002000150227             /*?Richiamo del *pgm di controllo?*/
+002100150227             chgvar     var(&NewPwd2)    value(&NewPwd)
+002200150227             chgvar     var(&RtnCde)     value('0')
+002300150310           /*call       pgm(QUSRSYS/TRULPWDR) +*/
+002400150310             call       pgm(GAITRAFIL/TRULPWDR) +
+002500150227                        parm( &NewPwd2 &RtnCde )
+002600150227
+002700150227             /*?Invio di un messaggio *ESCAPE se password errata?*/
+002800150305             if         cond(&RtnCde = '1')  then(do)
+002900150227               SndPgmMsg  msgid(CPF9898) msgf(QCPFMSG) +
+003000150303                          msgdta('Password con stringa di caratteri NON ammessa') +
+003100150227                          topgmq(*prv) msgtype(*ESCAPE)
+003200150305               enddo
+003300150227
+003400150227             /*?Fine?*/
+003500150227             EndPgm

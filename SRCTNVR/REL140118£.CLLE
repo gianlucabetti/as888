@@ -1,0 +1,68 @@
+000100091109/*********************************************************************/
+000200091109             pgm
+000300140116
+000400140116/* _____ Chiudo i sottosistemi  _______*/
+000500140116             ENDSBS     SBS(WIFIBARRIT) OPTION(*IMMED)
+000600140116             ENDSBS     SBS(WIFIBARCON) OPTION(*IMMED)
+000700140116             DLYJOB     DLY(15)
+000800101108
+000900101108/* _____ Sposto FIPDO* da UNITRAGRU a EDPSED __________________*/
+001000101108             MOVOBJ     OBJ(UNITRAGRU/FIPDO00T) OBJTYPE(*FILE) +
+001100101108                          TOLIB(EDPSED)
+001200101108             MOVOBJ     OBJ(UNITRAGRU/FIPDO01T) OBJTYPE(*FILE) +
+001300101108                          TOLIB(EDPSED)
+001400140110             MOVOBJ     OBJ(UNITRAGRU/FIPDO02T) OBJTYPE(*FILE) +
+001500140110                          TOLIB(EDPSED)
+001600140110             MOVOBJ     OBJ(UNITRAGRU/FIPDO03T) OBJTYPE(*FILE) +
+001700140110                          TOLIB(EDPSED)
+001800101108
+001900101108/* _____ Creo il nuovo FIPDO* in UNITRAGRU __________________*/
+002000101108             CRTDUPOBJ  OBJ(FIPDO*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+002100101108                          TOLIB(UNITRAGRU)
+002200101108
+002300101115/* _____ Cancello FIPDO* da EDPWKSE _________*/
+002400101115             DLTF       FILE(EDPWKSE/FIPDO01T)
+002500140110             DLTF       FILE(EDPWKSE/FIPDO02T)
+002600140110             DLTF       FILE(EDPWKSE/FIPDO03T)
+002700140110             DLTF       FILE(EDPWKSE/FIPDO00T)
+002800091109
+002900140110/* ___esegue copia dati da file salvato nel nuovo modificato _______*/
+003000140110             CPYF       FROMFILE(EDPSED/FIPDO00T) +
+003100140110                          TOFILE(UNITRAGRU/FIPDO00T) +
+003200140110                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+003300140110
+003400101108/* _____ Sposto FIPDC* da UNITRAGRU a EDPSED __________________*/
+003500101108             MOVOBJ     OBJ(UNITRAGRU/FIPDC00T) OBJTYPE(*FILE) +
+003600101108                          TOLIB(EDPSED)
+003700101108             MOVOBJ     OBJ(UNITRAGRU/FIPDC01T) OBJTYPE(*FILE) +
+003800101108                          TOLIB(EDPSED)
+003900101108             MOVOBJ     OBJ(UNITRAGRU/FIPDC02T) OBJTYPE(*FILE) +
+004000101108                          TOLIB(EDPSED)
+004100101108             MOVOBJ     OBJ(UNITRAGRU/FIPDC03T) OBJTYPE(*FILE) +
+004200101108                          TOLIB(EDPSED)
+004300101108
+004400101108/* _____ Creo il nuovo FIPDC* in UNITRAGRU __________________*/
+004500101108             CRTDUPOBJ  OBJ(FIPDC*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+004600101108                          TOLIB(UNITRAGRU)
+004700101108
+004800101108/* _____ Cancello FIDPC* da EDPWKSE _________*/
+004900101115             DLTF       FILE(EDPWKSE/FIPDC01T)
+005000101115             DLTF       FILE(EDPWKSE/FIPDC02T)
+005100101115             DLTF       FILE(EDPWKSE/FIPDC03T)
+005200101115             DLTF       FILE(EDPWKSE/FIPDC00T)
+005300140110
+005400140110/* ___esegue copia dati da file salvato nel nuovo modificato _______*/
+005500140110             CPYF       FROMFILE(EDPSED/FIPDC00T) +
+005600140110                          TOFILE(UNITRAGRU/FIPDC00T) +
+005700140110                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+005800140110
+005900091109/* _____ Sposta i programmi dalla EDPWKSE alla OBJ __________________*/
+006000140115             call       pgm(GAITRAOBJ/TNSYMVC) +
+006100140115                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+006200140115             monmsg     msgid(CPF0000)
+006300140116
+006400140116/* _____ Riattivo i sottosistemi  _______*/
+006500140116             STRSBS     SBSD(WIFIBARRIT)
+006600140116             STRSBS     SBSD(WIFIBARCON)
+006700101027
+006800091109             endpgm

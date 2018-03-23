@@ -1,0 +1,39 @@
+000100990504     H* ACTGRP=*CALLER
+000200990504     H DEBUG DECEDIT('0,') DATEDIT(*DMY/)
+000300140917      *------------------------------------------------------------
+000400140917     ftabel00f  if   e           k disk
+000500140917     D kpjba         e ds
+000600140917     d ds5A4         e ds
+000700140917      *
+000800140917     d dataiso         s               d   datfmt(*iso)
+000900140917     d dataeur         s               d   datfmt(*eur)
+001000000607      *--------------------------------------------------------------------
+001100140917     c     *entry        plist
+001200140917     c                   parm                    kpjba
+001300140917      *
+001400140917     C     Ktab          KLIST
+001500140917     C                   KFLD                    tblkut
+001600140917     C                   KFLD                    tblcod
+001700140917     C                   KFLD                    tblkey
+001800140917      * Imposta la UDATE  da TIME
+001900140917     C                   TIME                    W0140            14 0
+002000140917     C                   MOVE      W0140         UDATE8            8 0
+002100140917     c                   move      udate8        dataeur
+002200140917     c                   move      dataeur       dataiso
+002300140917      * tabella 5a per pulizie
+002400140917     c                   eval      tblkut = 1
+002500140917     c                   eval      tblcod = '5A'
+002600140917     c                   eval      tblkey = '4'
+002700140917     c                   clear                   ds5a4
+002800140917     c     ktab          chain(n)  tabel00f
+002900140917     c                   if        %found(tabel00f)
+003000140917     c                   movel     tbluni        ds5a4
+003100140917     c                   end
+003200140917     c     dataiso       subdur    §5A4Fgts:*d   dataiso
+003300140917     c                   move      dataiso       alladata          8 0
+003400140917      *     elimina tutto fino alla data ricavata da udate meno i giorni in tabella
+003500140917     C/EXEC SQL
+003600140917     C+ delete from FIfgts0F where fgtdst < :alladata
+003700140917     C/END-EXEC
+003800140917      *
+003900000607     c                   seton                                        lr

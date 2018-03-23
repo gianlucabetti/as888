@@ -1,0 +1,3 @@
+000100071116     D Proj_AutorizzazioneSocieta...
+000200071116     D                 PR                  EXTPGM('XAUTSOC')
+000300071116     D  xAutSocDs                          LIKEDS(xAutSocDs)

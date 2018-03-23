@@ -1,0 +1,48 @@
+000100950929             PGM        PARM(&KPJBA)
+000200950929
+000300971204             DCL        VAR(&KPJBA)   TYPE(*CHAR) LEN(502)
+000400971204             DCL        VAR(&KNMTD)   TYPE(*CHAR) LEN(10)
+000500971204             DCL        VAR(&TNTL90) TYPE(*CHAR) LEN(132)
+000600971204             DCL        VAR(&D90MSG) TYPE(*CHAR) LEN(98)
+000700971204             DCL        VAR(&D90ERR) TYPE(*CHAR) LEN(1)
+000800971204             DCL        VAR(&D90LIB) TYPE(*CHAR) LEN(10)
+000900971204             DCL        VAR(&D90AZP) TYPE(*CHAR) LEN(10)
+001000971204             DCL        VAR(&D90GES) TYPE(*CHAR) LEN(10)
+001100010717             DCL        VAR(&D90NSI) TYPE(*CHAR) LEN(10)
+001200951012
+001300971204/*   Reperisco codice utente               */
+001400951012             CHGVAR     VAR(&KNMTD) VALUE(%SST(&KPJBA 20 10))
+001500010717/*   Reperisco SIF e lo passo al TNTL90R   */
+001600010717             CHGVAR     VAR(&D90NSI) VALUE(%SST(&KPJBA 92 10))
+001700010717             CHGVAR     VAR(%SST(&TNTL90 1 10)) VALUE(&D90NSI)
+001800971204
+001900971204/*   Richiamo pgm per reperire libreria dati gestionali e S.Inform.traini  */
+002000971204             CALL       PGM(TNTL90R) PARM(&TNTL90)
+002100010717
+002200971204             /*      Imposto variabili di ritorno     */
+002300971204             CHGVAR  VAR(&D90MSG) VALUE(%SST(&TNTL90 55 78))
+002400971204             CHGVAR  VAR(&D90ERR) VALUE(%SST(&TNTL90 54 1))
+002500971204             CHGVAR  VAR(&D90LIB) VALUE(%SST(&TNTL90 11 10))
+002600971204             CHGVAR  VAR(&D90AZP) VALUE(%SST(&TNTL90 21 10))
+002700971204             CHGVAR  VAR(&D90GES) VALUE(%SST(&TNTL90 41 10))
+002800971204             /*           Ci sono errori ?            */
+002900971204             IF         COND(&D90ERR *EQ '1 ') THEN(DO)
+003000971204             SNDBRKMSG  MSG(&D90MSG) TOMSGQ(&KNMTD)
+003100951012             GOTO       CMDLBL(FINE)
+003200951012             ENDDO
+003300951006
+003400950929/*   Eseguo OVRDBF su file dei traini - storico tratte per avere in linea  */
+003500051104/*           OVRDBF     FILE(TNTST02L) TOFILE(&D90GES/TNTST02L)            */
+003600051104/*           OVRDBF     FILE(TNTSR01L) TOFILE(&D90GES/TNTSR01L)            */
+003601060710             STRCMTCTL  LCKLVL(*ALL) CMTSCOPE(*JOB)
+003700951002
+003800950929/*   Richiamo pgm x u file dei traini - storico tratte per avere in linea  */
+003900971204             CHGVAR  VAR(%SST(&KPJBA 247 10)) VALUE(&D90AZP)
+004000971204             CHGVAR  VAR(%SST(&KPJBA 257 10)) VALUE(&D90GES)
+004100980910             CALL       PGM(yco350R) PARM(&KPJBA)
+004101060710             ENDCMTCTL
+004200950929
+004300950929/*   DLTOVR file dei traini - storico tratte                                */
+004400950929             DLTOVR     FILE(*ALL)
+004500950929
+004600951012 FINE:       ENDPGM

@@ -1,0 +1,106 @@
+000100150505 LC | 05/05/15 | o Se LAPBRAND = "Symbol" e tipo dispositivo = 'PDA'
+000200150505               | . Agganciare UNANA07L con
+000300150505               |   UNATIP = '80'e
+000400150505               |   UNAMAT = LAPMATRICN
+000500150505               | . Se record non trovato effettuare altro tentativo aggiungendo
+000600150505               | una 'S' a sx davanti a LAPMATRICN
+000700150505               | . Se record ancora non trovato => stampare (*) e passare al
+000800150505               | record successivo, altrimenti proseguire con punti seguenti
+000900150505               | o Se LAPBRAND = "Symbol" e tipo dispositivo = 'PISTOLA'
+001000150505               | . Agganciare UNANA07L con
+001100150505               |   UNATIP = '83'e
+001200150505               |   UNAMAT = LAPMATRICN
+001300150505               | . Se record non trovato effettuare altro tentativo aggiungendo
+001400150505               | una 'S' a sx davanti a LAPMATRICN
+001500150505               | . Se record ancora non trovato => stampare (*) e passare al
+001600150505               | record successivo, altrimenti proseguire con punti seguenti
+001700150505               | o Stampare la matricola normalizzata e non S/N
+001800150505               | o Aggiunto numero motivi e totale
+001900150505               | o Aggiunto order by nell'SQL.
+002000150505               | o Aggiunto terzo e quarto test mediante UNMOV05L per le
+002100150505               |   riparazioni Symbol
+002200150507 LC | 07/05/15 | 1) Nella valorizzazione del campo UNAMDR invece che solamente
+002300150507               |   'AFARIA' indicare  'AFARIA' + 1 *blank + <data corrente nel
+002400150507               |   formato AAAAMMGG>
+002500150507               |   4) A fine lettura ed elaborazione del TILAP00F e prima di
+002600150507               |   chiudere e stampare totalizzazioni nel PRTF, estrarre i
+002700150507               |   record di UNANA00F aventi UNATIP in (74, 77, 80, 83) e UNAMDR
+002800150507               |   <> 'AFARIA AAAAMMGG' dove AAAAMMGG è la data corrente (appena
+002900150507               |   utilizzata per l'aggiornamento record nel elaborazione del
+003000150507               |   TILAP00F)AAAMMGG>
+003100150507               |   A questo punto per ciascun record estratto di UNANA00F:
+003200150507               |   - se UNATIP = 80 o 83:
+003300150507               |   o se UNAMAT inizia con 'S' ignorare il primo byte e
+003400150507               |   "memorizzarsi" il valore risultante come valore di matricola
+003500150507               |   da utilizzare per le successive ricerche
+003600150507               |   o se UNAMAT non inizia con 'S' valorizzarsi UNAMAT come
+003700150507               |   valore di matricola da utilizzare per le successive ricerche
+003800150507               |   formato AAAAMMGG>
+003900150507               |   - quindi se UNATIP = 74 o 80                =>
+004000150507               |   cercare il dispositivo in:
+004100150507               |   formato AAAAMMGG>
+004200150507               |   SELECT PLGDATORA, PLGPRFC
+004300150507               |   FROM FIPLG00F WHERE PLGIDDISP in (UNAMAT, <matricola>)
+004400150507               |   order by PLGDATORA desc
+004500150507               |   fetch first 1 row only
+004600150507               |   formato AAAAMMGG>
+004700150507               |   - Se trovato record e la porzione relativa ad AAAAMMGG del
+004800150507               |   campo PLGDATORA, ovvero i primi 8 bytes, sono > di AAAAMMGG
+004900150507               |   corrente utilizzato nella selezione per UNAMDR <> 'AFARIA
+005000150507               |   AAAAMMGG':AAMMGG>
+005100150507               |   o Aggiornare il record corrente di UNANA00F con:
+005200150507               |   " UNAMTA = *blanks
+005300150507               |   " UNADSL con la porzione relativa ad AAAAMMGG del campo
+005400150507               |   PLGDATORAAAAMMGG>
+005500150507               |   " UNAMDR con 'SPUNTE' + 1 *blank + <data corrente nel formato
+005600150507               |   AAAAMMGG>AAAMMGG>
+005700150507               |   " UNAMVD = PLGPRFC
+005800150507               |   o Diversamente (ovvero record non trovato o data non >):
+005900150507               |   " Listare anomalia "PDA " + UNATIP + " / " + UNAMAT + "
+006000150507               |   assente sia in AFARIA che in SPUNTE"
+006100150507               |   " Conteggiare questo nuovo tipo di anomalia nei totali da
+006200150507               |   da stampare a piede PRTF
+006300150507               |   formato AAAAMMGG>
+006400150507               |   formato AAAAMMGG>
+006500150507               |   - quindi se UNATIP = 77 o 83                =>
+006600150507               |   cercare il dispositivo in:
+006700150507               |   formato AAAAMMGG>
+006800150507               |   SELECT PSLIDDISP, PSLDTORAR, PSLINDIP, PSLPRFC
+006900150507               |   FROM FILTRA201/FIPSL00F WHERE PSLIDDISP in (UNAMAT,
+007000150507               |   <matricola>)MMGG>
+007100150507               |   order by PSLDATORA desc
+007200150507               |   fetch first 1 row only
+007300150507               |   - Se trovato record e la porzione relativa ad AAAAMMGG del
+007400150507               |   campo PSLDATORA, ovvero i primi 8 bytes, sono > di AAAAMMGG
+007500150507               |   corrente utilizzato nella selezione per UNAMDR <> 'AFARIA
+007600150507               |   AAAAMMGG':AAMMGG>
+007700150507               |   o Aggiornare il record corrente di UNANA00F con:
+007800150507               |   " UNAMTA con valore PSLINDIP editato in formato "indirizzo
+007900150507               |   IP" (ne parliamo a voce che facciamo prima e son cotto)
+008000150507               |   " UNADSL con la porzione relativa ad AAAAMMGG del campo
+008100150507               |   PSLDATORAAAAMMGG>
+008200150507               |   " UNAMDR con 'SPUNTE' + 1 *blank + <data corrente nel formato
+008300150507               |   AAAAMMGG>AAAMMGG>
+008400150507               |   " UNAMVD = PSLPRFC
+008500150507               |   o Diversamente (ovvero record non trovato o data non >):
+008600150507               |   " Listare anomalia "PISTOLA " + UNATIP + " / " + UNAMAT + "
+008700150507               |   assente sia in AFARIA che in SPUNTE"
+008800150507               |   " Conteggiare questo nuovo tipo di anomalia nei totali da
+008900150507               |   stampare a piede PRTF
+009000150508 LC | 08/05/15 | Se UNANA00F non aggiornabile, viene aggiunta riga in stampa
+009100150512 LC | 12/05/15 | Se mancala spunta su PDA o Pistola, non stampo anomalia se il
+009200150520               | device è appena entrato a magazzino o in un magazzino
+009300150520               | particolare.
+009400150520 LC | 20/05/15 | Aumentati i magazzini con cui non stampare.
+009500150522 LC | 22/05/15 | Presi nel secondo giro solo i device con aggionamento più
+009600150522               | vecchio di 3 gg dalla data di lancio (oggi non si conteggia,
+009700150522               | quindi i gg sono 4 se sottraggo da oggi).
+009800150604 LC | 04/06/15 | controllo e scrivo di chi è la SIM:
+009900150604               | se il 20° char di LAPSIM è numerico, è una SIM TIM,
+010000150604               | altrimenti è VODAFONE
+010100150629 FG | 29/06/15 | Sostituita istruzione SQL su file FIPLG00F (più performante)
+010200150805 FG | 05/08/15 | Introdotto activation group named "PDA_AFARIA"
+010300150811 LC | 11/08/15 | Aggiunta kpjba per schedulazione
+010400150813 LC | 13/08/15 | Aggiunta ora fine elaborazione
+010500150928 LC | 28/09/15 | A volte si inloopava per colpa dell'update su UNANA00F
+010600150928               | Definito insensitive il cursore C4

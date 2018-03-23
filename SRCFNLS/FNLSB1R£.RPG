@@ -1,0 +1,275 @@
+000100950130     H* FNLSB1R *-----------------------------------------------------*
+000200930112     H*-----------------*                                             *
+000300930113     H*     PROGRAMMA DI STAMPA QUADRATURA SPUNTE I.M.P. (FILTRO)     *
+000400930112     H*---------------------------------------------------------------*
+000500930112     H              J
+000600950320     FFNFVV05LIF  E           K        DISK
+000700950130     FFNLSB1D CF  E                    WORKSTN
+000800930112     I*
+000900930112     IKPJBA     E DS
+001000930112     I* RICERCA RAGIONE SOCIALE
+001100930112     ICNCR80    E DS
+001200930112     IUT§DSE    E DSUT§DSE0F
+001300930112     I*
+001400930112     I* RICERCA N° FOGLIO IMP PER '?'
+001500950130     IDSLR01    EIDS
+001600930113     I* CALL PROGRAMMA STAMPA QUADRATURA
+001700930112     IPARAM       DS
+001800930115     I* NUMERO FOGLIO
+001900930112     I                                        1   5 VIDNFI
+002000950130     I* DATA FOGLIO GG/MM/AAAA
+002100950130     I                                        6  130PARDF2
+002200930114     I* DATA PRESENZA COLLI (G/M/A)
+002300950130     I                                       14  210PARDPC
+002400930115     I* RAGIONE SOCIALE
+002500950130     I                                       22  41 RSUT
+002600930115     I* FILIALE ELABORATORE
+002700950130     I                                       42  440PARFEL
+002800950320     I* FILIALE GESTIONE FOGLIO
+002900950320     I                                       45  470PARFGS
+003000950320     I* DATA FOGLIO AAMMGG
+003100950320     I                                       48  550PARDFV
+003200930112     I* ROVESCIAMENTO DATA
+003300930112     IWLBDAT      DS
+003400950130     I                                        1   80G02DAT
+003500950130     I                                        9  160G02INV
+003600950130     I                                       17  17 G02ERR
+003700950130     I                                       18  220G02TGI
+003800930112     I* TRASFORMAZIONE GIORNI IN DATA
+003900930112     IWGIDAT      DS
+004000950130     I                                        1   80GIODAT
+004100950130     I                                        9  160GIOINV
+004200950130     I                                       17  210GIOTGI
+004300930112     C*---------------------------------------------------------------*
+004400930112     C* INDICATORI USATI                                              *
+004500930112     C*---------------------------------------------------------------*
+004600930112     C* 01 - N° FOGLIO IMP OBBLIGATORIO
+004700930112     C* 02 - DATA PRESENZA COLLI OBBLIGATORIA
+004800930112     C* 03 - N° FOGLIO INESISTENTE
+004900930112     C* 04 - N° FOGLIO IMP ERRATO
+005000930112     C* 05 - N° FOGLIO IMP ANNULLATO
+005100930112     C* 06 - DATA PRESENZA COLLI > O = ALLA DATA FOGLIO IMP
+005200930112     C* 07 - INSERIMENTO SOLO DI FOGLI IMP
+005300930112     C* 08 - DATA PRESENZA COLLI FORMALMENTE NON CORRETTA
+005400930112     C* 30 - RICERCA '?' IN VIDNFI
+005500930112     C* 31 - TESTN SUL VIDNFI
+005600950130     C* 32 - CHAIN SU FNFVV
+005700930112     C* 90 - GENERICO DI ERRORE
+005800930112     C*---------------------------------------------------------------*
+005900930112     C*                    MAIN                                       *
+006000930118     C* PROGRAMMA PRINCIPALE LANCIO STAMPA QUADRATURA SPUNTE          *
+006100930112     C*---------------------------------------------------------------*
+006200930112     C*
+006300930112     C* DEFINIZIONI VARIABILI, KEYLIST E PLIST
+006400930112     C                     EXSR DEFVAR
+006500930112     C*
+006600930112     C* IMPOSTO STAMPA SPUNTA A 'N'
+006700930112     C                     MOVEL'N'       VIDSSI
+006800930112     C*
+006900930112     C* EMISSIONE FORMATO VIDEO - RICHIESTA N° FOGLIO VIAGGIO E DATA
+007000930112     C           FMTD1     TAG
+007100950130     C                     EXFMTLSB1D1
+007200930112     C*
+007300930112     C* CMD3 - FINE LAVORO
+007400930112     C   KC                GOTO FINE
+007500930112     C*
+007600930112     C* CONTROLLI FORMATO VIDEO
+007700930112     C                     EXSR CTLD1
+007800930112     C*
+007900930112     C* SE ERRORI RIEMETTO IL FORMATO
+008000930112     C   90                GOTO FMTD1
+008100930112     C*
+008200950130     C* CMD6 - LANCIO PROGRAMMA
+008300950130     C   KF                EXSR LANCIO
+008400930112     C*
+008500930112     C* ENTER - RIMANE NELLA VIDEATA
+008600930118IF  1C           *INKC     IFEQ '0'
+008700950130     C           *INKF     ANDEQ'0'
+008800930118     C*
+008900930112     C                     GOTO FMTD1
+009000930118     C*
+009100930118E   1C                     ENDIF
+009200930112     C*
+009300930112     C           FINE      TAG
+009400930112     C                     SETON                     LR
+009500930112     C*---------------------------------------------------------------*
+009600930112     C*                    CTLD1                                      *
+009700930112     C* ROUTINE DI CONTROLLO DATI FORMATO VIDEO                       *
+009800930112     C*---------------------------------------------------------------*
+009900930112     C           CTLD1     BEGSR
+010000930112     C*
+010100930112     C                     SETOF                     903031
+010200930112     C*
+010300930112     C* N° FOGLIO IMP OBBLIGATORIO
+010400930112IF  1C           VIDNFI    IFEQ *BLANKS
+010500930112     C           VIDNFI    OREQ *ZEROS
+010600930112     C                     SETON                     9001
+010700930112     C                     GOTO ENDC1
+010800930112E   1C                     ENDIF
+010900930112     C*
+011000930112     C* RICERCA
+011100950320     C           '?'       SCAN VIDNFI                   30
+011200930112DO  1C         30          DO
+011300950130     C                     CLEARDSLR01
+011400950130     C                     MOVEL'S'       DLRRIC           PGM.RICHIAMATO
+011500950130     C                     Z-ADD3         DLRNPG
+011600950130     C                     Z-ADDDATAIN    DLRGDA
+011700950130     C                     Z-ADD31129999  DLRADA
+011800950130     C                     MOVEL'FNLSB1R' DLRPGM
+011900950130     C                     MOVELSIMFEL    DLRFGS
+012000950130     C                     MOVELDSLR01    KPJBU
+012100950130     C                     CALL 'FNLR02R'
+012200930112     C                     PARM           KPJBA
+012300950130     C                     MOVELKPJBU     DSLR01
+012400950130     C                     MOVELDLRNFV    VIDNFI
+012500930112     C                     SETON                     90
+012600930112     C                     GOTO ENDC1
+012700930118E   1C                     ENDDO
+012800930112     C*
+012900930112     C* SOLO VALORE NUMERICO
+013000930112     C                     TESTN          VIDNFI     31
+013100930112     C        N31          SETON                     9004
+013200930112     C        N31          GOTO ENDC1
+013300930112     C*
+013400930112     C* ESISTENZA FOGLIO IMP
+013500950130     C* LEGGO TUTTI I FOGLI FVV CON NPG+NFV
+013600950130     C                     SETOF                     33
+013700950131     C                     MOVEL3         KNPG
+013800950130     C                     MOVELVIDNFI    KNFV
+013900950320     C                     MOVELSIMFEL    KFLE
+014000950320     C           KFVV      CHAINFNFVV05L             32
+014100930112     C*
+014200950320IF  1C           *IN32     IFEQ *ON
+014300930112     C                     SETON                     9003
+014400930112     C                     GOTO ENDC1
+014500930112X   1C                     ELSE
+014600930112     C*
+014700930112     C* SOLO FOGLIO IMP
+014800930112IF  2C           FVVSPG    IFNE 'P'
+014900930112     C                     SETON                     9007
+015000930112     C                     GOTO ENDC1
+015100930112E   2C                     ENDIF
+015200930112     C*
+015300930112     C* FOGLIO ANNULLATO
+015400930112IF  2C           FVVATB    IFNE *BLANKS
+015500930112     C                     SETON                     9005
+015600930112     C                     GOTO ENDC1
+015700930112E   2C                     ENDIF
+015800930112E   1C                     ENDIF
+015900930112     C*
+016000930112     C* GIRO DATA FOGLIO DA PORTARE A VIDEO
+016100950130     C                     Z-ADDFVVDFV    G02INV
+016200950130     C                     Z-ADD*ZERO     G02DAT
+016300950130     C                     MOVEL'3'       G02ERR
+016400950130     C                     CALL 'XSRDA8'
+016500950130     C                     PARM           WLBDAT
+016600950130     C                     Z-ADDG02DAT    VIDDFI
+016700930112     C*
+016800930112     C* DATA PRESENZA COLLI OBBLIGATORIA
+016900930112IF  1C           VIDDPC    IFEQ *ZEROS
+017000930112     C                     SETON                     9002
+017100930112     C                     GOTO ENDC1
+017200930112E   1C                     ENDIF
+017300930112     C*
+017400930112     C* CONTROLLO FORMALE DATA
+017500930112     C                     MOVE VIDDPC    G02DAT
+017600930112     C                     MOVEL*BLANK    G02ERR
+017700950130     C                     CALL 'XSRDA8'
+017800930112     C                     PARM           WLBDAT
+017900930112     C* DATA NON CORRETTA
+018000930112IF  1C           G02ERR    IFEQ '1'
+018100930112     C                     SETON                     9008
+018200930112     C                     GOTO ENDC1
+018300930112X   1C                     ELSE
+018400930112     C*
+018500930112     C* DATA CORRETTA: CONFRONTO DATA FOGLIO IMP
+018600950130     C                     Z-ADDG02DAT    VIDDPC
+018700950130     C                     Z-ADDG02INV    ROVDA   80
+018800930112     C*
+018900930112IF  2C           ROVDA     IFLE FVVDFV
+019000930112     C                     SETON                     9006
+019100930112     C                     GOTO ENDC1
+019200930112E   2C                     ENDIF
+019300930112E   1C                     ENDIF
+019400930112     C*
+019500930112     C           ENDC1     TAG
+019600930112     C*
+019700930112     C                     ENDSR
+019800930112     C*---------------------------------------------------------------*
+019900930112     C*                    LANCIO                                     *
+020000930112     C* ROUTINE DI LANCIO PROGRAMMI BATCH                             *
+020100930112     C*---------------------------------------------------------------*
+020200930112     C           LANCIO    BEGSR
+020300930112     C*
+020400930113     C* STAMPA QUADRATURA SPUNTE
+020500950320     C                     Z-ADDFVVFGS    PARFGS
+020600930118     C                     MOVELVIDDFI    PARDF2
+020700950320     C                     MOVELFVVDFV    PARDFV
+020800930118     C                     MOVELVIDDPC    PARDPC
+020900950130     C                     MOVELSIMFEL    PARFEL
+021000930118     C*
+021100950130     C                     CLEARKPJBU
+021200930112     C                     MOVELPARAM     KPJBU
+021300950130     C                     MOVEL'LSB2'    KCOAZ
+021400930112     C                     CALL 'BCH10'
+021500930112     C                     PARM           KPJBA
+021600930112     C*
+021700930113     C* STAMPA SPUNTE
+021800930112IF  1C           VIDSSI    IFEQ 'S'
+021900950130     C                     CLEARDSLR01
+022000950130     C                     Z-ADD3         DLRNPG
+022100950130     C                     MOVELVIDNFI    DLRNFV
+022200950131     C                     MOVE *ALL'9'   DLRNPA
+022300950131     C                     MOVE *ALL'9'   DLRSRA
+022400950131     C                     MOVEL'S'       DLRFS1
+022500950131     C                     MOVELSIMFEL    DLRFGS
+022600950130     C                     CLEARKPJBU
+022700950130     C                     MOVELDSLR01    KPJBU
+022800950130     C                     MOVEL'LR06'    KCOAZ
+022900930112     C                     CALL 'BCH10'
+023000930112     C                     PARM           KPJBA
+023100930112E   1C                     ENDIF
+023200930112     C*
+023300930112     C                     ENDSR
+023400930112     C*---------------------------------------------------------------*
+023500930112     C*                    DEFVAR                                     *
+023600930112     C* ROUTINE DI DEFINIZIONE KLIST, VARIABILI E PLIST               *
+023700930112     C*---------------------------------------------------------------*
+023800930112     C           DEFVAR    BEGSR
+023900930112     C*
+024000930112     C           *ENTRY    PLIST
+024100930112     C                     PARM           KPJBA
+024200930112     C*
+024300930112     C                     Z-ADD1         CODUT   10
+024400930112     C                     CALL 'X§PARUT'
+024500930112     C                     PARM           UT§DSE
+024600950130     C                     MOVELRAGUT     RSUT
+024700930115     C                     MOVELREC80     CNCR80
+024800950130     C*
+024900950130     C                     TIME           WTIME  140       ORA & DATA
+025000950130     C                     MOVE WTIME     WDATE   80       GG/MM/AAAA
+025100930112     C*
+025200930112     C* GIRO DATA
+025300950130     C                     Z-ADDWDATE     G02DAT
+025400930112     C                     MOVEL*BLANK    G02ERR
+025500950130     C                     CALL 'XSRDA8'
+025600930112     C                     PARM           WLBDAT
+025700930112     C* SOTTRAGGO 3gg
+025800930112     C           G02TGI    SUB  3         GIOTGI
+025900950130     C                     CALL 'XSRGI8'
+026000930112     C                     PARM           WGIDAT
+026100930112     C*
+026200930112     C* DATA INIZIALE = DATA CORRENTE - 3gg
+026300950130     C                     Z-ADDGIODAT    DATAIN  80
+026400930112     C*
+026500950130     C* LETTURA FNFVV01L
+026600930112     C           KFVV      KLIST
+026700950130     C                     KFLD           KNPG
+026800950130     C                     KFLD           KNFV
+026900950320     C                     KFLD           KFLE
+027000930112     C*
+027100950130     C           *LIKE     DEFN FVVNPG    KNPG             CATEGORIA FOGLIO
+027200950130     C           *LIKE     DEFN FVVNFV    KNFV             NR.FOGLIO
+027300950320     C           *LIKE     DEFN FVVFLE    KFLE             NR.FOGLIO
+027400950130     C*
+027500930112     C                     ENDSR

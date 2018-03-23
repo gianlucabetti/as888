@@ -1,0 +1,45 @@
+000100130114/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600000717             PGM        PARM(&PRG &KSC &DATORA &PGI &PPI &FIT &FI3 +
+000700000717                          &FI4 &ESITO)
+000800991027
+000900000714             DCL        VAR(&PRG) TYPE(*CHAR) LEN(10) /* Progressivo */
+001000000714             DCL        VAR(&KSC) TYPE(*CHAR) LEN(8) /* Cliente */
+001100000714             DCL        VAR(&DATORA) TYPE(*CHAR) LEN(14) /* Data Ora */
+001200000712             DCL        VAR(&PGI) TYPE(*CHAR) LEN(10) /* Programma +
+001300000712                          Importatore */
+001400000712             DCL        VAR(&PPI) TYPE(*CHAR) LEN(50) /* Parametri +
+001500000712                          Programma Importatore */
+001600000717             DCL        VAR(&FIT) TYPE(*CHAR) LEN(10) /* File Tradotto */
+001700000717             DCL        VAR(&FI3) TYPE(*CHAR) LEN(10) /* Libreria File Remoto */
+001800000717             DCL        VAR(&FI4) TYPE(*CHAR) LEN(10) /* File Remoto */
+001900000712             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+002000080421             DCL        VAR(&LLIST) TYPE(*CHAR) LEN(2750)
+002100080421             DCL        VAR(&CMD) TYPE(*CHAR) LEN(3000)
+002200080421             DCL        VAR(&NN) TYPE(*DEC) LEN(15 5) VALUE(3000)
+002300000712
+002400021007
+002500021007/* Come primissima cosa salvo la lista librerie iniziale della JOBD ------ */
+002600021007             RTVJOBA    USRLIBL(&LLIST)
+002700021007             MONMSG     MSGID(CPF0000)
+002800991026
+002900021007
+003000021007/* Quindi chiamo il *pgm di post-traduzione ------------------------------ */
+003100000717             CALL       PGM(&PGI) PARM(&PPI &FIT &FI3 &FI4 &ESITO)
+003200000712             MONMSG     MSGID(CPF0000) EXEC(DO)
+003300000712             CHGVAR     VAR(&ESITO) VALUE('1')
+003400000712             ENDDO
+003500021007
+003600021007
+003700021007/* In uscita di ogni post-traduttore ------------------------------------- */
+003800021007/* per sicurezza re-imposto la corretta LIBL (quella della JOBD TIS700C) - */
+003900021007             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &LLIST +
+004000021007                          *CAT ')')
+004100021007             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+004200021007             MONMSG     MSGID(CPF0000)
+004300021007
+004400000330
+004500990907             ENDPGM

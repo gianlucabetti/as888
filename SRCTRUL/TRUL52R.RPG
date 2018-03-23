@@ -1,0 +1,143 @@
+000100950113     H
+000200950113     H*--------------------------------------------------------------*
+000300950113     H* PGM. TRUL52R : Routine che aggiunge o sottrae x gg da una    *
+000400950113     H*                data tenedo conto dei giorni festivi          *
+000500950113     H*--------------------------------------------------------------*
+000600950113     H*                PARAMETRI:                                    *
+000700950113     H*                          D52DIN=Data iniziale da cui partire *
+000800950113     H*                                 per aggiungere o sottrarre gg*
+000900950113     H*                          D52GIO=Numero gg.                   *
+001000950113     H*                          D52SGN=Segno  gg.: blanks=aggiunge  *
+001100950113     H*                                             '-'   =sottrae   *
+001200950113     H*                          D52DFI=Data finale (passata a 0)    *
+001300950113     H*                          D52ERR=ERRORE se impostato a uno    *
+001400950113     H*--------------------------------------------------------------*
+001500950113     FAZCLN01LIF  E           K        DISK
+001600950113      *--------------------------------------------------------------*
+001700950113      *  Schiere
+001800950113      *--------------------------------------------------------------*
+001900950113     E                    GIO        31  1                                CRC90
+002000950113     I*--------------------------------------------------------------*
+002100950113     ITRUL52    E DSTRUL52DS
+002200950113      *  DS x impostazione data finale
+002300950113     I            DS
+002400950113     I                                        1   40§A
+002500950113     I                                        5   60§M
+002600950113     I                                        7   80§G
+002700950113     I                                        1   80DATA
+002800950113      *--------------------------------------------------------------*
+002900950113      *  Ciclo Principale
+003000950113      *--------------------------------------------------------------*
+003100950113     C           KCLN      CHAINAZCLN01L             31
+003200950113      *  Aggiunge
+003300950113     C           D52SGN    IFEQ *BLANKS
+003400950113     C*
+003500950113     C           *IN31     DOWEQ'0'
+003600950113     C           WGG       ANDNE0
+003700950113     C                     EXSR ADDGIO
+003800950113     C                     READ AZCLN01L                 31
+003900950113     C                     END
+004000950113      *
+004100950113     C                     ELSE
+004200950113      *  Sottrae
+004300950113     C           *IN31     DOWEQ'0'
+004400950113     C           WGG       ANDNE0
+004500950113     C                     EXSR SUBGIO
+004600950113     C                     READPAZCLN01L                 31
+004700950113     C                     END
+004800950113     C*
+004900950113     C                     END
+005000950113     C*
+005100950113     C*  Se ho trovato la data la reimposto altrimenti do l'errore
+005200950113     C           WGG       IFEQ 0
+005300950113     C                     Z-ADDDATA      D52DFI
+005400950113     C                     MOVEL*BLANKS   D52ERR
+005500950113     C                     ELSE
+005600950113     C                     MOVEL'1'       D52ERR
+005700950113     C                     END
+005800950113     C*
+005900950113     C                     SETON                     LR
+006000950113      *--------------------------------------------------------------*
+006100950113      *   ADDGIO: Aggiugo giorni alla data                           *
+006200950113      *--------------------------------------------------------------*
+006300950113     C           ADDGIO    BEGSR
+006400950113      *
+006500950113      *  Aggiungo gg. alla data fino a che non trovo la data finale
+006600950113      *  o finisce il mese e devo passare alla lettura del successivo
+006700950113     C                     MOVEACLNPOM    GIO
+006800950113     C           WGG       DOWGT0
+006900950113     C           §G        ANDLT31
+007000950113     C                     ADD  1         §G
+007100950113     C           GIO,§G    IFEQ *BLANKS
+007200950113     C                     SUB  1         WGG
+007300950113     C                     END
+007400950113     C                     END
+007500950113      *  Se ho già sottratto tutti i giorni aggiungo 1 ed ho la nuova
+007600950113      *  data
+007700950113     C           WGG       IFEQ 0
+007800950113     C                     Z-ADDCLNMES    §M
+007900950113     C                     Z-ADDCLNANN    §A
+008000950113     C                     ELSE
+008100950113      *  altrimenti dovrò ripartire dal primo giorno del mese successivo
+008200950113     C                     Z-ADD0         §G
+008300950113     C                     END
+008400950113     C*
+008500950113     C                     ENDSR
+008600950113      *--------------------------------------------------------------*
+008700950113      *   SUBGIO: Sottraggo giorni alla data                         *
+008800950113      *--------------------------------------------------------------*
+008900950113     C           SUBGIO    BEGSR
+009000950113      *
+009100950113      *  Aggiungo gg. alla data fino a che non trovo la data finale
+009200950113      *  o finisce il mese e devo passare alla lettura del successivo
+009300950113     C                     MOVEACLNPOM    GIO
+009400950113     C           WGG       DOWGT0
+009500950113     C           §G        ANDGT1
+009600950113     C                     SUB  1         §G
+009700950113     C           GIO,§G    IFEQ *BLANKS
+009800950113     C                     SUB  1         WGG
+009900950113     C                     END
+010000950113     C                     END
+010100950113      *  Se ho già sottratto tutti i giorni aggiungo 1 ed ho la nuova
+010200950113      *  data
+010300950113     C           WGG       IFEQ 0
+010400950113     C                     Z-ADDCLNMES    §M
+010500950113     C                     Z-ADDCLNANN    §A
+010600950113     C                     ELSE
+010700950113      *  altrimenti dovrò ripartire dal primo giorno del mese successivo
+010800950113     C                     Z-ADD32        §G
+010900950113     C                     END
+011000950113     C*
+011100950113     C                     ENDSR
+011200950113      *--------------------------------------------------------------*
+011300950113      *   Operazioni iniziali                                        *
+011400950113      *--------------------------------------------------------------*
+011500950113     C           *INZSR    BEGSR
+011600950113     C*
+011700950113     C           *ENTRY    PLIST
+011800950113     C                     PARM           TRUL52
+011900950113     C*--------------------------------------------------------------*
+012000950113     C* Definisco chiave per lettura AZCLN
+012100950113     C           KCLN      KLIST
+012200950113     C                     KFLD           KTFP
+012300950113     C                     KFLD           KTFA
+012400950113     C                     KFLD           KANN
+012500950113     C                     KFLD           KMES
+012600950113     C*--------------------------------------------------------------*
+012700950113     C* Definisco variabili
+012800950113     C           *LIKE     DEFN CLNTFP    KTFP
+012900950113     C           *LIKE     DEFN CLNTFA    KTFA
+013000950113     C           *LIKE     DEFN CLNANN    KANN
+013100950113     C           *LIKE     DEFN CLNMES    KMES
+013200950113     C*--------------------------------------------------------------*
+013300950113     C                     Z-ADD0         KTFP
+013400950113     C                     Z-ADD0         KTFA
+013500950113     C                     MOVELD52DIN    KANN
+013600950113     C                     MOVE D52DIN    MMGG    40
+013700950113     C                     MOVELMMGG      KMES
+013800950113     C                     Z-ADDD52GIO    WGG     40
+013900950113     C                     MOVE MMGG      §G
+014000950113     C                     MOVELMMGG      §M
+014100950113     C                     MOVELD52DIN    §A
+014200950113     C*
+014300950113     C                     ENDSR

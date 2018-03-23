@@ -1,0 +1,34 @@
+000100100409             PGM        PARM(&KPJBA &TRMK01DS)
+000200091218
+000300091218             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400100409             DCL        VAR(&TRMK01DS) TYPE(*CHAR) LEN(300)
+000500100301             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000600100301             RTVJOBA    JOB(&DSP)
+000700091218
+000800091218/* Avvio il controllo di sincronia */
+000900091218             STRCMTCTL  LCKLVL(*CHG)
+001000091218             MONMSG     MSGID(CPF8351)
+001100091218
+001200091218/* controllo di sincronia già attivo */
+001300091218             MONMSG     MSGID(CPF8351) EXEC(DO)
+001400091218             ENDCMTCTL
+001500091218             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001600091218             STRCMTCTL  LCKLVL(*CHG)
+001700091218             ENDDO
+001800091218
+001900091218/* Richiamo programma */
+002000100409             CALL       PGM(TRMK02R) PARM(&KPJBA &TRMK01DS)
+002100091218             MONMSG     MSGID(CPF0000) EXEC(DO)
+002200091218             ROLLBACK
+002300100301             SNDBRKMSG  MSG('ERRORE Il programma Inserimento +
+002400100301                          Attività è +
+002500100304                          terminato in modo anomalo. +
+002600100301                          Segnalare il +
+002700100301                          problema alla persona responsabile della +
+002800100301                          manutenzione del programma.') TOMSGQ(&DSP)
+002900091218             ENDDO
+003000091218
+003100091218/* Stoppo il controllo di sincronia */
+003200091218             ENDCMTCTL
+003300091218
+003400091218             ENDPGM

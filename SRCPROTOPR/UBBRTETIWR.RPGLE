@@ -1,0 +1,3 @@
+000100161107     d UBBRTETIWR...
+000200161107     d                 pr                  extproc('UBBRTETIWR')
+000300161107     d UBBRTETIDS                          likeds(UBBRTETIDS)

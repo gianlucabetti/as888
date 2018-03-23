@@ -1,0 +1,579 @@
+000100010316     H*------------------------------------------------------------------------*
+000200010316     H* TRASFERIMENTO BOLLE DA TITAS10F A TITASP0F
+000300010316     H*------------------------------------------------------------------------*
+000400010316     H              J
+000500010316     F*---
+000600010316     F* BOLLE
+000700010316     F*---
+000800010316     FTITASP0FIF  E                    DISK
+000900010316     F*---
+001000010316     F* ESTENSIONE BOLLE
+001100010316     F*---
+001200010316     FTITA730CUF  E           K        DISK
+001300010316     F            TITA7P00                          KIGNORE
+001400010316     FTITA7P0FO   E           K        DISK                      A
+001500010316     F*---
+001600010316     F* ANAGRAFICHE
+001700010316     F*---
+001800010316     FTITAA30CUF  E           K        DISK
+001900010316     F            TITAAP00                          KIGNORE
+002000010316     FTITAAP0FO   E           K        DISK                      A
+002100010316     F*---
+002200010316     F* SEGNACOLLI
+002300010316     F*---
+002400010316     FTITAT30CUF  E           K        DISK
+002500010316     F            TITATP00                          KIGNORE
+002600010316     FTITATP0FO   E           K        DISK                      A
+002700010316     F*---
+002800010316     F* RIFERIMENTI
+002900010316     F*---
+003000010316     FTITA430CUF  E           K        DISK
+003100010316     F            TITA4P00                          KIGNORE
+003200010316     FTITA4P0FO   E           K        DISK                      A
+003300010316     F*---
+003400010316     F* COMPETENZE DETTAGLIO
+003500010316     F*---
+003600010316     FECCED30CUF  E           K        DISK
+003700010316     F            ECCEDP                            KIGNORE
+003800010316     FECCEDP0FO   E           K        DISK                      A
+003900010316     FPRTF198 O   F     198     OF    LPRINTER
+004000010316     L*------------------------------------------------------------------------*
+004100010316     LPRTF198  66FL 60OL
+004200010316     E*------------------------------------------------------------------------*
+004300010316     E* SCHIERE
+004400010316     E*------------------------------------------------------------------------*
+004500010316     E                    TES     1  15 66
+004600010316     I*------------------------------------------------------------------------*
+004700010316     I* DS
+004800010316     I*------------------------------------------------------------------------*
+004900010316     I* DS PER SCOMPORRE DATA IN ANNO/MESE/GIONRO
+005000010316     IDS§DAT      DS
+005100010316     I                                        1   20DSSEC
+005200010316     I                                        3   40DSANN
+005300010316     I                                        5   60DSMES
+005400010316     I                                        7   80DSGIO
+005500010316     I                                        1   40DSAAS
+005600010316     I                                        5   80DSMGS
+005700010316     I                                        3   80DSDAT6
+005800010316     I                                        1   80DSDAT8
+005900010316     IDS§TIM      DS
+006000010316     I                                        1   20DTORA
+006100010316     I                                        3   40DTMIN
+006200010316     I                                        5   60DTSCN
+006300010316     I                                        7   80DTGIO
+006400010316     I                                        9  100DTMES
+006500010316     I                                       11  120DTSEC
+006600010316     I                                       13  140DTANN
+006700010316     I                                        1   60DTORA6
+006800010316     I                                        1  140DTTIME
+006900010316     I*------------------------------------------------------------------------*
+007000010316     I* INPUT
+007100010316     I*------------------------------------------------------------------------*
+007200010316     I*-------------------
+007300010316     I* SCOMPOSIZIONE DATE PARAMETRO
+007400010316     I*-------------------
+007500010316     I            DS
+007600010316     I                                        1   40DSAASI
+007700010316     I                                        5   80DSMGSI
+007800010316     I                                        1   80DSDATI
+007900010316     I            DS
+008000010316     I                                        1   40DSAASF
+008100010316     I                                        5   80DSMGSF
+008200010316     I                                        1   80DSDATF
+008300010316     I*-------------------
+008400010316     I* DATA SPEDIZIONE
+008500010316     I*-------------------
+008600010316     I            DS
+008700010316     I                                        1   40TASAAS
+008800010316     I                                        5   80TASMGS
+008900010316     I                                        1   80TASDSP
+009000010316     C*------------------------------------------------------------------------*
+009100010316     C*?MAIN LINE
+009200010316     C*------------------------------------------------------------------------*
+009300010316     C*
+009400010316     C* ROUTINE INIZIALE
+009500010316     C                     EXSR RUTINZ
+009600010316     C*
+009700010316     C* STAMPA RIGA DI TESTATA
+009800010316     C                     EXCPTTESTA
+009900010316     C*
+010000010316     C* SE NON DEVE ESSERE ESEGUITO IL PGM VADO A FINE
+010100010316     C           FINL00    IFEQ '0'                        --- 1 -->
+010200010316     C*
+010300010316     C* POSIZIONAMENTO SUL FILE E PRIMA LETTURA SU TITAS
+010400010316     C                     EXSR SETTAS
+010500010316     C*
+010600010316     C* CICLO FINO A FINE FILE TITAS OPPURE
+010700010316     C* RICHIESTA CHIUSURA PGM OPPURE
+010800010316     C* FINE PGM PER ERRORE
+010900010316     C                     SETOF                     98
+011000010316     C           FINTAS    DOWEQ'0'                        --- 2 -->
+011100010316     C           *IN98     ANDEQ'0'
+011200010316     C           FINL00    ANDEQ'0'
+011300010316     C*
+011400010316     C           WRECOK    IFEQ 'S'
+011500010316     C*
+011600010316     C* SE ESISTE TITA7 TRASFERISCO ANCHE QUELLO
+011700010316     C           TASSV3    IFNE *BLANKS                    --- 3 -->
+011800010316     C                     EXSR SETTA7                     *PRIMO TITA7
+011900010316     C           FINTA7    DOWEQ'0'                        --- 4 -->
+012000010316     C                     DELETTITA7000                   *CANCELLO TITA710
+012100010316     C                     WRITETITA7P00               99  *SCRIVO TITA7P
+012200010316     C   99                EXCPTERRTA7
+012300010316     C   99                MOVEL'1'       FINL00           *FINE PGM
+012400010316     C  N99                ADD  1         NUMTA7           *REC TRASF TITA7
+012500010316     C                     EXSR LETTA7                     *SUCCESSIVO TITA7
+012600010316     C                     ENDDO                           <-- 4 ---
+012700010316     C                     ENDIF                           <-- 3 ---
+012800010316     C*
+012900010316     C* TRASFERISCE TITAA - ANAGRAFICHE
+013000010316     C                     EXSR SETTAA                     *PRIMO TITAA
+013100010316DO  3C           FINTAA    DOWEQ'0'
+013200010316     C                     DELETTITAA000                   *CANCELLA TITAA10
+013300010316     C                     WRITETITAAP00               99  *SCRIVE TITAAP
+013400010316     C   99                EXCPTERRTAA
+013500010316     C   99                MOVEL'1'       FINL00           *FINE PGM
+013600010316     C  N99                ADD  1         NUMTAA           *REC TRASF TITAA
+013700010316     C                     EXSR LETTAA                     *SUCCESSIVO TITAA
+013800010316E   3C                     ENDDO
+013900010316     C*
+014000010316     C* TRASFERISCE TITAT - SEGNACOLLI
+014100010316     C                     EXSR SETTAT                     *PRIMO TITAT
+014200010316     C           FINTAT    DOWEQ'0'                        --- 3 -->
+014300010316     C                     DELETTITAT000                   *CANCELLA TITAT10
+014400010316     C                     WRITETITATP00               99  *SCRIVE TITATP
+014500010316     C   99                EXCPTERRTAT
+014600010316     C   99                MOVEL'1'       FINL00           *FINE PGM
+014700010316     C  N99                ADD  1         NUMTAT           *REC TRASF TITAT
+014800010316     C                     EXSR LETTAT                     *SUCCESSIVO TITAT
+014900010316     C                     ENDDO                           <-- 3 ---
+015000010316     C*
+015100010316     C* TRASFERISCE TITA4 - RIFERIMENTI
+015200010316     C                     EXSR SETTA4                     *PRIMO TITA4
+015300010316     C           FINTA4    DOWEQ'0'                        --- 3 -->
+015400010316     C                     DELETTITA4000                   *CANCELLA TITA410
+015500010316     C                     WRITETITA4P00               99  *SCRIVE TITA4P
+015600010316     C   99                EXCPTERRTA4
+015700010316     C   99                MOVEL'1'       FINL00           *FINE PGM
+015800010316     C  N99                ADD  1         NUMTA4           *REC TRASF TITA4
+015900010316     C                     EXSR LETTA4                     *SUCCESSIVO TITA4
+016000010316     C                     ENDDO                           <-- 3 ---
+016100010316     C*
+016200010316     C* SE ESISTE ECCED TRASFERISCO ANCHE QUELLO, SENZA CANCELLARLO PERCHE' LO FA IL GUFO DOPO
+016300010316     C                     EXSR SETCED                     *PRIMO ECCED
+016400010316     C           FINCED    DOWEQ'0'                        --- 5 -->
+016500010316     C                     DELETECCED                      *CANCELLO
+016600010316     C                     WRITEECCEDP                 99  *SCRIVO ECCEDP
+016700010316     C   99                EXCPTERRCED
+016800010316     C   99                MOVEL'1'       FINL00           *FINE PGM
+016900010316     C  N99                ADD  1         NUMCED           *REC TRASF ECCED
+017000010316     C                     EXSR LETCED                     *SUCCESSIVO ECCED
+017100010316     C                     ENDDO                           <-- 5 ---
+017200010316     C*
+017300010316     C* LETTURA SUCCESSIVA BOLLE
+017400010316     C                     ENDIF
+017500010316     C                     EXSR LETTAS                     *SUCCESSIVO TITAS
+017600010316     C                     SHTDN                     98    *CONTR.CHIUSURA PGM
+017700010316     C*
+017800010316     C                     ENDDO                           <-- 2 ---
+017900010316     C                     ENDIF                           <-- 1 ---
+018000010316     C*
+018100010316     C* STAMPA RIGA DI FINE STAMPA
+018200010316     C                     EXSR SUBDAT                     *RECUPERA DATA E ORA
+018300010316     C                     EXCPTSTAFIN
+018400010316     C*
+018500010316     C                     SETON                     LR
+018600010316     C*------------------------------------------------------------------------*
+018700010316     C*? SETTAS - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITAS
+018800010316     C*------------------------------------------------------------------------*
+018900010316     C           SETTAS    BEGSR
+019000010316     C*
+019100010316     C* AZZERO CONTATORE RECORD LETTI
+019200010316     C                     MOVEL'0'       FINTAS  1
+019300010316     C                     EXSR LETTAS
+019400010316     C*
+019500010316     C                     ENDSR
+019600010316     C*------------------------------------------------------------------------*
+019700010316     C*? LETTAS - LETTURA PROSSIMO RECORD TITAS
+019800010316     C*------------------------------------------------------------------------*
+019900010316     C           LETTAS    BEGSR
+020000010316     C*
+020100010316     C* LETTURE SUCCESSIVE ALLA PRIMA
+020200010316     C                     READ TITASP0F                 99
+020300010316     C           *IN99     IFEQ '1'                        *FINE FILE
+020400010316     C           TASDSP    ORGT 20000731                   *SUPERATA DATA FINE
+020500010316     C                     MOVEL'1'       FINTAS
+020600010316     C                     ELSE
+020700010316     C                     EXSR CHKREC                     *CONTR.VALIDITA REC.
+020800010316     C                     ENDIF
+020900010316     C*
+021000010316     C                     ENDSR
+021100010316     C*------------------------------------------------------------------------*
+021200010316     C*? SETTA7 - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITA7
+021300010316     C*------------------------------------------------------------------------*
+021400010316     C           SETTA7    BEGSR
+021500010316     C*
+021600010316     C* AZZERO CONTATORE RECORD LETTI
+021700010316     C                     MOVEL'0'       FINTA7  1
+021800010316     C*
+021900010316     C* POSIZIONAMENTO E PRIMA LETTURA
+022000010316     C                     Z-ADDTASAAS    TA7AAS
+022100010316     C                     Z-ADDTASLNP    TA7LNP
+022200010316     C                     Z-ADDTASNRS    TA7NRS
+022300010316     C                     Z-ADDTASNSP    TA7NSP
+022400010316     C                     MOVELTASTBL    TA7TBL
+022500010316     C           KEYTA7    CHAINTITA730C             99    *FINE-ARCHIV
+022600010316     C           *IN99     IFEQ '1'
+022700010316     C                     MOVEL'1'       FINTA7
+022800010316     C                     END
+022900010316     C*
+023000010316     C                     ENDSR
+023100010316     C*------------------------------------------------------------------------*
+023200010316     C*? LETTA7 - LETTURA PROSSIMO RECORD TITA7
+023300010316     C*------------------------------------------------------------------------*
+023400010316     C           LETTA7    BEGSR
+023500010316     C*
+023600010316     C                     READ TITA730C                 99
+023700010316     C           *IN99     IFEQ '1'                        *FINE FILE
+023800010316     C           TA7AAS    ORNE TASAAS
+023900010316     C           TA7LNP    ORNE TASLNP
+024000010316     C           TA7NRS    ORNE TASNRS
+024100010316     C           TA7NSP    ORNE TASNSP
+024200010316     C           TA7TBL    ORNE TASTBL
+024300010316     C                     MOVEL'1'       FINTA7
+024400010316     C                     ENDIF
+024500010316     C*
+024600010316     C                     ENDSR
+024700010316     C*------------------------------------------------------------------------*
+024800010316     C*? SETTAA - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITAA - ANAGRAFICHE
+024900010316     C*------------------------------------------------------------------------*
+025000010316     C           SETTAA    BEGSR
+025100010316     C*
+025200010316     C* AZZERO CONTATORE RECORD LETTI
+025300010316     C                     MOVEL'0'       FINTAA  1
+025400010316     C*
+025500010316     C* POSIZIONAMENTO E PRIMA LETTURA
+025600010316     C                     Z-ADDTASAAS    TAAAAS
+025700010316     C                     Z-ADDTASLNP    TAALNP
+025800010316     C                     Z-ADDTASNRS    TAANRS
+025900010316     C                     Z-ADDTASNSP    TAANSP
+026000010316     C           KEYTAA    CHAINTITAA30C             99    *FINE FILE
+026100010316IF  1C           *IN99     IFEQ '1'
+026200010316     C                     MOVEL'1'       FINTAA
+026300010316E   1C                     ENDIF
+026400010316     C*
+026500010316     C                     ENDSR
+026600010316     C*------------------------------------------------------------------------*
+026700010316     C*? LETTAA - LETTURA PROSSIMO RECORD TITAA - ANAGRAFICHE
+026800010316     C*------------------------------------------------------------------------*
+026900010316     C           LETTAA    BEGSR
+027000010316     C*
+027100010316     C                     READ TITAA30C                 99
+027200010316IF  2C           *IN99     IFEQ '1'                        *FINE FILE
+027300010316     C           TAAAAS    ORNE TASAAS
+027400010316     C           TAALNP    ORNE TASLNP
+027500010316     C           TAANRS    ORNE TASNRS
+027600010316     C           TAANSP    ORNE TASNSP
+027700010316     C                     MOVEL'1'       FINTAA
+027800010316E   2C                     ENDIF
+027900010316     C*
+028000010316     C                     ENDSR
+028100010316     C*------------------------------------------------------------------------*
+028200010316     C*? SETTAT - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITAT - SEGNACOLLI
+028300010316     C*------------------------------------------------------------------------*
+028400010316     C           SETTAT    BEGSR
+028500010316     C*
+028600010316     C* AZZERO CONTATORE RECORD LETTI
+028700010316     C                     MOVEL'0'       FINTAT  1
+028800010316     C*
+028900010316     C* POSIZIONAMENTO E PRIMA LETTURA
+029000010316     C                     Z-ADDTASAAS    TATAAS
+029100010316     C                     Z-ADDTASLNP    TATLNP
+029200010316     C                     Z-ADDTASNRS    TATNRS
+029300010316     C                     Z-ADDTASNSP    TATNSP
+029400010316     C           KEYTAT    CHAINTITAT30C             99    *FINE FILE
+029500010316IF  1C           *IN99     IFEQ '1'
+029600010316     C                     MOVEL'1'       FINTAT
+029700010316E   1C                     ENDIF
+029800010316     C*
+029900010316     C                     ENDSR
+030000010316     C*------------------------------------------------------------------------*
+030100010316     C*? LETTAT - LETTURA PROSSIMO RECORD TITAT - SEGNACOLLI
+030200010316     C*------------------------------------------------------------------------*
+030300010316     C           LETTAT    BEGSR
+030400010316     C*
+030500010316     C                     READ TITAT30C                 99
+030600010316IF  2C           *IN99     IFEQ '1'                        *FINE FILE
+030700010316     C           TATAAS    ORNE TASAAS
+030800010316     C           TATLNP    ORNE TASLNP
+030900010316     C           TATNRS    ORNE TASNRS
+031000010316     C           TATNSP    ORNE TASNSP
+031100010316     C                     MOVEL'1'       FINTAT
+031200010316E   1C                     ENDIF
+031300010316     C*
+031400010316     C                     ENDSR
+031500010316     C*------------------------------------------------------------------------*
+031600010316     C*? SETTA4 - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITA4 - RIFERIMENTI
+031700010316     C*------------------------------------------------------------------------*
+031800010316     C           SETTA4    BEGSR
+031900010316     C*
+032000010316     C* AZZERO CONTATORE RECORD LETTI
+032100010316     C                     MOVEL'0'       FINTA4  1
+032200010316     C*
+032300010316     C* POSIZIONAMENTO E PRIMA LETTURA
+032400010316     C                     Z-ADDTASAAS    TA4AAS
+032500010316     C                     Z-ADDTASLNP    TA4LNP
+032600010316     C                     Z-ADDTASNRS    TA4NRS
+032700010316     C                     Z-ADDTASNSP    TA4NSP
+032800010316     C           KEYTA4    CHAINTITA430C             99    *FINE FILE
+032900010316IF  1C           *IN99     IFEQ '1'
+033000010316     C                     MOVEL'1'       FINTA4
+033100010316E   1C                     ENDIF
+033200010316     C*
+033300010316     C                     ENDSR
+033400010316     C*------------------------------------------------------------------------*
+033500010316     C*? LETTA4 - LETTURA PROSSIMO RECORD TITA4 - RIFERIMENTI
+033600010316     C*------------------------------------------------------------------------*
+033700010316     C           LETTA4    BEGSR
+033800010316     C*
+033900010316     C                     READ TITA430C                 99
+034000010316IF  2C           *IN99     IFEQ '1'                        *FINE FILE
+034100010316     C           TA4AAS    ORNE TASAAS
+034200010316     C           TA4LNP    ORNE TASLNP
+034300010316     C           TA4NRS    ORNE TASNRS
+034400010316     C           TA4NSP    ORNE TASNSP
+034500010316     C                     MOVEL'1'       FINTA4
+034600010316E   2C                     ENDIF
+034700010316     C*
+034800010316     C                     ENDSR
+034900010316     C*------------------------------------------------------------------------*
+035000010316     C*? SETCED - POSIZIONAMENTO E PRIMA LETTURA DEL FILE ECCED
+035100010316     C*------------------------------------------------------------------------*
+035200010316     C           SETCED    BEGSR
+035300010316     C*
+035400010316     C* AZZERO CONTATORE RECORD LETTI
+035500010316     C                     MOVEL'0'       FINCED  1
+035600010316     C*
+035700010316     C* POSIZIONAMENTO E PRIMA LETTURA
+035800010316     C                     Z-ADDTASAAS    CEDAAS
+035900010316     C                     Z-ADDTASLNP    CEDLNP
+036000010316     C                     Z-ADDTASNRS    CEDNRS
+036100010316     C                     Z-ADDTASNSP    CEDNSP
+036200010316     C                     MOVELTASTBL    CEDTBL
+036300010316     C           KEYCED    CHAINECCED30C             99    *FINE-ARCHIV
+036400010316     C           *IN99     IFEQ '1'
+036500010316     C                     MOVEL'1'       FINCED
+036600010316     C                     END
+036700010316     C*
+036800010316     C                     ENDSR
+036900010316     C*------------------------------------------------------------------------*
+037000010316     C*? LETCED - LETTURA PROSSIMO RECORD ECCED
+037100010316     C*------------------------------------------------------------------------*
+037200010316     C           LETCED    BEGSR
+037300010316     C*
+037400010316     C                     READ ECCED30C                 99
+037500010316     C           *IN99     IFEQ '1'                        *FINE FILE
+037600010316     C           CEDAAS    ORNE TASAAS
+037700010316     C           CEDLNP    ORNE TASLNP
+037800010316     C           CEDNRS    ORNE TASNRS
+037900010316     C           CEDNSP    ORNE TASNSP
+038000010316     C           CEDTBL    ORNE TASTBL
+038100010316     C                     MOVEL'1'       FINCED
+038200010316     C                     END                             <-- 1 ---
+038300010316     C*
+038400010316     C                     ENDSR
+038500010316     C*------------------------------------------------------------------------*
+038600010316     C*? CHKREC - CONTROLLA VALIDITA' DEL RECORD
+038700010316     C*------------------------------------------------------------------------*
+038800010316     C           CHKREC    BEGSR
+038900010316     C*
+039000010316     C                     MOVEL'S'       WRECOK  1
+039100010316     C*
+039200010316     C                     ENDSR
+039300010316     C*------------------------------------------------------------------------*
+039400010316     C*?SUBDAT - SUBROUTINE PER RECUPERARE DATA E ORA ATTUALI
+039500010316     C*------------------------------------------------------------------------*
+039600010316     C           SUBDAT    BEGSR
+039700010316     C                     TIME           DTTIME
+039800010316     C                     Z-ADDDTANN     DSANN
+039900010316     C                     Z-ADDDTMES     DSMES
+040000010316     C                     Z-ADDDTGIO     DSGIO
+040100010316     C                     Z-ADDDTSEC     DSSEC
+040200010316     C                     ENDSR
+040300010316     C*------------------------------------------------------------------------*
+040400010316     C*? RUTINZ - ROUTINE INIZIALE
+040500010316     C*------------------------------------------------------------------------*
+040600010316     C           RUTINZ    BEGSR
+040700010316     C*
+040800010316     C* CHIAVE LETTURA TITAS38C - PARZIALE
+040900010316     C           KEYTAS    KLIST
+041000010316     C                     KFLD           TASAAS
+041100010316     C                     KFLD           TASMGS
+041200010316     C*
+041300010316     C* CHIAVE LETTURA TITA730C - COMPLETA
+041400010316     C           KEYTA7    KLIST
+041500010316     C                     KFLD           TA7AAS
+041600010316     C                     KFLD           TA7LNP
+041700010316     C                     KFLD           TA7NRS
+041800010316     C                     KFLD           TA7NSP
+041900010316     C                     KFLD           TA7TBL
+042000010316     C*
+042100010316     C* CHIAVE LETTURA TITAA30C - COMPLETA
+042200010316     C           KEYTAA    KLIST
+042300010316     C                     KFLD           TAAAAS
+042400010316     C                     KFLD           TAALNP
+042500010316     C                     KFLD           TAANRS
+042600010316     C                     KFLD           TAANSP
+042700010316     C*
+042800010316     C* CHIAVE LETTURA TITAT30C - COMPLETA
+042900010316     C           KEYTAT    KLIST
+043000010316     C                     KFLD           TATAAS
+043100010316     C                     KFLD           TATLNP
+043200010316     C                     KFLD           TATNRS
+043300010316     C                     KFLD           TATNSP
+043400010316     C*
+043500010316     C* CHIAVE LETTURA TITA430C - COMPLETA
+043600010316     C           KEYTA4    KLIST
+043700010316     C                     KFLD           TA4AAS
+043800010316     C                     KFLD           TA4LNP
+043900010316     C                     KFLD           TA4NRS
+044000010316     C                     KFLD           TA4NSP
+044100010316     C*
+044200010316     C* CHIAVE LETTURA ECCED30C - COMPLETA
+044300010316     C           KEYCED    KLIST
+044400010316     C                     KFLD           CEDAAS           ANNO SPEDIZIONE
+044500010316     C                     KFLD           CEDLNP           LINEA DI PARTENZA
+044600010316     C                     KFLD           CEDNRS           NUMERO SERIE
+044700010316     C                     KFLD           CEDNSP           NUMERO SPEDIZIONE
+044800010316     C                     KFLD           CEDTBL           TIPO BOLLA
+044900010316     C*
+045000010316     C* IMPOSTO A ZERO IL FINE PGM
+045100010316     C                     MOVEL'0'       FINL00  1
+045200010316     C                     MOVEL*BLANKS   RSUT   20
+045300010316     C                     Z-ADD*ZEROS    NUMTAS  90
+045400010316     C                     Z-ADD*ZEROS    NUMTA7  90
+045500010316     C                     Z-ADD*ZEROS    NUMTAA  90
+045600010316     C                     Z-ADD*ZEROS    NUMTAT  90
+045700010316     C                     Z-ADD*ZEROS    NUMTA4  90
+045800010316     C                     Z-ADD*ZEROS    NUMCET  90
+045900010316     C                     Z-ADD*ZEROS    NUMCED  90
+046000010316     C                     Z-ADD*ZEROS    NUMFIC  90
+046100010316     C                     Z-ADD*ZEROS    NUMFIM  90
+046200010316     C*
+046300010316     C                     EXSR SUBDAT                     *RECUPERA DATA E ORA
+046400010316     C*
+046500010316     C                     ENDSR
+046600010316     O*------------------------------------------------------------------------*
+046700010316     OPRTF198 E   02           TESTA
+046800010316     O                                    8 'TNSB36R '
+046900010316     O                         RSUT      45
+047000010316     O                                   82 'TRASF. TITAS10->TITASP  '
+047100010316     O                                  100 'DAL: 20000101'
+047200010316     O                                  120 'AL:  20000731'
+047300010316     O                                  150 'Data:'
+047400010316     O                         DSDAT6   159 '  /  /  '
+047500010316     O                                  167 'Ora:'
+047600010316     O                         DTORA6   178 '  .  .  '
+047700010316     O                                  190 'Pagina:'
+047800010316     O                         PAGE  Z  198
+047900010316     O        E 11             TESTA
+048000010316     O                         TES,2     66
+048100010316     O                         TES,3    132
+048200010316     O                         TES,4    198
+048300010316     O        E  1             TESTA
+048400010316     O                         TES,1     66
+048500010316     O                         TES,1    132
+048600010316     O                         TES,1    198
+048700010316     O*------------------------------------
+048800010316     O        E  1             ERRTA7
+048900010316     O                         TA7AAS  +  5
+049000010316     O                         TA7LNP  +  1
+049100010316     O                         TA7NRS  +  1
+049200010316     O                         TA7NSP  +  1
+049300010316     O                         TA7TBL  +  1
+049400010316     O                         TA7SVN  +  1
+049500010316     O                                 +  1 'ERR. WRITE TITA7   '
+049600010316     O*------------------------------------
+049700010316     O        E  1             ERRTAA
+049800010316     O                         TAAAAS  +  5
+049900010316     O                         TAALNP  +  1
+050000010316     O                         TAANRS  +  1
+050100010316     O                         TAANSP  +  1
+050200010316     O                         TAATRC  +  1
+050300010316     O                                 +  1 'ERR. WRITE TITAA   '
+050400010316     O*------------------------------------
+050500010316     O        E  1             ERRTAT
+050600010316     O                         TATAAS  +  5
+050700010316     O                         TATLNP  +  1
+050800010316     O                         TATNRS  +  1
+050900010316     O                         TATNSP  +  1
+051000010316     O                         TATNSC  +  1
+051100010316     O                                 +  1 'ERR. WRITE TITAT   '
+051200010316     O*------------------------------------
+051300010316     O        E  1             ERRTA4
+051400010316     O                         TA4AAS  +  5
+051500010316     O                         TA4LNP  +  1
+051600010316     O                         TA4NRS  +  1
+051700010316     O                         TA4NSP  +  1
+051800010316     O                         TA4TRC  +  1
+051900010316     O                                 +  1 'ERR. WRITE TITA4   '
+052000010316     O*------------------------------------
+052100010316     O        E  1             ERRCED
+052200010316     O                         CEDAAS  +  5
+052300010316     O                         CEDLNP  +  1
+052400010316     O                         CEDNRS  +  1
+052500010316     O                         CEDNSP  +  1
+052600010316     O                         CEDTBL  +  1
+052700010316     O                         CEDCMP  +  1
+052800010316     O                                 +  1 'ERR. WRITE ECCED   '
+052900010316     O*------------------------------------
+053000010316     O        E  1             STAFIN
+053100010316     O                                   30 'N.REC.TRASF. TITAS'
+053200010316     O                         NUMTAS2   44
+053300010316     O        E  1             STAFIN
+053400010316     O                                   30 'N.REC.TRASF. TITA7'
+053500010316     O                         NUMTA72   44
+053600010316     O        E  1             STAFIN
+053700010316     O                                   30 'N.REC.TRASF. TITAA'
+053800010316     O                         NUMTAA2   44
+053900010316     O        E  1             STAFIN
+054000010316     O                                   30 'N.REC.TRASF. TITAT'
+054100010316     O                         NUMTAT2   44
+054200010316     O        E  1             STAFIN
+054300010316     O                                   30 'N.REC.TRASF. TITA4'
+054400010316     O                         NUMTA42   44
+054500010316     O        E  1             STAFIN
+054600010316     O                                   30 'N.REC.TRASF. ECCET'
+054700010316     O                         NUMCET2   44
+054800010316     O        E  1             STAFIN
+054900010316     O                                   30 'N.REC.TRASF. ECCED'
+055000010316     O                         NUMCED2   44
+055100010316     O        E  1             STAFIN
+055200010316     O                                   30 'N.REC.TRASF. ECFIC'
+055300010316     O                         NUMFIC2   44
+055400010316     O        E  1             STAFIN
+055500010316     O                                   30 'N.REC.TRASF. ECFIM'
+055600010316     O                         NUMFIM2   44
+055700010316     O        E   60           STAFIN
+055800010316     O                                   76 '*** FINE STAMPA ***'
+055900010316     O                                  150 'Data:'
+056000010316     O                         DSDAT6   159 '  /  /  '
+056100010316     O                                  167 'Ora:'
+056200010316     O                         DTORA6   178 '  :  :  '
+056300010316     O*------------------------------------------------------------------------*
+056400010316**
+056500010316------------------------------------------------------------------  1
+056600010316 DATA    ORA       AA LNP SE N.SPED. TB     ERR  DESCRIZIONE ERROR  2
+056700010316E                                                                   3
+056800010316                                                                    4
+056900010316                                                                    5
+057000010316                                                                    6
+057100010316                                                                    7
+057200010316                                                                    8
+057300010316                                                                    9
+057400010316                                                                   10
+057500010316                                                                   11
+057600010316                                                                   12
+057700010316                                                                   13
+057800010316                                                                   14
+057900010316                                                                   15

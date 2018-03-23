@@ -1,0 +1,44 @@
+000100141113             PGM        PARM(&KPJBA)
+000200141113
+000300141113             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400141113             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000500141113
+000600140819             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000700140819             DCL        VAR(&CLR) TYPE(*CHAR) LEN(1)
+000800140819             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+000900140819             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+001000140819             DCL        VAR(&ERRCODE) TYPE(*CHAR) LEN(8)
+001100141113             DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(500)
+001200141113
+001300141113             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001400141113             CHGVAR     VAR(&LIB) VALUE(%SST(&KPJBU 1 10))
+001500141113             CHGVAR     VAR(&CLR) VALUE(%SST(&KPJBU 11 1))
+001600141114
+001700141114/* Cancello eventuale lista dei sorgenti in QTEMP (non dovrebbe esserci)*/
+001800141114             DLTF       FILE(QTEMP/WFTID*)
+001900141114             MONMSG     MSGID(CPF0000)
+002000141114/* Creo copia in QTEMP del file dei risultati diagnostica */
+002100141114             CRTDUPOBJ  OBJ(WFTIDTMP) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002200141114                          TOLIB(QTEMP)
+002300141114             MONMSG     MSGID(CPF0000) EXEC(DO)
+002400141114             GOTO       CMDLBL(FINE)
+002500141114             ENDDO
+002600141114             CRTDUPOBJ  OBJ(WFTID01L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002700141114                          TOLIB(QTEMP)
+002800141114             MONMSG     MSGID(CPF0000) EXEC(DO)
+002900141114             GOTO       CMDLBL(FINE)
+003000141114             ENDDO
+003100141114
+003200141114             OVRDBF     FILE(WFTIDTMP) TOFILE(QTEMP/WFTIDTMP) +
+003300141114                          OVRSCOPE(*JOB)
+003400141114             OVRDBF     FILE(WFTID01L) TOFILE(QTEMP/WFTID01L) +
+003500141114                          OVRSCOPE(*JOB)
+003600141113
+003700141111/* eseguo scansione di tutti i sorgenti della GAITRASRC per avere quelli con una definizione */
+003800141111/* di ACTGRP */
+003900141112             CALL       PGM(UBACTGPMC3) PARM('GAITRASRC' ' ' ' ' &ERRCODE)
+004000141111/* eseguo DSPPGM di tutti gli oggetti nella libreria passata */
+004100141113/* per ogni PGM confronto l'ACTGRP trovato con quello sul sorgente */
+004200141113/* e scrivo il rcd del file finale con solo le incongruenze */
+004300141113             CALL       PGM(UBACTGPMC4) PARM(&LIB &CLR &ESITO)
+004400140819FINE:        ENDPGM

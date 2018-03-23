@@ -1,0 +1,42 @@
+000100100519             PGM        parm(&kpjba)
+000200060711
+000300100519             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400120424             dcl        var(&Parms) type(*char) len(256)
+000500120423             DCL        VAR(&AS400) TYPE(*CHAR) LEN(8)
+000600060711
+000700060711 /* Reprisco il sistema AS/400 corrente */
+000800060711             RTVNETA    SYSNAME(&AS400)
+000900060711
+001000120424 /* Se presente, elimino dalla QTEMP l'eventuale file WFDEX00F già esistente */
+001100120423             DLTF       FILE(QTEMP/WFDEX00F)
+001200060711             MONMSG     MSGID(CPF0000)
+001300060711
+001400120423 /* Duplica in QTEMP del file WFDEX00F */
+001500120424 /* (se richiesta la sola stampa) */
+001600120424             if         cond(%sst(&Parms 7 1) *eq 'S') then(do)
+001700120424
+001800120424               IF         COND(%sst(&AS400 1 6) *EQ 'SETRAS') THEN(DO)
+001900120424                 CRTDUPOBJ  OBJ(WFDEX00F) FROMLIB(GAITRAAZM) OBJTYPE(*FILE) +
+002000120424                              TOLIB(QTEMP) DATA(*NO)
+002100120424                 ENDDO
+002200120424               ELSE       CMD(DO)
+002300120424                 CRTDUPOBJ  OBJ(WFDEX00F) FROMLIB(GAITRAAZP) OBJTYPE(*FILE) +
+002400120424                              TOLIB(QTEMP) DATA(*NO)
+002500120424                 ENDDO
+002600120424
+002700120424             enddo
+002800120424
+002900120424 /* Ripulisce il file in GAITRAAZM/P */
+003000120424 /* (altrimenti) */
+003100120424             else       cmd(do)
+003200120424
+003300120424               if         cond(%sst(&As400 1 6) *eq 'SETRAS') +
+003400120424                            then(CLRPFM file(GAITRAAZM/WFDEX00F))
+003500120424               else       cmd(CLRPFM file(GAITRAAZP/WFDEX00F))
+003600120424
+003700120424             enddo
+003800970703
+003900120423 /* Richiamo programma */
+004000110801             CALL       PGM(FIDN77R) PARM(&KPJBA)
+004100000529
+004200120423             ENDPGM

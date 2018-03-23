@@ -1,0 +1,63 @@
+000100170202/*END                                                                */
+000200061003/*-------------------------------------------------------------------*/
+000300061003/*?Stampa riepilogo statistica letture VDL - batch              *NEW?*/
+000400061003/*-------------------------------------------------------------------*/
+000500061003             pgm        parm(&KPJBA)
+000600061003
+000700061003             dcl        var(&KPJBA)      type(*char)          len(502)
+000800061003             dcl        var(&KNSIF)      type(*char)          len(10)
+000900070918             dcl        var(&KPJBU)      type(*char)          len(256)
+001000061003             dcl        var(&LIB)        type(*char)          len(10) +
+001100061003                        value('*LIBL     ')
+001200061003             dcl        var(&FILE)       type(*char)          len(10) +
+001300170202                        value('FNMSS00F  ')
+001400070918             dcl        var(&WFL)        type(*char)          len(10) +
+001500070918                        value('*LIBL     ')
+001600070918             dcl        var(&WRKF)       type(*char)          len(10) +
+001700070918                        value('WFMSS00F  ')
+001800061003
+001900061003    /* Controllo Sistema Informativo per reperimento libreria file */
+002000070918             chgvar     var(&KNSIF)      value(%sst(&KPJBA  92  10))
+002100070918             chgvar     var(&KPJBU)      value(%sst(&KPJBA 247 256))
+002200061003
+002300070918    /* Override al file FNMSS00F dal S.I. di SEDE */
+002400070918             if         cond(%sst(&KNSIF 1 6) *eq 'GAITRA')    then(do)
+002500061003
+002600070918               if         cond(&KNSIF *eq 'GAITRA201 ')        then(do)
+002700070918                 chgvar     var(&LIB)    value('FILTRAGRU ')
+002800061003                 enddo
+002900070918               if         cond(%sst(&KNSIF 1 7) *eq 'GAITRAP') then(do )
+003000070918                 chgvar     var(&LIB)    value('FILTRAGRPF')
+003100061003                 enddo
+003200061003
+003300070918               ovrdbf     file(&FILE)    tofile(&LIB/&FILE)
+003400061003
+003500061003               enddo
+003600070918
+003700070919    /* Override al file WFMSS00F dal S.I. di FILIALE */
+003800070918             if         cond(%sst(&KNSIF 1 6) *eq 'FILTRA' *and +
+003900070918                             %sst(&KPJBU 14 1) *eq '1')        then(do)
+004000070918
+004100070918               if         cond(&KNSIF *eq 'FILTRA201 '     *and +
+004200070918                               %sst(&KPJBU 14 1) *eq '1')      then(do)
+004300070918                 chgvar     var(&WFL)    value('GAITRAAZM ')
+004400070918                 enddo
+004500070918               if         cond(%sst(&KNSIF 1 7) *eq 'FILTRAP') then(do )
+004600070918                 chgvar     var(&WFL)    value('GAITRAAZP ')
+004700070918                 enddo
+004800070918
+004900070918               ovrdbf     file(&WRKF)    tofile(&WFL/&WRKF)
+005000070918
+005100070918               enddo
+005200061003
+005300070919    /* Pulizia del file WFMSS00F */
+005400070919             if         cond(%sst(&KPJBU 14 1) *eq '1')        then(do)
+005500070919               clrpfm     file(&WFL/&WRKF)
+005600070919               enddo
+005700070919
+005800061003    /* Richiamo pgm. di stampa */
+005900130329             call       pgm(FIMS07R)     parm(&KPJBA)
+006000061003
+006100061003    /* Cancellazione override */
+006200070918             dltovr     file(*all)
+006300061003             monmsg     msgid(CPF0000)

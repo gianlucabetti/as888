@@ -1,0 +1,53 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200170119/* TISIP9C:  elaborazione eventi particolari  da sede in filiale               */
+000300000000/*----------------------------------------------------------------------------*/
+000400170119 TISIP9C:    PGM        PARM(&KPJBA)
+000500000000
+000600000000/* DICHIARAZIONE VARIABILI */
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800120301             DCL        VAR(&KPJBAS) TYPE(*CHAR) LEN(502)
+000900120229             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001000120229             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+001100120229             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+001200120229             DCL        VAR(&CMD) TYPE(*CHAR) LEN(350)
+001300120229             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+001400120530
+001500120229             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+001600170119
+001700120301/* Salvataggio KPJBA  */
+001800120301             CHGVAR     VAR(&KPJBAS) VALUE(&KPJBA)
+001900170119
+002000120229/* Reperisco la lista librerie CORRENTE _________________________________________________________ */
+002100120229             RTVJOBA    USRLIBL(&L275)
+002200120301
+002300120229/* Se S.I. di prova imposto GAITRAPSP */
+002400120229             IF         COND(%SST(&KNSIF 7 1) = 'P') THEN(DO)
+002500170119             CHGVAR     VAR(&SIF) VALUE('FILTRAPFP ')
+002600120229             ENDDO
+002700120229             ELSE       CMD(DO)
+002800170119             CHGVAR     VAR(&SIF) VALUE('FILTRA201 ')
+002900120229             ENDDO
+003000170119
+003100170119/* Forzo S.I. di FILIALE_________________________________________________________________________ */
+003200120229
+003300120229             CALL       PGM(TRUL07C) PARM(&SIF)
+003400000000
+003500170119/* Richiamo programma                      */
+003600170119             CALL       PGM(TISIP9R) PARM(&KPJBA)
+003700120530             MONMSG     MSGID(CPF0000)
+003800120229
+003900120229/* Reimposto la lista librerie originale ________________________________________________________ */
+004000120229             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+004100120229                          *CAT ' )')
+004200120229             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+004300170119             MONMSG     MSGID(CPF0000)
+004400120301/*Ripristino aree dati iniziali */
+004500120301             DLTDTAARA  DTAARA(§DATIUTE)
+004600170119             MONMSG     MSGID(CPF0000)
+004700120301             DLTDTAARA  DTAARA(§AZUTE)
+004800170119             MONMSG     MSGID(CPF0000)
+004900120301/* Ripristino KPJBA */
+005000120309             CHGVAR     VAR(%SST(&KPJBA 1 246)) VALUE(%SST(&KPJBAS 1 +
+005100120309                          246))
+005200120301
+005300120530ENDPGM:      ENDPGM

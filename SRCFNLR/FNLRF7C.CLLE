@@ -1,0 +1,111 @@
+000100140507 /*  L'azione diventa importante per gestire il file FNARBZ0F oppure NO.    */
+000200140507 /*  Il tutto per migliorare le prestazioni e NON far fare alla procedura   */
+000300140507 /*  cose inutili. Se lanciato dalle azioni LR59 o LR60 UTILIZZA gli STOP.  */
+000400140507 /*-------------------------------------------------------------------------*/
+000500140507
+000600950524             PGM        PARM(&KPJBA)
+000700140507
+000800950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000900030722             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+001000050422             DCL        VAR(&tpaz) TYPE(*CHAR) LEN(1)
+001100050426             DCL        VAR(&lsr) TYPE(*CHAR) LEN(1)
+001200140507
+001300140507             DCL        VAR(&KCDAZ) TYPE(*CHAR) LEN(4) VALUE(' ')
+001400140508             CHGVAR     VAR(&KCDAZ) VALUE(%SUBSTRING(&KPJBA 60 4))
+001500140507
+001600050422             CHGVAR     VAR(&TPAZ) VALUE(%SUBSTRING(&KPJBA 64 1))
+001700050426             CHGVAR     VAR(&lsr) VALUE(%SUBSTRING(&KPJBA 357 1))
+001800030722             RTVJOBA    JOB(&DSP)
+001900950911
+002000950524        /*  Mi duplico l'archivio FNARBY00F e FNARBY1L in QTEMP */
+002100130403             CRTDUPOBJ  OBJ(FNARBY0F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002200130403                          TOLIB(QTEMP)
+002300950914             MONMSG     MSGID(CPF2130) EXEC(CLRPFM +
+002400950914                          FILE(QTEMP/FNARBY0F))
+002500130404             OVRDBF     FILE(FNARBy0f) TOFILE(QTEMP/FNARBy0f) +
+002600130404                          OVRSCOPE(*JOB)
+002700130403             CRTDUPOBJ  OBJ(FNARBY1l) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002800130403                          TOLIB(QTEMP)
+002900130403             MONMSG     MSGID(CPF0000)
+003000130403             OVRDBF     FILE(FNARBy1l) TOFILE(QTEMP/FNARBy1l) +
+003100130403                          OVRSCOPE(*JOB)
+003200980309
+003300140507             IF         COND(&KCDAZ *EQ 'LR59' *OR &KCDAZ *EQ +
+003400140507                          'LR60') THEN(DO)
+003500140507
+003600950526        /*  Mi duplico l'archivio FNARBZ00F IN QTEMP            */
+003700130403             CRTDUPOBJ  OBJ(FNARBZ0f) FROMLIB(*libl) OBJTYPE(*FILE) +
+003800130326                          TOLIB(QTEMP)
+003900950914             MONMSG     MSGID(CPF2130) EXEC(CLRPFM +
+004000950914                          FILE(QTEMP/FNARBZ0F))
+004100130326             OVRDBF     FILE(FNARBZ0F) TOFILE(QTEMP/FNARBZ0F) +
+004200130326                          OVRSCOPE(*JOB)
+004300130326
+004400140507             ENDDO
+004500980309
+004600990803       /*  Mi duplico l'archivio FNEVB00F IN QTEMP per la scrittura  */
+004700130326
+004800130326             CRTDUPOBJ  OBJ(WFNEVB00F) FROMLIB(*libl) +
+004900130326                          OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(WFNEVB00F)
+005000130326             MONMSG     MSGID(CPF2130) EXEC(CLRPFM +
+005100130326                        FILE(QTEMP/WfNEVB00F))
+005200130326
+005300130326             CRTDUPOBJ  OBJ(WFNEVB01L) FROMLIB(*libl) +
+005400050411                          OBJTYPE(*FILE) TOLIB(QTEMP)
+005500130403             MONMSG     MSGID(CPF0000)
+005600130326             OVRDBF     FILE(WFNEVB00F) TOFILE(QTEMP/WFNEVB00F) +
+005700130326                          OVRSCOPE(*JOB)
+005800130326             OVRDBF     FILE(WFNEVB01L) TOFILE(QTEMP/WFNEVB01L) +
+005900130326                          OVRSCOPE(*JOB)
+006000130326
+006100130326
+006200950524
+006300950524        /* Apro in Share file per stampa distinta-stampa anomlie */
+006400050426             IF         COND(&LSR *EQ 'N') THEN(DO)
+006500050426             OVRPRTF    FILE(FNLRF7P) DEVTYPE(*SCS) LPI(6) CPI(15) +
+006600050426                          FRONTMGN(*DEVD) PAGRTT(*AUTO) SHARE(*YES)
+006700050426             ENDDO
+006800050426             IF         COND(&LSR *EQ 'S') THEN(DO)
+006900050422             OVRPRTF    FILE(FNLRF7P) SHARE(*YES)
+007000050426             CALL       PGM(FNLRF7R6) PARM(&KPJBA)
+007100050426             ENDDO
+007200950524
+007300030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+007400030722/* procedura/programma fosse finita in maniera anomala occorre */
+007500030722/* parare il colpo riducendo il male al male minore ossia      */
+007600030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+007700030722/* metà piuttosto che confermarle. E ripartendo da una         */
+007800030722/* situazione pulita.                                          */
+007900070928             STRCMTCTL  LCKLVL(*CHG)
+008000030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+008100070928             ROLLBACK
+008200070928             ENDCMTCTL
+008300070928             STRCMTCTL  LCKLVL(*CHG)
+008400030722             ENDDO
+008500030708
+008600950524        /*   Eseguo CALL a pgm preparazione distinta da spunte   */
+008700030703             CALL       PGM(FNLRF7R) PARM(&KPJBA)
+008800030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+008900030708             ROLLBACK
+009000030722             SNDBRKMSG  MSG('ERRORE La quadratura distinte è +
+009100030722                          terminata in modo anomalo. +
+009200030722                          Segnalare il +
+009300030722                          problema alla persona responsabile della +
+009400030722                          manutenzione del programma.') TOMSGQ(&DSP)
+009500030728             RCLRSC     LVL(*CALLER)
+009600030708             ENDDO
+009700030722
+009800030722             ENDCMTCTL
+009900030708
+010000950524             DLTOVR     FILE(*ALL)
+010100130326
+010200050415             CLRPFM     FILE(QTEMP/FNARBY0F)
+010300130326             CLRPFM     FILE(QTEMP/WFNEVB00F)
+010400140507
+010500140507             IF         COND(&KCDAZ *EQ 'LR59' *OR &KCDAZ *EQ +
+010600140507                          'LR60') THEN(DO)
+010700140507             CLRPFM     FILE(QTEMP/FNARBZ0F)
+010800140507             ENDDO
+010900140507
+011000130326
+011100950524             ENDPGM

@@ -1,0 +1,300 @@
+000100931008     H              J
+000200931008?     *--------------------------------------------------------------*
+000300941103      * TNSC23R                                                      *
+000400931008      *       *-----------------------------------------*            *
+000500931008      *          INTERROGAZIONE CONTRASSEGNI X FILIALE               *
+000600931013      *          VISUALIZZAZIONE DATI BOLLA                          *
+000700931008      *       *-----------------------------------------*            *
+000800931008      *                                                              *
+000900931008?     *--------------------------------------------------------------*
+001000940218      * 20 -CONTRASSEGNO INCASSATO E NON PAGATO                      *
+001100940218      * 80 -READ SU FLCSB01L                                         *
+001200940218      * 81 -CHAIN SU CNABI.                                          *
+001300940218?     *--------------------------------------------------------------*
+001400941103     FFNCSB01LIF  E           K        DISK
+001500931013     FCNABI00FIF  E           K        DISK
+001600970408     FTABEL00FIF  E           K        DISK
+001700941103     FTNSC23D CF  E                    WORKSTN
+001800970408?     *--------------------------------------------------------------*
+001900970408?     *  SCHIERA                                                     *
+002000970408?     *--------------------------------------------------------------*
+002100970408     E                    C4S       100  1 0             Stato C/Ass.
+002200970408     E                    D4S       100 90               Descr.C/Ass.
+002300931008?     *--------------------------------------------------------------*
+002400931008?     *  DS                                                          *
+002500931008?     *--------------------------------------------------------------*
+002600931008     IKPJBA     E DS
+002700931008      *
+002800941103     ITNSC20    E DSTNSC20DS
+002900970408     IDS4S      E DS
+003000931008      *
+003100931008     IUT§DSE    E DSUT§DSE0F
+003200931008     ICNCR80    E DS
+003300931013     I*
+003400931116      *  Ds x numero spedizione contrass.
+003500931116     I            DS
+003600931116     I                                        1   30CSBLNP
+003700941103     I                                        4   70CSBAAS
+003800941103     I                                        8   90CSBNRS
+003900941103     I                                       10  160CSBNSP
+004000941103     I                                        1  160NUMSPE
+004100931116      *
+004200931116      *  Ds x numero spedizione pagamento
+004300931116     I            DS
+004400931116     I                                        1   30CSBPLP
+004500941103     I                                        4   70CSBPAA
+004600941103     I                                        8   90CSBPNS
+004700941103     I                                       10  160CSBPSP
+004800941103     I                                        1  160SPEPAG
+004900941103      *
+005000941103     IWLBDA8      DS
+005100941103     I                                        1   80G02DAT
+005200941103     I                                        9  160G02INV
+005300941103     I                                       17  17 G02ERR
+005400941103     I                                       18  220G02TGI
+005500931008     I           SDS
+005600931008     I                                        1  10 NOMPG
+005700931008      *---------------------------------------------------------------*
+005800931008      *   C I C L O      P R I N C I P A L E                          *
+005900931008      *---------------------------------------------------------------*
+006000931013     C*  CARICAMENTO DATI BOLLA IN PRIMA VIDEATA
+006100931013     C                     EXSR CARDAT
+006200931008     C*
+006300931008     C*  LOOP
+006400931008     C           £FINE     DOUEQ'S'
+006500931008     C*
+006600931008     C           TIPVID    CASEQ'1'       GESVD1
+006700931013     C           TIPVID    CASEQ'2'       GESVD2
+006800931008     C                     END
+006900931008     C*
+007000931008     C                     END
+007100931008     C*
+007200931008     C                     SETON                     LR
+007300931008      *---------------------------------------------------------------*
+007400931013      *  CARDAT: INIZIALIZZAZIONE PARAMETRI VIDEO                     *
+007500931008      *---------------------------------------------------------------*
+007600931013     C           CARDAT    BEGSR
+007700931008     C*
+007800931008     C                     MOVELNOMPG     NOMPGM
+007900931013     C*
+008000931013     C*  CONTROLLO ESISTENZA BOLLA
+008100941103     C                     MOVE D20ANN    CSBAAS
+008200941103     C                     MOVE D20LNP    CSBLNP
+008300941103     C                     MOVE D20NSR    CSBNRS
+008400941103     C                     MOVE D20NSP    CSBNSP
+008500931013     C*
+008600941103     C           KEYBOL    CHAINFNCSB01L             80
+008700931013     C           *IN80     IFEQ '0'
+008800970408     C* Carico stato C/Assegno e relativa decodifica
+008900970408     C                     MOVELCSBSTA    V1CSTA
+009000970408     C                     Z-ADD1         X       40
+009100970408     C           CSBSTA    LOKUPC4S,X                    31
+009200970408     C                     MOVELD4S,X     V1DSTA
+009300970408     C* SOLO CONTRASSEGNI INCASSATI NON PAGATI
+009400970408     C           D20TCR    IFEQ 'I'
+009500931013     C           CSBDDC    COMP 0                        20
+009600931013     C  N20      CSBDDP    COMP 0                    2020
+009700931013     C                     END
+009800931013     C* SOLO CONTRASSEGNI PAGATI
+009900941103     C           D20TCR    IFEQ 'P'
+010000931013     C           CSBNDP    COMP 0                        20
+010100931013     C                     END
+010200931013     C                     END
+010300931013     C*
+010400931013     C*  Test Tipo Contrassegni
+010500931013     C           *IN20     IFEQ '0'
+010600931013     C           *IN80     ANDEQ'0'
+010700931013     C                     MOVEL'1'       TIPVID  1
+010800931013     C                     MOVELCSBLNA    LNA
+010900931013     C                     MOVELCSBLNP    LNP
+011000941103     C                     MOVE CSBRMA    RFA
+011100931013     C                     MOVE CSBNRA    NRA
+011200941103     C                     MOVE CSBDDC    G02INV
+011300941103     C                     Z-ADD0         G02DAT
+011400941103     C                     MOVEL'3'       G02ERR
+011500941103     C                     CALL 'XSRDA8'
+011600941103     C                     PARM           WLBDA8
+011700941103     C                     MOVE G02DAT    DDC
+011800941103     C                     MOVE CSBDTE    G02INV
+011900941103     C                     Z-ADD0         G02DAT
+012000941103     C                     MOVEL'3'       G02ERR
+012100941103     C                     CALL 'XSRDA8'
+012200941103     C                     PARM           WLBDA8
+012300941103     C                     MOVE G02DAT    DTE
+012400931013     C                     MOVE CSBNDT    NDT
+012500941103     C                     MOVELCSBAAS    G02INV
+012600941103     C                     MOVE CSBMGS    G02INV
+012700941103     C                     Z-ADD0         G02DAT
+012800941103     C                     MOVEL'3'       G02ERR
+012900941103     C                     CALL 'XSRDA8'
+013000941103     C                     PARM           WLBDA8
+013100941103     C                     MOVE G02DAT    DSP
+013200931013     C                     MOVE CSBNRS    NRS
+013300931013     C                     MOVE CSBNSP    NSP
+013400941103     C                     MOVE CSBCMB    CMB
+013500941103     C                     MOVE CSBCMP    CMP
+013600941103     C                     MOVE CSBVCA    VCA
+013700011002     C           VCA       IFEQ *BLANK
+013800011002     C                     MOVE 'ITL'     VCA
+013900011002     C                     END
+014000941103     C                     Z-ADDCSBCAS    ASS
+014100931013     C                     MOVE CSBABI    ABI
+014200931013     C                     MOVE CSBCAB    CAB
+014300931013     C                     MOVEL*BLANK    BAI
+014400931013     C                     MOVE CSBABI    ABIABI
+014500931013     C                     MOVE CSBCAB    ABICAB
+014600931013     C           KEYABI    CHAINCNABI00F             81
+014700931013     C  N81                MOVELABIIST    BAI
+014800931013     C                     MOVE CSBCDI    CDI
+014900931013     C                     MOVELCSBRMN    RMN
+015000931013     C                     MOVELCSBRSM    RSM
+015100931013     C                     MOVELCSBRSD    RSD
+015200931013     C                     MOVELCSBTPI    TPI
+015300931111     C*  Tipo Documento
+015400931111     C           CSBFPC    IFEQ '2'
+015500931111     C                     MOVE 'BON. '   DECTIP
+015600931111     C                     ELSE
+015700931111     C           CSBPAB    IFEQ 99999
+015800931111     C           CSBPCA    ANDEQ99999
+015900931111     C                     MOVE 'LETT.'   DECTIP
+016000931111     C                     ELSE
+016100931111     C           CSBPAB    IFNE 0
+016200931111     C           CSBPCA    ORNE 0
+016300931111     C                     MOVE 'ASS. '   DECTIP
+016400931111     C                     END
+016500931111     C                     END
+016600931111     C                     END
+016700931013     C*----------------------------------------------------*
+016800931013     C*  Tipo ASSEGNO
+016900931013     C                     MOVEL'     '   TIP
+017000931013     C           CSBFPC    IFEQ ' '                        NO BONIFICO
+017100931013     C           CSBABI    ANDNE0                          ASSEGNO
+017200931013     C*
+017300931013     C           CSBTPA    IFEQ 'B'                        BANCARIO
+017400931013     C                     MOVEL'BANCA'   TIP
+017500931013     C                     MOVE 'RIO  '   TIP
+017600931013     C                     ELSE
+017700931013     C           CSBTPA    IFEQ 'C'                        CIRCOLARE
+017800931013     C                     MOVEL'CIRCO'   TIP
+017900931013     C                     MOVE 'LARE '   TIP
+018000931013     C                     ELSE
+018100931013     C           CSBTPA    IFEQ 'V'                        VAGLIA
+018200931013     C                     MOVEL'VAGLIA'  TIP
+018300931013     C                     ELSE
+018400931013     C           CSBTPA    IFEQ 'P'                        POSTALE
+018500931013     C                     MOVEL'POSTALE' TIP
+018600931013     C                     END                             POSTALE
+018700931013     C                     END                             VAGLIA
+018800931013     C                     END                             CIRCOLARE
+018900931013     C                     END                             BANCARIO
+019000931013     C*
+019100931013     C                     END
+019200931013     C*----------------------------------------------------*
+019300941103     C                     MOVE CSBDDP    G02INV
+019400941103     C                     Z-ADD0         G02DAT
+019500941103     C                     MOVEL'3'       G02ERR
+019600941103     C                     CALL 'XSRDA8'
+019700941103     C                     PARM           WLBDA8
+019800941103     C                     MOVE G02DAT    DDP
+019900931013     C                     MOVE CSBNDP    NDP
+020000931013     C                     MOVEL*BLANK    BAP
+020100931013     C                     MOVE CSBPAB    ABIABI
+020200931013     C                     MOVE CSBPCA    ABICAB
+020300931013     C           KEYABI    CHAINCNABI00F             81
+020400931013     C  N81                MOVELABIIST    BAP
+020500941103     C                     MOVE CSBDGC    G02INV
+020600941103     C                     Z-ADD0         G02DAT
+020700941103     C                     MOVEL'3'       G02ERR
+020800941103     C                     CALL 'XSRDA8'
+020900941103     C                     PARM           WLBDA8
+021000941103     C                     MOVE G02DAT    DGC
+021100931116     C                     MOVEL*ZERO     LNPP
+021200931116     C                     MOVEL*ZERO     AAP
+021300931116     C                     MOVE *ZERO     NRSP
+021400931116     C                     MOVE *ZERO     NSPP
+021500931116     C*
+021600931116     C*  Stampo riferimnti spedizione pagamento contrassegno solo se
+021700931116     C*  diverso da originale
+021800931116     C           NUMSPE    IFNE SPEPAG
+021900931013     C                     MOVELCSBPLP    LNPP
+022000931013     C                     MOVELCSBPAA    AAP
+022100931111     C                     MOVE CSBPNS    NRSP
+022200931111     C                     MOVE CSBPSP    NSPP
+022300931116     C                     END
+022400931116     C*
+022500931013     C                     ELSE
+022600931013     C                     MOVEL'2'       TIPVID
+022700931013     C                     END
+022800931011     C                     ENDSR
+022900931011      *---------------------------------------------------------------*
+023000931013      *  GESVD1: GESTIONE VIDEATA VISUALIZZAZIONE DATI BOLLA          *
+023100931011      *---------------------------------------------------------------*
+023200931013     C           GESVD1    BEGSR
+023300931011     C*
+023400941103     C                     EXFMTSC23D01
+023500931011     C*  Fine elaborazione
+023600931011     C                     MOVEL'S'       £FINE
+023700931011     C*
+023800931013     C                     ENDSR
+023900931013      *---------------------------------------------------------------*
+024000931013      *  GESVD2: GESTIONE VIDEATA BOLLA NON TROVATA                   *
+024100931013      *---------------------------------------------------------------*
+024200931013     C           GESVD2    BEGSR
+024300931013     C*
+024400941103     C                     EXFMTSC23D02
+024500931013     C*  Fine elaborazione
+024600931013     C                     MOVEL'S'       £FINE
+024700931013     C*
+024800931013     C                     ENDSR
+024900931011      *---------------------------------------------------------------*
+025000941103      *  *INZSR: OPERAZIONI INIZIALI                                  *
+025100931011      *---------------------------------------------------------------*
+025200941103     C           *INZSR    BEGSR
+025300931011      *---------------------------------------------------------------*
+025400931011     C           *ENTRY    PLIST
+025500931011     C                     PARM           KPJBA
+025600941103     C                     MOVELKPJBU     TNSC20
+025700931011      *
+025800931011     C                     Z-ADD1         CODUT
+025900931011     C                     CALL 'X§PARUT'
+026000931011     C                     PARM           UT§DSE
+026100931011     C*          CODUT     CABEQ-1        FINE
+026200931011     C                     MOVELRAGUT     RSUT   20
+026300931011     C                     MOVELREC80     CNCR80
+026400931011     C                     MOVELKNMUS     §SEI    6
+026500931013     C*
+026600931013     C*  CHIAVI
+026700931013     C           KEYBOL    KLIST
+026800931013     C                     KFLD           CSBAAS
+026900931013     C                     KFLD           CSBLNP
+027000931013     C                     KFLD           CSBNRS
+027100931013     C                     KFLD           CSBNSP
+027200931013     C*
+027300931013     C           KEYABI    KLIST
+027400931013     C                     KFLD           ABIABI
+027500931013     C                     KFLD           ABICAB
+027600970408     C*
+027700970408     C           KEYTAB    KLIST
+027800970408     C                     KFLD           TBLKUT
+027900970408     C                     KFLD           TBLCOD
+028000931011     C*----------------------------------------------------*
+028100970408     C* Eseguo caricamento tabella 4S
+028200970408     C                     Z-ADD1         TBLKUT
+028300970408     C                     MOVEL'4S'      TBLCOD
+028400970408     C                     Z-ADD0         X
+028500970408     C                     Z-ADD0         C4S
+028600970408     C                     MOVEA*BLANKS   D4S
+028700970408     C           KEYTAB    CHAINTABEL00F             31
+028800970408     C           *IN31     DOWEQ'0'
+028900970408     C           X         ANDLT100
+029000970408     C           TBLFLG    IFEQ *BLANKS
+029100970408     C                     ADD  1         X
+029200970408     C                     MOVE TBLKEY    C4S,X
+029300970408     C                     MOVELTBLUNI    D4S,X
+029400970408     C                     END
+029500970408     C           KEYTAB    READETABEL00F                 31
+029600970408     C                     END
+029700931011     C*----------------------------------------------------*
+029800970408     C                     MOVEL'N'       £FINE   1
+029900970408     C*----------------------------------------------------*
+030000931011     C                     ENDSR

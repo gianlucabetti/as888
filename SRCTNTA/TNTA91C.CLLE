@@ -1,0 +1,25 @@
+000100021023             PGM        PARM(&KPJBA)
+000200000000
+000300000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400061002             DCL        VAR(&KPJBU)  TYPE(*CHAR)  LEN(256)
+000500061002             DCL        VAR(&ord)    TYPE(*char)  LEN(1)
+000600021023             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000700061002             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+000800061002             CHGVAR     VAR(&ord)    VALUE(%SST(&KPJBU 7 1))
+000900021023
+001000061002/* se richiesto ordinamento per comm.le creo file di lavoro in qtemp */
+001100061002             IF         COND(&ORD = 'C') THEN(DO)
+001200061002             DLTF       FILE(QTEMP/WFTA91*)
+001300021023             MONMSG     MSGID(CPF0000)
+001400061002             RTVMBRD    FILE(WFTA910F) RTNLIB(&LIB)
+001500021023             MONMSG     MSGID(CPF0000)
+001600021023             IF         COND(&LIB = '          ') THEN(GOTO +
+001700021023                          CMDLBL(FINE))
+001800061002             CRTDUPOBJ  OBJ(WFTA91*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001900021023                          TOLIB(QTEMP)
+002000061002             enddo
+002100000000
+002200021023/* Richiamo il pgm  */
+002300061002             CALL       PGM(TNTA91R) PARM(&KPJBA)
+002400000000
+002500021023 FINE:       ENDPGM

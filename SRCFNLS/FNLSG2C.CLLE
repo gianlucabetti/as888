@@ -1,0 +1,28 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200080318/* FNLSG2C - STATISTICA VOLUMI - GUIDA                                        */
+000300000000/*----------------------------------------------------------------------------*/
+000400080318 FNLSG2C:    PGM        PARM(&KPJBA)
+000500000000
+000600080318             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700080318             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000800080318
+000900080318/* CREO FILE DI LAVORO IN QTEMP */
+001000090709             DLTF       FILE(QTEMP/WFVLMF*)
+001100080318             MONMSG     MSGID(CPF0000)
+001200090709             RTVMBRD    FILE(WFVLMF0F) RTNLIB(&LIB)
+001300080318             MONMSG     MSGID(CPF0000)
+001400080318             IF         COND(&LIB = '          ') THEN(GOTO +
+001500080318                          CMDLBL(FINE))
+001600090709             CRTDUPOBJ  OBJ(WFVLMF*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001700080318                          TOLIB(QTEMP)
+001800000000
+001900080318  /* RIGENERA IL FILE DI LAVORO                                               */
+002000080318             CALL       PGM(FNLSG2R) PARM(&KPJBA)
+002100000000
+002200000000  /* LANCIA STAMPA                                                            */
+002300080319             OVRPRTF    FILE(PRTF198) FORMTYPE(*STD) +
+002400080319                          USRDTA('ST.VOLUMI')
+002500080319             CALL       PGM(FNLSG3R) PARM(&KPJBA)
+002600000000             RCLRSC     LVL(*CALLER)
+002700000000
+002800080318 FINE:       ENDPGM

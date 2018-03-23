@@ -1,0 +1,61 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600031106             PGM        PARM(&FID &MBD &FIS &MBS &FIT &MBT &PGI &PPI &ESITO)
+000700991027
+000800991027             DCL        VAR(&FID) TYPE(*CHAR) LEN(10) /* File +
+000900991027                          tradurre */
+001000991027             DCL        VAR(&MBD) TYPE(*CHAR) LEN(10) /* Membro +
+001100991027                          tradurre */
+001200991027             DCL        VAR(&FIS) TYPE(*CHAR) LEN(10) /* File +
+001300991027                          storico */
+001400991027             DCL        VAR(&MBS) TYPE(*CHAR) LEN(10) /* Membro +
+001500991027                          storico */
+001600031106             DCL        VAR(&FIT) TYPE(*CHAR) LEN(10) /* File +
+001700031106                          tradotto */
+001800031106             DCL        VAR(&MBT) TYPE(*CHAR) LEN(10) /* Membro +
+001900031106                          tradotto */
+002000000712             DCL        VAR(&PGI) TYPE(*CHAR) LEN(10) /* Programma +
+002100000712                          Importatore */
+002200000712             DCL        VAR(&PPI) TYPE(*CHAR) LEN(50) /* Parametri +
+002300000712                          Programma Importatore */
+002400000712             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+002500000712
+002600130228
+002700130228             IF         COND(&FIS *NE '*')  THEN(DO)
+002800991027             ADDPFM     FILE(&FIS) MBR(&MBS)
+002900000330             MONMSG     MSGID(CPF5812 CPF7306)
+003000130228             ENDDO
+003100031106
+003200031106             ADDPFM     FILE(&FIT) MBR(&MBT) TEXT(&MBD)
+003300031106             MONMSG     MSGID(CPF5812 CPF7306)
+003400991027
+003500000330             ALCOBJ     OBJ((&FID *FILE *EXCL &MBD))
+003600000330             ALCOBJ     OBJ((&FIS *FILE *EXCL &MBS))
+003700031106             ALCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+003800000330
+003900071205             OVRDBF     FILE(&FID) TOFILE(&FID) MBR(&MBD) +
+004000071205                          OVRSCOPE(*JOB)
+004100991027             OVRDBF     FILE(&FIS) TOFILE(&FIS) MBR(&MBS) +
+004200071205                          OVRSCOPE(*JOB)
+004300031106             OVRDBF     FILE(&FIT) TOFILE(&FIT) MBR(&MBT) +
+004400071205                          FRCRATIO(1) OVRSCOPE(*JOB)
+004500991027
+004600000712             IF         COND(&PGI *NE '          ')  THEN(DO)
+004700000713             CALL       PGM(&PGI) PARM(&PPI &ESITO)
+004800000712             MONMSG     MSGID(CPF0000) EXEC(DO)
+004900000712             CHGVAR     VAR(&ESITO) VALUE('1')
+005000000712             ENDDO
+005100000711             ENDDO
+005200000330
+005300071205             DLTOVR     FILE(&FID &FIS &FIT) LVL(*JOB)
+005400071205             MONMSG     MSGID(CPF9841)
+005500991027
+005600991027             DLCOBJ     OBJ((&FID *FILE *EXCL &MBD))
+005700991027             DLCOBJ     OBJ((&FIS *FILE *EXCL &MBS))
+005800031106             DLCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+005900991027
+006000991026
+006100990907             ENDPGM

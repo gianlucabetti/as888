@@ -1,0 +1,38 @@
+000100150130/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER )                                   */
+000200150130/*-------------------------------------------------------------------*/
+000300150130/* CU 2015 - creazione file di scarico                               */
+000400150130/*-------------------------------------------------------------------*/
+000500150130             PGM        PARM(&KPJBA)
+000600150130
+000700150130             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800150130             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000900150130             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10)
+001000150130             DCL        VAR(&LIBRF) TYPE(*CHAR) LEN(10)
+001100150130
+001200150130/* Libreria file                                              */
+001300150130             DCL        VAR(&LIBFIL)   TYPE(*CHAR) LEN(10)
+001400150130
+001500150130             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001600150205             CHGVAR     VAR(&FILE)  VALUE(%SST(&KPJBU 39 10))
+001700150205             CHGVAR     VAR(&LIBRF) VALUE(%SST(&KPJBU 59 10))
+001800150130
+001900150130             CLRPFM     FILE(QTEMP/SDGCUW00F)
+002000150130             MONMSG     MSGID(CPF3142) EXEC(DO)
+002100150130
+002200150130             RTVMBRD    FILE(SDGCUW00F) RTNLIB(&LIBFIL)
+002300150130             CRTDUPOBJ  OBJ(SDGCUW*) FROMLIB(&LIBFIL) OBJTYPE(*ALL) +
+002400150130                          TOLIB(QTEMP)
+002500150130/*- Se  errore  vado a fine                                    */
+002600150130             MONMSG     MSGID(CPF0000) EXEC(DO)
+002700150130             GOTO       CMDLBL(FINE)
+002800150130             ENDDO
+002900150130
+003000150130             ENDDO
+003100150130
+003200150130             CALL       PGM(SDGSK61R) PARM(&KPJBA)
+003300150130
+003400150130             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+003500150205             CHGVAR     VAR(&FILE)  VALUE(%SST(&KPJBU 39 10))
+003600150205             CHGVAR     VAR(&LIBRF) VALUE(%SST(&KPJBU 59 10))
+003700150130
+003800150130 FINE:       ENDPGM

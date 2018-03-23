@@ -1,0 +1,52 @@
+000100971127/*----------------------------------------------------------------------------*/
+000200040514/* AVVIA PGM Aggiornamenti vari bolle                                         */
+000300111007/*           senza fare SMBJOB ma call diretta                                */
+000400971127/*----------------------------------------------------------------------------*/
+000500971127             PGM
+000600040402             DCL        VAR(&NOLIB) TYPE(*CHAR) LEN(1) VALUE('S')
+000700111007             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+000800111007             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000900971127
+001000971127/* IMPOSTA LA PRIORITA' DEL JOB */
+001100971127             CHGJOB     RUNPTY(20)
+001200040621
+001300040621/* se sono su As di backup esco dal pgm  */
+001400040621             CHKOBJ     OBJ(QGPL/MIMIXBACK) OBJTYPE(*DTAARA)
+001500040621             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOBACK))
+001600040621             goto       fine
+001700040621NOBACK:
+001800040507
+001900040507/* Se esiste ambiente prova, sottometto filtrapfp e gaitrapfp    */
+002000040507             CHKOBJ     OBJ(FILTRAPRD) OBJTYPE(*LIB)
+002100040507             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&NOLIB) +
+002200040507                          VALUE('N'))
+002300040507
+002400040507             IF         COND(&NOLIB *ne 'N') THEN(DO)
+002500111007
+002600111007             CALL       PGM(TRUL07C) PARM('FILTRAPFP ')
+002700040507
+002800111007             GOTO       CMDLBL(GUFO)
+002900040507             enddo
+003000040511
+003100040511             CHGVAR     VAR(&NOLIB) VALUE('S')
+003200040402
+003300040402             CHKOBJ     OBJ(FILTRA201) OBJTYPE(*LIB)
+003400040402             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&NOLIB) +
+003500040402                          VALUE('N'))
+003600040402
+003700040830             IF         COND(&NOLIB *ne 'N') THEN(DO)
+003800111007             CALL       PGM(TRUL07C) PARM('FILTRA201 ')
+003900111007
+004000971127
+004100111007             ENDDO
+004200111007
+004300111007 GUFO:
+004400111007             CALL       PGM(FNLV52R) PARM(&KPJBA &CHIUDI)
+004500111007
+004600111007             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(FINE))
+004700111007
+004800111007             DLYJOB     DLY(25)
+004900111007             GOTO       CMDLBL(GUFO)
+005000111007
+005100111007 FINE:
+005200111007             ENDPGM

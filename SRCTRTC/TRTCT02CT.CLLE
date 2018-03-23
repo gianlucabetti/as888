@@ -1,0 +1,48 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200090225/*?******************************************************************/
+000300090225/*?  RICEVE ED ELABORA IFTMIN                     da UPLOAD         */
+000400090225/*?  Ricezione in Sede tramite server FTP x cliente                 */
+000500090225/*?******************************************************************/
+000600090225
+000700160330             PGM
+000800090225
+000900090225             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001000090225             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001100090212
+001200090212
+001300160330             ADDLIBLE   LIB(FILTRAGRPF) POSITION(*AFTER UNITRAGRP)
+001400090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+001500090216
+001600160330             ADDLIBLE   LIB(FILTRAPRD) POSITION(*AFTER FILTRAGRPF)
+001700090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+001800090216
+001900090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+002000090213/* procedura/programma fosse finita in maniera anomala occorre */
+002100090213/* parare il colpo riducendo il male al male minore ossia      */
+002200090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+002300090213/* metà piuttosto che confermarle. E ripartendo da una         */
+002400090213/* situazione pulita.                                          */
+002500090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002600090213/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+002700090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+002800090213             ENDCMTCTL
+002900090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+003000090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003100090213             ENDDO
+003200090212
+003300090212             CALL       PGM(TRTCT02R) PARM(&ESITO)
+003400090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+003500090213             ROLLBACK
+003600090213             ENDDO
+003700090212
+003800090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+003900090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+004000090213 /* in modo pulito senza lasciare transazioni a metà.            */
+004100090213             ENDCMTCTL
+004200090216
+004300160330             rmvLIBLE   LIB(FILTRAGRPF)
+004400090216             MONMSG     MSGID(CPF0000)
+004500160330             rmvLIBLE   LIB(FILTRAPRD)
+004600090216             MONMSG     MSGID(CPF0000)
+004700090216
+004800090212             ENDPGM

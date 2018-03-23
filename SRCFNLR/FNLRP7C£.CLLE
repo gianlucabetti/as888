@@ -1,0 +1,28 @@
+000100000000     /*****************************************************************/
+000200050517     /*  Nome programma:  FNLRP7C                                     */
+000300050517     /*  Descrizione   :  ELENCO SPEDIZIONI MESSAG.IN DISTINTE PARCEL */
+000400000000     /*****************************************************************/
+000500000000             PGM        PARM(&KPJBA)
+000600000000
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800000000             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+000900000000
+001000050517     /*  Duplico il file di work in QTEMP per evitare conflitti       */
+001100000000
+001200050517             CHKOBJ     OBJ(QTEMP/WFTPM00F) OBJTYPE(*FILE)
+001300000000             MONMSG     MSGID(CPF9801) EXEC(DO)
+001400050517             RTVOBJD    OBJ(WFTPM00F) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+001500050517             CRTDUPOBJ  OBJ(WFTPM00F) FROMLIB(&RTNLIB) +
+001600000000                          OBJTYPE(*FILE) TOLIB(QTEMP) DATA(*NO)
+001700000000             ENDDO
+001800000000
+001900050517             CLRPFM     FILE(QTEMP/WFTPM00F)
+002000000000             MONMSG     MSGID(CPF0000)
+002100050517
+002200050517             CRTDUPOBJ  OBJ(WFTPM01l) FROMLIB(&RTNLIB) +
+002300050517                          OBJTYPE(*FILE) TOLIB(QTEMP) DATA(*NO)
+002400050517             MONMSG     MSGID(CPF0000)
+002500000000
+002600050517             CALL       PGM(FNLRP7R) PARM(&KPJBA)
+002700000000             MONMSG     MSGID(CPF0000)
+002800000000             ENDPGM

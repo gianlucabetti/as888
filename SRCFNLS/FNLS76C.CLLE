@@ -1,0 +1,71 @@
+000100950419 FNLS76C:    PGM        PARM(&KPJBA)
+000200080220
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400030613             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+000500910306             DCL        VAR(&PRT)    TYPE(*CHAR)  LEN(10)
+000600950206             DCL        VAR(&MODETI)    TYPE(*CHAR)  LEN(10)
+000700950418             DCL        VAR(&PARFLG) TYPE(*CHAR) LEN(1)
+000800080220             DCL        VAR(&VPOmaxLDV) TYPE(*CHAR)  LEN(5)
+000900080220
+001000950418             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+001100950418             DCL        VAR(&QDATE) TYPE(*CHAR) LEN(6)
+001200950418             DCL        VAR(&GIORNO) TYPE(*CHAR) LEN(2)
+001300950418             DCL        VAR(&MESE) TYPE(*CHAR) LEN(2)
+001400950418             DCL        VAR(&ANNO) TYPE(*CHAR) LEN(2)
+001500950418             DCL        VAR(&QTIME) TYPE(*CHAR) LEN(6)
+001600950419             DCL        VAR(&ORA) TYPE(*CHAR) LEN(2)
+001700950419             DCL        VAR(&MIN) TYPE(*CHAR) LEN(2)
+001800950419             DCL        VAR(&SEC) TYPE(*CHAR) LEN(2)
+001900950418             DCL        VAR(&MESSAGGIO) TYPE(*CHAR) LEN(512)
+002000900924
+002100920124             CHGVAR     VAR(&PRT) VALUE(%SST(&KPJBA 493 10))
+002200950206             CHGVAR     VAR(&MODETI) VALUE(%SST(&KPJBA 473 10))
+002300920124
+002400080220/* Override ---------------------------------------------------------*/
+002500941228             OVRPRTF    FILE(FNLV22P) OUTQ(&PRT) FORMTYPE(&MODETI) +
+002600941228                          USRDTA('Rist.Segn') SHARE(*YES)
+002700900925
+002800080220/* Richiamo pgm di stampa -------------------------------------------*/
+002900941228             CALL       PGM(FNLS76R) PARM(&KPJBA)
+003000950418
+003100080220/* Controllo la corretta esecuzione delle stampe --------------------*/
+003200030613             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+003300030613             CHGVAR     VAR(&PARFLG) VALUE(%SST(&KPJBU 156 1))
+003400950419
+003500950419/* SE SUPERO TOT. PAGINE IN STAMPA (PARFLG = "E"), EMETTO MESSAGGIO */
+003600950418             IF         COND(&PARFLG *EQ 'E') THEN(DO)
+003700080220             chgvar     var(&VPOmaxLDV) value(%sst(&KPJBU 151 5))
+003800950418             RTVJOBA    USER(&USER)
+003900950418             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&QDATE)
+004000950418             CHGVAR     VAR(&GIORNO) VALUE(%SST(&QDATE 1 2))
+004100950418             CHGVAR     VAR(&MESE) VALUE(%SST(&QDATE 3 2))
+004200950418             CHGVAR     VAR(&ANNO) VALUE(%SST(&QDATE 5 2))
+004300950418             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&QTIME)
+004400950419             CHGVAR     VAR(&ORA) VALUE(%SST(&QTIME 1 2))
+004500950419             CHGVAR     VAR(&MIN) VALUE(%SST(&QTIME 3 2))
+004600950419             CHGVAR     VAR(&SEC) VALUE(%SST(&QTIME 5 2))
+004700950419/* INVIO MESSAGGIO CON OBBLIGO DI RISPOSTA ALLA CODA DELL'OPERATORE */
+004800950419             CHGVAR     VAR(&MESSAGGIO) VALUE(&GIORNO *CAT '/' *CAT +
+004900950419                          &MESE *CAT '/' *CAT &ANNO *CAT '   ' *CAT +
+005000950419                          &ORA *CAT ':' *CAT &MIN *CAT ':' *CAT +
+005100950419                          &SEC *BCAT '                 Programma di +
+005200950419                          ristampa segnacolli.  ATTENZIONE, +
+005300950419                          l''utente' *BCAT &USER *BCAT 'ha +
+005400950419                          richiesto un''elaborazione che sta +
+005500080220                          ristampando piu'' di' *bcat &VPOmaxLDV +
+005600080220                                                *bcat 'segnacolli. +
+005700950419                          L''elaborazione viene interrotta e la +
+005800950419                          stampa congelata. Rispondere OK per +
+005900950419                          chiudere il lavoro.')
+006000950418             SNDUSRMSG  MSG(&MESSAGGIO) TOUSR(*SYSOPR)
+006100950419/* CONGELO LA STAMPA */
+006200950418             HLDSPLF    FILE(FNLV22P) SELECT(&USER)
+006300950524             MONMSG     MSGID(CPF3337)
+006400950719             MONMSG     MSGID(CPF3309)
+006500950418             ENDDO
+006600920124
+006700080220/* Fine -------------------------------------------------------------*/
+006800910218             RCLRSC     LVL(*CALLER)
+006900900925             DLTOVR     FILE(*ALL)
+007000080220
+007100000000             ENDPGM

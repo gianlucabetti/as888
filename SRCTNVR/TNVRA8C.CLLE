@@ -1,0 +1,50 @@
+000100020507             pgm
+000200020507
+000300020507 /* Variables from DSPFD file --------------------------------------*/
+000400020507             dcl        var(&MBFILE) type(*char) len(10)
+000500020507             dcl        var(&MBLIB)  type(*char) len(10)
+000600020507             dcl        var(&MBNAME) type(*char) len(10)
+000700020507
+000800020507 /* Outfile from command DSPFD -------------------------------------*/
+000900020507             dclf       file(QTEMP/QWHFDMBR)
+001000020507
+001100020507    /* FNDCT00F */
+001200020507             dspfd      file(*libl/FNDCT00F) type(*MBR) +
+001300020507                          output(*outfile)   outfile(QTEMP/QWHFDMBR) +
+001400020507                          outmbr(*first *REPLACE)
+001500020507             monmsg     msgid(CPF0000)
+001600020507    /* FNDCT00R */
+001700020507             dspfd      file(*libl/FNDCT00R) type(*MBR) +
+001800020507                          output(*outfile)   outfile(QTEMP/QWHFDMBR) +
+001900020507                          outmbr(*first *ADD)
+002000020507             monmsg     msgid(CPF0000)
+002100020507    /* FNDCT00T */
+002200020507             dspfd      file(*libl/FNDCT00T) type(*MBR) +
+002300020507                          output(*outfile)   outfile(QTEMP/QWHFDMBR) +
+002400020507                          outmbr(*first *ADD)
+002500020507             monmsg     msgid(CPF0000)
+002600020507
+002700020507 /* PF FNDCT00F-R-T ------------------------------------------------*/
+002800020507
+002900020507 READ:
+003000020507
+003100020507   /* Read a record from an *OUTFILE of the DSPFD command - - - - - */
+003200020507             rcvf
+003300020507             monmsg     msgid(CPF0864)     exec(goto cmdlbl(E_O_F))
+003400020507
+003500020507             if         cond(&MBNRCD > 0)  then(DO)
+003600020507
+003700020507               ovrdbf     file(FNDCT00F)   tofile(&MBLIB/&MBFILE) +
+003800020507                            mbr(&MBNAME)   ovrscope(*JOB)
+003900020507               call       pgm(EDPWK/TNVRA8R)
+004000020507               dltovr     file(FNDCT00F)   lvl(*JOB)
+004100020507
+004200020507             enddo
+004300020507
+004400020507   /* Loop back to read QWHFDMBR file - - - - - - - - - - - - - - - */
+004500020507             goto       cmdlbl(READ)
+004600020507
+004700020507 E_O_F:
+004800020507
+004900020507 /* End of the program procedure -----------------------------------*/
+005000020507             ENDPGM

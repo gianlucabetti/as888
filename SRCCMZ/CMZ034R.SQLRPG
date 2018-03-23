@@ -1,0 +1,262 @@
+000100900327     H/TITLE   ELABORAZIONE CODA DI INVIO  FILE
+000200900330     H              J                                                     CN1100
+000300900327     F*----------------------------------------------------*
+000400900327      /EJECT
+000500900327?    F*----------------------------------------------------*
+000600900327?    F*   INDICATORI                                       *
+000700900327?    F*----------------------------------------------------*
+000800900327     F*  INDICATORI CHE CONDIZIONANO  L'INTERO PROGRAMMA   *
+000900900327     F*----------------------------------------------------*
+001200900327     F* 03 -
+001300900327     F* 04 -
+001400900327     F* 05 -
+001500900327     F* 06 -
+001600900327     F*----------------------------------------------------*
+001700900327     F*  INDICATORI DI SRVIZIO                             *
+001800900327     F*----------------------------------------------------*
+001900900327     F* 15
+002000900327     F* 19 -
+002100900327     F* 20 -
+002200900327     F* 21 -
+002300900327     F*----------------------------------------------------*
+002400900327      /EJECT
+002500900327?    F*----------------------------------------------------*
+002600900327?    F*     CAMPI WORK UTILIZZATI                          *
+002700900327?    F*----------------------------------------------------*
+002800900327      /EJECT
+002900900327?    F*----------------------------------------------------*
+003000900327?    F*               D A T A   B A S E                    *
+003100900327?    F*----------------------------------------------------*
+003200900327     FCMDST01LUF  E           K        DISK
+003300900327     F*-                                                   *
+003400900327      /EJECT
+003500900327?    E*----------------------------------------------------*
+003600900327?    E*  SCHIERE                                           *
+003700900327?    E*----------------------------------------------------*
+003800900327     E                    CMD     1   1 80               DLYJOB
+003900900327      /EJECT
+004000900327?    I*----------------------------------------------------*
+004100900327?    I*  STRUTTURE DATI                                    *
+004200900327?    I*----------------------------------------------------*
+004300900327     I*
+004400900327     ICMZ001    E DSCMZ001DS
+004500900327     I*
+004600900327     I*
+004700900327     I            DS
+004800900327     I*----------------- INVERSIONE DATE :
+004900900327     I                                        1   20ANNODS
+005000900327     I                                        3   40MESEDS
+005100900327     I                                        5   60GIORDS
+005200900327     I                                        1   60DATAIN
+005300900327     i* ora spegimento
+005400900327     ILIMDS       DS
+005500900327     I                                        1   70LIMDAT
+005600900327     I                                        8  130LIMORA
+005700900327     i* ora attuale
+005800900327     I            DS
+005900900327     I                                        1   70UDAT
+006000900327     I                                        8  130UTIM
+006100900327     I                                        1  13 ORA
+006200900327      /EJECT
+006300900327?    C*----------------------------------------------------*
+006400900327?    C*     DEFINIZIONE CAMPI                              *
+006500900327?    C*----------------------------------------------------*
+006600900327     C           *NAMVAR   DEFN           CMZ001
+006700900327     C*
+006800900327     C/EJECT
+006900900327?    C*----------------------------------------------------*
+007000900327?    C*-  CHIAVI                                          -*
+007100900327?    C*----------------------------------------------------*
+007200900327     C*                                                    *
+007300900327     C* CMDST01L
+007400900327     C           KDST      KLIST                           *
+007500900327     C                     KFLD           DSTDST           *
+007600900327     C/EJECT
+007700900327?    C*----------------------------------------------------*
+007800900327?    C*-  OPERAZIONI INIZIALI                             -*
+007900900327?    C*----------------------------------------------------*
+008000900327     C*                                                    *
+008100900327     C/EJECT
+008200900327?    C*----------------------------------------------------*
+008300900327?    C*-  FLUSSO PRINCIPALE                               -*
+008400900327     C*
+008500900327     c* imposta la data e ora di chiusura in base a DTAARA CMZ001
+008600900327     C* Controlla lo stato delle linee
+008700900327     C*
+008800900327     c* LOOP
+008900900327     C*   Elabora file coda cercando i destinatari che hanno qualcosa
+009000900327     c*   da inviare in base a ora di invio , ora attuale, tentativi
+009100900327     c*   gia effettuati
+009200900327     c*
+009300900327     c*      Per ogni destinatario
+009400900327     C*       Imposta a '1' DSTSTS
+009500900327     C*       Submit CMZ022R
+009600900327     c*
+009700010821     c* a fine elaborazione attende 2'
+009800900327     c* in base alla data-ora di chiusura impostata  decide
+009900900327     c* se terminare o rileggere la coda di invio
+010000900327     c*
+010100900327?    C*----------------------------------------------------*
+010200900327     C*                                                    *
+010300900327?    C                     EXSR LIMITE                     *
+010400900327     c*                                                    *
+010500900327     C* imposta ora attuale                                *
+010600900327     c*                                                    *
+010700900525     C                     TIME           W120   120
+010800900525     C                     MOVELW120      UTIM             *
+010900900525     C                     MOVE *ZERO     UDAT             *
+011000900525     C                     MOVE W120      W060    60
+011100900530     C                     MOVE W060      DATAIN
+011200900530     C                     EXSR ROVDAT
+011300900530     C                     MOVE DATAIN    UDAT
+011400900327     C*                                                    *
+011500900327     C*                                                    *
+011600911206B1   C           ORA       DOWLTLIMDS                      *
+011700900327     C*  attiva le linee                                   *
+011800900327     c*                                                    *
+011900941220     C* SPOSTATO NEL CMZ032C                               *
+012000941220     C*************        CALL 'CMZ035C'                  *
+012100941220     c*                                                    *
+012200900327     C*                                                    *
+012300900327     C/SPACE 3
+012400900327     C*                                                    *
+012500900327     C* ELABORA LA CODA DI INVIO                           *
+012600900327     C*                                                    *
+012700900327     C/EXEC SQL
+012800900327     C+ whenever sqlerror  goto LAB100
+012900900327     C/END-EXEC
+013000900327     C*                                                    *
+013100900327     C/EXEC SQL
+013200900327     C+ DECLARE C1 CURSOR FOR SELECT DISTINCT DSTDST FROM CMINV00F,
+013300900330     C+ CMDST00F WHERE INVHLD = ' ' and DSTHLD = ' ' and DSTSTS = ' ' and
+013400900327     C+ INVDST = DSTDST and (DSTRTX < :£RTY and DSTNBX <> '  ' or DSTRTR
+013500900327     C+ < :£RTY and DSTNBR <> '    ' ) and concat( Digits(INVDTR),
+013600900327     C+ digits(INVORR)) < :ORA
+014200900327     C/END-EXEC
+014300900327     C*
+014400900327     C/EXEC SQL
+014500900327     C+ open C1
+014600900327     C/END-EXEC
+014700900327     C*
+014800900327     C/EXEC SQL
+014900900327     C+ fetch C1 into :DSTDST
+015000900327     C/END-EXEC
+015100900327     c*                                                    *
+015200900327     c*                                                    *
+015300900327B2   C           SQLCOD    DOWNE100                        *
+015400900327     C           KDST      CHAINCMDST000             21    *
+015500900327     C                     MOVE '1'       DSTSTS           *
+015600900327     C                     UPDATCMDST000                   *
+015700900327     C*                                                    *
+015800900402     C                     MOVE DSTDST    PDST    3
+015900900327     C                     CALL 'CMZ022C'                  *
+016000900404     C                     PARM           PDST             *
+016100900504     C                     PARM           DSTCPN
+016200900404     C                     PARM ' '       PFLG    1        *
+016300900404     C*
+016400900404     C*  PFLG=' ' chiamato da sys locale
+016500900404     C*  PFLG=' ' chaimato da sys remoto
+016600900404     C*
+016700900327     C*                                                    *
+016800900327     C/EXEC SQL
+016900900327     C+ fetch C1 into :DSTDST
+017000900327     C/END-EXEC
+017100900327     C*                                                    *
+017200900327E2   C                     END                             *
+017300900327     C/SPACE 3
+017400900327     C*                                                    *
+017500900413     C*  DLYJOB
+017600900413     C*
+017700900413     C                     SHTDN                     21    *
+017800900413     C   21                GOTO LAB100
+017900900413     C*
+018000900327     C                     CALL 'QCMDEXC'                  *
+018100900327     C                     PARM           CMD              *
+018200900327     C                     PARM 80        LEN    155       *
+018300900413     C*
+018400900327     C*                                                    *
+018500900411     C/EXEC SQL
+018600900411     C+ CLOSE C1
+018700900411     C/END-EXEC
+018800900419     c*                                                    *
+018900900419     C* imposta ora attuale                                *
+019000900419     c*                                                    *
+019100900525     C                     TIME           W120   120
+019200900525     C                     MOVELW120      UTIM             *
+019300900525     C                     MOVE *ZERO     UDAT             *
+019400900525     C                     MOVE W120      W060    60
+019500900530     C                     MOVE W060      DATAIN
+019600900530     C                     EXSR ROVDAT
+019700900530     C                     MOVE DATAIN    UDAT
+019800900327E1   C                     END                             *
+019900900327     C*                                                    *
+020000900411     C*----------------                                    *
+020100900411     C           LAB100    TAG                             *
+020200900411     C*----------------                                    *
+020300900327     C                     SETON                         LR*
+020400900327     C/EJECT
+020500900327?    C*----------------------------------------------------*
+020600900327?    C*   IMPOSTA DATA E ORA DI CHIUSRA SISTEMA            *
+020700900327?    C*----------------------------------------------------*
+020800900327     C           LIMITE    BEGSR                           *
+020900900327     C*                                                    *
+021000900330     C                     MOVE *ZERO     LIMDS            *
+021100900330     C                     MOVE *ZERO     ORA              *
+021200900327     C                     IN   CMZ001                     *
+021300900327     C                     MOVEL£ORS      LIMORA           *
+021400900327     C                     TIME           W060    60       *
+021500911213     C           £ORS      IFEQ 9999
+021600911206     C                     MOVE 9999999   LIMDAT
+021700911206     C                     ELSE
+021800900411     C*
+021900900411     C* ora attuale minore ora spegnimento --> fino a ora spegnimento
+022000900411     C*
+022100900327     C           W060      IFLT LIMORA                     *
+022200900327     C                     MOVE UDATE     DATAIN           *
+022300900327     C                     EXSR ROVDAT                     *
+022400900327     C                     MOVE DATAIN    LIMDAT           *
+022500900327     C                     ELSE                            *
+022600900411     C*
+022700900411     C* ora attuale maggiore ora spegnimento --> fino a ora spegnimento
+022800900411     C* del giorno dopo (se avvio in giorno)
+022900900411     C*  fine subito (se avvio in notte )
+023000900411     C*
+023100900411     C*
+023200900411     C                     MOVELW060      W040    40
+023300911125     C*          £ORI      IFGT £ORN
+023400911125     C*          W040      ANDLT£ORI
+023500911125     C*          W040      ANDGT£ORN
+023600911125     C*          £ORI      ORLE £ORN
+023700911125     C*          W040      ANDLT£ORI
+023800911125     C*          £ORI      ORLE £ORN
+023900911125     C*          W040      ANDGT£ORN
+024000900411     C*     giorno dopo (se avvio in giorno)
+024100900327     C                     MOVE UDATE     W060             *
+024200900327     C                     CALL 'TAADATAC'                 *
+024300900327     C                     PARM 1         W050    50       *
+024400900327     C                     PARM           W06     6        *
+024500900327     C                     PARM           W060             *
+024600900327     C                     MOVE W06       DATAIN           *
+024700900327     C                     EXSR ROVDAT                     *
+024800900327     C                     MOVE DATAIN    LIMDAT           *
+024900911125     C*                    ELSE
+025000900411     C*  fine subito (se avvio in notte )
+025100911125     C*                    MOVE UDATE     DATAIN           *
+025200911125     C*                    EXSR ROVDAT                     *
+025300911125     C*                    MOVE DATAIN    LIMDAT           *
+025400911125     C*                    END
+025500900411     C                     END
+025600911206     C                     END
+025700900327     C                     ENDSR
+025800900327     C/EJECT
+025900900327     C***------------------------------------------------***
+026000900327     C**--------- ROVESCIAMENTO DATE --------------------***
+026100900327     C***------------------------------------------------***
+026200900327     CSR         ROVDAT    BEGSR                           *
+026300900327     C           GIORDS    SUB  ANNODS    COMOD1  20       *
+026400900327     C           COMOD1    MULT 9999      COMOD2  60       *
+026500900327     C           COMOD2    ADD  DATAIN    DATAIN           *
+026600900327     CSR                   ENDSR                           *
+026700900327     C***------------------------------------------------***
+026800900327**
+026900010821DLYJOB     DLY(120)

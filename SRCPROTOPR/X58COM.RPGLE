@@ -1,0 +1,3 @@
+000100080611     D Proj_LetturaCommenti...
+000200080611     D                 PR                  EXTPROC('X58COM')
+000300080611     D  x58ComDs                           LIKEDS(x58ComDs)

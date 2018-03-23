@@ -1,0 +1,75 @@
+000100890707             PGM        PARM(&KPJBA)
+000200890707
+000300940315             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+000400940315             DCL        VAR(&NRRBOL) TYPE(*DEC)   LEN(10 0)
+000500940315             DCL        VAR(&NRRVAR) TYPE(*DEC)   LEN(10 0)
+000501130723             DCL        VAR(&NRRmul) TYPE(*DEC)   LEN(10 0)
+000502130716             DCL        VAR(&RISP)   TYPE(*CHAR) LEN(1)
+000800130716             DCL        VAR(&D66lib) TYPE(*CHAR) LEN(10)
+000801130716             DCL        VAR(&D66nas) TYPE(*CHAR) LEN(10)
+000900130716             DCL        VAR(&D66lib2) TYPE(*CHAR) LEN(10)
+001200130716             DCL        VAR(&MSG) TYPE(*CHAR) LEN(200)
+001600940316             DCL        VAR(&ERRO1) TYPE(*CHAR) LEN(200) +
+001700940316                          VALUE('ERRORE !!! Gli archivi di sede +
+001800940316                          sono pieni !!! Impossibile procedere al +
+001900940316                          ripristino')
+002000940316             DCL        VAR(&ERRO2) TYPE(*CHAR) LEN(300) +
+002100940316                          VALUE('ERRORE nel ripristino del +
+002200940316                          file          !!! Sono cambiati i +
+002300940316                          tracciati !!! Vuoi effettuare ugualmente +
+002400940316                          il ripristino ? SI/NO')
+002500940712
+002600940712/*---------------------------------------------------------------------*/
+002700940712/*  Richiamo pgm. x richiesta parametri ripristino archivi C/  A       */
+002800940712/*---------------------------------------------------------------------*/
+002900130716             CHGVAR     VAR(&D66lib) VALUE(%SUBSTRING(&KPJBA 247 10))
+003000130716             CHGVAR     VAR(&D66nas) VALUE(%SUBSTRING(&KPJBA 257 10))
+003100130716             CHGVAR     VAR(&D66LIB2) VALUE(%SUBSTRING(&KPJBA 267 10))
+003101130716             CHGVAR     VAR(&msg) VALUE('(C G) +
+003102130716                          Montare nastro per ripristino +
+003103130716                          archivi pulizia Contrassegni di sede in ' +
+003104130716                          *BCAT  &d66nas)
+003300890707
+003400940315/*---------------------------------------------------------------------*/
+003500940315/*  Inizio Ripristino: Mando messaggio all'operatore di sistema        */
+003600940315/*---------------------------------------------------------------------*/
+003700890707             SNDUSRMSG  MSG(&MSG) VALUES(C G) DFT(C) TOMSGQ(QSYSOPR) +
+003800890707                          MSGRPY(&RISP)
+003900890707             IF         COND((&RISP *EQ 'C') *OR (&RISP *EQ 'c')) +
+004000890707                          THEN(GOTO CMDLBL(ENDPGM))
+004100890707
+004200940315/*---------------------------------------------------------------------*/
+004300940712/*  Controllo che gli archivi di sede non siano pieni                  */
+004400940315/*---------------------------------------------------------------------*/
+004600130716                        RTVMBRD    FILE(&D66LIB2/TNCPB00F) MBR(*FIRST) +
+004700940712                        NBRCURRCD(&NRRBOL)
+004800130716                        RTVMBRD    FILE(&D66LIB2/TNCPV00F) MBR(*FIRST) +
+004900940712                        NBRCURRCD(&NRRVAR)
+004901130723                        RTVMBRD    FILE(&D66LIB2/TNCPM00F) MBR(*FIRST) +
+004902130723                        NBRCURRCD(&NRRMUL)
+005000940315
+005100940315/*---------------------------------------------------------------------*/
+005200940315/*  Se gli archivi di sede sono pieni non siano pieni                  */
+005300940315/*---------------------------------------------------------------------*/
+005400130723             IF         COND((&NRRBOL *GT 0) *OR (&NRRVAR *GT 0) *OR +
+005500130723                          (&NRRMUL *GT 0)) THEN(DO)
+005600940712                           SNDUSRMSG  MSG(&ERRO1) MSGTYPE(*INFO) TOMSGQ(QSYSOPR)
+005700940712                           GOTO CMDLBL(ENDPGM)
+005800940315                        ENDDO
+005900940315
+006100940315/*---------------------------------------------------------------------*/
+006200130716/*  Carico in libreria buona gli archivi dalla libreria di salvataggio */
+006400940315/*---------------------------------------------------------------------*/
+006700940316
+006701130723             RSTLIB     SAVLIB(&D66LIB)  DEV(&D66NAS)
+006702130723
+006703130723             CPYF       FROMFILE(&D66LIB/TNCPB00F) +
+006704130723                          TOFILE(&D66LIB2/TNCPB00F) MBROPT(*REPLACE)
+008100890707
+008101130723             CPYF       FROMFILE(&D66LIB/TNCPv00F) +
+008102130723                          TOFILE(&D66LIB2/TNCPv00F) MBROPT(*REPLACE)
+008103130723
+008104130723             CPYF       FROMFILE(&D66LIB/TNCPm00F) +
+008105130723                          TOFILE(&D66LIB2/TNCpm00F) MBROPT(*REPLACE)
+008106130723
+008200890707 ENDPGM:     ENDPGM

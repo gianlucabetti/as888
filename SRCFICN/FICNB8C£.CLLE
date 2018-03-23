@@ -1,0 +1,51 @@
+000100030930 /*----------------------------------------------------------------MRB*/
+000200030930 /* Retrieve Job Status (calling API QWCRJBST)                        */
+000300030930 /*-------------------------------------------------------------------*/
+000400030930 /* Values that can be returned for job status (&JOBSTS):             */
+000500030930 /* *ACTIVE  The job has started.                                     */
+000600030930 /*          This does not guarantee that the job is currently running:+
+000700030930 /*          HLDJOB, RLSJOB, TFRGRPJOB, TFRSECJOB, DSCJOB or MSGW.    */
+000800030930 /* *JOBQ    The job is currently on a job queue.                     */
+000900030930 /* *OUTQ    The job has completed running and has spooled output.    */
+001000030930 /* *ERROR   The Job with the specified job identifier does not exist.*/
+001100030930 /*-------------------------------------------------------------------*/
+001200030930 /* More information:                                                 */
+001300030930 /* http://publib.boulder.ibm.com/pubs/html/as400/v5r1/ic2931/index.htm?-
+001400030930           info/apis/qwcrjbst.htm                                     */
+001500030930 /*-------------------------------------------------------------------*/
+001600030930              PGM        PARM(&JOBNBR &JOBUSR &JOBNAM &JOBSTS)
+001700030930
+001800030930              DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+001900030930              DCL        VAR(&JOBUSR) TYPE(*CHAR) LEN(10)
+002000030930              DCL        VAR(&JOBNAM) TYPE(*CHAR) LEN(10)
+002100030930              DCL        VAR(&JOBSTS) TYPE(*CHAR) LEN(10)
+002200030930
+002300030930              DCL        VAR(&RCV) TYPE(*CHAR) LEN(60)
+002400030930              DCL        VAR(&RCVL) TYPE(*CHAR) LEN(4)
+002500030930              DCL        VAR(&JOBID) TYPE(*CHAR) LEN(26)
+002600030930              DCL        VAR(&JOBFMT) TYPE(*CHAR) LEN(8)
+002700030930              DCL        VAR(&ERR) TYPE(*CHAR) LEN(30)
+002800030930
+002900030930 /* Set receiver variable to Hex 3C (= Decimal 60) */
+003000030930              CHGVAR     VAR(&RCVL) VALUE(X'0000003C')
+003100030930
+003200030930 /* Use qualified job name format */
+003300030930              CHGVAR     VAR(&JOBFMT) VALUE(JOBS0300)
+003400030930
+003500030930 /* Set qualified name of job */
+003600030930              CHGVAR     VAR(&JOBID) VALUE(&JOBNAM *CAT &JOBUSR *CAT &JOBNBR)
+003700030930
+003800030930 /* Retrieve job status */
+003900030930              CALL       PGM(QWCRJBST) PARM(&RCV &RCVL &JOBID &JOBFMT &ERR)
+004000030930
+004100030930 /* Extract job status from receiver */
+004200030930              CHGVAR     VAR(&JOBSTS) VALUE(%SST(&RCV 9 10))
+004300030930
+004400030930 /* Send Results */
+004500030930             SNDPGMMSG  MSG(&JOBID *BCAT &JOBFMT *BCAT &JOBSTS) +
+004600030930                          TOMSGQ(*SYSOPR)
+004700030930
+004800030930 /* End program */
+004900030930              RETURN
+005000030930
+005100030930              ENDPGM

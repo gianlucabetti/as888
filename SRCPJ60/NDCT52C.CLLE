@@ -1,0 +1,47 @@
+000100970808/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                    */
+000200950315
+000300970808/* GUIDA DEL PROGRAMMA DI STAMPA situazione banche                     __ */
+000400950315
+000500950127             PGM        PARM(&KPJBA)
+000600950508             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700950508             DCL        VAR(&KPJBAW) TYPE(*CHAR) LEN(502)
+000800950922             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000900950208             DCL        VAR(&NDS) TYPE(*CHAR) LEN(10)
+001000950315             DCL        VAR(&TIT) TYPE(*CHAR) LEN(50)
+001100950315             DCL        VAR(&TITX) TYPE(*CHAR) LEN(100)
+001200950315             DCL        VAR(&IDMSG) TYPE(*CHAR) LEN(27)
+001300950315             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+001400950922
+001500950922/* Salvataggio KPJBA                                               */
+001600950508             CHGVAR     VAR(&KPJBAW) VALUE(&KPJBA)
+001700950615
+001800970808             CHGVAR     VAR(&NDS) VALUE('NDCT51DS')
+001900950922
+002000970808             CHGVAR     VAR(&IDMSG) VALUE('PROMSG    *LIBL     COS0279')
+002100950315
+002200950315/* Reperisco nome del programma da file messaggi                   */
+002300950315             CALL       PGM(XRTVM) PARM(&IDMSG &TITX &ERR)
+002400950315             CHGVAR     VAR(&TIT) VALUE(%SST(&TITX 1 50))
+002500950315
+002600960603/* Eseguo ovrdbf file per ottenere un unico spool di stampa        */
+002700970813             OVRPRTF    FILE(NDCT52P) OVRSCOPE(*JOB) SHARE(*YES)
+002800970813             OVRPRTF    FILE(ANA968P) TOFILE(NDCT52P) +
+002900970813                          USRDTA('StatoBank ') OVRSCOPE(*JOB) +
+003000950623                          SHARE(*YES)
+003100950130
+003200950315/* Stampa prima pagina                                           */
+003300950131/* Stampa selezioni/ordinamenti                                  */
+003400950208             CALL       PGM(ANA968R) PARM(&KPJBA &NDS &TIT)
+003500950131
+003600041012             CLRPFM     FILE(YNDCT52F)
+003700041012             MONMSG     MSGID(CPF0000)
+003800950615
+003900970808/* Stampa                                                        */
+004000970808             CALL       PGM(NDCT52R) PARM(&KPJBA &TIT)
+004100950508
+004200950508/* Richiamo pgm cancellatore                                     */
+004300950508
+004400950508             CHGVAR     VAR(&KPJBA) VALUE(&KPJBAW)
+004500950508             CALL      PGM(ANA989R) PARM(&KPJBA)
+004600950130
+004700950127             ENDPGM

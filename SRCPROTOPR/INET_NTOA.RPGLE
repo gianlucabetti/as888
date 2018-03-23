@@ -1,0 +1,3 @@
+000100100612     D inet_ntoa...
+000200100612     D                 PR              *   ExtProc('inet_ntoa')
+000300100612     D  internet_addr                10U 0 value

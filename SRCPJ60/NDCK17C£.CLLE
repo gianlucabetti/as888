@@ -1,0 +1,113 @@
+000100000000/*PARMS DFTACTGRP(*NO) ACTGRP(QILE)                                       */
+000200000000/*-------------------------------------------------------------------*/
+000300990922/* RICEZIONE MOVIMENTI PER E/C (CBI)                                 */
+000400000000/*-------------------------------------------------------------------*/
+000500000000
+000600000000             PGM        PARM(&KPJBA)
+000700000000
+000800000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900000000             DCL        VAR(&LIBIN) TYPE(*CHAR) LEN(10)
+001000000000             DCL        VAR(&DATA) TYPE(*CHAR) LEN(6)
+001100000000             DCL        VAR(&GG) TYPE(*CHAR) LEN(2)
+001200000000             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+001300081117             DCL        VAR(&VIDEO) TYPE(*CHAR) LEN(10)     /* C1935 */
+001400080613             DCL        VAR(&INDIFS) TYPE(*CHAR) LEN(135)   /* C1935 */
+001500080613             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)      /* C1935 */
+001600080613
+001700080613             DCL        VAR(&PATH02) TYPE(*CHAR) LEN(2000)  /* C1935 */
+001800080613             DCL        VAR(&LIB02) TYPE(*CHAR) LEN(10)     /* C1935 */
+001900080613             DCL        VAR(&FILE02) TYPE(*CHAR) LEN(10)    /* C1935 */
+002000080613             DCL        VAR(&DESFILE02) TYPE(*CHAR) LEN(50) /* C1935 */
+002100080613             DCL        VAR(&DOWNL02) TYPE(*CHAR) LEN(1)    /* C1935 */
+002200080613             DCL        VAR(&ERR02) TYPE(*CHAR) LEN(1)      /* C1935 */
+002300000000
+002400130618             DCL        VAR(&KMSMN) TYPE(*CHAR) LEN(7) VALUE('PRO9999')
+002500130618             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+002600130618             DCL        VAR(&SOC001) TYPE(*CHAR) LEN(6) VALUE('SOC001')
+002700130618             DCL        VAR(&CDSXSC) TYPE(*DEC) LEN(9 0)
+002800130618             DCL        VAR(&MODXSC) TYPE(*CHAR) LEN(3)
+002900130618             DCL        VAR(&RTNXSC) TYPE(*CHAR) LEN(1)
+003000130618             DCL        VAR(&XSOC001DS) TYPE(*CHAR) LEN(1000)
+003100130618             DCL        VAR(&NDCK15DS) TYPE(*CHAR) LEN(24)
+003200130618             DCL        VAR(&SOCK15) TYPE(*CHAR) LEN(3) VALUE('201')
+003300130618             DCL        VAR(&LIBK15) TYPE(*CHAR) LEN(10) VALUE('CBKLIB34')
+003400130618             DCL        VAR(&NRCK15) TYPE(*CHAR) LEN(9) VALUE('000000000')
+003500130618             DCL        VAR(&SRIK15) TYPE(*CHAR) LEN(1) VALUE('1')
+003600130618             DCL        VAR(&CTRSEMPK15) TYPE(*CHAR) LEN(1) VALUE('1')
+003700130618
+003800130618             CHGVAR     VAR(&FILE) VALUE('CBI1')            /* C1935 */
+003900130618
+004000130618             CALL       PGM(XSOC) PARM(&SOC001 &SOCK15 &CDSXSC &MODXSC &RTNXSC &XSOC001DS +
+004100130618                          &KPJBA)
+004200130618
+004300130618             IF         COND(&RTNXSC *EQ '1') THEN(DO)
+004400130618                DMPCLPGM
+004500130618                DSPJOBLOG  OUTPUT(*PRINT)
+004600130618                CHGVAR     VAR(%SUBSTRING(&KPJBA 40 7)) VALUE(&KMSMN)
+004700130618                CHGVAR     VAR(%SUBSTRING(&KPJBU 207 50)) VALUE('Importazione CBI Telemaco in +
+004800130618                             Proj non riuscita.')
+004900130618                CHGVAR     VAR(%SUBSTRING(&KPJBA 247 256)) VALUE(&KPJBU)
+005000130618                RETURN
+005100130618             ENDDO
+005200130618
+005300000000/* PROMPT DI CONFERMA, SMISTAMENTO E REPERIMENTO PARAMETRI */
+005400060526/*           CALL       PGM(NDCK15R) PARM(&KPJBA)          C1935  */
+005500060526             CHGVAR     VAR(&LIBIN) VALUE(%SST(&KPJBA 250 10))
+005600060526             IF         COND(&LIBIN = '          ') THEN(GOTO +
+005700000000                          CMDLBL(FINE))
+005800000000
+005900000000/* AGGIUNGO LIBRERIA DATI CBI */
+006000000000             ADDLIBLE   LIB(&LIBIN) POSITION(*LAST)
+006100000000             MONMSG     MSGID(CPF0000)
+006200080529
+006300080529/* Copio i dati ricevuti su file piatto                       C1935 */
+006400080529             CHGVAR     VAR(&INDIFS) VALUE(%SST(&KPJBA 271 135))   +
+006500080529                                                           /* C1935 */
+006600080613             IF         COND(&INDIFS *NE ' ') THEN(DO)      /* C1935 */
+006700080613             CHGVAR     VAR(&PATH02) VALUE(&INDIFS)         /* C1935 */
+006800080613             CHGVAR     VAR(&LIB02) VALUE(&LIBIN)           /* C1935 */
+006900080613             CHGVAR     VAR(&FILE02) VALUE(&FILE)           /* C1935 */
+007000080613             CHGVAR     VAR(&DESFILE02) VALUE(' ')          /* C1935 */
+007100080613             CHGVAR     VAR(&DOWNL02) VALUE('S')            /* C1935 */
+007200080613             CHGVAR     VAR(&ERR02) VALUE('0')              /* C1935 */
+007300080613             CALL       PGM(NDCK19R2) PARM(&PATH02 &LIB02 &FILE02 +
+007400080613                          &DESFILE02 &DOWNL02 &ERR02)       /* C1935 */
+007500081117             IF         COND(&ERR02 *NE '0') THEN(DO)       /* C1935 */
+007600081117             CHGVAR     VAR(&VIDEO) VALUE(%SST(&KPJBA 20 10)) +
+007700081117                                                            /* C1935 */
+007800081117             SNDBRKMSG  MSG('Errore durante la copia dei dati dal +
+007900081117                          file IFS. Ricezione annullata.') +
+008000081117                          TOMSGQ(&VIDEO)                    /* C1935 */
+008100081117             GOTO       CMDLBL(LIBR)                        /* C1935 */
+008200081117             ENDDO                                          /* C1935 */
+008300080613             ENDDO                                          /* C1935 */
+008400061107
+008500000000/* SALVATAGGIO FILE CBI (UNO PER OGNI GIORNO) */
+008600060530 SUDTA:      RTVJOBA    DATE(&DATA)
+008700000000             CHGVAR     VAR(&GG) VALUE(%SST(&DATA 1 2))
+008800990922             CHGVAR     VAR(&SAVF) VALUE('CBISAV' *CAT &GG)
+008900000000             CHKOBJ     OBJ(&LIBIN/&SAVF) OBJTYPE(*FILE)
+009000000000             MONMSG     MSGID(CPF9801) EXEC(DO)
+009100000000             CRTSAVF    FILE(&LIBIN/&SAVF) TEXT('Salvataggio CBI1')
+009200000000             ENDDO
+009300000000             CLRSAVF    FILE(&LIBIN/&SAVF)
+009400000000             SAVOBJ     OBJ(CBI1) LIB(&LIBIN) DEV(*SAVF) +
+009500000000                          SAVF(&LIBIN/&SAVF) UPDHST(*NO)
+009600000000
+009700130618/* Estrazione codici ABI e scrittura tabella Y04.                                                 */
+009800130618             CALL       PGM(YK030000R)
+009900130618
+010000990922/* TRANSCODIFICA CBI FILE PER E/C BANCA */
+010100990922             CALL       PGM(NDCK17R) PARM(&KPJBA)
+010200990922
+010300990922/* "SPUNTA" DI NDRI1 */
+010400000000             CALL       PGM(NDCK14R) PARM(&KPJBA)
+010500000000
+010600000000/* SCRITTURA FILE COSTI E STAMPA RIEPILOGO */
+010700000000             CALL       PGM(NDCK11R) PARM(&KPJBA)
+010800000000
+010900000000/* ELIMINO LIBRERIA DATI CBI */
+011000081117 LIBR:       RMVLIBLE   LIB(&LIBIN)
+011100000000             MONMSG     MSGID(CPF0000)
+011200000000
+011300000000 FINE:       ENDPGM

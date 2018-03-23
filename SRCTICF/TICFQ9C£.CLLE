@@ -1,0 +1,59 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200140407/* TICFQ9C - Crea w-file per confronto fatturazione                           */
+000300000000/*----------------------------------------------------------------------------*/
+000400140407 TICFQ9C:    PGM        PARM(&KPJBA)
+000500000000
+000600040416             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700160225             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000800121217             DCL        VAR(&LIBRERIA) TYPE(*CHAR) LEN(10)
+000900130208             DCL        VAR(&WLIB) TYPE(*CHAR) LEN(10)
+001000121217
+001100121217/* Imposto le variabili */
+001200160225             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001300140408             CHGVAR     VAR(&LIBRERIA) VALUE(%SST(&KPJBA 279 10))
+001400140410             CHGVAR     VAR(&WLIB) VALUE(%SST(&KPJBA 289 10))
+001500121217
+001600050609/* pulizia Work-file                  */
+001700130123             CLRPFM     FILE(&LIBRERIA/WFCFT00F)
+001800130123             CLRPFM     FILE(&LIBRERIA/WFCFT10F)
+001900130123             CLRPFM     FILE(&LIBRERIA/WFCFT20F)
+002000130123             CLRPFM     FILE(&LIBRERIA/WFCFT30F)
+002100141218             CLRPFM     FILE(&LIBRERIA/WFCFS00F)
+002200060914
+002300060915    /* aggiungo libreria bolle + file work */
+002400140408             ADDLIBLE   LIB(&LIBRERIA)
+002500050608
+002600130123/* lancio pgm di scrittura file per memorizzazione dettaglio */
+002700140407             CALL       PGM(TICFQ2R) PARM(&KPJBA)
+002800050608
+002900050608/* lancio pgm di scrittura file per memorizzazione totali */
+003000140407             CALL       PGM(TICFQ1R) PARM(&KPJBA)
+003100130123
+003200130123/* lancio pgm di scrittura file per memorizzazione totali per unificante */
+003300140407             CALL       PGM(TICFQ3R) PARM(&KPJBA)
+003400141218
+003500141218/* lancio pgm di scrittura file per memorizzazione dettaglio SCARTATO*/
+003600141218             CALL       PGM(TICFS2R) PARM(&KPJBA)
+003700121228
+003800140410/* Copio file di WORK nella libreria EDP* per scarico su Excel */
+003900140410             CPYF       FROMFILE(&LIBRERIA/WFCFT00F) +
+004000140410                          TOFILE(&WLIB/WFCFT00F) CRTFILE(*YES)
+004100140410             CPYF       FROMFILE(&LIBRERIA/WFCFT10F) +
+004200140410                          TOFILE(&WLIB/WFCFT10F) CRTFILE(*YES)
+004300140410             CPYF       FROMFILE(&LIBRERIA/WFCFT20F) +
+004400140410                          TOFILE(&WLIB/WFCFT20F) CRTFILE(*YES)
+004500140410             CPYF       FROMFILE(&LIBRERIA/WFCFT30F) +
+004600140410                          TOFILE(&WLIB/WFCFT30F) CRTFILE(*YES)
+004700141218             CPYF       FROMFILE(&LIBRERIA/WFCFS00F) +
+004800141218                          TOFILE(&WLIB/WFCFS00F) CRTFILE(*YES)
+004900050608
+005000050607             DLTOVR     FILE(*ALL)
+005100160224
+005200160224    /* tolgo la libreria file work */
+005300160224             RMVLIBLE   LIB(&LIBRERIA)
+005400160224
+005500160224  /* lancio pgm nuovo confronto fatturazione */
+005600160225             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&KPJBU)
+005700160224             CALL       PGM(TICFQ4C) PARM(&KPJBA)
+005800160224
+005900050613             ENDPGM

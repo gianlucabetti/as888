@@ -1,0 +1,3 @@
+000100170720     D XGIOLAV...
+000200170720     D                 PR                  EXTPGM('XGIOLAV')
+000300170720     D  XGIOLAVDS                          LIKEDS(XGIOLAVDS)

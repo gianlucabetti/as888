@@ -1,0 +1,143 @@
+000100971210     H            Y                                                       CN0500
+000200971210      *--------------------------------------------------------------*
+000300971210      *   UTILITY PER CONTROLLO ESISTENZA INDICE E MODIFICABILITA'   *
+000400971210      *                        DI UNA TABELLA                        *
+000500971210      *--------------------------------------------------------------*
+000600971210     FTABEL00FIF  E           K        DISK
+000700971210     E*--------------------------------------------------------------*
+000800971210     E*  SCHIERE                                                     *
+000900971210     E*--------------------------------------------------------------*
+001000971210     E                    ERR     1   5 78
+001100971210      *--------------------------------------------------------------*
+001200971210      *  DS                                                          *
+001300971210      *--------------------------------------------------------------*
+001400971210     ITRUL12    E DSTRUL12DS
+001500971210     IDS        E DS
+001600971210      *--------------------------------------------------------------*
+001700971210      *  PGM:  SPECIFICHE DI ESECUZIONE                              *
+001800971210      *--------------------------------------------------------------*
+001900971210      * Ricevo parametri in entrata
+002000971210     C           *ENTRY    PLIST
+002100971210     C                     PARM           TRUL12
+002200971210      * Inizializzo campi di errore
+002300971210     C                     MOVEL*BLANKS   O12ERR
+002400971210     C                     MOVEL*BLANKS   O12MSG
+002500971210      * Definisco chiave di accesso tabella
+002600971210     C           KTAB      KLIST
+002700971210     C                     KFLD           KKUT
+002800971210     C                     KFLD           KCOD
+002900971210     C                     KFLD           KKEY             *
+003000971210      * Definizione variabili
+003100971210     C           *LIKE     DEFN TBLKUT    KKUT
+003200971210     C           *LIKE     DEFN TBLCOD    KCOD
+003300971210     C           *LIKE     DEFN TBLKEY    KKEY
+003400971211      *----------------------------------------------------------*
+003500971211     C           I12TLA    IFEQ 'C'
+003600971211     C                     GOTO FINE
+003700971211     C                     END
+003800971210      *----------------------------------------------------------*
+003900971210      * controllo che sia stato immesso il sistema informativo
+004000971210     C           I12NSI    IFEQ *BLANKS
+004100971210     C                     MOVELERR,1     O12MSG
+004200971210     C                     MOVEL'1'       O12ERR
+004300971210     C                     CALL 'TRUL12C'
+004400971210     C                     PARM           TRUL12
+004500971210     C                     GOTO FINE
+004600971210     C                     END
+004700971210      *----------------------------------------------------------*
+004800971210      * controllo se esiste l'indice della tabella
+004900971210     C                     Z-ADD1         KKUT
+005000971210     C                     MOVEL*BLANKS   KCOD
+005100971210     C                     MOVEL'00000000'KKEY
+005200971210     C                     MOVE I12COD    KKEY
+005300971210     C           KTAB      CHAINTABEL00F             21
+005400971210      * Se non esiste do errore
+005500971210     C           *IN21     IFEQ '1'
+005600971210     C                     MOVELERR,2     O12MSG
+005700971210     C                     MOVEL'1'       O12ERR
+005800971210     C                     CALL 'TRUL12C'
+005900971210     C                     PARM           TRUL12
+006000971210     C                     GOTO FINE
+006100971210     C                     END
+006200971210      *----------------------------------------------------------*
+006300971210      * Salvo campi della DS
+006400971210     C                     MOVELTBLUNI    DS
+006500971210     C                     MOVEL§TIP      TIPTAB  1
+006600971210      * Controllo se la tabella non è sempre modificabile
+006700971210     C           §TIP      IFNE *BLANKS
+006800971210      * Se S.Informativo di manutenzione non è indicato lo reperisco
+006900971210      * dall'indice generico
+007000980126     C****       §TIP      IFEQ 'B'
+007100980126     C****       §SIFB     ANDEQ*BLANK
+007200980126     C***        §TIP      OREQ 'G'
+007300980126     C****       §SIFG     ANDEQ*BLANK
+007400971210      * Posizionamento su indice generico
+007500971210     C                     Z-ADD1         KKUT
+007600971210     C                     MOVEL*BLANKS   KCOD
+007700971210     C                     MOVEL'000000  'KKEY
+007800971210     C           KTAB      CHAINTABEL00F             21
+007900971210      * Se non esiste do errore
+008000971210     C           *IN21     IFEQ '1'
+008100971210     C                     MOVELERR,3     O12MSG
+008200971210     C                     MOVEL'1'       O12ERR
+008300971210     C                     CALL 'TRUL12C'
+008400971210     C                     PARM           TRUL12
+008500971210     C                     GOTO FINE
+008600971210     C                     ELSE
+008700971210     C                     MOVELTBLUNI    DS
+008800971210     C           TIPTAB    IFEQ 'B'
+008900980126     C***        §SIFB     ANDEQ*BLANK
+009000980126     C           §SIFGB    ANDEQ*BLANK
+009100971210     C           TIPTAB    OREQ 'G'
+009200980126     C***        §SIFG     ANDEQ*BLANK
+009300980126     C           §SIFGB    ANDEQ*BLANK
+009400971210     C                     MOVELERR,4     O12MSG
+009500971210     C                     MOVEL'1'       O12ERR
+009600971210     C                     CALL 'TRUL12C'
+009700971210     C                     PARM           TRUL12
+009800971210     C                     GOTO FINE
+009900971210     C                     END
+010000971210     C*
+010100971210     C                     END
+010200980126     C***                  END
+010300971210      * Verifico se posso manutenzionare la tabella
+010400971210     C           TIPTAB    IFEQ 'B'
+010500980126     C***        §SIFB     ANDNEI12NSI
+010600980126     C           §SIFGB    ANDNEI12NSI
+010700971210     C                     MOVELERR,5     O12MSG
+010800980126     C***                  MOVE §SIFB     O12MSG
+010900980126     C                     MOVE §SIFGB    O12MSG
+011000971210     C                     MOVEL'1'       O12ERR
+011100971210     C                     CALL 'TRUL12C'
+011200971210     C                     PARM           TRUL12
+011300971210     C                     GOTO FINE
+011400971210     C                     END
+011500971210     C           TIPTAB    IFEQ 'G'
+011600980126     C***        §SIFG     ANDNEI12NSI
+011700980126     C           §SIFGB    ANDNEI12NSI
+011800971210     C                     MOVELERR,5     O12MSG
+011900980126     C***                  MOVE §SIFG     O12MSG
+012000980126     C                     MOVE §SIFGB    O12MSG
+012100971210     C                     MOVEL'1'       O12ERR
+012200971210     C                     CALL 'TRUL12C'
+012300971210     C                     PARM           TRUL12
+012400971210     C                     GOTO FINE
+012500971210     C                     END
+012600971210      *
+012700971210     C                     END
+012800971210      *----------------------------------------------------------*
+012900971210      *  Fine lavoro : Tipo lancio
+013000971210     C           FINE      TAG
+013100971210      *
+013200971211     C           I12TLA    IFNE ' '
+013300971210     C                     SETON                     LR
+013400971210     C                     ELSE
+013500971210     C                     SETON                     RT
+013600971210     C                     END
+013700971210      *----------------------------------------------------------*
+013800971210**
+013900971210ERRORE !! Non immesso nome sistema informativo
+014000971210ERRORE !! Non trovato indice tabella
+014100971210Tabella non manutenzionabile !! Non esiste l'indice della tabella degli indici
+014200971210Tabella non manutenzionabile !! S.Informativo di aggiornamento non indicato
+014300971210ERRORE !! La Tabella può essere manutenzionata solo dal S.informat.

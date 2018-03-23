@@ -1,0 +1,649 @@
+000100990805     H* TRTR51R *-----------------------------------------------------*
+000200930422     H*-----------------*                                             *
+000300990805     H*            - RICEZIONE VARIAZIONI PESO   IN SEDE -            *
+000400941124     H*---------------------------------------------------------------*
+000500930422     H* INDICATORI USATI                                              *
+000600930422     H*---------------------------------------------------------------*
+000700930806     H* 01 - MANCA SECONDA BOLLA
+000800930806     H* 02 - MANCA PRIMA   BOLLA
+000900930806     H* 05 - BOLLA TROVATA IN ARCHIVIO CORRENTE
+001000930426     H* 06 - BOLLA TROVATA NELLO STORICO
+001100930426     H* 07 - BOLLA TROVATA IN ARCHIVIO BOLLE ANNO PRECEDENTE
+001200990702     H* 11 - LETTURA DI TITAS000
+001300990702     H* 12 - LETTURA DI TITAS010
+001400990702     H* 13 - LETTURA DI TITASP00
+001500930423     H* 30 - LETTURA TABEL00F
+001600930427     H* 31 - RICERCA FILIALE IN TABELLA £1
+001700930423     H* 32 - CALL 'QCMDEXC'
+001800990805     H* 33 - LETTURA FNARBP0R
+001900930423     H* 34 - LETTURA CMRIC01L
+002000990702     H* 38 - LETTURA DI TNBLA000
+002100930806     H* 39/40 COMOD
+002200930422     H*---------------------------------------------------------------*
+002300930422     H* DATA BASE                                                     *
+002400930422     H*---------------------------------------------------------------*
+002500930422     H              J
+002600990805     FFNARBP0RUF  E           K        DISK                           UC
+002700941124     FTNBLA01LIF  E           K        DISK
+002800990701     FTITAS30CUF  E           K        DISK
+002900991028     FFIARBE2CUF  E           K        DISK                      A
+003000990805     F            FNARBP00                          KRENAMEFNARBP0E
+003100930423     FTABEL00FIF  E           K        DISK
+003200930423     FCMRIC01LUF  E           K        DISK
+003300930422     E*---------------------------------------------------------------*
+003400930422     E* SCHIERE                                                       *
+003500930422     E*---------------------------------------------------------------*
+003600930423     E* COMANDI QCMDEXC
+003700930423     E                    CMD1    1   1 55
+003800930423     E                    CMD2    1   1 55
+003900930423     E                    CMD3    1   1 55
+004000930426     E* DESCRIZIONE ERRORE
+004100930528     E                    ERR     1   4 35
+004200990701     ITITAS000    11
+004300990701     ITITAS010    12
+004400990701     ITITASP00    13
+004500941129     I*
+004600990805     IFNARBP0E
+004700950111     I              ARBAAS                          RRBAAS
+004800950111     I              ARBLNP                          RRBLNP
+004900950111     I              ARBNRS                          RRBNRS
+005000950111     I              ARBNSP                          RRBNSP
+005100950111     I              ARBCBO                          RRBCBO
+005200950111     I              ARBDTV                          RRBDTV
+005300950111     I              ARBORV                          RRBORV
+005400950111     I              ARBCVB                          RRBCVB
+005500990805     I              ARBPKC                          RRBPKC
+005600991028     I              ARBFPC                          RRBFPC
+005700990805     I              ARBNCP                          RRBNCP
+005800930422     I*---------------------------------------------------------------*
+005900930422     I* DS                                                            *
+006000930422     I*---------------------------------------------------------------*
+006100930422     IKPJBA     E DS
+006200930423     I                                      483 492 LEGFIL
+006300930423     I                                      493 502 MBRFIL
+006400960208     I***
+006500960208     I* PARAMETRI PER CONTROLLO DATA E TRASFORM IN GIORNI - XSRDA8 -
+006600960208     I***
+006700960208     IWLBDAT     IDS
+006800960208     I                                        1   80G02DAT
+006900960208     I                                        9  160G02INV
+007000960208     I                                       17  17 G02ERR
+007100960208     I                                       18  220G02TGI
+007200960208     I***
+007300960208     I* PARAMETRI PER TRASFORM GIORNI IN DATA             - XSRDGI -
+007400960208     I***
+007500960208     IWGIDAT     IDS
+007600960208     I                                        1   80GIODAT
+007700960208     I                                        9  160GIOINV
+007800960208     I                                       17  210GIOTGI
+007900930528     IDS3A      E DS
+008000950111     I*
+008100990805     I* DS PER FNLV39R - DS DEI CAMPI PER CALCOLO PESO   DA FATTURARE
+008200990805     IDSLV39    E DSFNLV39DS
+008300990702     I*
+008400990702     IDSLV55    E DSFNLV55DS
+008500950111     I*
+008600950111£$   I*DS$SLD    E DS
+008700930422     C*---------------------------------------------------------------*
+008800930422     C*                    MAIN                                       *
+008900990805     C* PROGRAMMA DI RICEZIONE IN SEDE VARIAZIONI PESO                *
+009000930422     C*---------------------------------------------------------------*
+009100930528     C*
+009200930528     C* DEFINIZIONE VARIABILI, KLIST E PLIST
+009300930528     C                     EXSR DEFVAR
+009400930528     C*
+009500930528     C* APERTURA MEMBRO DI RICEZIONE
+009600930528     C                     EXSR CAEXA
+009700930528     C*
+009800930528     C* APERTURA RIUSCITA
+009900930528IF  1C           *IN32     IFEQ '0'
+010000930423     C*
+010100990805     C* LEGGO VARIAZIONE PESO
+010200990805     C                     CLEARFNARBP0E
+010300990805     C                     READ FNARBP0R                 33
+010400930423DO  2C           *IN33     DOWEQ'0'
+010500930423     C*
+010600930423     C* GESTIONE VARIAZIONI DA APPLICARE
+010700930423     C                     EXSR GESMOD
+010800990805     C                     CLEARFNARBP0E
+010900990805     C                     READ FNARBP0R                 33
+011000930423E   2C                     ENDDO
+011100930423     C*
+011200930423     C* AGGIORNA ARCHIVIO DI LOG
+011300930423     C           LEGFIL    CHAINCMRIC01L             34
+011400930423IF  2C           *IN34     IFEQ '0'
+011500930423     C                     Z-ADDNREC      RICNR1
+011600930423     C                     MOVE '1'       RICFL2
+011700930423     C                     UPDATCMRIC000
+011800930423E   2C                     ENDIF
+011900930423     C*
+012000930423     C* CHIUSURA MEMBRO DI RICEZIONE
+012100990805     C                     CLOSEFNARBP0R
+012200930423E   1C                     ENDIF
+012300990702     C*
+012400990702     C                     MOVEL'C'       D55TLA
+012500990702     C                     CALL 'FNLV55R'
+012600990702     C                     PARM           DSLV55
+012700930422     C*
+012800930423     C                     SETON                     LR
+012900930423     C*---------------------------------------------------------------*
+013000930423     C*                    GESMOD                                     *
+013100990805     C* ROUTINE DI GESTIONE MODIFICHE PESO   DA APPLICARE             *
+013200930423     C*---------------------------------------------------------------*
+013300930423     C           GESMOD    BEGSR
+013400930426     C*
+013500930426     C                     SETOF                     050607
+013600930528     C                     SETOF                     3108
+013700930806     C                     SETOF                     0102
+013800930806     C*
+013900930806     C* LETTURA TIPO BOLLA
+014000930528     C                     MOVEL'3A'      COD
+014100950111     C                     MOVELARBCBO    KEY       P
+014200930528     C           KTAB      CHAINTABEL                30
+014300930528     C*
+014400930528     C* NON TROVATO CODICE BOLLA: SCRIVO NEL FILE DEGLI ERRORI
+014500930806IF  1C           *IN30     IFEQ '1'
+014600930806     C                     Z-ADD102       FEV
+014700930806     C                     MOVELERR,3     DER
+014800950111     C                     EXSR RIEARB
+014900930528     C*
+015000930806X   1C                     ELSE
+015100930528     C*
+015200930528     C                     MOVELTBLUNI    DS3A
+015300950905     C* SE SI TRATTA DI UNA BOLLA NON TRASMESSA IN SEDE
+015400950905     C* CANCELLO SENZA DARE ERRORE
+015500950905   1AC           §3ABSD    IFEQ ' '
+015600930806     C*
+015700930806     C* 2   B O L L A
+015800930806     C*
+015900930806IF  2C           §3ATB2    IFNE '  '
+016000930806     C                     MOVEL§3ATB2    TBL
+016100930528     C*
+016200930426     C* CERCO BOLLA IN ARCHIVIO CORRENTE
+016300941129     C                     SETOF                     111213
+016400990701     C           KTAS      CHAINTITAS30C             37
+016500930426     C*
+016600930426     C* SE NON LA TROVO CERCO NELLE BOLLE ANNULLATE
+016700941129     C   37      KTAS2     CHAINTNBLA01L             38
+016800941129     C   37 38             SETON                     01
+016900941129    2C                     ENDIF
+017000930426     C*
+017100930806     C* 1   B O L L A
+017200930806     C*
+017300930806     C                     MOVEL§3ATB1    TBL
+017400930528     C*
+017500930528     C* CERCO BOLLA IN ARCHIVIO CORRENTE
+017600941129     C                     SETOF                     111213
+017700990701     C           KTAS      CHAINTITAS30C             37
+017800930528     C*
+017900930528     C* SE NON LA TROVO CERCO NELLE BOLLE ANNULLATE
+018000941129IF  2C           *IN37     IFEQ '1'
+018100941129     C           KTAS2     CHAINTNBLA01L             38
+018200941129     C      38             SETON                     02
+018300930528     C*
+018400941129X   2C                     ELSE
+018500941129     C* BOLLA TROVATA
+018600941129     C   11                SETON                     05
+018700941129     C   12                SETON                     06
+018800941129     C   13                SETON                     07
+018900941129E   2C                     ENDIF
+019000930806     C*
+019100930806     C* CONTROLLO SE MANCANO VERAMENTE O E' CAMBIATO IL TIPO BOLLA
+019200930806     C   01
+019300930806     COR 02                EXSR MANBOL
+019400930806     C*
+019500930806     C* SE PRIMA BOLLA INESISTENTE ESCO E NON AGGIORNO
+019600930806IF  2C           *IN08     IFEQ '0'
+019700930806     C*
+019800930528     C* 1 BOLLA TROVATA IN ARCHIVIO (CORRENTE, STORICO O PRECEDENTE)
+019900930528IF  3C           *IN05     IFEQ '1'
+020000930427     C           *IN06     OREQ '1'
+020100930427     C           *IN07     OREQ '1'
+020200930528     C                     EXSR AGGIOR
+020300930528     C*
+020400930806IF  4C           *IN05     IFEQ *ON
+020500930806     C*
+020600930706     C* SE ESISTE ERRORE NON STAMPATO CANCELLO
+020700950111     C                     EXSR ANNARB
+020800930706     C*
+020900990701     C                     UPDATTITAS000
+021000930806E   4C                     ENDIF
+021100930706     C*
+021200990701     C   06                UPDATTITAS010
+021300940208     C*
+021400990701     C   07                UPDATTITASP00
+021500930806E   3C                     ENDIF
+021600930806     C*
+021700941129     C* 2 BOLLA TROVATA IN ARCHIVIO
+021800941129IF  3C           §3ATB2    IFNE *BLANKS
+021900941129     C           *IN01     ANDEQ*OFF
+022000941129     C*
+022100930528     C                     MOVEL§3ATB2    TBL
+022200941129     C                     SETOF                     111213
+022300990701     C           KTAS      CHAINTITAS30C             30
+022400930528     C*
+022500941129    4C           *IN30     IFEQ *OFF
+022600930528     C                     EXSR AGGIOR
+022700930528     C*
+022800990701     C   11                UPDATTITAS000
+022900990701     C   12                UPDATTITAS010
+023000990701     C   13                UPDATTITASP00
+023100941129E   4C                     ENDIF
+023200941129E   3C                     ENDIF
+023300930528     C*
+023400930528     C* CANCELLO SOLO VARIAZIONE TRASMESSA
+023500930528     C                     ADD  1         NREC    70
+023600990805     C                     DELETFNARBP0R
+023700930806E   2C                     ENDIF
+023800950905     C*
+023900950905X  1AC                     ELSE
+024000950905     C                     ADD  1         NREC    70
+024100990805     C                     DELETFNARBP0R
+024200950905E  1AC                     ENDIF
+024300950905E   1C                     ENDIF
+024400930806     C*
+024500930528     C                     ENDSR
+024600930528     C*---------------------------------------------------------------*
+024700930528     C*                    AGGIOR                                     *
+024800990805     C* ROUTINE DI AGGIORNAMENTO PESO   SULLA BOLLA                   *
+024900930528     C*---------------------------------------------------------------*
+025000930528     C           AGGIOR    BEGSR
+025100930426     C*
+025200990805     C* ESCLUDO QUALSIASI AGGIORNAMENTO SE TIPO PESO   UGUALE A 'T'
+025300970625    1C******     TASFVF    IFNE 'T'
+025400930528     C*
+025500930806     C                     MOVELTASTBL    BOL1    1
+025600930806     C                     MOVE TASTBL    BOL2    1
+025700930426     C                     MOVE TASKSC    CODCLI  40
+025800930806     C*
+025900990805     C                     CLEARDSLV39
+026000950111     C*
+026100950111     C* SE E' LA PRIMA BOLLA
+026200950111    2C           TBL       IFEQ §3ATB1
+026300950111     C*
+026400950111     C* SE C/SERVIZIO O STORNO O ASSEGNATO 9999
+026500950111    3C           BOL2      IFEQ '7'
+026600950111     C           BOL2      OREQ 'C'
+026700950111     C           BOL2      OREQ 'S'
+026800950111     C           BOL1      OREQ 'A'
+026900950111     C           CODCLI    ANDEQ9999
+027000950111     C*
+027100950111     C* NON PASSO LA DATA FATTURA
+027200990805     C                     CLEARD39DFT
+027300950111     C*
+027400950111   X3C                     ELSE
+027500990805     C                     MOVELTASDFT    D39DFT
+027600950111    3C                     ENDIF
+027700930623     C*
+027800950111   X2C                     ELSE
+027900950111     C* SE E' LA SECONDA BOLLA NON PASSO MAI LA DATA FATTURA
+028000990805     C                     CLEARD39DFT
+028100950111    2C                     ENDIF
+028200930623     C*
+028300990805     C                     MOVEL'C'       D39TPP
+028400990921     C                     MOVELARBNCP    D39NCP
+028500990805     C                     MOVELARBPKC    D39PLU
+028600990805     C                     MOVELTASFPF    D39FPF
+028700990805     C                     MOVELTASPKF    D39PLF
+028800990805     C                     MOVELTASFPB    D39FPB
+028900990805     C                     MOVELTASPKB    D39PLB
+029000990805     C                     MOVELTASAAS    D39AAS
+029100990805     C                     MOVELTASLNP    D39LNP
+029200990805     C                     MOVELTASNRS    D39NRS
+029300990805     C                     MOVELTASNSP    D39NSP
+029400990805     C                     MOVELARBCBO    D39CBO
+029500990805     C                     MOVELTASNCL    D39NCL
+029600990805     C                     MOVELTASLNA    D39LNA
+029700990805     C                     MOVELNUM3      D39MBR
+029800990805     C                     MOVE TASMGS    D39DTE
+029900990805     C                     MOVELTASAAS    D39DTE
+030000990805     C* SE IL PESO   CHE RICEVO E' T MA IL NUMERO COLLI E' <> DA
+030100970904     C*  COLLI RILEVATI, LI METTO UGUALI
+030200990805     C           ARBFPC    IFEQ 'T'
+030300990805     C           ARBNCP    ANDNETASNCL
+030400990805     C                     Z-ADDTASNCL    D39NCP
+030500970904     C                     ENDIF
+030600950111     C*
+030700990805     C                     MOVELDSLV39    KPJBU
+030800950111     C*
+030900990805     C                     CALL 'FNLV39R'
+031000950111     C                     PARM           KPJBA
+031100990805     C                     MOVELKPJBU     DSLV39
+031200950111     C*
+031300930623     C*
+031400990702     C* SE ERRORE SCRIVO FILE ERRORI
+031500990805    2C           D39ERR    IFEQ '2'
+031600950111     C*
+031700930623     C* FRANCO: FILIALE CHE ESEGUE LA VARIAZIONE  =  AS DELLA LNP
+031800950111    3C           BOL1      IFEQ 'F'
+031900990701     C                     Z-ADDTASTFP    FEV
+032000950111    3C                     ELSE
+032100930623     C* ASSEGNATO: FILIALE CHE ESEGUE LA VARIAZIONE  =  AS DELLA LNA
+032200990702     C                     CLEARDSLV55
+032300990702     C                     MOVEL'P'       D55TPT
+032400990702     C                     Z-ADDTASLNA    D55LIN
+032500990702     C                     Z-ADDDATEU     D55DRF
+032600990702     C                     CALL 'FNLV55R'
+032700990702     C                     PARM           DSLV55
+032800990702     C                     Z-ADDD55TFP    FEV
+032900950111    3C                     ENDIF
+033000950111     C                     MOVELERR,2     DER
+033100930623     C*
+033200930623     C* SCRIVO IL FILE DEGLI ERRORI
+033300950111     C                     EXSR RIEARB
+033400950111    2C                     ENDIF
+033500990702     C* AGGIORNO IN OGNI CASO I CAMPI DI TITAS (ANCHE SE C'E' ERRORE)
+033600990805     C* PERCHE' LA LORO IMPOSTAZIONE E' A CURA DELL'FNLV39R
+033700990805     C                     MOVELD39NCP    TASNCP
+033800990805     C                     MOVELD39PLU    TASPKC
+033900990805     C                     MOVELD39FPF    TASFPF
+034000990805     C                     MOVELD39PLF    TASPKF
+034100970625    1C***********          ENDIF
+034200930426     C*
+034300930423     C                     ENDSR
+034400930423     C*---------------------------------------------------------------*
+034500930423     C*                    CAEXA                                      *
+034600930423     C* ROUTINE DI APERTURA MEMBRO FILE DI RICEZIONE                  *
+034700930423     C*---------------------------------------------------------------*
+034800930423     C           CAEXA     BEGSR
+034900930423     C*
+035000930423     C                     MOVEL*BLANKS   VAR11  11
+035100930423     C                     MOVEL*BLANKS   VAR12  12
+035200930423     C                     MOVE ')'       VAR11
+035300930423     C                     MOVELMBRFIL    VAR11
+035400930423     C                     MOVE '))'      VAR12
+035500930423     C                     MOVELMBRFIL    VAR12
+035600930423     C                     Z-ADD55        LUNG   155
+035700930423     C* CHKOBJ
+035800930423     C                     MOVE VAR11     CMD1
+035900930423     C                     MOVEL*BLANKS   COMMAN
+036000930423     C                     MOVEACMD1,1    COMMAN 80
+036100930423     C                     CALL 'QCMDEXC'              32
+036200930423     C                     PARM           COMMAN
+036300930423     C                     PARM           LUNG
+036400930423IF  1C           *IN32     IFEQ '0'
+036500930423     C* ALCOBJ
+036600930423     C                     MOVE VAR12     CMD2
+036700930423     C                     MOVEL*BLANKS   COMMAN
+036800930423     C                     MOVEACMD2,1    COMMAN
+036900930423     C                     CALL 'QCMDEXC'              32
+037000930423     C                     PARM           COMMAN
+037100930423     C                     PARM           LUNG
+037200930423IF  2C           *IN32     IFEQ '0'
+037300930423     C* OVRDBF
+037400930423     C                     MOVE VAR11     CMD3
+037500930423     C                     MOVEL*BLANKS   COMMAN
+037600930423     C                     MOVEACMD3,1    COMMAN
+037700930423     C                     CALL 'QCMDEXC'              32
+037800930423     C                     PARM           COMMAN
+037900930423     C                     PARM           LUNG
+038000930423IF  3C           *IN32     IFEQ '0'
+038100930423     C* OPEN
+038200990805     C                     OPEN FNARBP0R
+038300930423E   3C                     ENDIF
+038400930423E   2C                     ENDIF
+038500930423E   1C                     ENDIF
+038600930423     C*
+038700930423     C                     ENDSR
+038800930706     C*---------------------------------------------------------------*
+038900950111     C*                    RIEARB                                     *
+039000930806     C* ROUTINE DI RIEMPIMENTO ARCHIVIO ERRORI                        *
+039100930706     C*---------------------------------------------------------------*
+039200950111     C           RIEARB    BEGSR
+039300930806     C*
+039400950111     C                     MOVELDER       ARBDER
+039500990805     C           KARB      CHAINFNARBP0E             30
+039600930806     C*
+039700930706     C* SE NON TROVATO RECORD
+039800930806IF  1C           *IN30     IFEQ *ON
+039900990805     C* O TROVATO MA NON E' QUELLE VARIAZIONE DI PESO
+040000990805     C           RRBPKC    ORNE ARBPKC
+040100930806     C*
+040200930806     C* RISCRIVO ERRORE
+040300990805     C                     CLEARFNARBP0E
+040400950111     C                     Z-ADDARBAAS    RRBAAS
+040500950111     C                     Z-ADDARBLNP    RRBLNP
+040600950111     C                     Z-ADDARBNRS    RRBNRS
+040700950111     C                     Z-ADDARBNSP    RRBNSP
+040800950111     C                     MOVELARBCBO    RRBCBO
+040900950111     C                     MOVELARBDTV    RRBDTV
+041000950111     C                     MOVELARBORV    RRBORV
+041100950111     C                     MOVELARBCVB    RRBCVB
+041200990805     C                     Z-ADDARBPKC    RRBPKC
+041300991028     C                     MOVELARBFPC    RRBFPC
+041400990805     C                     MOVELARBNCP    RRBNCP
+041500950111     C                     MOVELFEV       ARBFEV
+041600950111     C                     MOVELDER       ARBDER
+041700950111     C                     CLEARARBDAT
+041800990805     C                     WRITEFNARBP0E
+041900930806E   1C                     ENDIF
+042000930806     C*
+042100930706     C                     ENDSR
+042200930706     C*---------------------------------------------------------------*
+042300950111     C*                    ANNARB                                     *
+042400930806     C* ROUTINE DI ANNULLAMENTO ERRORE PERCHE' VARIAZIONE CARICATA    *
+042500930706     C*---------------------------------------------------------------*
+042600950111     C           ANNARB    BEGSR
+042700930806     C*
+042800990805     C           KARB2     SETLLFNARBP0E
+042900990805     C           KARB2     READEFNARBP0E                 30
+043000930706     C*
+043100930806DO  1C           *IN30     DOWEQ*OFF
+043200930706     C*
+043300930706     C* NON DEVE ESSERE RECORD STAMPATO (DATA = 0)
+043400930706     C*  E NON DEVE ESSERE GIA' FATTURATA CHE LA STAMPO COMUNQUE
+043500950111IF  2C           ARBDAT    IFEQ 0
+043600950111     C           ARBDER    ANDNEERR,2
+043700930706     C*
+043800941129     C* SE E' "2 SPE INESISTENTE" DEVO AVERE TROVATO LA 2 BOLLA
+043900950111IF  3C           ARBDER    IFEQ ERR,4
+044000950111IF  4C           *IN01     IFEQ *OFF
+044100990805     C                     DELETFNARBP0E
+044200950111E   4C                     ENDIF
+044300930706     C*
+044400950111X   3C                     ELSE
+044500930706     C*
+044600930706     C* SE E' "1 SPE INESISTENTE" DEVO AVERE TROVATO LA 1 BOLLA (05 ON)
+044700950111IF  4C           ARBDER    IFEQ ERR,1
+044800950111IF  5C           *IN05     IFEQ *ON
+044900990805     C                     DELETFNARBP0E
+045000950111E   5C                     ENDIF
+045100930706     C*
+045200950111X   4C                     ELSE
+045300930706     C*
+045400930706     C* SE E' " CODICE BOLLA INESISTE ANNULLO SEMPRE
+045500990805     C                     DELETFNARBP0E
+045600950111E   4C                     ENDIF
+045700941129E   3C                     ENDIF
+045800941124E   2C                     ENDIF
+045900930706     C*
+046000990805     C           KARB2     READEFNARBP0E                 30
+046100930806E   1C                     ENDDO
+046200930706     C*
+046300930706     C                     ENDSR
+046400930806     C*---------------------------------------------------------------*
+046500930806     C*                    MANBOL                                     *
+046600930806     C* ROUTINE DI CONTROLLO SE MANCA LA BOLLA O E' CAMBIATO IL TIPO  *
+046700930806     C*---------------------------------------------------------------*
+046800930806     C           MANBOL    BEGSR
+046900930806     C*
+047000930806     C* 01 02 ON - MANCANO ENTRAMBE SCRIVO FILE DEGLI ERRORI
+047100930806IF  1C           *IN01     IFEQ *ON
+047200930806     C           *IN02     ANDEQ*ON
+047300960208     C                     SETON                     08
+047400960208     C*
+047500960208     C* DO ERRORE SOLO SE PASSATI 3 GG DALLA DATA VARIAZIONE
+047600960208     C           ARBDTV    IFLE DATAM
+047700930806     C                     Z-ADD102       FEV
+047800930806     C                     MOVELERR,4     DER
+047900950111     C                     EXSR RIEARB
+048000930806     C*
+048100930806     C                     Z-ADD102       FEV
+048200930806     C                     MOVELERR,1     DER
+048300950111     C                     EXSR RIEARB
+048400960208     C                     ENDIF
+048500930806     C*
+048600930806X   1C                     ELSE
+048700930806     C*
+048800930806     C* 01 O 02 OFF - MANCA UNA DELLE DUE VEDO SE CAMBIATO TIPO BOLLA
+048900930806IF  2C           *IN01     IFEQ *ON
+049000930806     C           *IN02     OREQ *ON
+049100930806     C* N O N   T R O V A T A   S E C O N D A   B O L L A
+049200930806IF  3C           *IN01     IFEQ *ON
+049300930806     C                     MOVEL§3ATB1    ALF2
+049400930806     C                     EXSR RICBOL
+049500930806     C*
+049600930806     C* NON TROVATO ALTRO TIPO BOLLA: ERRORE
+049700960208     C* DO ERRORE SOLO SE PASSATI 3 GG DALLA DATA VARIAZIONE
+049800930806IF  4C           TIBOL     IFEQ *BLANKS
+049900960208     C           ARBDTV    IFLE DATAM
+050000930806     C                     Z-ADD102       FEV
+050100930806     C                     MOVELERR,4     DER
+050200950111     C                     EXSR RIEARB
+050300960208     C                     ENDIF
+050400930806X   4C                     ELSE
+050500930806     C                     MOVELTIBOL     §3ATB2
+050600990702     C                     SETOF                     01
+050700930806E   4C                     ENDIF
+050800990805     C* RICHIAMO LA PRIMA BOLLA
+050900990702     C                     MOVEL§3ATB1    TBL
+051000990702     C                     SETOF                     111213
+051100990702     C           KTAS      CHAINTITAS30C             37
+051200930806     C*
+051300930806X   3C                     ELSE
+051400990805     C* N O N   T R O V A T A   P R I M A   B O L L A
+051500930806     C                     MOVEL§3ATB2    ALF2    2
+051600930806     C                     EXSR RICBOL
+051700930806     C*
+051800930806     C* NON TROVATO ALTRO TIPO BOLLA: ERRORE
+051900930806IF  4C           TIBOL     IFEQ *BLANKS
+052000960208     C                     SETON                     08
+052100960208     C           ARBDTV    IFLE DATAM
+052200930806     C                     Z-ADD102       FEV
+052300930806     C                     MOVELERR,1     DER
+052400950111     C                     EXSR RIEARB
+052500960208     C                     ENDIF
+052600930806X   4C                     ELSE
+052700941129     C   11                SETON                     05
+052800941129     C   12                SETON                     06
+052900941129     C   13                SETON                     07
+053000930806     C                     MOVELTIBOL     §3ATB1
+053100930806E   4C                     ENDIF
+053200930806E   3C                     ENDIF
+053300930806E   2C                     ENDIF
+053400930806E   1C                     ENDIF
+053500930806     C*
+053600930806     C                     ENDSR
+053700930806     C*---------------------------------------------------------------*
+053800930806     C*                    RICBOL                                     *
+053900930806     C* ROUTINE DI RICERCA BOLLA SU ARCHIVIO STORICO O CORRENTE       *
+054000930806     C*---------------------------------------------------------------*
+054100930806     C           RICBOL    BEGSR
+054200930806     C*
+054300930806     C                     SETOF                     3940
+054400941129     C                     SETOF                     111213
+054500930806     C                     CLEARTIBOL
+054600930806     C*
+054700990701     C           KTAS2     SETLLTITAS30C
+054800990701     C           KTAS2     READETITAS30C                 39
+054900930806     C*
+055000930806DO  1C           *IN39     DOWEQ*OFF
+055100930806     C*
+055200930806IF  2C           TASTBL    IFNE ALF2
+055300930806     C                     SETON                     39
+055400930806     C                     MOVELTASTBL    TIBOL   2
+055500930806E   2C                     ENDIF
+055600930806     C*
+055700990701     C     N39   KTAS2     READETITAS30C                 39
+055800930806E   1C                     ENDDO
+055900930806     C*
+056000930806     C                     ENDSR
+056100930422     C*---------------------------------------------------------------*
+056200930422     C*                    DEFVAR                                     *
+056300930422     C* ROUTINE DI DEFINIZIONE VARIABILI, KLIST E PLIST               *
+056400930422     C*---------------------------------------------------------------*
+056500930422     C           DEFVAR    BEGSR
+056600930422     C*
+056700930422     C           *ENTRY    PLIST
+056800930422     C                     PARM           KPJBA
+056900930422     C*
+057000950111     C                     Z-ADD1         CODUT   10
+057100930806     C                     Z-ADD0         DAT
+057200930423     C* FILIALI IN GESTIONE DEL MEMBRO DI RICEZIONE (AS DI INVIO)
+057300930423     C                     MOVELMBRFIL    ALF4    4
+057400930423     C                     MOVE ALF4      NUM3    30
+057500960208     C* UDATE - 3
+057600960208     C*  SOLO PER LE SPEDIZ.DI RECUPERO E' TRA DATA G. - 3  E  + §3IGGS
+057700960208     C                     TIME           W0140  140
+057800960208     C* UDATE IN GGMMAAAA
+057900960208     C                     MOVE W0140     WDTGIO  80
+058000960208     C*
+058100960208     C* UDATE IN AAAAMMGG
+058200960208     C                     Z-ADDWDTGIO    G02DAT
+058300960208     C                     MOVEL*BLANK    G02ERR
+058400960208     C                     CALL 'XSRDA8'
+058500960208     C                     PARM           WLBDAT
+058600960208     C                     MOVELG02INV    DATEU   80
+058700960208     C* SOTTRAGGO  3
+058800960208     C           G02TGI    SUB  3         GIOTGI
+058900960208     C*
+059000960208     C                     CALL 'XSRGI8'
+059100960208     C                     PARM           WGIDAT
+059200960208     C*
+059300960208     C                     Z-ADDGIOINV    DATAM   80
+059400950111     C*
+059500950111     C* DEFINIZIONE CAMPI
+059600950111     C           *LIKE     DEFN ARBFEV    FEV
+059700950111     C           *LIKE     DEFN ARBDER    DER
+059800950111     C           *LIKE     DEFN ARBDAT    DAT
+059900950111     C           *LIKE     DEFN TBLCOD    COD
+060000950111     C           *LIKE     DEFN TBLKEY    KEY
+060100930422     C*
+060200950111     C* ACCESSO TABEL00F
+060300930423     C           KTAB      KLIST
+060400950111     C                     KFLD           CODUT
+060500950111     C                     KFLD           COD
+060600950111     C                     KFLD           KEY
+060700990701     C* ACCESSO TITAS30C
+060800930426     C           KTAS      KLIST
+060900950111     C                     KFLD           ARBAAS
+061000950111     C                     KFLD           ARBLNP
+061100950111     C                     KFLD           ARBNRS
+061200950111     C                     KFLD           ARBNSP
+061300930528     C                     KFLD           TBL     2
+061400990701     C* ACCESSO TITAS30C/TNBLA01L
+061500930528     C           KTAS2     KLIST
+061600950111     C                     KFLD           ARBAAS
+061700950111     C                     KFLD           ARBLNP
+061800950111     C                     KFLD           ARBNRS
+061900950111     C                     KFLD           ARBNSP
+062000991028     C* ACCESSO FIARBE2C
+062100950111     C           KARB      KLIST
+062200950111     C                     KFLD           ARBAAS
+062300950111     C                     KFLD           ARBLNP
+062400950111     C                     KFLD           ARBNRS
+062500950111     C                     KFLD           ARBNSP
+062600950111     C                     KFLD           ARBDER
+062700950111     C                     KFLD           DAT
+062800950111     C           KARB2     KLIST
+062900950111     C                     KFLD           ARBAAS
+063000950111     C                     KFLD           ARBLNP
+063100950111     C                     KFLD           ARBNRS
+063200950111     C                     KFLD           ARBNSP
+063300930423     C*
+063400930423     C                     ENDSR
+063500930423     C*---------------------------------------------------------------*
+063600930423     C*                    QCMDEXC                                    *
+063700930423     C*---------------------------------------------------------------*
+063800940412£$    */COPY GAITRASRC/SRCTRST,TRST49R
+063900930423**         CMD1
+064000990805CHKOBJ OBJ(FNARBP0R) OBJTYPE(*FILE)     MBR(M234567890)
+064100930423**         CMD2
+064200990805ALCOBJ OBJ((FNARBP0R *FILE *EXCL           M234567890))
+064300930423**         CMD3
+064400990805OVRDBF FILE(FNARBP0R)                   MBR(M234567890)
+064500930426**         ERR
+0646009305281 SPEDIZIONE INESISTENTE
+064700950222SPEDIZIONE GIA' TASSATA
+064800930528CODICE BOLLA INESISTENTE
+0649009305282 SPEDIZIONE INESISTENTE

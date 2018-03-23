@@ -1,0 +1,3 @@
+000100110223     D RunQSHCommand...
+000200110223     D                 PR            10I 0 EXTPROC('QzshSystem')
+000300110223     D                                 *   VALUE OPTIONS(*STRING)

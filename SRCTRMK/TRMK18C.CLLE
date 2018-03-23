@@ -1,0 +1,39 @@
+000100090610/*PARMS DFTACTGRP(*NO) ACTGRP('TRMK18')                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600060905
+000700090610             PGM        PARM(&KPJBA)
+000800090610
+000900090610             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001000090610
+001100090610
+001200050607/* AVVIO IL CONTROLLO SINCRONIA ------------------------------------*/
+001300090610             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*ACTGRP)
+001400050606             MONMSG     MSGID(CPF8351)
+001500050531
+001600090610/* RICHIAMO OIL PGM DI GESTIONE CONATTI ----------------------------*/
+001700090610             CALL       PGM(TRMK18R) PARM(&KPJBA)
+001800050606             MONMSG     MSGID(CPF0000) EXEC(DO)
+001900050606             ROLLBACK
+002000050607             GOTO       CMDLBL(FINE)
+002100050606             ENDDO
+002200050607
+002300050607/* VERIFICO L'ESITO DELL'ELABORAIZONE ------------------------------*/
+002400090610/*           IF         COND(&ESITO *NE ' ')  THEN(DO)              */
+002500090610/*           ROLLBACK                                               */
+002600090610/*           GOTO       CMDLBL(FINE)                                */
+002700090610/*           ENDDO                                                  */
+002800050607
+002900050607/* SANCISCO IL COMMIT ----------------------------------------------*/
+003000050607             COMMIT
+003100050531
+003200090610/* ESEGUO OPERAZIONI D CHIUSURA ------------------------------------*/
+003300090610 FINE:
+003400050606
+003500050607/* STOPPO IL CONTROLLO SINCRONIA -----------------------------------*/
+003600050606             ENDCMTCTL
+003700050606             MONMSG     MSGID(CPF8356)
+003800990908
+003900050606             ENDPGM

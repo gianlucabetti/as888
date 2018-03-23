@@ -1,0 +1,95 @@
+000001020902 /* ricevendo Sistema informativo, Nome membro, Profilo            */
+000002020902 /* restituisce il profilo relativo al PO di arrivo)               */
+000003020902 /* se il sistema informativo non è FIL... non cambia nulla        */
+000004020902 /* ES.: M031047 il profilo diventa EDPCED043                      */
+000005020902
+000100020902             PGM        PARM(&I57SIN &I57MBR &o57PRF)
+000600020902             DCL        VAR(&i57sin) TYPE(*CHAR) LEN(10)
+000700020902             DCL        VAR(&i57mbr) TYPE(*CHAR) LEN(10)
+000701020902             DCL        VAR(&o57prf) TYPE(*CHAR) LEN(10)
+000702020902
+000703020902             DCL        VAR(&USRL) TYPE(*CHAR) LEN(275)
+000704020902             DCL        VAR(&CMD) TYPE(*CHAR) LEN(300)
+000705020902             DCL        VAR(&NN) TYPE(*DEC) LEN(15 5) VALUE(300)
+000706020902
+000707020902             DCL        VAR(&TSTPRF) TYPE(*CHAR) LEN(10) +
+000708020902                          VALUE('EDPCED    ')
+003900971104
+003901020902             DCL        VAR(&gg) TYPE(*CHAR) LEN(2)
+003902020902             DCL        VAR(&Mm) TYPE(*CHAR) LEN(2)
+003903020902             DCL        VAR(&aa) TYPE(*CHAR) LEN(2)
+003905020902
+003906020902             DCL        VAR(&DSBS55)    TYPE(*CHAR)  LEN(214)
+003907020902             DCL        VAR(&DSlv55)    TYPE(*CHAR)  LEN(103)
+003909020902
+003910020902             QSYS/RTVJOBA USRLIBL(&USRL)
+004000020902             RTVSYSVAL  SYSVAL(QDAY) RTNVAR(&gg)
+004100020902             RTVSYSVAL  SYSVAL(QMONTH) RTNVAR(&Mm)
+004200020902             RTVSYSVAL  SYSVAL(QYEAR) RTNVAR(&aa)
+004201020902 /* se a blank imposto EDPCED come profilo */
+004202020902             IF         COND(&o57prf *eq '          ') THEN(+
+004203020902             CHGVAR     VAR(&o57prf) VALUE('EDPCED    '))
+004204020902
+004205020902 /* per i S.I. GAI e SDI lascio utente impostato   */
+004206020902             IF         COND(%SST(&i57sin 1 3) *ne 'FIL') THEN(GOTO +
+004207020902                          CMDLBL(FINE))
+004208020902 /* se a blank imposto EDPCEDXXX come profilo */
+004209020902             IF         COND(&o57prf *eq 'EDPCED    ') THEN(+
+004210020902             CHGVAR     VAR(&o57prf) VALUE('EDPCEDXXX '))
+004211020902 /* controlla se la parte di nome membro che identifica il PO arrivo*/
+004212020902 /* è formalmente valido                                            */
+004213020902             IF         COND(%SST(&I57MBR 5 1) *LT '0') THEN(GOTO +
+004214020902                          CMDLBL(FINE))
+004215020902             IF         COND(%SST(&I57MBR 6 1) *LT '0') THEN(GOTO +
+004216020902                          CMDLBL(FINE))
+004217020902             IF         COND(%SST(&I57MBR 7 1) *LT '0') THEN(GOTO +
+004218020902                          CMDLBL(FINE))
+004219020902             IF         COND(%SST(&I57MBR 5 1) *gt '9') THEN(GOTO +
+004220020902                          CMDLBL(FINE))
+004221020902             IF         COND(%SST(&I57MBR 6 1) *gt '9') THEN(GOTO +
+004222020902                          CMDLBL(FINE))
+004223020902             IF         COND(%SST(&I57MBR 7 1) *gt '9') THEN(GOTO +
+004224020902                          CMDLBL(FINE))
+004500020902 /* imposto le librerie del S.I. (GRU) */
+004501020902             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+004502020902             CHGVAR     VAR(%SST(&DSBS55 2 10)) VALUE(&I57sin)
+004503020902             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('000')
+004504020902             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('000')
+004505020902             CALL       PGM(TIBS55R) PARM(&DSBS55)
+004506020902             ADDLIBLE   LIB(%SST(&DSBS55 73 10)) /* azi */
+004507020902             MONMSG     MSGID(CPF0000)
+004508020902             ADDLIBLE   LIB(%SST(&DSBS55 63 10)) /* azM */
+004509020902             MONMSG     MSGID(CPF0000)
+004510020902             ADDLIBLE   LIB(%SST(&DSBS55 53 10)) /* gru */
+004511020902             MONMSG     MSGID(CPF0000)
+004601020902             ADDLIBLE   LIB(%SST(&DSBS55 43 10)) /* uni */
+004603020902             MONMSG     MSGID(CPF0000)
+004800971103
+004801020902 /* ricerco il terminal partenza */
+004802020902             CHGVAR     VAR(%SST(&DSLV55 1 1)) VALUE('L') /* Tipo +
+004803020902                          lancio */
+004804020902             CHGVAR     VAR(%SST(&DSLV55 3 3)) VALUE(%SST(&I57MBR 5 +
+004805020902                          3)) /* P.O. */
+004806020902             CHGVAR     VAR(%SST(&DSLV55 6 8)) VALUE('20' *CAT &AA +
+004807020902                          *CAT &MM *CAT &GG) /* data riferim. */
+004808020902             CHGVAR     VAR(%SST(&DSLV55 14 3)) VALUE('000') /* LNP +
+004809020902                          Ecc. */
+004810020902             CHGVAR     VAR(%SST(&DSLV55 17 3)) VALUE('000') /* +
+004811020902                          Term.part. */
+004812020902             CHGVAR     VAR(%SST(&DSLV55 21 3)) VALUE('000') /* +
+004813020902                          Term.Arr. */
+004814020902             CHGVAR     VAR(%SST(&DSLV55 25 1)) VALUE(' ') /* +
+004815020902                          Term.Partenza */
+005300020902             CALL       PGM(fnlv55R) PARM(&dslv55)
+005301020902             CHGVAR     VAR(%SST(&TSTPRF 7 3)) VALUE(%SST(&DSLV55 17 +
+005302020902                          3)) /* Term.Part. */
+005400020902             CHKOBJ     OBJ(&TSTPRF) OBJTYPE(*USRPRF)
+005401020902             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(prefine))
+005402020902
+005403020902             CHGVAR     VAR(&o57prf) VALUE(&tstprf)
+005404020902prefine:
+019401020902             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &USRL +
+019402020902                          *CAT ')')
+019403020902             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+019404020902             MONMSG     MSGID(CPF0000)
+019500020902FINE:    ENDPGM

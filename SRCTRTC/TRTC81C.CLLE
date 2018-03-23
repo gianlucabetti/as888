@@ -1,0 +1,99 @@
+000100080418/*? ************************************************************** ?*/
+000200080418/*?      TRASCODIFICA STATO DELLE CONSEGNE BOLLE IMPORT            ?*/
+000300080926/*?      RICHIAMATO DAL TRTC50R e DAL FNLSI1R                      ?*/
+000400080418/*? ************************************************************** ?*/
+000500080418             PGM        PARM(&CLIENTE &TFILE &TSCARICO)
+000600880609
+000700930507/* DICHIARAZIONE PARAMETRI IN INPUT                            */
+000800080418             DCL        VAR(&CLIENTE) TYPE(*CHAR) LEN(8)
+000900080418             DCL        VAR(&TFILE)   TYPE(*CHAR) LEN(2)
+001000080418             DCL        VAR(&TSCARICO) TYPE(*CHAR) LEN(2)
+001100110630             DCL        VAR(&ESITO)   TYPE(*CHAR) LEN(1)
+001200080418
+001300080418/* DICHIARAZIONE PARAMETRI x PGM da richiamare                 */
+001400041221             DCL        VAR(&CODFILE) TYPE(*CHAR) LEN(3) VALUE('784')
+001500050207             DCL        VAR(&DAPROGR) TYPE(*CHAR) LEN(5) VALUE('     ')
+001600041221             DCL        VAR(&FILSTA) TYPE(*CHAR) LEN(10) +
+001700041221                          VALUE('IFTSTA')
+001800041221             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+001900041221             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1) VALUE(' ')
+002000080418             DCL        VAR(&RIGHE_DETT) TYPE(*CHAR) LEN(1) VALUE('N')
+002100050826             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+002200041220
+002300041220/*-----------------------------------------------------------------------*/
+002400110617/*? serve per i file del progressivo TIVIR                              ?*/
+002500110617/*-----------------------------------------------------------------------*/
+002600110617             ADDLIBLE   LIB(GAITRAGRU) POSITION(*LAST)
+002700110617             MONMSG     MSGID(CPF0000)
+002800110617
+002900121010             ADDLIBLE   LIB(GAITRAGRPS) POSITION(*LAST)
+003000121010             MONMSG     MSGID(CPF0000)
+003100121010
+003200110617/*-----------------------------------------------------------------------*/
+003300080418/*? Crea in Qtemp il file per la trascodifica dei dati in formato FLAT  ?*/
+003400080418/*? prendendo l'immagine dal EDIFTSTA                                   ?*/
+003500041220/*-----------------------------------------------------------------------*/
+003600080418             DLTF       FILE(QTEMP/EDIFTSTA)
+003700080418             MONMSG     MSGID(CPF0000)
+003800080418             CRTDUPOBJ  OBJ(EDIFTSTA) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+003900080418                          TOLIB(QTEMP)
+004000110331
+004100110331             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004200110331             MONMSG     MSGID(CPF8351)
+004300110331
+004400041220
+004500080418/*? ******************************************************************** ?*/
+004600080418/*?  Con il Cliente --> tab.PT per creare EDI in QTEMP                   ?*/
+004700080418/*? ******************************************************************** ?*/
+004800080418             OVRDBF     FILE(EDIFTSTA) TOFILE(QTEMP/EDIFTSTA)
+004900080418
+005000110318/*? ******************************************************************** ?*/
+005100110318/*?  Se Non funziona il nuovo programma chiama il vecchio                ?*/
+005200110318/*? ******************************************************************** ?*/
+005300110630             CALL       PGM(TRTCT81R) PARM(&CLIENTE &TFILE &TSCARICO +
+005400110630                          &RIGHE_DETT &ESITO) /* Se ci sono +
+005500110630                          problemi con la chiamata al nuovo +
+005600110630                          programma, allora esegue il vecchio giro! */
+005700110318
+005800110318
+005900110318/*?  Vecchio pgm per traduzioni solo su CEDINTESA         IFTSTA         ?*/
+006000110322/*           CALL       PGM(TRTC81R) PARM(&CLIENTE &TFILE &TSCARICO +     */
+006100110322/*                        &RIGHE_DETT)                                    */
+006200080418/*? ******************************************************************** ?*/
+006300080418/*?  A questo punto copia da QTEMP al SNDIFTSTA da tradurre con INTESA   ?*/
+006400080418/*?             SOLO SE presenti Righe di dettaglio.                     ?*/
+006500080418/*?                       ALTRIMENTI va a FINE.                          ?*/
+006600080418/*? ******************************************************************** ?*/
+006700110331
+006800110331             ENDCMTCTL
+006900110331
+007000080418                                           /*----*/              /*----*/
+007100080418             IF         COND(&RIGHE_DETT *EQ 'N') THEN(GOTO CMDLBL(FINE))
+007200080418                                           /*----*/              /*----*/
+007300080418
+007400041220             CPYF       FROMFILE(QTEMP/EDIFTSTA) TOFILE(SNDIFTSTA) +
+007500041220                          MBROPT(*ADD) FMTOPT(*NOCHK)
+007600041220
+007700050826
+007800050826/* ?Reperisce lo User a cui inviare msg di avviso                      */
+007900050826             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+008000050826             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+008100050826             MONMSG     MSGID(CPF0000)
+008200050826             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+008300080418
+008400080418/* ---------------------------------------------------------------------*/
+008500080418/*?  Esegue l'invio del messaggio sul SERVER x traduzione INTESA.      ?*/
+008600080418/* ---------------------------------------------------------------------*/
+008700041221             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+008800041223             MONMSG     MSGID(CPF8351)
+008900080418
+009000080418
+009100041223             CHGVAR     VAR(&CODFILE) VALUE('784')
+009200050221             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSTA +
+009300050207                          &CODFILE &DAPROGR)
+009400041221             ENDCMTCTL
+009500080418
+009600080418   FINE:
+009700041221             DLTOVR     FILE(*ALL)
+009800880609
+009900080418             ENDPGM

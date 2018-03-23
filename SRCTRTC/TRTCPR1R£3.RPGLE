@@ -1,0 +1,2074 @@
+000100070125     h decedit('0,') option(*nodebugio)
+000200070125      *---------------------------------------------------------------*
+000300070125      * Da FIPRC00R scrive file di log FIPLG00F                       *
+000400070201      *       aggiorna file effettivi se dati OK                      *
+000500070125      *---------------------------------------------------------------*
+000600070205     ffiprc01r  if   e           k disk    rename(fiprc000:fiprc01)
+000700070205     f                                     infds(prc)
+000800070205     ffiprc00r  uf   e             disk    commit
+000900070129     ffiapd01l  if   e           k disk
+001000070202     ffipdo01t  uf   e           k disk    commit
+001100140128     ffipro11l  uf a e           k disk    commit
+001200070202     ffiqdt01l  uf   e           k disk    commit
+001300080226     ffidst01l  if   e           k disk
+001400070202     ffnorm01l  uf   e           k disk    commit
+001500080219     ffnorf01l  uf a e           k disk    commit
+001600080409     ffnorn02l  if a e           k disk    commit
+001700080227     ffipci02l  uf a e           k disk    commit
+001800070202     ffiplg00f  o    e             disk    commit
+001900080418     ffirpt01l  uf a e           k disk    commit
+002000080418     ffirpd02l  uf a e           k disk    commit
+002100080513     fprtemail  o    f  132        printer  oflind(*inof)  usropn
+002200140207     ftntbe01l  if   e           k disk
+002300070130
+002400070130      *------------------------------------------------------------------------*
+002500070130      *  RIEPILOGO INDICATORI
+002600070130      *------------------------------------------------------------------------*
+002700070130      * 01 - errore
+002800070131      * 02 - testn
+002900070131      * 03 - ORM manuale non aggiorno fasi ORM
+003000110620      * 04 - Errore per invio mail
+003100080519      * 05 - codice SPC errato
+003200070129
+003300070130      *------------------------------------------------------------------------*
+003400070129      *   V A R I A B I L I
+003500070130      *------------------------------------------------------------------------*
+003600080226     d chiudi          s              1
+003700070201     d dateu8          s              8  0
+003800110609     d data_eur        s               d   datfmt(*eur)
+003900110609     d data_iso        s               d   datfmt(*iso)
+004000070201     d hhmm            s              4  0
+004100070130     d kprcprfc        s                   like(prcprfc)
+004200080513     d lenght          s             15  5
+004300080513     d o_testo         s            132    inz
+004400120920     d Oggi_10         s              8  0
+004500120920     d Oggi_10o        s              8  0
+004600070129     d parmpo          s              3
+004700080513     d qcmd            s            512    inz
+004800080212     d savdfo          s                   like(ormdfo)
+004900080212     d savofo          s                   like(ormofo)
+005000080320     d save_§orfass    s                   like(§orfass)
+005100070201     d udate8          s              8  0
+005200070201     d wbnc            s                   like(qdtnbnri)
+005300070129     d wcodaut         s              7
+005400070521     d wdata           s              8  0
+005500080924     d wdesspc         s             15
+005600080327     d wfase           s              1    inz(*off)
+005700070202     d wfipdo          s              1    inz(*off)
+005800070202     d wfiqdt          s              1    inz(*off)
+005900080319     d wfipro          s              1    inz(*off)
+006000070201     d wfgs            s                   like(§okfgs)
+006100070202     d wfnorm          s              1    inz(*off)
+006200080924     d widrow          s                   like(ormndc)
+006300070201     d wncl            s                   like(qdtnclrit)
+006400070201     d wndc            s                   like(§okndc)
+006500070521     d wora            s              6  0
+006600070201     d wpdandc         s                   like(ormndc)
+006700080409     d wprg            s                   like(ornprg)
+006800070521     d w006a           s              6
+006900070521     d w008a           s              8
+007000070201     d w0140           s             14  0
+007100070201     d w030a           s             30
+007200080417     d w_dtaorach      s             14
+007300080513     d xx              s              3  0
+007400080513     d $invio          s              1n   inz(*off)
+007500080513     d $okmra          s              1n   inz(*off)
+007600140129     d worasti         s                   like(§RORORASTI)
+007700140129     d wsort           s                   like(§RORSORT)
+007800070129
+007900080513      *------------------------------------------------------------------------*
+008000080513      *   S C H I E R E
+008100080513      *------------------------------------------------------------------------*
+008200090911     d codspc          s              2    dim(23)
+008300090911     d desspc          s             15    dim(23)
+008400080513
+008500070130      *------------------------------------------------------------------------*
+008600070129      *   D S   I N T E R N E / E S T E R N E
+008700070130      *------------------------------------------------------------------------*
+008800070205     d prc             ds
+008900070205     d  prcnrr               397    400B 0
+009000070205
+009100070201     d wlbdat          ds
+009200070201     d  g02dat                 1      8  0
+009300070201     d  g02inv                 9     16  0
+009400070201     d  g02err                17     17
+009500070201     d  g02tgi                18     22  0
+009600070201
+009700070716     d dfar          e ds
+009800080219     d dorf01        e ds
+009900080317     d ddstflr       e ds
+010000080513     d dpsp          e ds
+010100090911     d dpsps         e ds
+010200080924
+010300080924     d fidsfrchds    e ds                  prefix(§RCH:4)
+010400070716
+010500140129     d fiprorords    e ds
+010600140129     d fiprookds     e ds
+010700140129     d fiprcrords    e ds
+010800140129     d  §rorpoe               10     12
+010900140129     d  §rornsr               13     14
+011000140129     d  §rornor               15     21
+011100140129     d  §rornrv               22     23
+011200140129     d  §roraas               10     13
+011300140129     d  §rorlnp               14     16
+011400140129     d  §rornrs               17     18
+011500140129     d  §rornsp               19     25
+011600140129     d  §rordata              26     33
+011700140129     d  §rorora               34     39
+011800070129     d fiprcokds     e ds
+011900070201     d  §okpoe                10     12
+012000070201     d  §oknsr                13     14
+012100070201     d  §oknor                15     21
+012200070201     d  §oknrv                22     23
+012300070201     d  §okaas                10     13
+012400070201     d  §oklnp                14     16
+012500070201     d  §oknrs                17     18
+012600070201     d  §oknsp                19     25
+012700070213     d  §okdata               26     33
+012800070213     d  §okora                34     39
+012900070129     d fiprcrchds    e ds
+013000070213     d  §rchdata              20     27
+013100070213     d  §rchora               28     33
+013200070129     d fiprcresds    e ds
+013300070213     d  §resdata              24     31
+013400070213     d  §resora               32     37
+013500070213     d  §resdatain           171    178
+013600070213     d  §resorain            179    184
+013700080317
+013800080513     d dmradan       e ds                  inz
+013900080327     d fior90ds      e ds
+014000070130     d kpjba         e ds
+014100070129     d tibs02ds      e ds
+014200080513
+014300080513     d trtcm1ds      e ds                  inz
+014400080514      *    .§cm1mitt = Indirizzo e-mail del mittente
+014500120305     d   §cm1mitt    e                     inz('ced@brt.it')
+014600080514      *    ·§cm1dst  = Indirizzo e-mail del destinatario
+014700120305     d   §cm1dst     e                     inz('monica.beghelli@brt.it')
+014800080514      *    ·§cm1tips = Tipo lettera via e-mail:
+014900080513      *     "LET" = testo allegato in corpo con logo
+015000080513      *             (richiede righe libere iniziali per il logo)
+015100080513      *     "COR" = testo integrato senza logo
+015200080513      *             (non consente né UNDERLINE né HIGHLIGHT)
+015300080514     d   §cm1tips    e                     inz('COR')
+015400080514      *    ·§cm1po   = Filiale
+015500080514     d   §cm1po      e                     inz('046')
+015600080514      *    ·§cm1var  = Oggetto e-mail
+015700080514     d   §cm1var     e                     inz('*OBJM*+
+015800080521     d                                     Errore in ricezione dati da PDA')
+015900080514      *    ·§cm1sts  = Stato
+016000080514     d   §cm1sts     e                     inz(*off)
+016100080514      *    ·§cm1idp  = Id processo
+016200080521     d   §cm1idp     e                     inz('2')
+016300080513
+016400080513     d psds           sds
+016500080513     d   sdspgm          *proc
+016600080513     d   jobuser             254    263                                         User name
+016700080513
+016800080513      *------------------------------------------------------------------------*
+016900080513      *   C O S T A N T I
+017000080513      *------------------------------------------------------------------------*
+017100080513     d c_sede          c                   const('046')
+017200080513      *  - comando di override al prtf
+017300080513     d c_cmdovrprtf    c                   const('OVRPRTF +
+017400080513     d                                           file(PRTEMAIL) +
+017500080513     d                                           pagesize(66 132) +
+017600080513     d                                           lpi(6) cpi(10) +
+017700080513     d                                           ovrscope(*actgrpdfn) +
+017800080513     d                                           ')
+017900080513     d c_cmddltovr     c                   const('DLTOVR +
+018000080513     d                                            file(PRTEMAIL) +
+018100080513     d                                            lvl(*actgrpdfn)')
+018200070129
+018300070129      *------------------------------------------------------------------------*
+018400070607
+018500070607     c                   eval      kprcprfc = 'AU0000000'
+018600070607     c                   eval      %subst(kprcprfc:3:3) = parmpo
+018700110609
+018800110609      *?Cerco la data del giorno
+018900110609     c                   time                    w0140
+019000120920      *?Calcolo oggi - 10 gg.
+019100110609     c                   move      w0140         data_eur
+019200110609     c                   move      data_eur      data_iso
+019300120920     c                   subdur    10:*d         data_iso
+019400120920     c                   move      data_iso      Oggi_10
+019500120920      *?Calcolo oggi + 10 gg.
+019600120920     c                   move      w0140         data_eur
+019700120920     c                   move      data_eur      data_iso
+019800120920     c                   adddur    10:*d         data_iso
+019900120920     c                   move      data_iso      Oggi_10o
+020000110202
+020100110202      * Recupero i codici SPC
+020200110202     c                   exsr      sr_carcodspc
+020300070129
+020400110202      * Leggo file ritorno dati da PDA
+020500070130     c     kprcprfc      setll     fiprc01r
+020600070129     c                   do        *hival
+020700070129     c                   read      fiprc01r
+020800070129
+020900070129     c                   if        %eof(fiprc01r)
+021000070129     c                   leave
+021100070129     c                   endif
+021200070129      * stesso p.o.
+021300070129     c                   if        %subst(prcprfc:3:3) <> parmpo
+021400070129     c                   leave
+021500070129     c                   endif
+021600070129
+021700070129     c                   clear                   fiplg000
+021800070130     c                   eval      *in01 = *off
+021900110620     c                   eval      *in04 = *off
+022000070129
+022100070130      * controlla i dati inviati
+022200070129     c                   exsr      sr_ctrdati
+022300070130
+022400070130      * aggiorno i dati effettivi in base al tipo record
+022500070130      * se non ci sono stati errori nei controlli
+022600101104     c                   if        not *in01
+022700101104      * e la distinta NON è in test per gli ORM
+022800080317     c                             and §dsttstpda <> 'O' and §dsttstpda <> 'E'
+022900080205     c                   exsr      sr_file
+023000080205     c                   endif
+023100080724
+023200080724      * scrivo fase RCH SEMPRE quando ricevo rcd RCH
+023300080924      * passo in kpjbu i dati da memorizzare nel campo "dati" sul file delle fasi
+023400090810     c                   if        prctiporcd = 'RCH' and not *in01
+023500080724     c                   exsr      sr_fase
+023600080724     c                   endif
+023700080404
+023800080519      * se non ci sono stati errori nei controlli
+023900101104      * e la distinta è in test cancello solo i dati di FIPDO e FIPRO
+024000101104     c                   if        not *in01 and
+024100101104     c                             (§dsttstpda = 'O' or §dsttstpda = 'E')
+024200080404      * e ricevo un RCH
+024300080404     c                   if        plgtiporcd = 'RCH'
+024400080404      * devo cancellare i dati da FIPDO e da FIPRO
+024500080404     c                   exsr      sr_fipdo
+024600080404     c                   exsr      sr_fipro
+024700080404     c                   endif
+024800080404     c                   endif
+024900070202
+025000080320      * se non ci sono stati errori nei controlli
+025100080320      * tipo record 'OK' solo per i ritiri
+025200101104     c                   if        not *in01 and
+025300140129     c                             plgtiporcd = 'OK' and §OKTPIDDOC = 'R'
+025400080320     c                   exsr      sr_wrtpro
+025500080320     c                   endif
+025600140129      * scrittura fipro per tipo record ROR
+025700140129     c                   if        plgtiporcd = 'ROR'
+025800140129     c                   exsr      sr_wrtproror
+025900140129     c                   endif
+026000070202      * scrivo il file di LOG
+026100070202     c                   exsr      sr_wrtlog
+026200070202
+026300080519      * se non ci sono stati errori nei controlli
+026400080415      * se ricevo fase "RES" o fase "RCH" scrivo i file legati al prospetto ORM
+026500080415     c                   if        not *in01 and
+026600080415     c                             (plgtiporcd = 'RCH' OR plgtiporcd = 'RES')
+026700080415     c                   exsr      sr_Prospetto
+026800080415     c                   endif
+026900080519      * se ci sono stati errori nei controlli inivio mail
+027000110620     c**!!!              if        *in01 or *in05
+027100110620     c                   if        *in04 or *in05
+027200080519     c                   exsr      sr_mail
+027300080519     c                   endif
+027400080519
+027500070205      * se ho avuto errori di allocazione dei file devo
+027600070202      * fare il rollback
+027700070205    2c                   if        wfiqdt = *on or wfipdo = *on or
+027800080327     c                             wfnorm = *on or wfipro = *on or
+027900080327     c                             wfase = *on
+028000070202     c                   rolbk
+028100070205      * se non ho avuto errori
+028200070205   2xc                   else
+028300070205      * aggancio il file fisico di ricezione
+028400070205     c     prcnrr        chain(e)  fiprc00r
+028500070205      * se rcd allocato flag di comodo per poi fare il rollback
+028600070205      * per errore rollback
+028700070205    3c                   if        %error
+028800070205     c                   rolbk
+028900070205   3xc                   else
+029000070205    4c                   if        %found(fiprc00r)
+029100070202      * cancello il file di ricezione
+029200070202     c                   delete    fiprc000
+029300070205      * committo le modifiche
+029400070205     c                   commit
+029500070205    4c                   endif
+029600070205    3c                   endif
+029700070205    2c                   endif
+029800070202
+029900080327     c                   eval      wfase = *off
+030000070202     c                   eval      wfiqdt = *off
+030100070202     c                   eval      wfipdo = *off
+030200070202     c                   eval      wfnorm = *off
+030300080319     c                   eval      wfipro = *off
+030400070202
+030500070129     c                   enddo
+030600080513
+030700080513     c                   exsr      sr_end
+030800080227
+030900080226      * testa la chiusura del sottosistema
+031000080226     c                   shtdn                                        99
+031100080226     c   99              eval      chiudi = 'S'
+031200070129
+031300070205     c                   eval      *inrt = *on
+031400110202
+031500110202      *------------------------------------------------------------------------*
+031600110202      * RECUPERO CODICI SPC
+031700110202      *------------------------------------------------------------------------*
+031800110202     c     sr_carcodspc  begsr
+031900110202
+032000110202     c                   clear                   codspc
+032100110202     c                   clear                   desspc
+032200110202
+032300110202      * recupero tabella codici SPC (PSP)
+032400110202      * chiave 1 per le prime 11 password
+032500110202     c                   clear                   tibs02ds
+032600110202     c                   clear                   dpsp
+032700110202     c                   eval      t02mod = 'C'
+032800110202     c                   eval      t02sif = knsif
+032900110202     c                   eval      t02cod = 'PSP'
+033000110202     c                   eval      t02ke1 = parmpo
+033100110202     c                   eval      t02ke2 = '1'
+033200110202     c                   call      'TIBS02R'
+033300110202     c                   parm                    kpjba
+033400110202     c                   parm                    tibs02ds
+033500110202     c                   if        t02err = *blanks
+033600110202     c                   eval      dpsp = t02uni
+033700110202     c                   endif
+033800110202
+033900110202     c                   if        dpsp <> *blanks
+034000110202     c                   eval      codspc(01) = §pspcod01
+034100110202     c                   eval      desspc(01) = §pspdes01
+034200110202     c                   eval      codspc(02) = §pspcod02
+034300110202     c                   eval      desspc(02) = §pspdes02
+034400110202     c                   eval      codspc(03) = §pspcod03
+034500110202     c                   eval      desspc(03) = §pspdes03
+034600110202     c                   eval      codspc(04) = §pspcod04
+034700110202     c                   eval      desspc(04) = §pspdes04
+034800110202     c                   eval      codspc(05) = §pspcod05
+034900110202     c                   eval      desspc(05) = §pspdes05
+035000110202     c                   eval      codspc(06) = §pspcod06
+035100110202     c                   eval      desspc(06) = §pspdes06
+035200110202     c                   eval      codspc(07) = §pspcod07
+035300110202     c                   eval      desspc(07) = §pspdes07
+035400110202     c                   eval      codspc(08) = §pspcod08
+035500110202     c                   eval      desspc(08) = §pspdes08
+035600110202     c                   eval      codspc(09) = §pspcod09
+035700110202     c                   eval      desspc(09) = §pspdes09
+035800110202     c                   eval      codspc(10) = §pspcod10
+035900110202     c                   eval      desspc(10) = §pspdes10
+036000110202     c                   eval      codspc(11) = §pspcod11
+036100110202     c                   eval      desspc(11) = §pspdes11
+036200110202     c                   endif
+036300110202      * chiave 2 per le altre 11 password
+036400110202     c                   clear                   dpsp
+036500110202     c                   eval      t02ke2 = '2'
+036600110202     c                   call      'TIBS02R'
+036700110202     c                   parm                    kpjba
+036800110202     c                   parm                    tibs02ds
+036900110202     c                   if        t02err = *blanks
+037000110202     c                   eval      dpsp = t02uni
+037100110202     c                   endif
+037200110202
+037300110202     c                   if        dpsp <> *blanks
+037400110202     c                   eval      codspc(12) = §pspcod01
+037500110202     c                   eval      desspc(12) = §pspdes01
+037600110202     c                   eval      codspc(13) = §pspcod02
+037700110202     c                   eval      desspc(13) = §pspdes02
+037800110202     c                   eval      codspc(14) = §pspcod03
+037900110202     c                   eval      desspc(14) = §pspdes03
+038000110202     c                   eval      codspc(15) = §pspcod04
+038100110202     c                   eval      desspc(15) = §pspdes04
+038200110202     c                   eval      codspc(16) = §pspcod05
+038300110202     c                   eval      desspc(16) = §pspdes05
+038400110202     c                   eval      codspc(17) = §pspcod06
+038500110202     c                   eval      desspc(17) = §pspdes06
+038600110202     c                   eval      codspc(18) = §pspcod07
+038700110202     c                   eval      desspc(18) = §pspdes07
+038800110202     c                   eval      codspc(19) = §pspcod08
+038900110202     c                   eval      desspc(19) = §pspdes08
+039000110202     c                   eval      codspc(20) = §pspcod09
+039100110202     c                   eval      desspc(20) = §pspdes09
+039200110202     c                   eval      codspc(21) = §pspcod10
+039300110202     c                   eval      desspc(21) = §pspdes10
+039400110202     c                   eval      codspc(22) = §pspcod11
+039500110202     c                   eval      desspc(22) = §pspdes11
+039600110202     c                   endif
+039700110202
+039800110202      * recupero tabella codici SPC (PSP)
+039900110202      * la password di sede
+040000110202     c                   clear                   tibs02ds
+040100110202     c                   clear                   dpsps
+040200110202     c                   eval      t02mod = 'C'
+040300110202     c                   eval      t02sif = knsif
+040400110202     c                   eval      t02cod = 'PSP'
+040500110202     c                   eval      t02ke1 = '046'
+040600110202     c                   call      'TIBS02R'
+040700110202     c                   parm                    kpjba
+040800110202     c                   parm                    tibs02ds
+040900110202     c                   if        t02err = *blanks
+041000110202     c                   eval      dpsps = t02uni
+041100110202     c                   endif
+041200110202     c                   if        dpsps <> *blanks
+041300110202     c                   eval      codspc(23) = §pspcods
+041400110202     c                   eval      desspc(23) = §pspdess
+041500110202     c                   endif
+041600110202
+041700110202     c                   endsr
+041800070129
+041900070129      *------------------------------------------------------------------------*
+042000070129      * ROUTINE CONTROLLO DATI FIPRC
+042100070129      *------------------------------------------------------------------------*
+042200070129     c     sr_ctrdati    begsr
+042300080924
+042400080924     c                   clear                   fidsfrchds
+042500081103     c                   eval      *in05 = *off
+042600070129
+042700070131      * tipo record
+042800070131      * se errato non posso continuare perchè non so come leggere i dati
+042900070201     c                   if        prctiporcd <> 'OK ' and
+043000070201     c                             prctiporcd <> 'RCH' and
+043100140129     c                             prctiporcd <> 'ROR' and
+043200070201     c                             prctiporcd <> 'RES'
+043300070131     c                   eval      plgerr = 'E'
+043400070131     c                   eval      plgmsg = 'TIPO RECORD NON VALIDO'
+043500070131     c                   eval      *in01 = *on
+043600110620     c                   eval      *in04 = *on
+043700070131     c                   leavesr
+043800070131     c                   endif
+043900070131     c                   eval      plgtiporcd = prctiporcd
+044000070131
+044100070129      * codice autotrasportatore
+044200070130      * anche se errato vado avanti lo stesso con i controlli ma lascio l'errore
+044300070131     c                   eval      wcodaut = %subst(prcprfc:3:7)
+044400070201      *  deve essere numerico
+044500070201     c                   eval      w030a = *all'0'
+044600070201     c                   movel     wcodaut       w030a
+044700070201     c                   exsr      sr_testn
+044800070201     c                   if        not *in02
+044900070201     c                   eval      plgerr = 'E'
+045000070201     c                   eval      plgmsg = 'AUTOTRASPORTATORE NON VALIDO'
+045100070201     c                   eval      *in01 = *on
+045200110620     c                   eval      *in04 = *on
+045300070201     c                   else
+045400070201      *  deve esistere
+045500070129     c                   eval      apdtip = 'A'
+045600070202     c                   move      wcodaut       apdpdr
+045700070129     c     kfiapd        chain     fiapd01l
+045800070129     c                   if        not %found(fiapd01l) or
+045900070129     c                             apdatb <> *blanks
+046000070129     c                   eval      plgerr = 'E'
+046100070129     c                   eval      plgmsg = 'AUTOTRASPORTATORE NON VALIDO'
+046200070130     c                   eval      *in01 = *on
+046300110620     c                   eval      *in04 = *on
+046400070130     c                   endif
+046500070201     c                   endif
+046600070130     c  n01              move      wcodaut       plgcodaut
+046700070129
+046800070129      * campo dati
+046900070129     c                   select
+047000070129     c                   when      prctiporcd = 'OK '
+047100070129     c                   exsr      sr_elabok
+047200070129     c                   when      prctiporcd = 'RCH'
+047300070129     c                   exsr      sr_elabrch
+047400070129     c                   when      prctiporcd = 'RES'
+047500070129     c                   exsr      sr_elabres
+047600140129     c                   when      prctiporcd = 'ROR'
+047700140129     c                   exsr      sr_elabror
+047800070129     c                   endsl
+047900070129
+048000070129     c                   endsr
+048100070129
+048200070129      *------------------------------------------------------------------------*
+048300070130      * ROUTINE ELABORAZIONE RCD "OK"
+048400070129      *------------------------------------------------------------------------*
+048500070129     c     sr_elabok     begsr
+048600070129
+048700070129     c                   eval      fiprcokds = prcdati
+048800070129
+048900070129      * p.o. gestione distinta
+049000070201     c                   eval      wfgs = §okfgs
+049100070201     c                   exsr      sr_ctrfgs
+049200070201     c   02              move      §okfgs        plgfgs
+049300070129
+049400070129      * numero distinta
+049500070201     c                   eval      wndc = §okndc
+049600070201     c                   exsr      sr_ctrndc
+049700070201     c   02              move      §okndc        plgndc
+049800070201
+049900070201      * controllo se esiste la distinta
+050000070201     c   02              exsr      sr_ctrdist
+050100070129
+050200070129      * tipo applicazione
+050300070130      * può essere C=consegne R=ritiri
+050400070131     c                   if        §oktpiddoc <> 'C' and §oktpiddoc <> 'R'
+050500070130     c  n01              eval      plgerr = 'E'
+050600070130     c  n01              eval      plgmsg = 'DATI NON VALIDI'
+050700070130     c  n01              eval      *in01 = *on
+050800110620     c  n01              eval      *in04 = *on
+050900070130     c                   else
+051000070131     c                   eval      plgtipappl = §oktpiddoc
+051100070130     c                   endif
+051200070129
+051300070129      * id documento
+051400080228      *  solo ritiro
+051500080228     c                   if        §oktpiddoc = 'R'
+051600070201      *  deve essere numerico
+051700070201     c                   eval      w030a = *all'0'
+051800070201     c                   eval      %subst(w030a:1:14) = %subst(§okiddoc:1:14)
+051900070201     c                   exsr      sr_testn
+052000070201     c                   if        not *in02
+052100070201     c  n01              eval      plgerr = 'E'
+052200070201     c  n01              eval      plgmsg = 'DATI ID DOC. ORM NON VALIDI'
+052300070201     c  n01              eval      *in01 = *on
+052400110620     c  n01              eval      *in04 = *on
+052500070201     c                   else
+052600070201      *  deve essere un n. di ORM valido
+052700070201     c                   move      §okpoe        ormpoe
+052800070201     c                   move      §oknsr        ormnsr
+052900070201     c                   move      §oknor        ormnor
+053000070201     c                   move      §oknrv        ormnrv
+053100070201     c     kfnorm        chain(n)  fnorm01l
+053200070201     c                   if        not %found(fnorm01l)
+053300070201     c  n01              eval      plgerr = 'E'
+053400070201     c  n01              eval      plgmsg = 'ORM INESISTENTE'
+053500070201     c  n01              eval      *in01 = *on
+053600110620     c  n01              eval      *in04 = *on
+053700070201     c                   endif
+053800070201     c                   endif
+053900070201     c  n01              eval      plgiddoc = §okiddoc
+054000080228     c                   endif
+054100070213
+054200070213      * data conferma
+054300070213      *  deve essere numerico
+054400070213     c                   eval      w030a = *all'0'
+054500070213     c                   movel     §okdata       w030a
+054600070213     c                   exsr      sr_testn
+054700070213     c                   if        not *in02
+054800070213     c  n01              eval      plgerr = 'E'
+054900070213     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+055000070213     c  n01              eval      *in01 = *on
+055100110620     c  n01              eval      *in04 = *on
+055200070213     c                   endif
+055300070213      *  deve essere una data valida
+055400070213     c                   if        *in02
+055500070213     c                   clear                   wlbdat
+055600070213     c                   move      §okdata       g02inv
+055700070213     c                   eval      g02err = '3'
+055800070213     c                   call      'XSRDA8'
+055900070213     c                   parm                    wlbdat
+056000070213     c                   if        g02err = '1'
+056100070213     c  n01              eval      plgerr = 'E'
+056200070213     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+056300070213     c  n01              eval      *in01 = *on
+056400110620     c  n01              eval      *in04 = *on
+056500070213     c                   endif
+056600070213     c                   endif
+056700070213
+056800070213      * ora conferma
+056900070213      *  deve essere numerico
+057000070213     c                   eval      w030a = *all'0'
+057100070213     c                   movel     §okora        w030a
+057200070213     c                   exsr      sr_testn
+057300070213     c                   if        not *in02
+057400070213     c  n01              eval      plgerr = 'E'
+057500070213     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+057600070213     c  n01              eval      *in01 = *on
+057700110620     c  n01              eval      *in04 = *on
+057800070213     c                   endif
+057900070213      *  deve essere un'ora valida
+058000070213     c                   if        *in02 and
+058100070213     c                             %subst(§okora:1:2) > '23' or
+058200070213     c                             %subst(§okora:3:2) > '59' or
+058300070213     c                             %subst(§okora:5:2) > '59'
+058400070213     c  n01              eval      plgerr = 'E'
+058500070213     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+058600080319     c  n01              eval      *in01 = *on
+058700110620     c  n01              eval      *in04 = *on
+058800070213     c                   endif
+058900110609      /free
+059000110609       //?La data di conferma ORM su rcd OK non può essere inferiore a 30 gg da oggi
+059100110609       //?in questo caso accetto il rcd ma imposto la data della distinta
+059200110609       //?e come ora imposto l'ora di ricezione del record
+059300110609       //?è capitato che PDA si è resettato ed ha riportato la data al 1980
+059400120920         IF  not *in01 and §OKdata < %editc(Oggi_10:'X');
+059500110609           §OKdata = %editc(DSTdfv:'X');
+059600110609           §OKora  = %subst(PRCdatora:9:6);
+059700121015           PLGmsg  = 'DATA < o > di 10 GG';
+059800110609         ENDIF;
+059900120920       //?E' capitato anche che il PDA è andato fuori di testa ed ha impostato
+060000120920       //?la data a 2514
+060100120920         IF  not *in01 and §OKdata > %editc(Oggi_10o:'X');
+060200120920           §OKdata = %editc(DSTdfv:'X');
+060300121015           %subst(§OKora:1:4)  = %subst(PRCdatora:9:4);
+060400121010           PLGmsg  = 'DATA < o > di 10 GG';
+060500120920         ENDIF;
+060600110609      /end-free
+060700070201
+060800070201      * flag richiesta assistenza
+060900140207     c                   if        §okflgass  <> *blank
+061000140213     c                   movel     'RAS'         tbecod
+061100140213     c                   movel     §okflgass     tbeke1
+061200140207     c     ktbe          chain     tntbe01l
+061300140207     c                   if        not %found(tntbe01l)
+061400070201     c  n01              eval      plgerr = 'E'
+061500070201     c  n01              eval      plgmsg = 'FLAG RICH. ASS. NON VALIDO'
+061600070201     c  n01              eval      *in01 = *on
+061700110620     c  n01              eval      *in04 = *on
+061800070201     c                   endif
+061900140225      * non memorizziamo richiesta assistenza per ORM RC
+062000140225     c                   IF        ORMnsr > 0
+062100140225     c  n01              eval      plgerr = 'E'
+062200140225     c  n01              eval      plgmsg = 'RICH. ASSISTENZA SU RC'
+062300140225     c  n01              eval      *in01 = *on
+062400140225     c  n01              eval      *in04 = *on
+062500140225     c                   ENDIF
+062600140207     c                   endif
+062700080221
+062800080221      * identificativo riga
+062900080319     c                   clear                   Widrow
+063000080221     c                   eval      w030a = *all'0'
+063100080221     c                   movel     §okidrow      w030a
+063200080221     c                   exsr      sr_testn
+063300080221     c                   if        not *in02
+063400080221     c  n01              eval      plgerr = 'E'
+063500080221     c  n01              eval      plgmsg = 'ID. RIGA OK NON VALIDO'
+063600080221     c  n01              eval      *in01 = *on
+063700110620     c  n01              eval      *in04 = *on
+063800080319
+063900080319     c                   else
+064000080319     c                   move      §okidrow      Widrow
+064100080221     c                   endif
+064200070129
+064300070129     c                   endsr
+064400070130
+064500070130      *------------------------------------------------------------------------*
+064600070130      * ROUTINE ELABORAZIONE RCD "RCH"
+064700070130      *------------------------------------------------------------------------*
+064800070130     c     sr_elabrch    begsr
+064900070130
+065000070130     c                   eval      fiprcrchds = prcdati
+065100070130
+065200070130      * p.o. gestione distinta
+065300070201     c                   eval      wfgs = §rchfgs
+065400070201     c                   exsr      sr_ctrfgs
+065500070201     c   02              move      §rchfgs       plgfgs
+065600070130
+065700070130      * numero distinta
+065800070201     c                   eval      wndc = §rchndc
+065900070201     c                   exsr      sr_ctrndc
+066000070201     c   02              move      §rchndc       plgndc
+066100070201
+066200070201      * controllo se esiste la distinta
+066300070201     c   02              exsr      sr_ctrdist
+066400070201
+066500070201      * controllo se stesso AUT
+066600070201     c                   if        *in02 and plgcodaut <> dstpdr
+066700070201     c  n01              eval      plgerr = 'E'
+066800070201     c  n01              eval      plgmsg = 'AUT. INCONGRUENTE'
+066900070201     c  n01              eval      *in01 = *on
+067000110620     c  n01              eval      *in04 = *on
+067100070201     c                   endif
+067200070201
+067300070201      * la distinta deve esistere anche su FIQDT
+067400070201     c                   if        *in02
+067500070201     c     kfiqdt        chain(n)  fiqdt01l
+067600070201     c                   if        not %found(fiqdt01l) or qdtatb <> *blanks
+067700070201     c  n01              eval      plgerr = 'E'
+067800070201     c  n01              eval      plgmsg = 'DISTINTA INESISTENTE SU FIQDT'
+067900070201     c  n01              eval      *in01 = *on
+068000110620     c  n01              eval      *in04 = *on
+068100070201     c                   endif
+068200070201     c                   endif
+068300070130
+068400070130      * totale colli
+068500070130      *  deve essere numerico
+068600070201     c                   eval      w030a = *all'0'
+068700070201     c                   movel     §rchncl       w030a
+068800070201     c                   exsr      sr_testn
+068900070201     c                   if        not *in02
+069000070130     c  n01              eval      plgerr = 'E'
+069100070201     c  n01              eval      plgmsg = 'DATI TOT. COLLI NON VALIDI'
+069200070130     c  n01              eval      *in01 = *on
+069300110620     c  n01              eval      *in04 = *on
+069400070201     c                   else
+069500070201     c                   move      §rchncl       wncl
+069600070130     c                   endif
+069700070130
+069800070130      * totale bancali
+069900070130      *  deve essere numerico
+070000070201     c                   eval      w030a = *all'0'
+070100070201     c                   movel     §rchbnc       w030a
+070200070201     c                   exsr      sr_testn
+070300070201     c                   if        not *in02
+070400070130     c  n01              eval      plgerr = 'E'
+070500070201     c  n01              eval      plgmsg = 'DATI TOT. BANCALI NON VALIDI'
+070600070130     c  n01              eval      *in01 = *on
+070700110620     c  n01              eval      *in04 = *on
+070800070201     c                   else
+070900070201     c                   move      §rchbnc       wbnc
+071000070130     c                   endif
+071100070213
+071200070213      * data chiusura
+071300070213      *  deve essere numerico
+071400070213     c                   eval      w030a = *all'0'
+071500070213     c                   movel     §rchdata      w030a
+071600070213     c                   exsr      sr_testn
+071700070213     c                   if        not *in02
+071800070213     c  n01              eval      plgerr = 'E'
+071900070213     c  n01              eval      plgmsg = 'DATA CHIUSURA NON VALIDA'
+072000070213     c  n01              eval      *in01 = *on
+072100110620     c  n01              eval      *in04 = *on
+072200070213     c                   endif
+072300070213      *  deve essere una data valida
+072400070213     c                   if        *in02
+072500070213     c                   clear                   wlbdat
+072600070213     c                   move      §rchdata      g02inv
+072700070213     c                   eval      g02err = '3'
+072800070213     c                   call      'XSRDA8'
+072900070213     c                   parm                    wlbdat
+073000070213     c                   if        g02err = '1'
+073100070213     c  n01              eval      plgerr = 'E'
+073200070213     c  n01              eval      plgmsg = 'DATA CHIUSURA NON VALIDA'
+073300070213     c  n01              eval      *in01 = *on
+073400110620     c  n01              eval      *in04 = *on
+073500070213     c                   endif
+073600070213     c                   endif
+073700070213
+073800070213      * ora chiusura
+073900070213      *  deve essere numerico
+074000070213     c                   eval      w030a = *all'0'
+074100070213     c                   movel     §rchora       w030a
+074200070213     c                   exsr      sr_testn
+074300070213     c                   if        not *in02
+074400070213     c  n01              eval      plgerr = 'E'
+074500070213     c  n01              eval      plgmsg = 'ORA CHIUSURA NON VALIDA'
+074600070213     c  n01              eval      *in01 = *on
+074700110620     c  n01              eval      *in04 = *on
+074800070213     c                   endif
+074900070213      *  deve essere un'ora valida
+075000070213     c                   if        *in02 and
+075100070213     c                             %subst(§rchora:1:2) > '23' or
+075200070213     c                             %subst(§rchora:3:2) > '59' or
+075300070213     c                             %subst(§rchora:5:2) > '59'
+075400070213     c  n01              eval      plgerr = 'E'
+075500070213     c  n01              eval      plgmsg = 'ORA CHIUSURA NON VALIDA'
+075600070213     c  n01              eval      *in01 = *on
+075700110620     c  n01              eval      *in04 = *on
+075800070213     c                   endif
+075900070514
+076000110609      /free
+076100110609       //?La data di chiusura distinta su rcd RCH non può essere inferiore a 30 gg da oggi
+076200110609       //?in questo caso accetto il rcd ma imposto la data della distinta
+076300110609       //?e come ora imposto l'ora di ricezione del record
+076400110609       //?è capitato che PDA si è resettato ed ha riportato la data al 1980
+076500120920         IF  not *in01 and §RCHdata < %editc(Oggi_10:'X');
+076600110609           §RCHdata = %editc(DSTdfv:'X');
+076700121015           %subst(§RCHora:1:4)  = %subst(PRCdatora:9:4);
+076800121010           PLGmsg   = 'DATA < o > di 10 GG';
+076900110609         ENDIF;
+077000120920       //?E' capitato anche che il PDA è andato fuori di testa ed ha impostato
+077100120920       //?la data a 2514
+077200120920         IF  not *in01 and §RCHdata > %editc(Oggi_10o:'X');
+077300120920           §RCHdata = %editc(DSTdfv:'X');
+077400121015           %subst(§RCHora:1:4)  = %subst(PRCdatora:9:4);
+077500121010           PLGmsg  = 'DATA < o > di 10 GG';
+077600120920         ENDIF;
+077700110609      /end-free
+077800110609
+077900070514      * imposto il tipo applicazione anche se non previsto dalla ds
+078000070514     c                   eval      plgtipappl = 'R'
+078100080513
+078200080513      * controllo codice SPC
+078300080721     c                   eval      *in05 = *off
+078400080519     c                   if        §rchcodspc <> *blanks
+078500080513     c                   exsr      sr_ctrcodspc
+078600080513     c                   endif
+078700070130
+078800070130     c                   endsr
+078900070130
+079000070130      *------------------------------------------------------------------------*
+079100070130      * ROUTINE ELABORAZIONE RCD "RES"
+079200070130      *------------------------------------------------------------------------*
+079300070130     c     sr_elabres    begsr
+079400070130
+079500070131     c                   eval      *in03 = *off
+079600070130     c                   eval      fiprcresds = prcdati
+079700070201
+079800070201      * causale
+079900070201      *  deve esistere
+080000070201     c                   if        §rescmr <> *blanks
+080100081106      * se causale 'AAA' ok...annullamento di ORM Manuale
+080200081106     c                             and §rescmr <> 'AAA'
+080300070201     c                   clear                   tibs02ds
+080400070201     c                   eval      t02mod = 'C'
+080500070201     c                   eval      t02sif = knsif
+080600070201     c                   eval      t02cod = 'CMR'
+080700070201     c                   eval      t02ke1 = §rescmr
+080800070201     c                   call      'TIBS02R'
+080900070201     c                   parm                    kpjba
+081000070201     c                   parm                    tibs02ds
+081100070201     c                   if        t02err <> *blanks
+081200070201     c  n01              eval      plgerr = 'E'
+081300070201     c  n01              eval      plgmsg = 'CAU. MANCATO RIT. INESISTENTE'
+081400070201     c  n01              eval      *in01 = *on
+081500110620     c  n01              eval      *in04 = *on
+081600070201     c                   endif
+081700070201     c                   endif
+081800070130
+081900070130      * p.o. gestione distinta
+082000070201     c                   eval      wfgs = §resfgs
+082100070201     c                   exsr      sr_ctrfgs
+082200070201     c   02              move      §resfgs       plgfgs
+082300070130
+082400070130      * numero distinta
+082500070201     c                   eval      wndc = §resndc
+082600070201     c                   exsr      sr_ctrndc
+082700070201     c   02              move      §resndc       plgndc
+082800070201
+082900070201      * controllo se esiste la distinta
+083000070201     c   02              exsr      sr_ctrdist
+083100070201
+083200070201      * controllo se stesso AUT
+083300070201     c                   if        *in02 and plgcodaut <> dstpdr
+083400070201     c  n01              eval      plgerr = 'E'
+083500070201     c  n01              eval      plgmsg = 'AUT. INCONGRUENTE'
+083600070201     c  n01              eval      *in01 = *on
+083700110620     c  n01              eval      *in04 = *on
+083800070201     c                   endif
+083900070201
+084000070201      * numero ORM
+084100070201      *  deve essere numerico
+084200070201     c                   eval      w030a = *all'0'
+084300070201     c                   eval      %subst(w030a:1:14) = %subst(prcdati:10:14)
+084400070201     c                   exsr      sr_testn
+084500070201     c                   if        not *in02
+084600070201     c  n01              eval      plgerr = 'E'
+084700070201     c  n01              eval      plgmsg = 'DATI ID DOC. ORM NON VALIDI'
+084800070201     c  n01              eval      *in01 = *on
+084900110620     c  n01              eval      *in04 = *on
+085000070201     c                   else
+085100070201      *  controllo se ORM manuale
+085200070521     c                   if        %subst(prcdati:10:8) = *all'0'
+085300070521     c                   eval      w006a = %subst(prcdati:18:6)
+085400070521     c                   move      w006a         wora
+085500070521     c     *eur          test(te)                wora
+085600070521     c                   if        %error
+085700070201     c  n01              eval      plgerr = 'E'
+085800070201     c  n01              eval      plgmsg = 'DATI ID DOC. ORM NON VALIDI'
+085900070201     c  n01              eval      *in01 = *on
+086000110620     c  n01              eval      *in04 = *on
+086100070201     c                   else
+086200070201     c                   eval      *in03 = *on
+086300080408     c                   eval      plgiddoc = %subst(prcdati:10:14)
+086400070201     c                   endif
+086500070202     c                   endif
+086600070202     c                   endif
+086700070130
+086800070201      * controllo la chiave ORM
+086900070201      * se non è un ORM manuale
+087000070201     c                   if        not *in03
+087100070202     c                   clear                   ormpoe
+087200070202     c                   clear                   ormnsr
+087300070202     c                   clear                   ormnor
+087400070202     c                   clear                   ormnrv
+087500070130      * p.o. emissione
+087600070130      *  deve essere numerico
+087700070201     c                   eval      w030a = *all'0'
+087800070201     c                   movel     §respoe       w030a
+087900070201     c                   exsr      sr_testn
+088000070201     c                   if        not *in02
+088100070130     c  n01              eval      plgerr = 'E'
+088200070201     c  n01              eval      plgmsg = 'DATI P.O. EMISSIONE NON VALIDI'
+088300070130     c  n01              eval      *in01 = *on
+088400110620     c  n01              eval      *in04 = *on
+088500070201     c                   else
+088600070201     c                   move      §respoe       ormpoe
+088700070130     c                   endif
+088800070130
+088900070130      * numero serie
+089000070130      *  deve essere numerico
+089100070201     c                   eval      w030a = *all'0'
+089200070201     c                   movel     §resnsr       w030a
+089300070201     c                   exsr      sr_testn
+089400070201     c                   if        not *in02
+089500070130     c  n01              eval      plgerr = 'E'
+089600070201     c  n01              eval      plgmsg = 'DATI N. SERIE NON VALIDI'
+089700070130     c  n01              eval      *in01 = *on
+089800110620     c  n01              eval      *in04 = *on
+089900070201     c                   else
+090000070201     c                   move      §resnsr       ormnsr
+090100070130     c                   endif
+090200070130
+090300070130      * numero orm
+090400070130      *  deve essere numerico
+090500070201     c                   eval      w030a = *all'0'
+090600070201     c                   movel     §resnor       w030a
+090700070201     c                   exsr      sr_testn
+090800070201     c                   if        not *in02
+090900070130     c  n01              eval      plgerr = 'E'
+091000070201     c  n01              eval      plgmsg = 'DATI N. ORM NON VALIDI'
+091100070130     c  n01              eval      *in01 = *on
+091200110620     c  n01              eval      *in04 = *on
+091300070201     c                   else
+091400070201     c                   move      §resnor       ormnor
+091500070130     c                   endif
+091600070130      * numero viaggio
+091700070130      *  deve essere numerico
+091800070201     c                   eval      w030a = *all'0'
+091900070201     c                   movel     §resnrv       w030a
+092000070201     c                   exsr      sr_testn
+092100070201     c                   if        not *in02
+092200070130     c  n01              eval      plgerr = 'E'
+092300070201     c  n01              eval      plgmsg = 'DATI N. VIAGGIO NON VALIDI'
+092400070130     c  n01              eval      *in01 = *on
+092500110620     c  n01              eval      *in04 = *on
+092600070201     c                   else
+092700070201     c                   move      §resnrv       ormnrv
+092800070130     c                   endif
+092900070131
+093000070201      * aggancio l'ORM
+093100070201     c     kfnorm        chain(n)  fnorm01l
+093200070131     c                   if        %found(fnorm01l)
+093300070201      * verifico se la distinta presente sull'ORM è la stessa del PDA
+093400070201     c                   if        ormndc <> plgndc
+093500070131     c  n01              eval      plgerr = 'E'
+093600070131     c  n01              eval      plgmsg = 'DISTINTA INCONGRUENTE'
+093700070131     c  n01              eval      *in01 = *on
+093800070201     c                   endif
+093900070201      * verifico la fase dell'ORM
+094000070201     c                   if        ormfao < 400 or ormfao >= 500
+094100070131     c  n01              eval      plgerr = 'E'
+094200070131     c  n01              eval      plgmsg = 'ESITO/FASE INCONGRUENTI'
+094300070131     c  n01              eval      *in01 = *on
+094400070201     c                   endif
+094500070131     c                   endif
+094600070207     c  n01              eval      %subst(plgiddoc:1:3) = §respoe
+094700070207     c  n01              eval      %subst(plgiddoc:4:2) = §resnsr
+094800070207     c  n01              eval      %subst(plgiddoc:6:7) = §resnor
+094900070207     c  n01              eval      %subst(plgiddoc:13:2) = §resnrv
+095000070201     c                   endif
+095100070213
+095200070213      * data conferma
+095300070213      *  deve essere numerico
+095400070213     c                   eval      w030a = *all'0'
+095500070213     c                   movel     §resdata      w030a
+095600070213     c                   exsr      sr_testn
+095700070213     c                   if        not *in02
+095800070213     c  n01              eval      plgerr = 'E'
+095900070213     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+096000070213     c  n01              eval      *in01 = *on
+096100110620     c  n01              eval      *in04 = *on
+096200070213     c                   endif
+096300070213      *  deve essere una data valida
+096400070213     c                   if        *in02
+096500070213     c                   clear                   wlbdat
+096600070213     c                   move      §resdata      g02inv
+096700070213     c                   eval      g02err = '3'
+096800070213     c                   call      'XSRDA8'
+096900070213     c                   parm                    wlbdat
+097000070213     c                   if        g02err = '1'
+097100070213     c  n01              eval      plgerr = 'E'
+097200070213     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+097300070213     c  n01              eval      *in01 = *on
+097400110620     c  n01              eval      *in04 = *on
+097500070213     c                   endif
+097600070213     c                   endif
+097700070213
+097800070213      * ora conferma
+097900070213      *  deve essere numerico
+098000070213     c                   eval      w030a = *all'0'
+098100070213     c                   movel     §resora       w030a
+098200070213     c                   exsr      sr_testn
+098300070213     c                   if        not *in02
+098400070213     c  n01              eval      plgerr = 'E'
+098500070213     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+098600070213     c  n01              eval      *in01 = *on
+098700110620     c  n01              eval      *in04 = *on
+098800070213     c                   endif
+098900070213      *  deve essere un'ora valida
+099000070213     c                   if        *in02 and
+099100070213     c                             %subst(§resora:1:2) > '23' or
+099200070213     c                             %subst(§resora:3:2) > '59' or
+099300070213     c                             %subst(§resora:5:2) > '59'
+099400070213     c  n01              eval      plgerr = 'E'
+099500070213     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+099600070213     c  n01              eval      *in01 = *on
+099700110620     c  n01              eval      *in04 = *on
+099800070213     c                   endif
+099900110609
+100000110609      /free
+100100110609       //?La data di immissione esito su rcd RES non può essere inferiore a 30 gg da oggi
+100200110609       //?in questo caso accetto il rcd ma imposto la data della distinta
+100300110609       //?e come ora imposto l'ora di ricezione del record
+100400110609       //?è capitato che PDA si è resettato ed ha riportato la data al 1980
+100500120920         IF  not *in01 and §RESdata < %editc(Oggi_10:'X');
+100600110609           §RESdata = %editc(DSTdfv:'X');
+100700121015           %subst(§RESora:1:4)  = %subst(PRCdatora:9:4);
+100800121010           PLGmsg   = 'DATA < o > di 10 GG';
+100900110609         ENDIF;
+101000120920       //?E' capitato anche che il PDA è andato fuori di testa ed ha impostato
+101100120920       //?la data a 2514
+101200120920         IF  not *in01 and §RESdata > %editc(Oggi_10o:'X');
+101300120920           §RESdata = %editc(DSTdfv:'X');
+101400121015           %subst(§RESora:1:4)  = %subst(PRCdatora:9:4);
+101500121010           PLGmsg  = 'DATA < o > di 10 GG';
+101600120920         ENDIF;
+101700110609      /end-free
+101800070130
+101900070130      * numero colli
+102000070130      *  deve essere numerico
+102100070201     c                   eval      w030a = *all'0'
+102200070201     c                   movel     §resncl       w030a
+102300070201     c                   exsr      sr_testn
+102400070201     c                   if        not *in02
+102500070130     c  n01              eval      plgerr = 'E'
+102600070201     c  n01              eval      plgmsg = 'DATI N. COLLI NON VALIDI'
+102700070130     c  n01              eval      *in01 = *on
+102800110620     c  n01              eval      *in04 = *on
+102900070130     c                   endif
+103000070130
+103100070130      * numero bancali
+103200070130      *  deve essere numerico
+103300070201     c                   eval      w030a = *all'0'
+103400070201     c                   movel     §resbnc       w030a
+103500070201     c                   exsr      sr_testn
+103600070201     c                   if        not *in02
+103700070130     c  n01              eval      plgerr = 'E'
+103800070201     c  n01              eval      plgmsg = 'DATI N. BANCALI NON VALIDI'
+103900070130     c  n01              eval      *in01 = *on
+104000110620     c  n01              eval      *in04 = *on
+104100070130     c                   endif
+104200070213
+104300070213      * data inserimento record
+104400070213      *  deve essere numerico
+104500070213     c                   eval      w030a = *all'0'
+104600070213     c                   movel     §resdatain    w030a
+104700070213     c                   exsr      sr_testn
+104800070213     c                   if        not *in02
+104900070213     c  n01              eval      plgerr = 'E'
+105000070213     c  n01              eval      plgmsg = 'DATA INSERIMENTO NON VALIDA'
+105100070213     c  n01              eval      *in01 = *on
+105200110620     c  n01              eval      *in04 = *on
+105300070213     c                   endif
+105400070213      *  deve essere una data valida
+105500070213     c                   if        *in02
+105600070213     c                   clear                   wlbdat
+105700070213     c                   move      §resdatain    g02inv
+105800070213     c                   eval      g02err = '3'
+105900070213     c                   call      'XSRDA8'
+106000070213     c                   parm                    wlbdat
+106100070213     c                   if        g02err = '1'
+106200070213     c  n01              eval      plgerr = 'E'
+106300070213     c  n01              eval      plgmsg = 'DATA INSERIMENTO NON VALIDA'
+106400070213     c  n01              eval      *in01 = *on
+106500110620     c  n01              eval      *in04 = *on
+106600070213     c                   endif
+106700070213     c                   endif
+106800070213
+106900070213      * ora conferma
+107000070213      *  deve essere numerico
+107100070213     c                   eval      w030a = *all'0'
+107200070213     c                   movel     §resorain     w030a
+107300070213     c                   exsr      sr_testn
+107400070213     c                   if        not *in02
+107500070213     c  n01              eval      plgerr = 'E'
+107600070213     c  n01              eval      plgmsg = 'ORA INSERIMENTO NON VALIDA'
+107700070213     c  n01              eval      *in01 = *on
+107800110620     c  n01              eval      *in04 = *on
+107900070213     c                   endif
+108000070213      *  deve essere un'ora valida
+108100070213     c                   if        *in02 and
+108200070213     c                             %subst(§resorain:1:2) > '23' or
+108300070213     c                             %subst(§resorain:3:2) > '59' or
+108400070213     c                             %subst(§resorain:5:2) > '59'
+108500070213     c  n01              eval      plgerr = 'E'
+108600070213     c  n01              eval      plgmsg = 'ORA INSERIMENTO NON VALIDA'
+108700070213     c  n01              eval      *in01 = *on
+108800110620     c  n01              eval      *in04 = *on
+108900070213     c                   endif
+109000110609
+109100110609      /free
+109200110609       //?La data di inserimento esito su rcd RES non può essere inferiore a 30 gg da oggi
+109300110609       //?in questo caso accetto il rcd ma imposto la data della distinta
+109400110609       //?e come ora imposto l'ora di ricezione del record
+109500110609       //?è capitato che PDA si è resettato ed ha riportato la data al 1980
+109600120920         IF  not *in01 and §RESdatain < %editc(Oggi_10:'X');
+109700110609           §RESdatain = %editc(DSTdfv:'X');
+109800121015           %subst(§RESorain:1:4)  = %subst(PRCdatora:9:4);
+109900121010           PLGmsg     = 'DATA < o > di 10 GG';
+110000110609         ENDIF;
+110100120920       //?E' capitato anche che il PDA è andato fuori di testa ed ha impostato
+110200120920       //?la data a 2514
+110300120920         IF  not *in01 and §RESdatain > %editc(Oggi_10o:'X');
+110400120920           §RESdatain = %editc(DSTdfv:'X');
+110500121015           %subst(§RESorain:1:4)  = %subst(PRCdatora:9:4);
+110600121010           PLGmsg     = 'DATA < o > di 10 GG';
+110700120920         ENDIF;
+110800110609      /end-free
+110900070130
+111000070130      * inserito da SPC
+111100070130      *  deve essere 'S' o blank
+111200070130     c                   if        §resflgspc <> 'S' and
+111300070130     c                             §resflgspc <> *blanks
+111400070130     c  n01              eval      plgerr = 'E'
+111500070201     c  n01              eval      plgmsg = 'FLAG INS. DA SPC NON VALIDO'
+111600070130     c  n01              eval      *in01 = *on
+111700110620     c  n01              eval      *in04 = *on
+111800070130     c                   endif
+111900070514
+112000070514      * imposto il tipo applicazione anche se non previsto dalla ds
+112100070514     c                   eval      plgtipappl = 'R'
+112200070130
+112300070130     c                   endsr
+112400070130
+112500140129      *------------------------------------------------------------------------*
+112600140129      * ROUTINE ELABORAZIONE RCD "ROR"
+112700140129      *------------------------------------------------------------------------*
+112800140129     c     sr_elabror    begsr
+112900140129
+113000140129     c                   eval      fiprcrords = prcdati
+113100140129
+113200140129      * p.o. gestione distinta
+113300140129     c                   eval      wfgs = §rorfgs
+113400140129     c                   exsr      sr_ctrfgs
+113500140129     c   02              move      §rorfgs       plgfgs
+113600140129
+113700140129      * numero distinta
+113800140129     c                   eval      wndc = §rorndc
+113900140129     c                   exsr      sr_ctrndc
+114000140207     c   02              move      §rorndc       plgndc
+114100140129
+114200140129      * controllo se esiste la distinta
+114300140129     c   02              exsr      sr_ctrdist
+114400140129
+114500140129      * tipo applicazione
+114600140129      * può essere C=consegne R=ritiri
+114700140207     c                   if        §rortpiddo <> 'C' and §rortpiddo <> 'R'
+114800140129     c  n01              eval      plgerr = 'E'
+114900140129     c  n01              eval      plgmsg = 'DATI NON VALIDI'
+115000140129     c  n01              eval      *in01 = *on
+115100140129     c  n01              eval      *in04 = *on
+115200140129     c                   else
+115300140207     c                   eval      plgtipappl = §rortpiddo
+115400140129     c                   endif
+115500140129
+115600140129      * id documento
+115700140129      *  solo ritiro
+115800140207     c                   if        §rortpiddo = 'R'
+115900140129      *  deve essere numerico
+116000140129     c                   eval      w030a = *all'0'
+116100140129     c                   eval      %subst(w030a:1:14) = %subst(§roriddoc:1:14)
+116200140129     c                   exsr      sr_testn
+116300140129     c                   if        not *in02
+116400140129     c  n01              eval      plgerr = 'E'
+116500140129     c  n01              eval      plgmsg = 'DATI ID DOC. ORM NON VALIDI'
+116600140129     c  n01              eval      *in01 = *on
+116700140129     c  n01              eval      *in04 = *on
+116800140129     c                   else
+116900140129      *  deve essere un n. di ORM valido
+117000140129     c                   move      §rorpoe       ormpoe
+117100140129     c                   move      §rornsr       ormnsr
+117200140129     c                   move      §rornor       ormnor
+117300140129     c                   move      §rornrv       ormnrv
+117400140129     c     kfnorm        chain(n)  fnorm01l
+117500140129     c                   if        not %found(fnorm01l)
+117600140129     c  n01              eval      plgerr = 'E'
+117700140129     c  n01              eval      plgmsg = 'ORM INESISTENTE'
+117800140129     c  n01              eval      *in01 = *on
+117900140129     c  n01              eval      *in04 = *on
+118000140129     c                   endif
+118100140129     c                   endif
+118200140129     c  n01              eval      plgiddoc = §roriddoc
+118300140129     c                   endif
+118400140129
+118500140129      * data conferma
+118600140129      *  deve essere numerico
+118700140129     c                   eval      w030a = *all'0'
+118800140129     c                   movel     §rordata      w030a
+118900140129     c                   exsr      sr_testn
+119000140129     c                   if        not *in02
+119100140129     c  n01              eval      plgerr = 'E'
+119200140129     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+119300140129     c  n01              eval      *in01 = *on
+119400140129     c  n01              eval      *in04 = *on
+119500140129     c                   endif
+119600140129      *  deve essere una data valida
+119700140129     c                   if        *in02
+119800140129     c                   clear                   wlbdat
+119900140129     c                   move      §rordata      g02inv
+120000140129     c                   eval      g02err = '3'
+120100140129     c                   call      'XSRDA8'
+120200140129     c                   parm                    wlbdat
+120300140129     c                   if        g02err = '1'
+120400140129     c  n01              eval      plgerr = 'E'
+120500140129     c  n01              eval      plgmsg = 'DATA CONFERMA NON VALIDA'
+120600140129     c  n01              eval      *in01 = *on
+120700140129     c  n01              eval      *in04 = *on
+120800140129     c                   endif
+120900140129     c                   endif
+121000140129
+121100140129      * ora conferma
+121200140129      *  deve essere numerico
+121300140129     c                   eval      w030a = *all'0'
+121400140129     c                   movel     §rorora       w030a
+121500140129     c                   exsr      sr_testn
+121600140129     c                   if        not *in02
+121700140129     c  n01              eval      plgerr = 'E'
+121800140129     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+121900140129     c  n01              eval      *in01 = *on
+122000140129     c  n01              eval      *in04 = *on
+122100140129     c                   endif
+122200140129      *  deve essere un'ora valida
+122300140129     c                   if        *in02 and
+122400140129     c                             %subst(§rorora:1:2) > '23' or
+122500140129     c                             %subst(§rorora:3:2) > '59' or
+122600140129     c                             %subst(§rorora:5:2) > '59'
+122700140129     c  n01              eval      plgerr = 'E'
+122800140129     c  n01              eval      plgmsg = 'ORA CONFERMA NON VALIDA'
+122900140129     c  n01              eval      *in01 = *on
+123000140129     c  n01              eval      *in04 = *on
+123100140129     c                   endif
+123200140129      /free
+123300140129       //?La data di conferma ORM su rcd OK non può essere inferiore a 30 gg da oggi
+123400140129       //?in questo caso accetto il rcd ma imposto la data della distinta
+123500140129       //?e come ora imposto l'ora di ricezione del record
+123600140129       //?è capitato che PDA si è resettato ed ha riportato la data al 1980
+123700140129         IF  not *in01 and §rordata < %editc(Oggi_10:'X');
+123800140207           §rordata = %editc(DSTdfv:'X');
+123900140129           §rorora  = %subst(PRCdatora:9:6);
+124000140129           PLGmsg  = 'DATA < o > di 10 GG';
+124100140129         ENDIF;
+124200140129       //?E' capitato anche che il PDA è andato fuori di testa ed ha impostato
+124300140129       //?la data a 2514
+124400140129         IF  not *in01 and §rordata > %editc(Oggi_10o:'X');
+124500140129           §rordata = %editc(DSTdfv:'X');
+124600140129           %subst(§rorora:1:4)  = %subst(PRCdatora:9:4);
+124700140129           PLGmsg  = 'DATA < o > di 10 GG';
+124800140129         ENDIF;
+124900140129      /end-free
+125000140129
+125100140129      * ora stimata
+125200140129     c                   clear                   Worasti
+125300140129     c                   eval      w030a = *all'0'
+125400140129     c                   movel     §rororasti    w030a
+125500140129     c                   exsr      sr_testn
+125600140129     c                   if        not *in02
+125700140129     c  n01              eval      plgerr = 'E'
+125800140129     c  n01              eval      plgmsg = 'ORA STIMATA NON VALIDA'
+125900140129     c  n01              eval      *in01 = *on
+126000140129     c  n01              eval      *in04 = *on
+126100140129      *
+126200140129     c                   if        %subst(§rorora:1:2) > '23' or
+126300140129     c                             %subst(§rorora:3:2) > '59' or
+126400140129     c                             %subst(§rorora:5:2) > '59'
+126500140129     c  n01              eval      plgerr = 'E'
+126600140129     c  n01              eval      plgmsg = 'ORA STIMATA NON VALIDA'
+126700140129     c  n01              eval      *in01 = *on
+126800140129     c  n01              eval      *in04 = *on
+126900140129     c                   endif
+127000140129
+127100140129     c                   else
+127200140129     c                   move      §rororasti    Worasti
+127300140129     c                   endif
+127400140129
+127500140129      * ordinamento
+127600140129     c                   clear                   Wsort
+127700140129     c                   eval      w030a = *all'0'
+127800140129     c                   movel     §rorsort      w030a
+127900140129     c                   exsr      sr_testn
+128000140129     c                   if        not *in02
+128100140129     c  n01              eval      plgerr = 'E'
+128200140129     c  n01              eval      plgmsg = 'ORDINAMENTO NON VALIDO'
+128300140129     c  n01              eval      *in01 = *on
+128400140129     c  n01              eval      *in04 = *on
+128500140129
+128600140129     c                   else
+128700140129     c                   move      §rorsort      Wsort
+128800140129     c                   endif
+128900140129
+129000140129     c                   endsr
+129100140129
+129200070130      *------------------------------------------------------------------------*
+129300070130      * ROUTINE PER AGGIORNARE I DATI EFFETTIVI
+129400070130      *------------------------------------------------------------------------*
+129500070130     c     sr_file       begsr
+129600070130
+129700070130     c                   select
+129800070130      * tipo record 'RCH'
+129900070130     c                   when      plgtiporcd = 'RCH'
+130000080327      * aggiorno fiqdt
+130100070201     c                   exsr      sr_fiqdt
+130200080327      * devo cancellare i dati da FIPDO e da FIPRO
+130300070201     c                   exsr      sr_fipdo
+130400080319     c                   exsr      sr_fipro
+130500070130
+130600070130      * tipo record 'RES'
+130700070131     c                   when      plgtiporcd = 'RES' and
+130800070131     c                             not *in03
+130900070201     c                   exsr      sr_fnorm
+131000070130
+131100070130     c                   endsl
+131200070130
+131300070130     c                   endsr
+131400070202
+131500070202      *------------------------------------------------------------------------*
+131600070202      * ROUTINE SCRITTURA FILE LOG
+131700070202      *------------------------------------------------------------------------*
+131800070202     c     sr_wrtlog     begsr
+131900070202
+132000070202     c                   eval      plgprfc = prcprfc
+132100070202     c                   eval      plgiddisp = prciddisp
+132200070202     c                   eval      plgdatora = prcdatora
+132300070202     c                   eval      plgdati = prcdati
+132400070205     c                   write     fiplg000
+132500070202
+132600070202     c                   endsr
+132700070201
+132800080415      *------------------------------------------------------------------------*
+132900080415      * ROUTINE SCRITTURA FILE PER PROSPETTO ORM
+133000080415      *------------------------------------------------------------------------*
+133100080415     c     sr_Prospetto  begsr
+133200080415
+133300080415      * se ricevo un RES
+133400080417    1c                   If        plgtiporcd = 'RES'
+133500080415      * cerco l'ORM da scrivere o aggiornare nel file dettaglio prospetto ORM
+133600080415     c     kfirpd        chain     Firpd02l
+133700080415
+133800080417    2c                   if        not %found(firpd02l)
+133900080415     c                   clear                   firpd000
+134000080415     c                   eval      rpdfgs = plgfgs
+134100080415     c                   eval      rpdnfv = plgndc
+134200080415     c                   eval      rpdpdr = plgcodaut
+134300080415     c                   eval      rpdiddoc = plgiddoc
+134400080415      * è un manuale ???
+134500080417    3c                   if        %subst(plgiddoc:1:8) = *all'0'
+134600080417     c                   eval      rpdman = 'S'
+134700080415     c                   eval      rpdrsr = §resrsr
+134800080415     c                   eval      rpdinr = §resinr
+134900080417    3c                   endif
+135000080417     c                   move      §resncl       rpdncl
+135100080417     c                   move      §resbnc       rpdbnc
+135200080415     c                   eval      rpdcmr = §rescmr
+135300080417     c                   movel     §resdata      rpddtr
+135400080417     c                   move      §resora       rpdorr
+135500080415     c                   eval      rpdflgspc = §resflgspc
+135600080417     c                   movel     §resdtorin    rpddtorin
+135700081106      * non scrivo record se orm manuale annullato
+135800081106     c                   if        rpdman <> 'S' or
+135900081106     c                             (rpdman = 'S' and §rescmr <> 'AAA')
+136000080417     c                   write     firpd000
+136100081106     c                   endif
+136200080417    2c                   endif
+136300080417      * se trovato record se data ora modifica maggiore di quella registrata aggiorno
+136400080417    2c                   if        %found(firpd02l) and
+136500080417     c                             rpddtorin < §resdtorin
+136600081106      * ma solo se non è un orm manuale annullato
+136700081106     c                             and (rpdman <> 'S' or
+136800081106     c                                 (rpdman = 'S' and §rescmr <> 'AAA'))
+136900080417     c                   move      §resncl       rpdncl
+137000080417     c                   move      §resbnc       rpdbnc
+137100080417     c                   eval      rpdcmr = §rescmr
+137200080505     c                   movel     §resdtorin    rpddtorin
+137300080505     c                   eval      rpdflgspc = §resflgspc
+137400080417     c                   update    firpd000
+137500080417    2c                   endif
+137600081106
+137700081106      * se trovato record e orm manuale annullato cancello il record
+137800081106    2c                   if        %found(firpd02l) and
+137900081106     c                             rpdman = 'S' and §rescmr = 'AAA'
+138000081106     c                   delete    firpd000
+138100081106    2c                   endif
+138200080417
+138300080417    1c                   endif
+138400080417
+138500080417      * se ricevo un RCH
+138600080417    1c                   If        plgtiporcd = 'RCH'
+138700080417      * cerco se la distinta è presente
+138800080417     c     kfirpt        chain     Firpt01l
+138900080417
+139000080417    2c                   if        not %found(firpt01l)
+139100080417     c                   clear                   firpt000
+139200080417     c                   eval      rptfgs = plgfgs
+139300080417     c                   eval      rptnfv = plgndc
+139400080417     c                   eval      rptpdr = plgcodaut
+139500080421     c                   eval      rptdfv = dstdfv
+139600080418     c                   eval      rptfpp = dstfpp
+139700080418     c                   eval      rpttpm = dsttpm
+139800080417     c                   move      §rchncl       rpttco
+139900080417     c                   move      §rchbnc       rpttbn
+140000080417     c                   movel     §rchdata      rptdch
+140100080417     c                   move      §rchora       rptoch
+140200080417     c                   write     firpt000
+140300080417    2c                   endif
+140400080417      * se trovato record se data ora modifica maggiore di quella registrata aggiorno
+140500080417    2c                   if        %found(firpt01l)
+140600080417     c                   movel     rptdch        w_dtaorach
+140700080417     c                   move      rptoch        w_dtaorach
+140800080417    3c                   If        w_dtaorach < §rchdatora
+140900080417     c                   move      §rchncl       rpttco
+141000080417     c                   move      §rchbnc       rpttbn
+141100080417     c                   movel     §rchdata      rptdch
+141200080417     c                   move      §rchora       rptoch
+141300080417     c                   update    firpt000
+141400080417    3c                   endif
+141500080417    2c                   endif
+141600080417
+141700080417    1c                   endif
+141800080415
+141900080415     c                   endsr
+142000080319      *------------------------------------------------------------------------*
+142100080319      * ROUTINE SCRITTURA FILE OK RICEVUTI
+142200080319      *------------------------------------------------------------------------*
+142300080319     c     sr_wrtpro     begsr
+142400080319
+142500080730      * verifico se estiste già un ok per questo ORM + DISTINTA + AUT
+142600080319
+142700140128     c     kfipro        chain     fipro11l
+142800080319
+142900080319      * se il record esiste e l'ok che ho ricevuto ha un idrow minore o uguale
+143000140207     c                   if        %found(fipro11l)
+143100140207     c                   movel     prodati       fiprookds
+143200140207     c                   endif
+143300080319      * a quello del file vado a fine
+143400140207     c                   if        %found(fipro11l) and widrow <= §proidrow
+143500080319     c                   leavesr
+143600080319     c                   endif
+143700080319
+143800140128     c                   eval      prodatora = §OKDATORA
+143900080319      * valorizzo i campi dell'ok
+144000140128     c                   eval      §proidrow = widrow
+144100140128     c                   eval      §proflgass = §OKFLGASS
+144200140224     c                   eval      §PROFLGVIS = ' '
+144300140128     c                   eval      §pronotass = §OKnotass
+144400140128     c                   eval      Prodati    = fiprookds
+144500080319
+144600140207     c                   if        not %found(fipro11l)
+144700080319     c                   eval      profgs = plgfgs
+144800080319     c                   eval      prondc = plgndc
+144900080730     c                   eval      procodaut = plgcodaut
+145000080319     c                   clear                   proatb
+145100080319     c                   eval      propoe = ormpoe
+145200080319     c                   eval      pronsr = ormnsr
+145300080319     c                   eval      pronor = ormnor
+145400080319     c                   eval      pronrv = ormnrv
+145500140128     c                   eval      protrd = 'OK '
+145600140128     c                   write     fipro100
+145700080319     c                   else
+145800140128     c                   update    fipro100
+145900080319     c                   endif
+146000080319
+146100080319     c                   endsr
+146200080319
+146300140129      *------------------------------------------------------------------------*
+146400140129      * ROUTINE SCRITTURA FILE ROR RICEVUTI
+146500140129      *------------------------------------------------------------------------*
+146600140129     c     sr_wrtproror  begsr
+146700140129
+146800140129      * verifico se estiste già un ok per questo ORM + DISTINTA + AUT
+146900140129
+147000140129     c     kfipro        chain     fipro11l
+147100140129
+147200140129     c                   eval      prodatora = §rorDATORA
+147300140207      * valorizzo i campi del ror
+147400140207     c                   move      §rorORASTI    §PROORASTI
+147500140207     c                   move      §rorSORT      §PROSORT
+147600140129     c                   eval      Prodati    = fiprorords
+147700140129
+147800140129     c                   if        not %found(fipro11l)
+147900140129     c                   eval      profgs = plgfgs
+148000140129     c                   eval      prondc = plgndc
+148100140129     c                   eval      procodaut = plgcodaut
+148200140129     c                   clear                   proatb
+148300140129     c                   eval      propoe = ormpoe
+148400140129     c                   eval      pronsr = ormnsr
+148500140129     c                   eval      pronor = ormnor
+148600140129     c                   eval      pronrv = ormnrv
+148700140129     c                   eval      protrd = 'ROR'
+148800140129     c                   write     fipro100
+148900140129     c                   else
+149000140129     c                   update    fipro100
+149100140129     c                   endif
+149200140129
+149300140129     c                   endsr
+149400140129
+149500070201      *------------------------------------------------------------------------*
+149600070201      * ROUTINE PER CONTROLLARE IL P.O. GESTIONE DISTINTA
+149700070201      *------------------------------------------------------------------------*
+149800070201     c     sr_ctrfgs     begsr
+149900070201
+150000070201     c                   eval      w030a = *all'0'
+150100070201     c                   movel     wfgs          w030a
+150200070201     c                   exsr      sr_testn
+150300070201     c                   if        not *in02
+150400070201     c  n01              eval      plgerr = 'E'
+150500070201     c  n01              eval      plgmsg = 'DATI P.O. DISTINTA NON VALIDI'
+150600070201     c  n01              eval      *in01 = *on
+150700110620     c  n01              eval      *in04 = *on
+150800070201     c                   endif
+150900070201
+151000070201     c                   endsr
+151100070201
+151200070201      *------------------------------------------------------------------------*
+151300070201      * ROUTINE PER CONTROLLARE IL NUMERO DISTINTA
+151400070201      *------------------------------------------------------------------------*
+151500070201     c     sr_ctrndc     begsr
+151600070201
+151700070201     c                   eval      w030a = *all'0'
+151800070201     c                   movel     wndc          w030a
+151900070201     c                   exsr      sr_testn
+152000070201     c                   if        not *in02
+152100070201     c  n01              eval      plgerr = 'E'
+152200070201     c  n01              eval      plgmsg = 'DATI NUM. DISTINTA NON VALIDI'
+152300070201     c  n01              eval      *in01 = *on
+152400110620     c  n01              eval      *in04 = *on
+152500070201     c                   endif
+152600070201
+152700070201     c                   endsr
+152800070201
+152900070201      *------------------------------------------------------------------------*
+153000070201      * ROUTINE PER CONTROLLARE L'EISISTENZA DELLA DISTINTA
+153100070201      *------------------------------------------------------------------------*
+153200070201     c     sr_ctrdist    begsr
+153300070201
+153400080226     c                   eval      dstnpg = 4
+153500070201     c                   move      wndc          dstnfv
+153600070201     c                   move      wfgs          dstfgs
+153700080317     c                   clear                   ddstflr
+153800080226     c     kfidst        chain     fidst01l
+153900080226     c                   if        not %found(fidst01l) or dstatb <> *blanks
+154000070201     c  n01              eval      plgerr = 'E'
+154100070201     c  n01              eval      plgmsg = 'DISTINA INESISTENTE'
+154200070201     c  n01              eval      *in01 = *on
+154300110620     c  n01              eval      *in04 = *on
+154400080317     c                   leavesr
+154500070201     c                   endif
+154600080317     c                   eval      ddstflr = dstflr
+154700070201
+154800070201     c                   endsr
+154900080513
+155000080513      *------------------------------------------------------------------------*
+155100080513      * ROUTINE PER CONTROLLARE CODICE SPC
+155200080513      *------------------------------------------------------------------------*
+155300080513     c     sr_ctrcodspc  begsr
+155400080513
+155500080519     c                   eval      *in05 = *off
+155600080924     c                   eval      xx = 1
+155700080924     c     §rchcodspc    lookup    codspc(xx)                             30
+155800080514     c                   if        not *in30
+155900080519     c                   eval      *in05 = *on
+156000080924     c                   else
+156100080924     c                   eval      §rchspccod = codspc(xx)
+156200080924     c                   eval      §rchspcdes = desspc(xx)
+156300080514     c                   endif
+156400080513
+156500080513     c                   endsr
+156600070201
+156700070201      *------------------------------------------------------------------------*
+156800070201      * ROUTINE PER CONTROLLARE SE IL CAMPO E' NUMERICO
+156900070201      *------------------------------------------------------------------------*
+157000070201     c     sr_testn      begsr
+157100070201
+157200070201     c                   eval      *in02 = *off
+157300070201     c                   testn                   w030a                02
+157400070201
+157500070201     c                   endsr
+157600070201
+157700070201      *------------------------------------------------------------------------*
+157800070201      * ROUTINE PER AGGIORNARE FIQDT
+157900070201      *------------------------------------------------------------------------*
+158000070201     c     sr_fiqdt      begsr
+158100070201
+158200070201      * imposto la data e ora attuale
+158300070201     c                   time                    w0140
+158400070201     c                   move      w0140         udate8
+158500070201     c                   movel     w0140         hhmm
+158600070201     c                   z-add     udate8        g02dat
+158700070201     c                   move      *blank        g02err
+158800070201     c                   call      'XSRDA8'
+158900070201     c                   parm                    wlbdat
+159000070201     c                   z-add     g02inv        dateu8
+159100070201
+159200070201      * aggancio FIQDT
+159300070202     c     kfiqdt        chain(e)  fiqdt01l
+159400070205      * se rcd allocato flag di comodo per poi fare il rollback
+159500070202     c                   if        %error
+159600070202     c                   eval      wfiqdt = *on
+159700070202     c                   leavesr
+159800070202     c                   endif
+159900070201     c                   if        %found(fiqdt01l)
+160000070201      * bancali ritirati
+160100081106      * se distinta a PDA non in test sommo i bancali rientrati a quando già presente su
+160200081106      * fiqdt
+160300110316     c**!!!              if        dstpda = 'E' and §dsttstpda = *blanks
+160400110316     c**!!!              add       wbnc          qdtnbnri
+160500110316     c**!!!              eval      qdtorari = hhmm
+160600110316     c**!!!              eval      qdtdairi = dateu8
+160700110316     c**!!!              eval      qdtfnbri = 'S'
+160800110316     c**!!!              endif
+160900080317     c****               if        wbnc <> qdtnbnri
+161000080317     c****               eval      qdtnbnri = wbnc
+161100080317     c****               eval      qdtorari = hhmm
+161200080317     c****               eval      qdtdairi = dateu8
+161300080317     c****               endif
+161400070201      * colli ritirati
+161500070201     c                   if        wncl <> qdtnclrit
+161600070201     c                   eval      qdtnclrit = wncl
+161700081112     c                   eval      qdtfncrit = 'S'
+161800070201     c                   endif
+161900070201
+162000070205     c                   update    fiqdt000
+162100070201     c                   endif
+162200070201
+162300070201     c                   endsr
+162400080327
+162500080327      *------------------------------------------------------------------------*
+162600080327      * ROUTINE PER SCRIVERE LA FASE RCH SULLA DISTINTA
+162700080327      *------------------------------------------------------------------------*
+162800080327     c     sr_fase       begsr
+162900080327
+163000080327     c                   clear                   fior90ds
+163100080327     c                   eval      or90tla = 'W'
+163200080327     c                   eval      or90fas = 'RCH'
+163300080327     c                   eval      or90fgs = plgfgs
+163400080327     c                   eval      or90ndc = plgndc
+163500080327     c                   eval      or90flgins = 'P'
+163600080327     c                   eval      or90comit = '1'
+163700080924     c                   eval      kpjbu = fidsfrchds
+163800080327     c                   call      'FIOR90R'
+163900080327     c                   parm                    kpjba
+164000080327     c                   parm                    fior90ds
+164100080327      * se torna errore imposto flag per poi fare il rollback
+164200080327     c                   if        or90err <> *blanks
+164300080327     c                   eval      wfase = *on
+164400080327     c                   leavesr
+164500080327     c                   endif
+164600080327
+164700080327     c                   endsr
+164800070201
+164900070201      *------------------------------------------------------------------------*
+165000080319      * ROUTINE PER CANCELLARE RCD DA FIPDO
+165100070201      *------------------------------------------------------------------------*
+165200070201     c     sr_fipdo      begsr
+165300080319
+165400080319      * Cancellazione PDO
+165500070201     c     kfiqdt        setll     fipdo01t
+165600070201     c                   do        *hival
+165700070205     c     kfiqdt        reade(e)  fipdo01t
+165800070205      * se rcd allocato flag di comodo per poi fare il rollback
+165900070205     c                   if        %error
+166000070205     c                   eval      wfipdo = *on
+166100070205     c                   leave
+166200070205     c                   endif
+166300070201     c                   if        %eof(fipdo01t)
+166400070201     c                   leave
+166500070201     c                   endif
+166600070205     c                   delete    fipdo000
+166700070201     c                   enddo
+166800080319
+166900070201     c                   endsr
+167000070201
+167100080319      *------------------------------------------------------------------------*
+167200080319      * ROUTINE PER CANCELLARE RCD DA FIPRO
+167300080319      *------------------------------------------------------------------------*
+167400080319     c     sr_fipro      begsr
+167500080319
+167600080319      * Cancellazione PRO
+167700140207     c     kfiqdt        setll     fipro11l
+167800080319     c                   do        *hival
+167900140207     c     kfiqdt        reade(e)  fipro11l
+168000080319      * se rcd allocato flag di comodo per poi fare il rollback
+168100080319     c                   if        %error
+168200080319     c                   eval      wfipro = *on
+168300080319     c                   leave
+168400080319     c                   endif
+168500140207     c                   if        %eof(fipro11l)
+168600080319     c                   leave
+168700080319     c                   endif
+168800140207     c                   delete    fipro100
+168900080319     c                   enddo
+169000080319
+169100080319     c                   endsr
+169200080319
+169300070201      *------------------------------------------------------------------------*
+169400070201      * ROUTINE PER AGGIORNARE FNORM/FNORF
+169500070201      *------------------------------------------------------------------------*
+169600070201     c     sr_fnorm      begsr
+169700070201
+169800070201      * imposto la data e ora attuale
+169900070201     c                   time                    w0140
+170000070201     c                   move      w0140         udate8
+170100070201     c                   z-add     udate8        g02dat
+170200070201     c                   move      *blank        g02err
+170300070201     c                   call      'XSRDA8'
+170400070201     c                   parm                    wlbdat
+170500070201     c                   z-add     g02inv        dateu8
+170600070201
+170700070201      * aggancio FNORM
+170800070202     c     kfnorm        chain(e)  fnorm01l
+170900070205      * se rcd allocato flag di comodo per poi fare il rollback
+171000070202     c                   if        %error
+171100070202     c                   eval      wfnorm = *on
+171200070202     c                   leavesr
+171300070202     c                   endif
+171400070201     c                   if        %found(fnorm01l)
+171500080219      * aggancio l'ultima fase dell'ORM
+171600080219      * per recuperare l'eventuale data/ora dell'ultimo esito avuto da PDA
+171700080219     c                   clear                   dorf01
+171800080219     c                   clear                   savdfo
+171900080219     c                   clear                   savofo
+172000080219     c     kfnorf        chain     fnorf01l
+172100080219     c                   if        %found(fnorf01l)
+172200080219     c                   eval      dorf01 = orfflo
+172300080320      * mi salvo orfass della fase precedente
+172400080320     c                   eval      save_§orfass = §orfass
+172500080320
+172600080219     c                   endif
+172700080219     c                   if        §orfesito <> *blanks
+172800080219     c                   eval      savdfo = %int(%subst(§orfesito:1:8))
+172900080219     c                   eval      savofo = %int(%subst(§orfesito:9:6))
+173000080219     c                   endif
+173100080212
+173200070201     c                   select
+173300070201      * esito fatto
+173400070201     c                   when      §rescmr = *blanks
+173500070201     c                   eval      ormfao = 420
+173600070201      * esito non fatto
+173700070201     c                   when      §rescmr <> *blanks
+173800070201     c                   eval      ormfao = 410
+173900070201     c                   endsl
+174000070201
+174100070213     c                   move      §resdata      ormdfo
+174200070213     c                   move      §resora       ormofo
+174300070716      * imposto il campo ORMETI
+174400070716     c                   clear                   tibs02ds
+174500070716     c                   eval      t02mod = 'C'
+174600070716     c                   eval      t02sif = knsif
+174700070716     c                   eval      t02cod = 'FAR'
+174800070716     c                   movel(p)  ormfao        t02ke1
+174900070716     c                   call      'TIBS02R'
+175000070716     c                   parm                    kpjba
+175100070716     c                   parm                    tibs02ds
+175200070716     c                   eval      dfar = t02uni
+175300070716     c                   eval      ormeti = d§farass
+175400070201      * scrivo fase
+175500070201     c                   clear                   fnorf000
+175600080219     c                   clear                   dorf01
+175700070201     c                   eval      orfpoe = ormpoe
+175800070201     c                   eval      orfnsr = ormnsr
+175900070201     c                   eval      orfnor = ormnor
+176000070201     c                   eval      orfnrv = ormnrv
+176100070201     c                   eval      orfpog = plgfgs
+176200070201     c                   eval      orfdae = ormdfo
+176300070201     c                   eval      orfore = ormofo
+176400070201     c                   eval      orffar = ormfao
+176500070221     c                   eval      orfpue = prcprfc
+176600070201     c                   eval      orfcar = §rescmr
+176700070201     c                   eval      orffgs = plgfgs
+176800070201     c                   eval      orfndc = plgndc
+176900070201     c                   eval      orfddc = ormddc
+177000080219     c                   eval      §orfesito = §resdtorin
+177100080320      * imposto  orfass della fase precedente
+177200080320     c                   eval      §orfass =  save_§orfass
+177300080219     c                   eval      orfflo = dorf01
+177400070205     c                   write     fnorf000
+177500080409      * scrivo NOTE
+177600080409      * solo se ci sono
+177700080409     c                   if        §resnote <> *blanks
+177800080409     c                   clear                   wprg
+177900080409      * cerco ultimo progressivo relativo alla stessa fase
+178000080409     c     kfnorn        setll     fnorn02l
+178100080409     c                   do        *hival
+178200080409     c     kfnorn        reade     fnorn02l
+178300080409     c                   if        %eof(fnorn02l)
+178400080409     c                   leave
+178500080409     c                   endif
+178600080409     c                   eval      wprg = ornprg
+178700080409     c                   enddo
+178800080409      * scrivo la nota
+178900080409     c                   add       1             wprg
+179000080409     c                   clear                   fnorn000
+179100080409     c                   eval      ornpoe = ormpoe
+179200080409     c                   eval      ornnsr = ormnsr
+179300080409     c                   eval      ornnor = ormnor
+179400080409     c                   eval      ornnrv = ormnrv
+179500080409     c                   eval      ornfar = ormfao
+179600080409     c                   movel     §orfesito     orndai
+179700080409     c                   move      §orfesito     ornori
+179800080409     c                   eval      ornprg = wprg
+179900080409     c                   eval      ornpue = orfpue
+180000080409     c                   eval      ornpon = plgfgs
+180100080409     c                   eval      ornsns = 'I'
+180200080409     c                   eval      ornnot = §resnote
+180300080409     c                   eval      ornftr = 'S'
+180400080409     c                   eval      orndtr = dateu8
+180500080409     c                   write     fnorn000
+180600080409     c                   endif
+180700070202      * aggiorno ORM
+180800080212      * solo se la data/ora ultima fase dell'ORM è inferiore a quella che sto per scrivere
+180900080212     c                   if        ormdfo > savdfo or
+181000080214     c                             (ormdfo = savdfo and ormofo >= savofo)
+181100070205     c                   update    fnorm000
+181200080212     c                   endif
+181300080227      * scrivo la partita iva e il codice fiscale nel file di appoggio
+181400080320      *
+181500080320      * verifico se esiste il file di appoggio fipci02l
+181600080320     c     kfnorm        chain     fipci02l
+181700080320      * nel casi in cui almeno uno dei due dati è valorizzato aggiorno o scrivo
+181800080227     c                   if        §rescodfis <> *blanks or §respiva <> *blanks
+181900080227     c                   if        %found(fipci02l)
+182000080227     c                   eval      pcicdf = §rescodfis
+182100080227     c                   eval      pciiso = §resisoiva
+182200080228     c                   eval      pcicpi = §respiva
+182300080227     c                   clear                   pciesito
+182400080227     c                   update    fipci000
+182500080227     c                   else
+182600080227     c                   clear                   fipci000
+182700080227     c                   eval      pcipoe = ormpoe
+182800080227     c                   eval      pcinsr = ormnsr
+182900080227     c                   eval      pcinor = ormnor
+183000080227     c                   eval      pcinrv = ormnrv
+183100080227     c                   eval      pcicdf = §rescodfis
+183200080227     c                   eval      pciiso = §resisoiva
+183300080228     c                   eval      pcicpi = §respiva
+183400080228     c                   write     fipci000
+183500080227     c                   endif
+183600080227     c                   endif
+183700080320
+183800080321      * nel casi in cui entrambi sono a blank ed il record esiste annullo il rcd
+183900080320     c                   if        §rescodfis = *blanks and §respiva = *blanks
+184000080320     c                             and %found(fipci02l)
+184100080321     c                   eval      pciatb = 'A'
+184200080321     c                   update    fipci000
+184300080320     c                   endif
+184400080320
+184500070201     c                   endif
+184600070201
+184700070201     c                   endsr
+184800080519
+184900080519      *------------------------------------------------------------------------*
+185000080519      * ROUTINE PER INVIARE MAIL SE ERRORE CODICE SPC
+185100080519      *------------------------------------------------------------------------*
+185200080519     c     sr_mail       begsr
+185300080519
+185400080519      * Reperimento tab. "MRA" se non già recuperata
+185500080519     c                   if        not $okmra
+185600080519     c                   clear                   dmradan
+185700080519     c                   clear                   tibs02ds
+185800080519     c                   eval      t02mod = 'C'
+185900080519     c                   eval      t02sif = knsif
+186000080519     c                   eval      t02cod = 'MRA'
+186100080519     c                   eval      t02ke1 = sdspgm
+186200080519     c                   call      'TIBS02R'
+186300080519     c                   parm                    kpjba
+186400080519     c                   parm                    tibs02ds
+186500080519     c                   if        t02err = *blanks
+186600080519     c                   eval      dmradan = t02uni
+186700080519     c                   eval      $okmra = *on
+186800080519     c                   endif
+186900080519     c                   endif
+187000080519
+187100080519      * Override al file di stampa ed apertura dello stesso
+187200080519     c                   if        not %open(prtemail)
+187300080519     c                   exsr      sr_openprtf
+187400080519     c                   endif
+187500080522
+187600080522      * Stampa errore
+187700080522     c                   if        *in05
+187800080522     c                   eval      o_testo = 'trovato codice SPC non valido in +
+187900080522     c                                        chiusura distinta ' +
+188000080522     c                                        %editc(plgfgs:'X') + '-' +
+188100080522     c                                        %editc(plgndc:'X') +
+188200080522     c                                        ' in data ' +
+188300080522     c                                        %subst(prcdatora:7:2) + '/' +
+188400080522     c                                        %subst(prcdatora:5:2) + '/' +
+188500080522     c                                        %subst(prcdatora:1:4)
+188600080522     c                   except    prtdet
+188700080522     c                   endif
+188800080522     c                   if        *in01
+188900080522     c                   eval      o_testo = 'trovato errore per la distinta ' +
+189000080522     c                                        %editc(plgfgs:'X') + '-' +
+189100080522     c                                        %editc(plgndc:'X') +
+189200080522     c                                        ' in data ' +
+189300080522     c                                        %subst(prcdatora:7:2) + '/' +
+189400080522     c                                        %subst(prcdatora:5:2) + '/' +
+189500080522     c                                        %subst(prcdatora:1:4)
+189600080522     c                   except    prtdet
+189700080522     c                   eval      o_testo = plgmsg + 'Profilo ' + prcprfc
+189800080522     c                   except    prtdet
+189900080522     c                   endif
+190000080522
+190100080522      * Stampa una riga vuota
+190200080522     c                   clear                   o_testo
+190300080522     c                   except    prtdet
+190400080519
+190500080519     c                   endsr
+190600080519
+190700080519      *------------------------------------------------------------------------*
+190800080519      * OVERRIDE AL FILE DI STAMPA PER IMPOSTARE I DATI PER L'INVIO VIA MAIL
+190900080519      *  + STAMPA INIZIO MAIL
+191000080519      *------------------------------------------------------------------------*
+191100080519     c     sr_openprtf   begsr
+191200080519
+191300080519      * Override al file di stampa
+191400080519     c                   exsr      sr_override
+191500080519
+191600080519     c                   open      prtemail
+191700080519
+191800080519      * Stampa una testata se NON è richiesta la e-mail
+191900080519     c                   if        §mradreg = *blanks
+192000080519     c                   eval      o_testo = jobuser + ' - ' + sdspgm
+192100080519     c                             + ' - ' + %editc( *date : 'Y' )
+192200080519     c                             + ' - *REM* ' + %subst(§cm1var : 7 : 70)
+192300080519     c                   except    prtdet
+192400080519     c                   clear                   o_testo
+192500080519     c                   except    prtdet
+192600080519     c                   except    prtdet
+192700080519     c                   endif
+192800080519
+192900080519      * Stampa testo iniziale
+193000080519     c                   eval      o_testo = 'trovato errore in ricezione dati +
+193100080522     c                                        PDA '
+193200080519     c                   except    prtdet
+193300080519
+193400080519      * Stampa una riga vuota
+193500080519     c                   clear                   o_testo
+193600080519     c                   except    prtdet
+193700080519
+193800080519     c                   endsr
+193900080519
+194000080519      *------------------------------------------------------------------------*
+194100080519      * OVERRIDE AL FILE DI STAMPA PER IMPOSTARE I DATI PER L'INVIO VIA MAIL
+194200080519      *  + STAMPA INIZIO MAIL
+194300080519      *------------------------------------------------------------------------*
+194400080519     c     sr_override   begsr
+194500080519
+194600080519     c                   reset                   $invio
+194700080519     c                   reset                   trtcm1ds
+194800080519
+194900080519     c                   if        §mradreg <> *blanks
+195000080519     c                   eval      §cm1mitt = %trim(§mradmitt)
+195100080519     c                   eval      §cm1dst  = %trim(§mraddest)
+195200080519     c                   eval      §cm1tips = §mradreg
+195300080519     c                   eval      §cm1po   = c_sede
+195400080519     c                   eval      §cm1var  = '*OBJM*' + §mraddes
+195500080519     c                   eval      §cm1idp  = §mradidpro
+195600080519     c                   eval      qcmd = c_cmdovrprtf
+195700080519     c                             + ' outq(' + %trim(§mradoutqi) + ')'
+195800080519     c                             + ' usrdfndta(''' + trtcm1ds + ''')'
+195900080519     c                   else
+196000080519     c                   eval      qcmd = c_cmdovrprtf
+196100080519     c                   endif
+196200080519
+196300080519     c                   eval      lenght = %size(qcmd)
+196400080519     c                   call(e)   'QCMDEXC'
+196500080519     c                   parm                    qcmd
+196600080519     c                   parm                    lenght
+196700080519
+196800080519     c                   if        §mradreg <> *blanks and not %error
+196900080519     c                   eval      $invio = *on
+197000080519     c                   endif
+197100080519
+197200080519     c                   endsr
+197300080513
+197400080513      *------------------------------------------------------------------------*
+197500080513      * ROUTINE FINALE
+197600080513      *------------------------------------------------------------------------*
+197700080513     c     sr_end        begsr
+197800080513
+197900080513     c                   if        %open(prtemail)
+198000080513
+198100080513      * Chiusura dello spool?
+198200080522     c                   eval      o_testo = sdspgm
+198300080522     c                   except    prtdet
+198400080513     c                   clear                   o_testo
+198500080513     c                   except    prtdet
+198600080513     c                   eval      o_testo = '***   Fine Lista   ***'
+198700080513     c                   except    prtdet
+198800080513
+198900080513     c                   close     prtemail
+199000080513
+199100080513      * Eliminazione overflow?
+199200080513     c                   eval      lenght = %size(qcmd)
+199300080513     c                   eval      qcmd = c_cmddltovr
+199400080513     c                   call(e)   'QCMDEXC'
+199500080513     c                   parm                    qcmd
+199600080513     c                   parm                    lenght
+199700080513
+199800080513     c                   endif
+199900080513
+200000080513     c                   endsr
+200100070129
+200200070129      *------------------------------------------------------------------------*
+200300070129      * ROUTINE INIZIALE
+200400070129      *------------------------------------------------------------------------*
+200500070129     c     *inzsr        begsr
+200600070129
+200700070129     c     *entry        plist
+200800070129     c                   parm                    parmpo
+200900080226     c                   parm                    chiudi
+201000070129
+201100070129     c     kfiapd        klist
+201200070129     c                   kfld                    apdtip
+201300070129     c                   kfld                    apdpdr
+201400070201
+201500070201     c     kfiqdt        klist
+201600070201     c                   kfld                    plgfgs
+201700070201     c                   kfld                    plgndc
+201800080319
+201900080319     c     kfipro        klist
+202000080319     c                   kfld                    plgfgs
+202100080319     c                   kfld                    plgndc
+202200140129     c                   kfld                    plgtiporcd
+202300080730     c                   kfld                    plgcodaut
+202400080319     c                   kfld                    ormpoe
+202500080319     c                   kfld                    ormnsr
+202600080319     c                   kfld                    ormnor
+202700080319     c                   kfld                    ormnrv
+202800070201
+202900080226     c     kfidst        klist
+203000080226     c                   kfld                    dstnpg
+203100070201     c                   kfld                    dstnfv
+203200070201     c                   kfld                    dstfgs
+203300070131
+203400070131     c     kfnorm        klist
+203500070131     c                   kfld                    ormpoe
+203600070131     c                   kfld                    ormnsr
+203700070131     c                   kfld                    ormnor
+203800070131     c                   kfld                    ormnrv
+203900080219
+204000080219     c     kfnorf        klist
+204100080219     c                   kfld                    ormpoe
+204200080219     c                   kfld                    ormnsr
+204300080219     c                   kfld                    ormnor
+204400080219     c                   kfld                    ormnrv
+204500080219     c                   kfld                    ormdfo
+204600080219     c                   kfld                    ormofo
+204700080219     c                   kfld                    ormfao
+204800080409
+204900080409     c     kfnorn        klist
+205000080409     c                   kfld                    ormpoe
+205100080409     c                   kfld                    ormnsr
+205200080409     c                   kfld                    ormnor
+205300080409     c                   kfld                    ormnrv
+205400080409     c                   kfld                    ormfao
+205500080415
+205600080415     c     kfirpd        klist
+205700080415     c                   kfld                    plgfgs
+205800080415     c                   kfld                    plgndc
+205900080415     c                   kfld                    plgcodaut
+206000080415     c                   kfld                    plgiddoc
+206100080417
+206200080417     c     kfirpt        klist
+206300080417     c                   kfld                    plgfgs
+206400080417     c                   kfld                    plgndc
+206500080417     c                   kfld                    plgcodaut
+206600140207      *
+206700140207     c     ktbe          klist
+206800140207     c                   kfld                    tbecod
+206900140207     c                   kfld                    tbeke1
+207000070129
+207100070129     c                   endsr
+207200080513
+207300080513     oprtemail  e            prtdet      1
+207400080513     o                       o_testo

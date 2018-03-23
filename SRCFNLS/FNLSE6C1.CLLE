@@ -1,0 +1,83 @@
+000100070124    /*---------------------------------------------------------------*/
+000200070124    /*?STATISTICA NUMERO LDV "A4" ED "A5" PER DATA/LNP/LNA - BATCH  ?*/
+000300070124    /*---------------------------------------------------------------*/
+000400070119             pgm        parm(&KPJBA)
+000500070119
+000600070119             dcl        var(&KPJBA)         type(*char)     len(502)
+000700070119             dcl        var(&KNSIF)         type(*char)     len(10)
+000800070124             dcl        var(&L300)          type(*char)     len(300)
+000900070124             dcl        var(&CMD)           type(*char)     len(400)
+001000070124             dcl        var(&LUNG)          type(*dec)      len(15 5) +
+001100070124                                            value(400)
+001200070119             chgvar     var(&KNSIF)         value(%sst(&KPJBA 92 10))
+001300070124             rtvjoba    usrlibl(&L300)
+001400070119
+001500070123    /* Alloca il WorkFile e lo Ripulisce ----------------------------*/
+001600070119             if         cond(%sst(&KNSIF 1 3) = 'GAI')      then(do)
+001700070119               alcobj   obj((*libl/WFNBL00F *file *EXCLRD))
+001800070119               monmsg   msgid(CPF1002)      exec(goto cmdlbl(FINE))
+001900070123               clrpfm   file(*libl/WFNBL00F)
+002000070119               enddo
+002100070119             else       cmd(do)
+002200070119               if       cond(%sst(&KNSIF 7 1) = 'P')        then(do)
+002300070123                 alcobj     obj((GAITRAAZP/WFNBL00F *file *EXCLRD))
+002400070119                 monmsg     msgid(CPF1002)  exec(goto cmdlbl(FINE))
+002500070123                 clrpfm     file(GAITRAAZP/WFNBL00F)
+002600070119                 enddo
+002700070119               else     cmd(do)
+002800070119                 alcobj     obj((GAITRAAZM/WFNBL00F *file *EXCLRD))
+002900070119                 monmsg     msgid(CPF1002)  exec(goto cmdlbl(FINE))
+003000070123                 clrpfm     file(GAITRAAZM/WFNBL00F)
+003100070119                 enddo
+003200070119               enddo
+003300070119
+003400070124    /* Forza la lista di librerie del S.I. di P.O. ------------------*/
+003500070119             if         cond(%sst(&KNSIF 1 3) = 'GAI')      then(do)
+003600070119               if       cond(%sst(&KNSIF 7 1) = 'P')        then(do)
+003700070124                  call      pgm(TRUL07C)    parm('FILTRAPFP ')
+003800070119                  enddo
+003900070119               else     cmd(do)
+004000070124                  call      pgm(TRUL07C)    parm('FILTRA201 ')
+004100070119                  enddo
+004200070119               enddo
+004300070124
+004400070124    /* Esegue le override al WrkF -----------------------------------*/
+004500070124             if         cond(%sst(&KNSIF 7 1) = 'P')        then(do)
+004600070124               ovrdbf       file(WFNBL00F)  tofile(GAITRAAZP/WFNBL00F)
+004700070124               enddo
+004800070124             else       cmd(do)
+004900070124               ovrdbf       file(WFNBL00F)  tofile(GAITRAAZM/WFNBL00F)
+005000070124               enddo
+005100070119
+005200070124    /* Richiama il pgm. per impostare i dati nel wrkf ---------------*/
+005300070122             call       pgm(FNLSE6R1)       parm(&KPJBA)
+005400070119
+005500070124    /* Cancella le override al WrkF ---------------------------------*/
+005600070124             dltovr     file(WFNBL00F)      lvl(*actgrpdfn)
+005700070124             monmsg     msgid(CPF0000)
+005800070124
+005900070124    /* Ripristina la lista di librerie originale --------------------*/
+006000070123             if         cond(%sst(&KNSIF 1 3) = 'GAI')      then(do)
+006100070124               chgvar   var(&CMD) +
+006200070124                        value('chglibl libl(' *cat &L300 *cat ')')
+006300070124               call     pgm(QCMDEXC)        parm(&CMD &LUNG)
+006400070123               enddo
+006500070119
+006600070124    /* Disalloca il WorkFile ----------------------------------------*/
+006700070119             if         cond(%sst(&KNSIF 1 3) = 'GAI')      then(do)
+006800070119               dlcobj   obj((*libl/WFNBL00F *file *EXCLRD))
+006900070119               monmsg   msgid(CPF1005)
+007000070119               enddo
+007100070119             else       cmd(do)
+007200070119               if       cond(%sst(&KNSIF 7 1) = 'P')        then(do)
+007300070119                 dlcobj      obj((GAITRAAZP/WFNBL00F *file *EXCLRD))
+007400070119                 monmsg      msgid(CPF1005) exec(goto cmdlbl(FINE))
+007500070119                 enddo
+007600070119               else     cmd(do)
+007700070119                 dlcobj      obj((GAITRAAZM/WFNBL00F *file *EXCLRD))
+007800070119                 monmsg      msgid(CPF1005) exec(goto cmdlbl(FINE))
+007900070119                 enddo
+008000070119               enddo
+008100070119
+008200070119    FINE:
+008300070119             endpgm

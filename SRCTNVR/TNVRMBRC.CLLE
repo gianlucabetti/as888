@@ -1,0 +1,46 @@
+000100020927             PGM
+000200021017
+000300021017 /*file x dspfd FISPP00R */
+000400021017             DCLF       FILE(QSYS/QAFDMBRL)
+000500021017
+000600020927             DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10) +
+000700020927                          VALUE('M         ')
+000800021021             DCL        VAR(&UT§DSE) TYPE(*CHAR) LEN(1591)
+000900020927             DCL        VAR(&SIMFEL) TYPE(*CHAR) LEN(3)
+001000021021
+001100021021  /* chiamo x§parut x reperire il simfel */
+001200021021             CALL       PGM(X§PARUT) PARM(&UT§DSE)
+001300021021             CHGVAR     VAR(&simfel) VALUE(%SST(&UT§DSE 1496 3))
+001400020927
+001500021017             DSPFD      FILE(*LIBL/FISPP00R) TYPE(*MBRLIST) +
+001600021017                          OUTPUT(*OUTFILE)  +
+001700020927                          OUTFILE(QTEMP/LISTAMBR)
+001800021017             OVRDBF     FILE(QAFDMBRL) TOFILE(QTEMP/LISTAMBR)
+001900020927
+002000020927  /*  legge file LISTAMBR in qtemp e x ogni membro faccio rename */
+002100021017  /*  se non esiste già il nuovo membro, altrimenti faccio la copia */
+002200021017  /*  ed elimino il vecchio membro                                  */
+002300021017 READ:
+002400020927             RCVF
+002500020927             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+002600021021/* Membro con nome vecchio */
+002700021021             IF         COND(%SST(&MLname 5 1) *EQ ' ') THEN(GOTO +
+002800021017                          CMDLBL(READ))
+002900021017/* Membro senza record   */
+003000021017             IF         COND((&MLNRCD) *EQ 0) THEN(GOTO CMDLBL(READ))
+003100021021/* Membro con simfel al posto giusto */
+003200021021             IF         COND(%SST(&MLNAME 5 3) *EQ &SIMFEL) +
+003300021021                          THEN(GOTO CMDLBL(READ))
+003400021017
+003500021021             CHGVAR     VAR(%SST(&NEWNAME 2 6)) VALUE(%SST(&MLNAME 5 +
+003600021021                          3) *CAT %SST(&MLNAME 2 3))
+003700021017             RNMM       FILE(FISPP00R) MBR(&MLname) NEWMBR(&NEWNAME)
+003800020927             MONMSG     MSGID(CPF3178) EXEC(DO)
+003900021017             CPYF       FROMFILE(FISPP00R) TOFILE(FISPP00R) +
+004000021017                          FROMMBR(&MLName) TOMBR(&NEWNAME) MBROPT(*ADD)
+004100021017             RMVM       FILE(FISPP00R) MBR(&MLName)
+004200021017             enddo
+004300021017             GOTO       CMDLBL(READ)
+004400020927 ENDF:
+004500020927             DLTF       FILE(QTEMP/LISTAMBR)
+004600980317             ENDPGM

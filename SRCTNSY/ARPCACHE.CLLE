@@ -1,0 +1,184 @@
+000100060203PGM   parm(&LineName)     /* List Physical Interface ARP Table */
+000200060203/*                  QtocLstPhyIfcARPTbl                              */
+000300060203/* http://publib.boulder.ibm.com/iseries/v5r2/ic2924/info/apis/apifinder.htm  */
+000400060203
+000500060203/*                  Required Parameter Group:                        */
+000600060203/*                                                                   */
+000700060203/*                1:  Qualified user space name Input Char(20)       */
+000800060203/*                2:  Format name Input Char(8)                      */
+000900060203/*                3:  Line name Input Char(10)                       */
+001000060203/*                4:  Error Code I/O Char(*)                         */
+001100060203/*                   Service Program: QTOCNETSTS                     */
+001200060203
+001300060203/*                 ARPT0100 format                                   */
+001400060203/*    Offset Type       Field                                        */
+001500060203/*    Dec Hex                                                        */
+001600060203/*    0   0  CHAR(15)  Internet address                              */
+001700060203/*    15  F  CHAR(1)   Reserved                                      */
+001800060203/*    16 10  BINARY(4) Internet address binary                       */
+001900060203/*    20 14  BINARY(4) Line type                                     */
+002000060203/*    24 18  BINARY(4) Ethernet type                                 */
+002100060203/*    28 1C  BINARY(4) Type of entry                                 */
+002200060203/*    32 20  BINARY(4) Data link connection identifier (DLCI)        */
+002300060203/*    36 24  BINARY(4) Routing information field (RIF) valid mask    */
+002400060203/*    40 28  CHAR(18)  Routing information field (RIF)               */
+002500060203/*    58 3A  CHAR(17)  Physical address (MAC)                        */
+002600060203/*    75 4B  CHAR(1)   Reserved                                      */
+002700060203
+002800060203/* CRTBNDCL PGM(Your-Lib/ARPCACHE)          */
+002900060203/*         SRCFILE(Your-Lib/QCLSRC)         */
+003000060203/*          SRCMBR(ARPCACHE)              */
+003100060203/*                                                                   */
+003200060203/*-------------------------------------------------------------------*/
+003300060203
+003400060203             DCL        VAR(&LINENAME) TYPE(*CHAR) LEN(10)
+003500060203
+003600060203             DCL        VAR(&IPADDRESS)    TYPE(*CHAR) LEN(15)
+003700060203             DCL        VAR(&IPADDRBIN)    TYPE(*CHAR) LEN(4)
+003800060203             DCL        VAR(&LINETYPBIN)   TYPE(*CHAR) LEN(4)
+003900060203             DCL        VAR(&ETHTYPEBIN)   TYPE(*CHAR) LEN(4)
+004000060203             DCL        VAR(&TYPEENTBIN)   TYPE(*CHAR) LEN(4)
+004100060203             DCL        VAR(&DLCIBIN)      TYPE(*CHAR) LEN(4)
+004200060203             DCL        VAR(&RIFBIN)       TYPE(*CHAR) LEN(4)
+004300060203             DCL        VAR(&RIF)          TYPE(*CHAR) LEN(18)
+004400060203             DCL        VAR(&MACADDRESS)   TYPE(*CHAR) LEN(17)
+004500060203
+004600060203
+004700060203             /*  PARAMETERS FOR THE QUSCRTUS  API                   */
+004800060203
+004900060203             DCL        VAR(&USP_NAME)  TYPE(*CHAR)  LEN(10)
+005000060203             DCL        VAR(&USP_LIB)   TYPE(*CHAR)  LEN(10)
+005100060203             DCL        VAR(&USP_QUAL)  TYPE(*CHAR)  LEN(20)
+005200060203             DCL        VAR(&USP_TYPE)  TYPE(*CHAR)  LEN(10)
+005300060203             DCL        VAR(&USP_SIZE)  TYPE(*CHAR)  LEN(4)
+005400060203             DCL        VAR(&USP_FILL)  TYPE(*CHAR)  LEN(1)
+005500060203             DCL        VAR(&USP_AUT)   TYPE(*CHAR)  LEN(10)
+005600060203             DCL        VAR(&USP_TEXT)  TYPE(*CHAR)  LEN(50)
+005700060203             /*  PARAMETERS FOR THE QUSRTVUS  API                   */
+005800060203
+005900060203             DCL        VAR(&STARTPOS)  TYPE(*CHAR)  LEN(4)
+006000060203             DCL        VAR(&DATALEN)   TYPE(*CHAR)  LEN(4)
+006100060203             DCL        VAR(&HEADER)    TYPE(*CHAR)  LEN(150)
+006200060203
+006300060203             /*  OFFSET TO FIRST DATA                               */
+006400060203             DCL        VAR(&LST_OFFSET) TYPE(*DEC)  LEN(9 0)
+006500060203             /*  SIZE OF DATA                                       */
+006600060203             DCL        VAR(&LST_SIZE)   TYPE(*DEC)  LEN(9 0)
+006700060203             /*  LIST DATA ENTRY                                    */
+006800060203             DCL        VAR(&LST_DATA)   TYPE(*CHAR) LEN(4096)
+006900060203             /*  NUMBER OF ENTRIES IN LIST DATA SECTION             */
+007000060203             DCL        VAR(&LST_NBR)    TYPE(*DEC)  LEN(9 0)
+007100060203             /*  ENTRY LENGTH IN DECIMAL                            */
+007200060203             DCL        VAR(&LST_LEN)    TYPE(*DEC)  LEN(9 0)
+007300060203             /*  ENTRY LENGTH IN BINARY                             */
+007400060203             DCL        VAR(&LST_LENBIN) TYPE(*CHAR) LEN(4)
+007500060203             /*  POSITION OF LIST ENTRY IN BINARY                   */
+007600060203             DCL        VAR(&LST_POSBIN) TYPE(*CHAR) LEN(4)
+007700060203             /*  COUNTER                                            */
+007800060203             DCL        VAR(&LST_COUNT)  TYPE(*DEC)  LEN(9) VALUE(0)
+007900060203
+008000060203             CHKOBJ     OBJ(&LINENAME) OBJTYPE(*LIND)
+008100060203             MONMSG     MSGID(CPF9801) EXEC(DO)
+008200060203             SNDPGMMSG  MSG('Line not found ' *BCAT &LINENAME)
+008300060203             GOTO       CMDLBL(END)
+008400060203             ENDDO
+008500060203
+008600060203
+008700060203             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Getting +
+008800060203                          the Arp Cache for Line ' *BCAT &LINENAME) +
+008900060203                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+009000060203
+009100060203             /*  -------------------------------------------------  */
+009200060203             /*  CREATE USER SPACE                                  */
+009300060203             /*  -------------------------------------------------  */
+009400060203             /*  SET USER SPACE NAME                                */
+009500060203             CHGVAR     VAR(&USP_NAME) VALUE('ARPUSRSPC ')
+009600060203             /*  SET USER SPACE LIBRARY                             */
+009700060203             CHGVAR     VAR(&USP_LIB) VALUE('QTEMP')
+009800060203             /*  SET USER SPACE QUALIFIED NAME                      */
+009900060203             CHGVAR     VAR(&USP_QUAL) VALUE(&USP_NAME *CAT +
+010000060203                          &USP_LIB)
+010100060203             /*  SET USER SPACE TYPE                                */
+010200060203             CHGVAR     VAR(&USP_TYPE) VALUE('ARP')
+010300060203             /*  SET USER SPACE SIZE                                */
+010400060203             CHGVAR     VAR(%BIN(&USP_SIZE)) VALUE(64000)
+010500060203             /*  SET USER SPACE FILL CHARACTER                      */
+010600060203             CHGVAR     VAR(&USP_FILL) VALUE(' ')
+010700060203             /*  SET USER SPACE AUTHORITY                           */
+010800060203             CHGVAR     VAR(&USP_AUT) VALUE('*USE')
+010900060203             /*  SET USER SPACE TEXT                                */
+011000060203             CHGVAR     VAR(&USP_TEXT) VALUE('ARP CACHE USER SPACE')
+011100060203       /*  CREATE USER SPACE                                  */
+011200060203             CALL       PGM(QUSCRTUS) PARM(&USP_QUAL &USP_TYPE +
+011300060203                          &USP_SIZE &USP_FILL &USP_AUT &USP_TEXT)
+011400060203
+011500060203             CALLPRC    PRC('QtocLstPhyIfcARPTbl')   +
+011600060203                      Parm(&USP_QUAL                 +
+011700060203                           'ARPT0100'                +
+011800060203                           &LineName                 +
+011900060203                           X'00000000'           )
+012000060203
+012100060203             /*  -------------------------------------------------  */
+012200060203             /*  RETRIEVE USER SPACE HEADER INFORMATION             */
+012300060203             /*  -------------------------------------------------  */
+012400060203
+012500060203             /*  SET START POSITION                                 */
+012600060203             CHGVAR     VAR(%BIN(&STARTPOS)) VALUE(1)
+012700060203             /*  SET DATA LENGTH                                    */
+012800060203             CHGVAR     VAR(%BIN(&DATALEN)) VALUE(140)
+012900060203
+013000060203             /*  RETRIEVE  HEADER DESCRIPTION INFORMATION           */
+013100060203             CALL       PGM(QUSRTVUS) PARM(&USP_QUAL &STARTPOS +
+013200060203                          &DATALEN &HEADER)
+013300060203
+013400060203             /*  RETRIEVE  DATA IN LIST SECTION                     */
+013500060203             /*  -------------------------------------------------  */
+013600060203             CHGVAR     VAR(&LST_OFFSET) VALUE(%BIN(&HEADER 125 4))
+013700060203             CHGVAR     VAR(&LST_SIZE)   VALUE(%BIN(&HEADER 129 4))
+013800060203             CHGVAR     VAR(&LST_NBR)    VALUE(%BIN(&HEADER 133 4))
+013900060203             CHGVAR     VAR(&LST_LEN)    VALUE(%BIN(&HEADER 137 4))
+014000060203             CHGVAR     VAR(%BIN(&LST_POSBIN)) VALUE(&LST_OFFSET + 1)
+014100060203             CHGVAR     VAR(&LST_LENBIN) VALUE(%SST(&HEADER 137 4))
+014200060203            /*  -------------------------------------------------  */
+014300060203             /*  RETRIEVE  LIST DATA ENTRIES                        */
+014400060203             /*  -------------------------------------------------  */
+014500060203
+014600060203             CHGVAR     VAR(&LST_COUNT) VALUE(0) /* INITIALIZE +
+014700060203                          NUMBER OF LIST ENTRIES COUNTER */
+014800060203
+014900060203 LST_LOOP:   IF         COND(&LST_COUNT *EQ &LST_NBR) THEN(GOTO +
+015000060203                          CMDLBL(LST_END))
+015100060203
+015200060203             CALL       PGM(QUSRTVUS) PARM(&USP_QUAL &LST_POSBIN +
+015300060203                          &LST_LENBIN &LST_DATA)
+015400060203
+015500060203             /*  EXTRACT FIELDS                                     */
+015600060203
+015700060203    chgvar               VAR(&IPADDRESS) value(%sst(&LST_DATA 1 15))
+015800060203    chgvar               VAR(&IPADDRBIN) value(%sst(&LST_DATA 17 4))
+015900060203    chgvar               VAR(&LINETYPBIN) value(%sst(&LST_DATA 21 4))
+016000060203    chgvar               VAR(&ETHTYPEBIN) value(%sst(&LST_DATA 25 4))
+016100060203    chgvar               VAR(&TYPEENTBIN) value(%sst(&LST_DATA 29 4))
+016200060203    chgvar               VAR(&DLCIBIN)    value(%sst(&LST_DATA 33 4))
+016300060203    chgvar               VAR(&RIFBIN)     value(%sst(&LST_DATA 37 4))
+016400060203    chgvar               VAR(&RIF)        value(%sst(&LST_DATA 41 18))
+016500060203    chgvar               VAR(&MACADDRESS) value(%sst(&LST_DATA 59 17))
+016600060203
+016700060203             /*  -------------------------------------------------  */
+016800060203             /*  ACTION TO BE PERFORMED FOR EACH LIST DATA ENTRY    */
+016900060203             /*  -------------------------------------------------  */
+017000060203
+017100060203             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA('IP +
+017200060203                          Address/MAC Address' *BCAT &IPADDRESS +
+017300060203                          *BCAT &MACADDRESS)
+017400060203
+017500060203 NEXTLST:    CHGVAR     VAR(&LST_COUNT) VALUE(&LST_COUNT + 1)
+017600060203             CHGVAR     VAR(%BIN(&LST_POSBIN)) +
+017700060203                          VALUE(%BIN(&LST_POSBIN) + &LST_LEN)
+017800060203             GOTO       CMDLBL(LST_LOOP)
+017900060203
+018000060203 LST_END:
+018100060203             DLTUSRSPC  USRSPC(&USP_LIB/&USP_NAME)
+018200060203
+018300060203   END:
+018400060203       ENDPGM

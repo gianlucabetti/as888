@@ -1,0 +1,21 @@
+000100001205/*----------------------------------------------------------------------------*/
+000200001205/* SIMULAZIONE CONTO ECONOMICO - SISTEMA SALDI CLIENTE CON NOTE E RETTIFICHE  */
+000300001205/*----------------------------------------------------------------------------*/
+000400021216 TREC12C:    PGM        PARM(&KPJBA)
+000600021216/* Dichiarazione variabili ---------------------------------------------------*/
+000700021216             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000701130228             DCL        VAR(&lib) TYPE(*CHAR) LEN(10)
+000702130228
+000900021216/* Esegue le opportune sostituzioni di files ---------------------------------*/
+000901110311             CHGVAR     VAR(&lib) VALUE(%SUBSTRING(&KPJBA 301 10))
+000902130228             CHKOBJ     OBJ(QSYS/&LIB) OBJTYPE(*LIB)
+000903130228             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(FINE))
+000904130228
+001000110311             OVRDBF     FILE(SISDOB) TOFILE(&lib/SISDO01L)
+001100110311             OVRDBF     FILE(SISDCB) TOFILE(&lib/SISDC01L)
+001200021219             OVRDBF     FILE(SISDOU) TOFILE(UNITRAGRU/SISDO01L)
+001300021219             OVRDBF     FILE(SISDCU) TOFILE(UNITRAGRU/SISDC01L)
+001400100603             CALL       PGM(TRECS12R) PARM(&KPJBA)
+001500001205
+001600001205             DLTOVR     FILE(*ALL)
+001700130228 FINE:       ENDPGM

@@ -1,0 +1,148 @@
+000100170118/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200170118/*PARMS                                                                       */
+000300170118/*PARMS                                                                       */
+000400170118/*PARMS                                                                       */
+000500170118/*PARMS                                                                       */
+000600170118
+000700170118
+000800170118              PGM        PARM(&KPJBA &STS &IDK &TIP)
+000900991110
+001000991110              DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+001100991110              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+001200991110              DCL        VAR(&FIL) TYPE(*CHAR) LEN(10)
+001300991110              DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001400991112              DCL        VAR(&OPZ) TYPE(*CHAR) LEN(2)
+001500000629              DCL        VAR(&STS) TYPE(*CHAR) LEN(1)
+001600000629              DCL        VAR(&FID) TYPE(*CHAR) LEN(10)
+001700000629              DCL        VAR(&MBD) TYPE(*CHAR) LEN(10)
+001800030519              DCL        VAR(&PRG) TYPE(*CHAR) LEN(10)
+001900050607              DCL        VAR(&IDK) TYPE(*CHAR) LEN(10)
+002000050607              DCL        VAR(&SQL) TYPE(*CHAR) LEN(999)
+002100090910              DCL        VAR(&TIP) TYPE(*CHAR) LEN(2)
+002200050901              DCL        VAR(&FILO18) TYPE(*CHAR) LEN(10)
+002300050901              DCL        VAR(&MBRO18) TYPE(*CHAR) LEN(10)
+002400050901              DCL        VAR(&AORO18) TYPE(*CHAR) LEN(1)
+002500050901              DCL        VAR(&CPYFOPZ) TYPE(*CHAR) LEN(10)
+002600060413              DCL        VAR(&APICE) TYPE(*CHAR) LEN(1) VALUE('''')
+002700991110              CHGVAR     VAR(&LIB) VALUE(%SUBSTRING(&KPJBA 247 10))
+002800991110              CHGVAR     VAR(&FIL) VALUE(%SUBSTRING(&KPJBA 257 10))
+002900991110              CHGVAR     VAR(&MBR) VALUE(%SUBSTRING(&KPJBA 267 10))
+003000991112              CHGVAR     VAR(&OPZ) VALUE(%SUBSTRING(&KPJBA 308 2))
+003100000629              CHGVAR     VAR(&FID) VALUE(%SUBSTRING(&KPJBA 310 10))
+003200000629              CHGVAR     VAR(&MBD) VALUE(%SUBSTRING(&KPJBA 320 10))
+003300030519              CHGVAR     VAR(&PRG) VALUE(%SUBSTRING(&KPJBA 330 10))
+003400050901              CHGVAR     VAR(&FILO18) VALUE(%SUBSTRING(&KPJBA 340 10))
+003500050901              CHGVAR     VAR(&MBRO18) VALUE(%SUBSTRING(&KPJBA 350 10))
+003600050901              CHGVAR     VAR(&AORO18) VALUE(%SUBSTRING(&KPJBA 360 1))
+003700000629
+003800000629              IF         COND(&OPZ = '11')  THEN(DO)
+003900170119                CHGVAR     VAR(&SQL) VALUE('UPDATE TIVGD00F SET VGDSTO = ''R'', +
+004000170403                           VGDFLO = '' ''||SUBSTR(VGDFLO, 2) +
+004100170118                           WHERE VGDSTO = ''S'' AND +
+004200170118                                 VGDPRG = ' *CAT &APICE *CAT &IDK *CAT &APICE *CAT +
+004300170403                           ' AND VGDTIP = ' *CAT &APICE *CAT &TIP *CAT &APICE *CAT +
+004400170403                           ' WITH NC')
+004500050607                RUNSQL     SQL(&SQL)
+004600170119                DLYJOB     DLY(2)
+004700000629              ENDDO
+004800991110
+004900000706
+005000050607              IF         COND(&OPZ = '15') THEN(DO)
+005100170403                CLRPFM     FILE(QTEMP/TIVGDXXX)
+005200170403                MONMSG     MSGID(CPF0000) EXEC(DO)
+005300080412                CHGVAR     VAR(&SQL) VALUE('CREATE TABLE QTEMP/TIVGDXXX +
+005400080412                                           (VGDDTA CHAR (2050),         +
+005500080412                                            VGDPRG CHAR (10),           +
+005600080412                                            VGDSTO CHAR (1))')
+005700080412                RUNSQL     SQL(&SQL)
+005800170403                ENDDO
+005900091105                CHGVAR     VAR(&SQL) VALUE('INSERT INTO QTEMP/TIVGDXXX +
+006000091105                           SELECT VGDDTA, VGDPRG, VGDSTO FROM TIVGD00F +
+006100170118                           WHERE VGDSTO <> '' '' AND +
+006200170118                                 VGDPRG = ' *CAT &APICE *CAT &IDK *CAT &APICE *CAT +
+006300170118                           ' AND VGDTIP = ' *CAT &APICE *CAT &TIP *CAT &APICE)
+006400080412                RUNSQL     SQL(&SQL)
+006500050607                DSPPFM     FILE(QTEMP/TIVGDXXX)
+006600050607                MONMSG     MSGID(CPF0000)
+006700991112              ENDDO
+006800050901
+006900050901
+007000050901              IF         COND(&OPZ = '18') THEN(DO)
+007100050901                CHKOBJ     OBJ(&FILO18) OBJTYPE(*FILE) MBR(&MBRO18)
+007200050901                MONMSG     MSGID(CPF9815) EXEC(DO)
+007300050901                  ADDPFM     FILE(&FILO18) MBR(&MBRO18)
+007400050901                  MONMSG     MSGID(CPF0000) EXEC(DO)
+007500050901                    CHGVAR     VAR(&STS) VALUE('2')
+007600050901                    GOTO       CMDLBL(ENDPGM)
+007700050901                  ENDDO
+007800050901                ENDDO
+007900050901
+008000170403                CLRPFM     FILE(QTEMP/TIVGDXXX)
+008100170403                MONMSG     MSGID(CPF0000) EXEC(DO)
+008200080412                CHGVAR     VAR(&SQL) VALUE('CREATE TABLE QTEMP/TIVGDXXX +
+008300080412                                           (VGDDTA CHAR (2050),         +
+008400080412                                            VGDPRG CHAR (10),           +
+008500080412                                            VGDSTO CHAR (1))')
+008600080412                RUNSQL     SQL(&SQL)
+008700170403                ENDDO
+008800170118                CHGVAR     VAR(&SQL) VALUE('INSERT INTO QTEMP/TIVGDXXX +
+008900170118                           SELECT VGDDTA, VGDPRG, VGDSTO FROM TIVGD00F +
+009000170118                           WHERE VGDSTO <> '' '' AND +
+009100170118                                 VGDPRG = ' *CAT &APICE *CAT &IDK *CAT &APICE *CAT +
+009200170403                           ' AND VGDTIP = ' *CAT &APICE *CAT &TIP *CAT &APICE *CAT +
+009300170403                           ' WITH NC')
+009400080412                RUNSQL     SQL(&SQL)
+009500050901
+009600050901                IF         COND(&AORO18 = 'S') THEN(DO)
+009700050901                  CHGVAR     VAR(&CPYFOPZ) VALUE('*REPLACE')
+009800050901                ENDDO
+009900050901
+010000050901                IF         COND(&AORO18 = 'A') THEN(DO)
+010100050901                  CHGVAR     VAR(&CPYFOPZ) VALUE('*ADD')
+010200050901                ENDDO
+010300050901
+010400050901               CPYF       FROMFILE(QTEMP/TIVGDXXX) TOFILE(&FILO18) +
+010500050901                          TOMBR(&MBRO18) MBROPT(&CPYFOPZ) +
+010600050901                          FMTOPT(*NOCHK)
+010700050901                MONMSG     MSGID(CPF0000) EXEC(DO)
+010800050901                    CHGVAR     VAR(&STS) VALUE('2')
+010900050901                    GOTO       CMDLBL(ENDPGM)
+011000050901                ENDDO
+011100080412                DLTF       FILE(QTEMP/TIVGDXXX)
+011200080412                MONMSG     MSGID(CPF0000)
+011300050901              ENDDO
+011400050901
+011500010316
+011600010316              IF         COND(&OPZ = '23')  THEN(DO)
+011700010316                DSPPFM     FILE(&FIL) MBR(&MBD)
+011800010316                MONMSG     MSGID(CPF0000)
+011900010316              ENDDO
+012000010316
+012100000706
+012200010316              IF         COND(&OPZ = '24')  THEN(DO)
+012300170403                CLRPFM     FILE(QTEMP/TIVGDXXX)
+012400170403                MONMSG     MSGID(CPF0000) EXEC(DO)
+012500080412                CHGVAR     VAR(&SQL) VALUE('CREATE TABLE QTEMP/TIVGDXXX +
+012600080412                                           (VGDDTA CHAR (2050),         +
+012700080412                                            VGDPRG CHAR (10),           +
+012800080412                                            VGDSTO CHAR (1))')
+012900080412                RUNSQL     SQL(&SQL)
+013000170403                ENDDO
+013100170118                CHGVAR     VAR(&SQL) VALUE('INSERT INTO QTEMP/TIVGDXXX +
+013200170118                           SELECT VGDDTA, VGDPRG, VGDSTO FROM TIVGD00F +
+013300170118                           WHERE VGDSTO = '' '' AND +
+013400170118                                 VGDPRG = ' *CAT &APICE *CAT &IDK *CAT &APICE *CAT +
+013500170403                           ' AND VGDTIP = ' *CAT &APICE *CAT &TIP *CAT &APICE *CAT +
+013600170403                           ' WITH NC')
+013700080412                RUNSQL     SQL(&SQL)
+013800050607                DSPPFM     FILE(QTEMP/TIVGDXXX)
+013900050607                MONMSG     MSGID(CPF0000)
+014000991115              ENDDO
+014100991115
+014200000706
+014300010131              IF         COND(&STS *NE '2')  THEN(DO)
+014400000713                CALL       PGM(TIS7GIR1) PARM(&KPJBA)
+014500000713                MONMSG     MSGID(CPF0000)
+014600000713              ENDDO
+014700050901  ENDPGM:
+014800991110              ENDPGM

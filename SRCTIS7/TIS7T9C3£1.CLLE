@@ -1,0 +1,80 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600060616             PGM        PARM(&MBD &FIT &MBT &PGT &PPT &ESITO)
+000700060616
+000800991027
+000900060616             DCL        VAR(&MBD) TYPE(*CHAR) LEN(10) /* Membro +
+001000060616                          tradurre */
+001100991027             DCL        VAR(&FIT) TYPE(*CHAR) LEN(10) /* File +
+001200991027                          tradotto */
+001300991027             DCL        VAR(&MBT) TYPE(*CHAR) LEN(10) /* Membro +
+001400991027                          tradotto */
+001500991027             DCL        VAR(&PGT) TYPE(*CHAR) LEN(10) /* Programma +
+001600991027                          traduttore */
+001700991027             DCL        VAR(&PPT) TYPE(*CHAR) LEN(50) /* Parametri +
+001800991027                          Programma traduttore */
+001900991027             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+002000070427             DCL        VAR(&GIRIT) TYPE(*DEC) LEN(1 0)
+002100991026
+002200100304
+002300100304
+002400100304             IF         COND(&FIT *NE '*')  THEN(DO)
+002500050414
+002600090205             CHKOBJ     OBJ(&FIT) OBJTYPE(*FILE) MBR(&MBT)
+002700090205             MONMSG     MSGID(CPF9815) EXEC(DO)
+002800070427             CHGVAR     VAR(&GIRIT) VALUE(1)
+002900070427 RIPROVADD:  ADDPFM     FILE(&FIT) MBR(&MBT) TEXT(&MBD)
+003000070427      /*     MONMSG     MSGID(CPF5812 CPF7306 CPF3222) EXEC(DO)  */
+003100070427             MONMSG     MSGID(CPF0000) EXEC(DO)
+003200070427             DLYJOB     DLY(40)
+003300070427             IF         COND(&GIRIT *LT 3)  THEN(DO)
+003400070427             CHGVAR     VAR(&GIRIT) VALUE(&GIRIT + 1)
+003500070427             GOTO       CMDLBL(RIPROVADD)
+003600070427             ENDDO
+003700070427             ADDPFM     FILE(&FIT) MBR(&MBT) TEXT(&MBD)
+003800070427             ENDDO
+003900090205             ENDDO
+004000050414
+004100070427             CHGVAR     VAR(&GIRIT) VALUE(1)
+004200070427 RIPROVALC:  ALCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+004300050414             MONMSG     MSGID(CPF0000) EXEC(DO)
+004400070427             DLYJOB     DLY(40)
+004500050414             IF         COND(&GIRIT *LT 3)  THEN(DO)
+004600050414             CHGVAR     VAR(&GIRIT) VALUE(&GIRIT + 1)
+004700070427             GOTO       CMDLBL(RIPROVALC)
+004800050414             ENDDO
+004900050414             ALCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+005000050414             ENDDO
+005100050414
+005200050414
+005300001214             OVRDBF     FILE(&FIT) TOFILE(&FIT) MBR(&MBT) +
+005400071205                          FRCRATIO(1) OVRSCOPE(*JOB)
+005500100303
+005600100304             ENDDO
+005700100304
+005800100304
+005900991027
+006000000711             IF         COND(&PGT *NE '          ')  THEN(DO)
+006100991027             CALL       PGM(&PGT) PARM(&PPT &ESITO)
+006200000330             MONMSG     MSGID(CPF0000) EXEC(DO)
+006300000330             CHGVAR     VAR(&ESITO) VALUE('1')
+006400000330             ENDDO
+006500000711             ENDDO
+006600040823
+006700100303
+006800100304
+006900100304             IF         COND(&FIT *NE '*')  THEN(DO)
+007000100304
+007100071205             DLTOVR     FILE(&FIT) LVL(*JOB)
+007200071205             MONMSG     MSGID(CPF9841)
+007300041005
+007400991027             DLCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+007500100304
+007600100304             ENDDO
+007700100303
+007800060616
+007900991026
+008000990907             ENDPGM

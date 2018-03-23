@@ -1,0 +1,37 @@
+000100100115/*PRM dftactgrp(*no) actgrp(*caller)                                 */
+000200100115/*PRM usrprf(*owner)                                                 */
+000300100115/*END                                                                */
+000400100114/*********************************************************************/
+000500100114/*  COMPILARE CON PROFILO QSECOFR ED OPZIONE USRPRF(*OWNER)          */
+000600100114/*********************************************************************/
+000700100115             pgm        parm(&Profilo &Text &Err)
+000800100114
+000900100115             dcl        var(&Profilo)    type(*char) len(10)
+001000100115             dcl        var(&Text)       type(*char) len(50)
+001100100115             dcl        var(&Err)        type(*char) len(1)
+001200100115
+001300100115             dcl        var(&Text_Old)   type(*char) len(50)
+001400100115
+001500100115             chgvar     var(&Err)        value(' ')
+001600100114
+001700100114    /* Prima verifica l'esistenza del profilo ---------------------- */
+001800100114             RTVUSRPRF  usrprf(&PROFILO) text(&TEXT_old)
+001900100114             monmsg     msgid(CPF0000)   exec(do)
+002000100114               chgvar var(&ERR) value('0')
+002100100114               goto       cmdlbl(FINE)
+002200100114             enddo
+002300100114
+002400100115    /* Poi ne cambia la descrizione (se reperito) ------------------ */
+002500100114             CHGUSRPRF  usrprf(&PROFILO) text(&TEXT)
+002600100114
+002700100114             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+002800100114                          value('E'))
+002900100114
+003000100114               if         cond(&ERR *eq ' ') then(do)
+003100100114                 CHGMSGQ    msgq(&PROFILO) text(&TEXT)
+003200100114                 monmsg     msgid(CPF0000)
+003300100114               enddo
+003400100114
+003500100114    /* Fine -------------------------------------------------------- */
+003600100115    Fine:
+003700100115             endpgm

@@ -1,0 +1,98 @@
+000100890921     H              J
+000200921126     H*----------------------------------------------------------*
+000300921126     H**  PREP. ARCHIVIO BOLLE FATTURATE  AL CLIENTE  - FILTRO   *
+000400921126     H*----------------------------------------------------------*
+000500980903     FFNLVB7D CF  E                    WORKSTN
+000600980903      *
+000700890921     IKPJBA     E DS
+000800900315     IPARAM       DS
+000900941122     I                                        1   80DAL
+001000941122     I                                        9  160AL
+001100941122     I                                       17  230CLIU
+001200921126     IWLBDAT      DS
+001300941122     I                                        1   80G02DAT
+001400941122     I                                        9  160G02INV
+001500941122     I                                       17  17 G02ERR
+001600941122     I                                       18  220G02TGI
+001700921126     IUT§DSE    E DSUT§DSE0F
+001800921126     C*---------------------------------------------------------------*
+001900921126     C           *ENTRY    PLIST
+002000921126     C                     PARM           KPJBA
+002100980903      *
+002200921126     C                     Z-ADD1         CODUT
+002300921126     C                     CALL 'X§PARUT'
+002400921126     C                     PARM           UT§DSE
+002500921126     C           CODUT     CABEQ-1        FINE
+002600921126     C                     MOVELRAGUT     RSUT   20
+002700921126     C*
+002800921126     C           VIDEO     TAG
+002900921126     C*
+003000980903     C                     EXFMTLVB7D01
+003100921126     C                     SETOF                     9897
+003200980903     C                     SETOF                     969594
+003300921126     C   KC                GOTO FINE
+003400921126     C*
+003500941122     C           VIDDAL    IFEQ *ZERO
+003600941122     C           VIDALL    OREQ *ZERO
+003700921126     C                     SETON                     98     DATE OBBLIGATORIE
+003800921126     C                     END
+003900921126     C   98                GOTO VIDEO
+004000921126      *
+004100941122      * GIRO E CONTROLLO DATE
+004200941122      *
+004300941122     C           VIDDAL    IFNE *ZEROS
+004400941122     C                     Z-ADDVIDDAL    G02DAT
+004500941122     C                     Z-ADD*ZERO     G02INV
+004600941122     C                     MOVEL*BLANKS   G02ERR
+004700941122     C                     CALL 'XSRDA8'
+004800941122     C                     PARM           WLBDAT
+004900941122     C                     Z-ADDG02DAT    VIDDAL
+005000941122     C           G02ERR    IFEQ '1'
+005100921126     C                     SETON                     97    Formato data errato
+005200941122     C                     MOVE *ZERO     DAL
+005300941122     C                     GOTO VIDEO
+005400941122     C                     ELSE
+005500941122     C                     Z-ADDG02INV    DAL
+005600921126     C                     END
+005700941122     C                     END
+005800921126      *
+005900941122     C           VIDALL    IFNE *ZEROS
+006000941122     C                     Z-ADDVIDALL    G02DAT
+006100941122     C                     Z-ADD*ZERO     G02INV
+006200941122     C                     MOVEL*BLANKS   G02ERR
+006300941122     C                     CALL 'XSRDA8'
+006400941122     C                     PARM           WLBDAT
+006500941122     C                     Z-ADDG02DAT    VIDALL
+006600941122     C           G02ERR    IFEQ '1'
+006700941122     C                     SETON                     96    Formato data errato
+006800941122     C                     MOVE *ZERO     AL
+006900941122     C                     GOTO VIDEO
+007000941122     C                     ELSE
+007100941122     C                     Z-ADDG02INV    AL
+007200941122     C                     END
+007300941122     C                     END
+007400941122     C*
+007500921126     C           DAL       IFGT AL
+007600921126     C                     SETON                     95      1°DATA > 2°DATA
+007700921126     C                     GOTO VIDEO
+007800921126     C                     END
+007900980903     C*
+008000980903     C           VIDCLI    IFEQ *ZERO
+008100980903     C                     SETON                     94     CLIENTE OBBLIGATORIO
+008200980903     C                     GOTO VIDEO
+008300980903     C                     END
+008400921126      *
+008500921126     C           *INKF     CABEQ'0'       VIDEO
+008600941122     C*
+008700941122     C                     Z-ADDVIDCLI    CLIU
+008800921126     C                     MOVELPARAM     KPJBU
+008900980903     C                     MOVE 'LVB8'    KCOAZ
+009000941206     C                     MOVE '3'       KRITB
+009100941206     C                     CALL 'BCH09'
+009200941206     C                     PARM           KPJBA
+009300941206     C           KRITB     CABEQ'2'       VIDEO
+009400921126     C                     CALL 'BCH10'
+009500921126     C                     PARM           KPJBA
+009600921126      *
+009700921126     C           FINE      TAG
+009800921126     C                     SETON                     LR

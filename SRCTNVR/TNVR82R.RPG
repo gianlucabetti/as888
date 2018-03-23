@@ -1,0 +1,337 @@
+000100000000     H*------------------------------------------------------------------------*
+000200000000     H* SISTEMA TARIFFE DI CONTO ECONOMICO - ESEGUE
+000300000000     H*------------------------------------------------------------------------*
+000400000000     H              J
+000500000000     F*------------------------------------------------------------------------*
+000600000000     F* DATA BASE
+000700000000     F*------------------------------------------------------------------------*
+000800990216     FECEVT01LUF  E           K        DISK
+000900990216     FECEVD01LUF  E           K        DISK                      A
+001000000000     E*------------------------------------------------------------------------*
+001100000000     E* SCHIERE
+001200000000     E*------------------------------------------------------------------------*
+001300000000     E                    FIL        36  3 0             FILIALI
+001400000000     E                    PER        12  5 2             % MAGGIORAZIONE TARIFFA
+001500000000     C*------------------------------------------------------------------------*
+001600000000     C* MAIN LINE
+001700000000     C*------------------------------------------------------------------------*
+001800000000     C*---
+001900000000     C* 1) SCAGLIONE INF = 3500 (o 3500,1)   o   SCAGLIONE SUP = 3500 (o 3500,1)
+002000000000     C*    . RECORD VALIDI AL 1/1/99 CON DECORRENZA <= 31/12/98
+002100000000     C*      * AGGIORNA CON LA DATA SCADENZA = 31/12/98;
+002200000000     C*      * AGGIUNGE LO STESSO RECORD MA CON SCAGLIONI A 5000 kg E CON
+002300000000     C*        DATA DECORRENZA = 01/01/99 E SCADENZA = 31/12/1999;
+002400000000     C*    . RECORD VALIDI AL 1/1/99 CON DECORRENZA > 31/12/98
+002500000000     C*      * AGGIORNA GLI SCAGLIONI A 5000 kg;
+002600000000     C*---
+002700000000     C* TARIFFE
+002800000000     C           *LOVAL    SETLLECEVD01L
+002900000000     C                     READ ECEVD01L                 99
+003000000000DO  1C           *IN99     DOWEQ*OFF
+003100000000IF  2C           EVDATB    IFEQ *BLANKS                     *NO ANNULLATE
+003200000000IF  3C           EVDSGI    IFEQ 3500
+003300000000     C           EVDSGI    OREQ 3500,1
+003400000000     C           EVDSGF    OREQ 3500
+003500000000     C           EVDSGF    OREQ 3500,1
+003600000000IF  4C           19990101  IFLE EVDDST                      *VALIDO NEL 99
+003700000000IF  5C           EVDDDT    IFLE 19981231                    *DECORRENZA 98
+003800000000     C* AGGIORNA
+003900000000     C                     Z-ADD19981231  EVDDST            *SCADENZA   98
+004000000000     C                     MOVEL*BLANKS   EVDFTR
+004100000000     C                     UPDATECEVD
+004200000000     C* INSERISCE
+004300000000IF  6C           EVDSGI    IFEQ 3500
+004400000000     C                     Z-ADD5000      EVDSGI
+004500000000X   6C                     ELSE
+004600000000IF  7C           EVDSGI    IFEQ 3500,1
+004700000000     C                     Z-ADD5000,001  EVDSGI
+004800000000E   7C                     ENDIF
+004900000000E   6C                     ENDIF
+005000000000IF  6C           EVDSGF    IFEQ 3500
+005100000000     C                     Z-ADD5000      EVDSGF
+005200000000X   6C                     ELSE
+005300000000IF  7C           EVDSGF    IFEQ 3500,1
+005400000000     C                     Z-ADD5000,001  EVDSGF
+005500000000E   7C                     ENDIF
+005600000000E   6C                     ENDIF
+005700000000     C                     Z-ADD19990101  EVDDDT            *DECORRENZA 99
+005800000000     C                     Z-ADD20091231  EVDDST            *SCADENZA   2000
+005900000000     C                     MOVEL*BLANKS   EVDFTR
+006000000000     C                     Z-ADD*ZEROS    EVDDTR
+006100000000     C                     MOVEL*BLANKS   EVDATB
+006200000000     C                     WRITEECEVD
+006300000000X   5C                     ELSE                             *DECORRENZA 99
+006400000000     C* AGGIORNA
+006500000000IF  6C           EVDSGI    IFEQ 3500
+006600000000     C                     Z-ADD5000      EVDSGI
+006700000000X   6C                     ELSE
+006800000000IF  7C           EVDSGI    IFEQ 3500,1
+006900000000     C                     Z-ADD5000,001  EVDSGI
+007000000000E   7C                     ENDIF
+007100000000E   6C                     ENDIF
+007200000000IF  6C           EVDSGF    IFEQ 3500
+007300000000     C                     Z-ADD5000      EVDSGF
+007400000000X   6C                     ELSE
+007500000000IF  7C           EVDSGF    IFEQ 3500,1
+007600000000     C                     Z-ADD5000,001  EVDSGF
+007700000000E   7C                     ENDIF
+007800000000E   6C                     ENDIF
+007900000000     C                     MOVEL*BLANKS   EVDFTR
+008000000000     C                     UPDATECEVD
+008100000000E   5C                     ENDIF
+008200000000E   4C                     ENDIF
+008300000000E   3C                     ENDIF
+008400000000E   2C                     ENDIF
+008500000000     C                     READ ECEVD01L                 99
+008600000000E   1C                     ENDDO                           *FINE VOCI
+008700000000     C*---
+008800000000     C* AGGIORNA I RECORD CON DATA SCADENZA 31/12/99 UGUALE A 31/12/2009
+008900000000     C*---
+009000000000     C* VOCI
+009100000000     C           *LOVAL    SETLLECEVT01L
+009200000000     C                     READ ECEVT01L                 99
+009300000000DO  1C           *IN99     DOWEQ*OFF
+009400000000IF  2C           EVTATB    IFEQ *BLANKS                     *NO ANNULLATE
+009500000000IF  3C           EVTDSV    IFEQ 19991231
+009600000000     C                     Z-ADD20091231  EVTDSV            *DATA SCADENZA
+009700000000     C                     MOVEL*BLANKS   EVTFTR            *FLAG TRASMISSIONE
+009800000000     C                     UPDATECEVT
+009900000000E   3C                     ENDIF
+010000000000E   2C                     ENDIF
+010100000000     C                     READ ECEVT01L                 99
+010200000000E   1C                     ENDDO                           *FINE VOCI
+010300000000     C* TARIFFE
+010400000000     C           *LOVAL    SETLLECEVD01L
+010500000000     C                     READ ECEVD01L                 99
+010600000000DO  1C           *IN99     DOWEQ*OFF
+010700000000IF  2C           EVDATB    IFEQ *BLANKS                     *NO ANNULLATE
+010800000000IF  3C           EVDDST    IFEQ 19991231
+010900000000     C                     Z-ADD20091231  EVDDST            *DATA SCADENZA
+011000000000     C                     MOVEL*BLANKS   EVDFTR            *FLAG TRASMISSIONE
+011100000000     C                     UPDATECEVD
+011200000000E   3C                     ENDIF
+011300000000E   2C                     ENDIF
+011400000000     C                     READ ECEVD01L                 99
+011500000000E   1C                     ENDDO                           *FINE VOCI
+011600000000     C*---
+011700000000     C* CREA LA TARIFFA "F" PER ALCUNE VOCI E PER ALCUNE FILIALI
+011800000000     C*---
+011900000000DO  1C           1         DO   36        I
+012000000000     C                     CLEARECEVD
+012100000000     C* 610
+012200000000     C                     Z-ADD610       EVDVOC
+012300000000     C                     Z-ADD1         EVDPRG
+012400000000     C                     MOVEL'F'       EVDTTV
+012500000000     C                     Z-ADDFIL,I     EVDFT1
+012600000000     C                     Z-ADD19990101  EVDDDT
+012700000000     C                     Z-ADD20091231  EVDDST
+012800000000     C                     Z-ADD*ALL'9'   EVDSGF
+012900000000     C                     MOVEL'+'       EVDSEG
+013000000000     C                     Z-ADDPER,1     EVDPER
+013100990216     C                     ADD  2         EVDPER
+013200000000     C                     WRITEECEVD
+013300000000     C* 611
+013400000000     C                     Z-ADD611       EVDVOC
+013500000000     C                     Z-ADDPER,2     EVDPER
+013600990216     C                     ADD  2         EVDPER
+013700000000     C                     WRITEECEVD
+013800000000     C* 612
+013900000000     C                     Z-ADD612       EVDVOC
+014000000000     C                     Z-ADDPER,3     EVDPER
+014100990216     C                     ADD  2         EVDPER
+014200000000     C                     WRITEECEVD
+014300000000     C* 613
+014400000000     C                     Z-ADD613       EVDVOC
+014500000000     C                     Z-ADDPER,4     EVDPER
+014600990216     C                     ADD  2         EVDPER
+014700000000     C                     WRITEECEVD
+014800000000     C* 614
+014900000000     C                     Z-ADD614       EVDVOC
+015000000000     C                     Z-ADDPER,5     EVDPER
+015100990216     C                     ADD  2         EVDPER
+015200000000     C                     WRITEECEVD
+015300000000     C* 615
+015400000000     C                     Z-ADD615       EVDVOC
+015500000000     C                     Z-ADDPER,6     EVDPER
+015600990216     C                     ADD  2         EVDPER
+015700000000     C                     WRITEECEVD
+015800000000     C* 616
+015900000000     C                     Z-ADD616       EVDVOC
+016000000000     C                     Z-ADDPER,7     EVDPER
+016100990216     C                     ADD  2         EVDPER
+016200000000     C                     WRITEECEVD
+016300000000     C* 617
+016400000000     C                     Z-ADD617       EVDVOC
+016500000000     C                     Z-ADDPER,8     EVDPER
+016600990216     C                     ADD  2         EVDPER
+016700000000     C                     WRITEECEVD
+016800000000     C* 618
+016900000000     C                     Z-ADD618       EVDVOC
+017000000000     C                     Z-ADDPER,9     EVDPER
+017100990216     C                     ADD  2         EVDPER
+017200000000     C                     WRITEECEVD
+017300000000     C* 619
+017400000000     C                     Z-ADD619       EVDVOC
+017500000000     C                     Z-ADDPER,10    EVDPER
+017600990216     C                     ADD  2         EVDPER
+017700000000     C                     WRITEECEVD
+017800000000     C* 620
+017900000000     C                     Z-ADD620       EVDVOC
+018000000000     C                     Z-ADDPER,11    EVDPER
+018100990216     C                     ADD  2         EVDPER
+018200000000     C                     WRITEECEVD
+018300000000     C* 621
+018400000000     C                     Z-ADD621       EVDVOC
+018500000000     C                     Z-ADDPER,12    EVDPER
+018600990216     C                     ADD  2         EVDPER
+018700000000     C                     WRITEECEVD
+018800000000E   1C                     ENDDO
+018900000000     C*
+019000000000     C                     SETON                         LR
+019100000000     C*------------------------------------------------------------------------*
+019200000000     C* MEMCAR - MEMORIZZA CARTELLO
+019300000000     C*------------------------------------------------------------------------*
+019400000000     C           MEMCAR    BEGSR
+019500000000     C*
+019600000000     C                     Z-ADDWVOC      KVDVOC
+019700000000     C                     Z-ADD1         KVDPRG
+019800000000     C                     MOVEL'C'       KVDTTV
+019900000000     C                     Z-ADD*ZEROS    KVDFT1
+020000000000     C                     Z-ADD*ZEROS    KVDFT2
+020100000000     C                     Z-ADD*ZEROS    KVDCLI
+020200000000     C                     Z-ADD*ZEROS    KVDCTR
+020300000000     C                     MOVEL*BLANKS   KVDCTS
+020400000000     C                     MOVEL*BLANKS   KVDCAP
+020500000000     C           KEYEVD    SETLLECEVD01L
+020600000000     C           KEYEVD    READEECEVD01L            N    99
+020700000000DO  1C           *IN99     DOWEQ*OFF
+020800990217IF  2C           19990101  IFGE EVDDDT
+020900000000     C           19990101  ANDLEEVDDST
+021000000000     C                     Z-ADDEVDPER    PER,I
+021100000000     C                     LEAVE
+021200000000E   2C                     ENDIF
+021300000000     C           KEYEVD    READEECEVD01L            N    99
+021400000000E   1C                     ENDDO
+021500000000     C*
+021600000000     C                     ENDSR
+021700000000     C*------------------------------------------------------------------------*
+021800000000     C* *INZSR - OPERAZIONI INIZIALI
+021900000000     C*------------------------------------------------------------------------*
+022000000000     C           *INZSR    BEGSR
+022100000000     C*
+022200000000     C* VARIABILI RIFERITE AL DATA BASE
+022300000000     C           *LIKE     DEFN EVDVOC    KVDVOC           *ECEVD00F
+022400000000     C           *LIKE     DEFN EVDPRG    KVDPRG
+022500990216     C           *LIKE     DEFN EVDTTV    KVDTTV
+022600990216     C           *LIKE     DEFN EVDFT1    KVDFT1
+022700990216     C           *LIKE     DEFN EVDFT2    KVDFT2
+022800990216     C           *LIKE     DEFN EVDCLI    KVDCLI
+022900990216     C           *LIKE     DEFN EVDCTR    KVDCTR
+023000990216     C           *LIKE     DEFN EVDCTS    KVDCTS
+023100990216     C           *LIKE     DEFN EVDCAP    KVDCAP
+023200000000     C           *LIKE     DEFN EVDVOC    WVOC             *DI LAVORO
+023300000000     C*
+023400000000     C* VARIABILI DI CONTROLLO
+023500000000     C                     Z-ADD*ZEROS    I       50
+023600000000     C*
+023700000000     C* CHIAVI LETTURA
+023800000000     C           KEYEVD    KLIST                           *ECEVD01L
+023900000000     C                     KFLD           KVDVOC            -VOCE
+024000000000     C                     KFLD           KVDPRG            -PROGRESSIVO
+024100000000     C                     KFLD           KVDTTV            -TIPO TARIFFA
+024200000000     C                     KFLD           KVDFT1            -FILIALE UNO
+024300000000     C                     KFLD           KVDFT2            -FILIALE DUE
+024400000000     C                     KFLD           KVDCLI            -CLIENTE
+024500000000     C                     KFLD           KVDCTR            -TARIFFA
+024600000000     C                     KFLD           KVDCTS            -CODICE TASSAZIONE
+024700000000     C                     KFLD           KVDCAP            -CAP
+024800000000     C*
+024900000000     C* FILIALI PER LE QUALI CREARE DELLE TARIFFE "F" PER ALCUNE VOCI
+025000000000     C                     Z-ADD6         FIL,1
+025100000000     C                     Z-ADD41        FIL,2
+025200000000     C                     Z-ADD58        FIL,3
+025300000000     C                     Z-ADD61        FIL,4
+025400000000     C                     Z-ADD64        FIL,5
+025500000000     C                     Z-ADD112       FIL,6
+025600000000     C                     Z-ADD214       FIL,7
+025700000000     C                     Z-ADD43        FIL,8
+025800000000     C                     Z-ADD47        FIL,9
+025900000000     C                     Z-ADD48        FIL,10
+026000000000     C                     Z-ADD60        FIL,11
+026100000000     C                     Z-ADD65        FIL,12
+026200000000     C                     Z-ADD118       FIL,13
+026300000000     C                     Z-ADD277       FIL,14
+026400000000     C                     Z-ADD59        FIL,15
+026500000000     C                     Z-ADD16        FIL,16
+026600000000     C                     Z-ADD40        FIL,17
+026700000000     C                     Z-ADD69        FIL,18
+026800000000     C                     Z-ADD98        FIL,19
+026900000000     C                     Z-ADD116       FIL,20
+027000000000     C                     Z-ADD5         FIL,21
+027100000000     C                     Z-ADD54        FIL,22
+027200000000     C                     Z-ADD111       FIL,23
+027300000000     C                     Z-ADD121       FIL,24
+027400000000     C                     Z-ADD249       FIL,25
+027500000000     C                     Z-ADD50        FIL,26
+027600000000     C                     Z-ADD95        FIL,27
+027700000000     C                     Z-ADD202       FIL,28
+027800000000     C                     Z-ADD89        FIL,29
+027900000000     C                     Z-ADD83        FIL,30
+028000000000     C                     Z-ADD96        FIL,31
+028100000000     C                     Z-ADD97        FIL,32
+028200000000     C                     Z-ADD220       FIL,33
+028300000000     C                     Z-ADD93        FIL,34
+028400000000     C                     Z-ADD94        FIL,35
+028500000000     C                     Z-ADD110       FIL,36
+028600000000     C*---
+028700000000     C* CARICE LE TARIFFE DI CARTELLO DI ALCUNE VOCI
+028800000000     C*---
+028900000000     C                     Z-ADD610       WVOC
+029000000000     C                     Z-ADD1         I
+029100000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+029200000000     C*
+029300000000     C                     Z-ADD611       WVOC
+029400000000     C                     Z-ADD2         I
+029500000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+029600000000     C*
+029700000000     C                     Z-ADD612       WVOC
+029800000000     C                     Z-ADD3         I
+029900000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+030000000000     C*
+030100000000     C                     Z-ADD613       WVOC
+030200000000     C                     Z-ADD4         I
+030300000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+030400000000     C*
+030500000000     C                     Z-ADD614       WVOC
+030600000000     C                     Z-ADD5         I
+030700000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+030800000000     C*
+030900000000     C                     Z-ADD615       WVOC
+031000000000     C                     Z-ADD6         I
+031100000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+031200000000     C*
+031300000000     C                     Z-ADD616       WVOC
+031400000000     C                     Z-ADD7         I
+031500000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+031600000000     C*
+031700000000     C                     Z-ADD617       WVOC
+031800000000     C                     Z-ADD8         I
+031900000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+032000000000     C*
+032100000000     C                     Z-ADD618       WVOC
+032200000000     C                     Z-ADD9         I
+032300000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+032400000000     C*
+032500000000     C                     Z-ADD619       WVOC
+032600000000     C                     Z-ADD10        I
+032700000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+032800000000     C*
+032900000000     C                     Z-ADD620       WVOC
+033000000000     C                     Z-ADD11        I
+033100000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+033200000000     C*
+033300000000     C                     Z-ADD621       WVOC
+033400000000     C                     Z-ADD12        I
+033500000000     C                     EXSR MEMCAR                     *MEMORIZZA CARTELLO
+033600000000     C*
+033700000000     C                     ENDSR

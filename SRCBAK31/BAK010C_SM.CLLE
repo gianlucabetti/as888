@@ -1,0 +1,100 @@
+000100031006/*PARMS USRPRF(*OWNER) DFTACTGRP(*YES)                               */
+000200150504/*PRM   usrprf(*owner) dftactgrp(*yes)                               */
+000300150504/*END                                                                */
+000400930707/*-------------------------------------------------------------------*/
+000500930707/* LANCIO MODULO DI CONTROLLO INTERATTIVO                            */
+000600930707/*-------------------------------------------------------------------*/
+000700930707             PGM
+000800020509
+000900020510/* X0128 */  DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+001000020509/*   "   */  DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+001100020509/*   "   */  DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+001200020509/*   "   */  DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(10)
+001300020509/* X0128 */  DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+001400030711/* X0188 */  DCL        VAR(&PGMSTK) TYPE(*CHAR) LEN(10) +
+001500030825                          VALUE('BAK009C')
+001600030711/* X0188 */  DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(1) VALUE('0')
+001700030825/* X0196 */  DCL        VAR(&LIBPER) TYPE(*CHAR) LEN(10) +
+001800030825                          VALUE('          ')
+001900150506/*?BRT?¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯ */
+002000150511/*?BRT?*/    dcl        var(&L275)     type(*char) len(275)
+002100150511/*?BRT?*/    dcl        var(&SIF)      type(*char) len(10)
+002200150511/*?BRT?*/    dcl        var(&CMD)      type(*char) len(350)
+002300150511/*?BRT?*/    dcl        var(&LUNG)     type(*dec)  len(15 5) value(350)
+002400150511/*?BRT?*/    dcl        var(&KPJBA)    type(*char) len(502)
+002500150506/*?BRT?_____________________________________________________________________________________ */
+002600030825
+002700030825/* X0196 - Reperimento libreria personalizzazioni A.B.P.             */
+002800030825/* X0196 */  RTVDTAARA  DTAARA(PROBAS/KPLIB (1 10)) RTNVAR(&LIBPER)
+002900030825/* X0196 */  MONMSG     MSGID(CPF0000)
+003000930707
+003100030825/* Rimozione lib. A.B.P. (eventualmente già in lista)                */
+003200030825/* X0196 */  IF         COND(&LIBPER *NE ' ') THEN(DO)
+003300030825/* X0196 */  RMVLIBLE   LIB(&LIBPER)
+003400030825/* X0196 */  MONMSG     MSGID(CPF0000)
+003500030825/* X0196 */  ENDDO
+003600930823             RMVLIBLE   LIB(PROBAS)
+003700930823             MONMSG     MSGID(CPF0000)
+003800930823
+003900030825/* Aggiunta lib. A.B.P. (in testa!!!)                                */
+004000930727             ADDLIBLE   LIB(PROBAS) POSITION(*FIRST)
+004100030825/* X0196 */  IF         COND(&LIBPER *NE ' ') THEN(DO)
+004200030825/* X0196 */  ADDLIBLE   LIB(&LIBPER) POSITION(*FIRST)
+004300030825/* X0196 */  MONMSG     MSGID(CPF0000)
+004400030825/* X0196 */  ENDDO
+004500020509
+004600020509/* X0128  Reperimento nome video dal job */
+004700020510/* X0128 */  RTVJOBA    JOB(&JOBNAME) USER(&USER) NBR(&NBR)
+004800020509
+004900020509/* X0128  Reperimento associazione video/stampante */
+005000020510/* X0128 */  CALL       PGM(BAK110R) PARM(&JOBNAME &OUTQ &ERR)
+005100020509
+005200020509/* X0128  Esecuzione CHGJOB per impostare la coda di stampa reperita */
+005300020509/*   "   */  IF         COND(&ERR *EQ '0') THEN(DO)
+005400020510/*   "   */  CHGJOB     JOB(&NBR/&USER/&JOBNAME) OUTQ(&OUTQ)
+005500020509/*   "   */  MONMSG     MSGID(CPF0000)
+005600020509/* X0128 */  ENDDO
+005700020509
+005800940505             OVRDBF     FILE(KFSIF01L) TOFILE(PROBAS/KFSIF01L)
+005900020509
+006000150506/*?BRT?¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯ */
+006100160311/*?BRT?*/    IF         cond(%sst(&USER 1 5) = 'EDPSM' *or +
+006200160311                          %sst(&JOBNAME 1 9) = 'P04674698') +
+006300160311                          then(do)
+006400150604/*?BRT?*/    SndBrkMsg  msg('Debug ?') tomsgq(&JobName)
+006500150604/*?BRT?*/    ENDDO
+006600150505/*?BRT?*/
+006700150506/*?BRT?--?Reperimento della lista librerie CORRENTE?                                         */
+006800150505/*?BRT?*/    rtvjoba    usrlibl(&L275)
+006900150511/*?BRT?*/
+007000150511/*?BRT?--?Impostazione lista librerie del s.i. "GAITRA201"?                                  */
+007100150511/*?BRT?*/    call       pgm(GAITRAOBJ/TRUL07C)     parm('GAITRA201 ')
+007200150511/*?BRT?*/    monmsg     msgid(CPF0000) exec( goto  cmdlbl( NO_ChkIPj ) )
+007300150505/*?BRT?*/
+007400150506/*?BRT?--?Richiamo *pgm di controllo dell'IP address del *job?                               */
+007500150511/*?BRT?*/    call       pgm(UBCHKIPJ)
+007600150505/*?BRT?*/    monmsg     msgid(CPF0000)
+007700150505/*?BRT?*/
+007800150506/*?BRT?--?Reimpostazione della lista librerie originale?                                     */
+007900150511/*?BRT?*/    chgvar     var(&CMD)      value('CHGLIBL LIBL(' *cat &L275 +
+008000150511/*?BRT?*/                                                    *cat ')')
+008100150511/*?BRT?*/    call       pgm(QCMDEXC)   parm(&CMD &LUNG)
+008200150505/*?BRT?*/
+008300150511/*?BRT?*/ NO_ChkIPj:
+008400150515/*?BRT?*/
+008500150515/*?BRT?--?Cancellazione Aree Dati Utente (del sistema informativo di Sede)?                  */
+008600150515/*?BRT?*/    dltdtaara  dtaara(QTEMP/§AZUTE)
+008700150515/*?BRT?*/    monmsg     msgid(CPF0000)
+008800150515/*?BRT?*/    dltdtaara  dtaara(QTEMP/§DATIUTE)
+008900150515/*?BRT?*/    monmsg     msgid(CPF0000)
+009000150506/*?BRT?_____________________________________________________________________________________ */
+009100150505
+009200940117             CALL       PGM(BAK010R)
+009300030711
+009400030711/* X0188 SE SI PROVIENE DA CMD KUSOABP RITORNO CONTROLLO A BAK009C   */
+009500030711/*   "   */  CALL       PGM(XCHKPGM) PARM(&PGMSTK &RTNCDE)
+009600030711/* X0188 */  IF         COND(&RTNCDE *EQ '1') THEN(RETURN)
+009700930707
+009800930707             SIGNOFF
+009900930707
+010000930707             ENDPGM

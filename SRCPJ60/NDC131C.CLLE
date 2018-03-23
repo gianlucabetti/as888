@@ -1,0 +1,78 @@
+000100981217/*PARMS DFTACTGRP(*NO) ACTGRP(QILE)                                      */
+000200950315
+000300981216/* GUIDA DEL PROGRAMMA DI STAMPA MASTRINI                                 */
+000400981216
+000500981217             PGM        PARM(&KPJBA)
+000600981217             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700981217             DCL        VAR(&KPJBAW) TYPE(*CHAR) LEN(502)
+000800981217             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000900981217             DCL        VAR(&NDS) TYPE(*CHAR) LEN(10)
+001000981217             DCL        VAR(&TIT) TYPE(*CHAR) LEN(50)
+001100981217             DCL        VAR(&TITX) TYPE(*CHAR) LEN(100)
+001200981217             DCL        VAR(&IDMSG) TYPE(*CHAR) LEN(27)
+001300981217             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)
+001400041012             DCL        VAR(&YCD131) TYPE(*CHAR) LEN(1)
+001500041012             DCL        VAR(&SOC968) TYPE(*CHAR) LEN(3)
+001600041012             DCL        VAR(&LAN968) TYPE(*CHAR) LEN(9)
+001700041012             DCL        VAR(&MPEPAR) TYPE(*CHAR) LEN(256)
+001800041012             DCL        VAR(&YFORMTYPE) TYPE(*CHAR) LEN(10)
+001900041012
+002000041012/* Reperisco flag di stampa per CD.                                  */
+002100041012             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+002200041012             CHGVAR     VAR(&SOC968) VALUE(%SST(&KPJBU 1 3))
+002300041012             CHGVAR     VAR(&LAN968) VALUE(%SST(&KPJBU 4 9))
+002400041012             CALL       PGM(YRTVMPE01W) PARM(&LAN968 &SOC968 &MPEPAR)
+002500041012             CHGVAR     VAR(&YCD131) VALUE(%SST(&MPEPAR 256 1))
+002600041012             IF         COND(&YCD131 *EQ ' ') THEN(DO)
+002700041012             CHGVAR     VAR(&YCD131) VALUE('0')
+002800041012             ENDDO
+002900981217
+003000981217/* Salvataggio KPJBA                                               */
+003100981217             CHGVAR     VAR(&KPJBAW) VALUE(&KPJBA)
+003200981217
+003300981217 /*LANCIATORE  */
+003400981217 /* togliere se non necessaria  */
+003500981217 /*In NDS mettere il nome della DS esterna dei parametri di lancio */
+003600981217             CHGVAR     VAR(&NDS) VALUE('NDC131DS')
+003700981217
+003800981217             CHGVAR     VAR(&IDMSG) VALUE('PROMSG    *LIBL     COS0441')
+003900981217
+004000981217/* Reperisco nome del programma da file messaggi                   */
+004100981217             CALL       PGM(XRTVM) PARM(&IDMSG &TITX &ERR)
+004200981217             CHGVAR     VAR(&TIT) VALUE(%SST(&TITX 1 50))
+004300981217
+004400981217/* Eseguo ovrdbf file per ottenere un unico spool di stampa        */
+004500981217/* In USRDTA mettere un titolo breve della elaborazione   */
+004600041012             IF         COND(&YCD131 *EQ '0') THEN(DO)
+004700981217             OVRPRTF    FILE(NDC132P) OVRSCOPE(*JOB) SHARE(*YES)
+004800981217             OVRPRTF    FILE(ANA968P) TOFILE(NDC132P) +
+004900981217                          USRDTA('Stp mastri') OVRSCOPE(*JOB) +
+005000981217                          SHARE(*YES)
+005100041012             ENDDO
+005200041012
+005300041012/* Se la stampa è per il CD                                          */
+005400041012/* imposto attributi dello spool                                     */
+005500041012/* concordati con R. Natalello.                                      */
+005600041012             IF         COND(&YCD131 *EQ '1') THEN(DO)
+005700041012             CHGVAR     VAR(&YFORMTYPE) VALUE('CD' *CAT &SOC968)
+005800041012             OVRPRTF    FILE(NDC132P) OUTQ(OTTICOIN) +
+005900041012                          FORMTYPE(&YFORMTYPE) HOLD(*YES) +
+006000041012                          USRDTA('MastriCD') OVRSCOPE(*JOB) SHARE(*YES)
+006100041012             ENDDO
+006200981217
+006300981217/* Stampa prima pagina                                           */
+006400981217/* Stampa selezioni/ordinamenti                                  */
+006500041012             IF         COND(&YCD131 *EQ '0') THEN(DO)
+006600981217             CALL       PGM(ANA968R) PARM(&KPJBA &NDS &TIT)
+006700041012             ENDDO
+006800981217
+006900981217/* Stampa mastrini */
+007000981217/* Mettere nome del programma di stampa  */
+007100981217             CALL       PGM(NDC131R) PARM(&KPJBA &TIT)
+007200981217
+007300981217/* Richiamo pgm cancellatore                                     */
+007400981217
+007500981217             CHGVAR     VAR(&KPJBA) VALUE(&KPJBAW)
+007600981217             CALL      PGM(ANA989R) PARM(&KPJBA)
+007700981217
+007800981217             ENDPGM

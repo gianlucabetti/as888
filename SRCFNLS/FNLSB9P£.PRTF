@@ -1,0 +1,777 @@
+000100090113      *PARMS DEVTYPE(*AFPDS) PAGESIZE(104 120 *ROWCOL) LPI(9) CPI(15)
+000200090113      *PARMS OVRFLW(104) PRTQLTY(*STD) DRAWER(*FORMDF) PAGRTT(0)
+000300090112      *PARMS UOM(*INCH) FORMTYPE(*DOCRIT) SAVE(*NO) USRDTA('Doc.Ritiro')
+000400100414     /*PRM devtype(*afpds) pagesize(104 120 *rowcol) lpi(9) cpi(15)
+000500100414     /*PRM ovrflw(104) prtqlty(*std) drawer(*formdf) pagrtt(0)
+000600100414     /*PRM uom(*inch) formtype(*DocRit) save(*no) usrdta('Doc.Ritiro')
+000700100414     /*END
+000800090112      *---------------------------------------------------------------*
+000900090112      *?Stampa Documento di Ritiro fincato da AS - Max 4 in "A4"     ?*
+001000090112      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+001100090112      * Compilazione --> DEVTYPE(*AFPDS)                              *
+001200090112      *                  PAGESIZE(93 120 *ROWCOL)                     *
+001300090112      *                  LPI(9)                                       *
+001400090112      *                  CPI(15)                                      *
+001500110503      *                  OVRFLW(104)                                  *
+001600090112      *                  PRTQLTY(*STD)                                *
+001700090112      *                  DRAWER(*FORMDF)                              *
+001800090112      *                  PAGRTT(0)                                    *
+001900090112      *                  UOM(*INCH)          > No: (*CM)              *
+002000090112      *                  FORMTYPE(*DOCRIT)                            *
+002100090112      *                  SAVE(*NO)                                    *
+002200090112      *                  USRDTA('Doc.Ritiro')                         *
+002300090112      *---------------------------------------------------------------*
+002400090112      *
+002500090112      * N O T E
+002600090112      *
+002700090112      *-------------------------------------*
+002800090112      * » BOX(first-corner-down first-corner-across
+002900090112      *       diagonal-corner-down diagonal-corner-across line-width)
+003000090112      *   1 - Distanza del 1° bordo orizzontale (dal lato superiore del foglio)
+003100090112      *   2 - Distanza del 1° bordo verticale   (dal lato sinistro  del foglio)
+003200090112      *   3 - Distanza del 2° bordo orizzontale (dal lato superiore del foglio)
+003300090112      *   4 - Distanza del 2° bordo verticale   (dal lato sinistro  del foglio)
+003400090112      *   5 - Spessore della riga: in inches - da .001 a 22.750,
+003500090112      *                            *NARROW   - .008 in.,
+003600090112      *                            *MEDIUM   - .017 in.,
+003700090112      *                            *WIDE     - .025 in.
+003800090112      *-------------------------------------*
+003900090112      * » LINE(position-down position-across line-lenght line-direction
+004000090112      *        line-width)
+004100090112      *   1 - Distanza della linea dal lato superiore del foglio
+004200090112      *   2 - Distanza della linea dal lato sinistro  del foglio
+004300090112      *   3 - Lunghezza della riga
+004400090112      *   4 - Tipo riga (*HRZ = orizzontale, *VRT = verticale)
+004500090112      *   5 - Spessore della riga: in inches - da .001 a 22.750,
+004600090112      *                            *NARROW   - .008 in.,
+004700090112      *                            *MEDIUM   - .017 in.,
+004800090112      *                            *WIDE     - .025 in.
+004900090112      *-------------------------------------*
+005000090112      * » BARCODE(type height +6parms)
+005100090112      *   1 - Tipo: CODE128 / EAN13 / CODEABAR / CODE3OF9 / MSI / UPCA
+005200090112      *             INTERL2OF5 / MATRIX2OF5 / INDUST2OF5 / POSTNET / ...
+005300090112      *   2 - Altezza (espressa in LPI)
+005400090112      *   Altri parametri:
+005500090112      *   3 - Direzione .........: *HRZ = horizontal, *VRT = vertical
+005600090112      *   4 - Human Readable ....: *HRI, *HRITOP, *NOHRI
+005700090112      *   5 - Asterist (per 3OF9): *AST, *NOAST
+005800090112      *   6 - Check digit .......: type
+005900090112      *   7 - Unit Width ........: width of narrow bar/space
+006000090112      *   8 - Wide/Narrow Ratio .: value from 2.00-3.00
+006100090112      *-------------------------------------*
+006200090112      * » POSITION(position-down position-across)
+006300090112      *   1 - Distanza della linea dal lato superiore del foglio
+006400090112      *   2 - Distanza della linea dal lato sinistro  del foglio
+006500090112      *-------------------------------------*
+006600090112      * » FONT(font-identifier point-size)
+006700090112      * - Courier CPI(17.5) ..............: FONT(00248)
+006800090112      * - Courier CPI(15) ................: FONT(00222)
+006900090112      * - Courier CPI(13.3) ..............: FONT(00204)
+007000090112      * - Courier CPI(12) ................: FONT(00085)
+007100090112      * - Courier CPI(10) ................: FONT(00011)
+007200090112      * - Gothic  CPI(17.5) ..............: FONT(00400)
+007300090112      * - Gothic  CPI(15) ................: FONT(00230)
+007400090112      * - Gothic  CPI(12) ................: FONT(00066)
+007500090112      * - Gothic  CPI(10) ................: FONT(00040)
+007600090112      *---------------------------------------------------------------*
+007700090112
+007800090112     A                                      REF(CNDIZION)
+007900090112
+008000090112      *---------------------------------------------------------------*
+008100090112      *?Posizionamento singolo Doc.Ritiro all'interno del foglio "A4"?*
+008200090112      *---------------------------------------------------------------*
+008300090112
+008400100722     A          R LSB9POS
+008500090112     A                                      TEXT('Posizionam. per stam-
+008600090112     A                                      pa del singolo Doc.Ritiro')
+008700090112     A  41                                 1' '
+008800090114     A                                      SKIPB(0001)
+008900090112     A  42                                 1' '
+009000090114     A                                      SKIPB(0027)
+009100090112     A  43                                 1' '
+009200090114     A                                      SKIPB(0053)
+009300090112     A  44                                 1' '
+009400090114     A                                      SKIPB(0079)
+009500090113
+009600090113      *---------------------------------------------------------------*
+009700090113      *?Salto di una riga (vuota)                                    ?*
+009800090113      *---------------------------------------------------------------*
+009900090113
+010000100722     A          R LSB9NUL
+010100090113     A                                      SPACEB(0001)
+010200090113     A                                     1' '
+010300090112
+010400090112      *---------------------------------------------------------------*
+010500090112      *?Numerazione righe in stampa (PROVA TEMPORANEA)               ?*
+010600090112      *---------------------------------------------------------------*
+010700090112
+010800100722     A          R LSB9ROWNR
+010900090112      *
+011000090112     A            PROWNR         3S 0
+011100090112     A                                      TEXT('Progressivo riga')
+011200090112     A                                      POSITION(&§PC0 &§PC1)
+011300090112      *
+011400090112      * Parametri
+011500090112     A            §PC0           5S 3P
+011600090112     A            §PC1           5S 3P
+011700090112
+011800120329      *---------------------------------------------------------------*
+011900120329      *?Simil-Logo BRT                                               ?*
+012000120329      *---------------------------------------------------------------*
+012100120329
+012200120329     A          R LSB9LOGBRT
+012300120329     A                                      TEXT('Logo BRT')
+012400120329      *
+012500120329      *?Box BRT?
+012600120329     A                                      BOX(&§PLBLS  &§PLBLVS +
+012700120329     A                                          &§PLBLI  &§PLBLVD +
+012800120329     A                                          0.020)
+012900120329      *
+013000120329      *?Linea (spessa) sottostante?
+013100120329     A                                      LINE(&§PLOI  &§PLBLVS +
+013200120329     A                                           &§PLUL +
+013300120329     A                                           *HRZ    0.030)
+013400120329      *
+013500120329      *?"BRT"?
+013600120329      *
+013700120329      *?-B-?
+013800120329     A                                      LINE(&§PLBVA &§PLBL1A +
+013900120329     A                                           &§PSPE  *HRZ  &§PLU1)
+014000120329     A                                      LINE(&§PLBVB &§PLBL1B +
+014100120329     A                                           &§PSPE  *HRZ  &§PLU2)
+014200120329     A                                      LINE(&§PLBVC &§PLBL1B +
+014300120329     A                                           &§PSPE  *HRZ  &§PLU2)
+014400120329     A                                      LINE(&§PLBOA &§PLBL1C +
+014500120329     A                                           &§PLU3  *HRZ  &§PSPE)
+014600120329     A                                      LINE(&§PLBOB &§PLBL1C +
+014700120329     A                                           &§PLU3  *HRZ  &§PSPE)
+014800120329     A                                      LINE(&§PLBOC &§PLBL1C +
+014900120329     A                                           &§PLU3  *HRZ  &§PSPE)
+015000120329      *?-R-?
+015100120329     A                                      LINE(&§PLBVA &§PLBL3A +
+015200120329     A                                           &§PSPE  *HRZ  &§PLU1)
+015300120329     A                                      LINE(&§PLBVB &§PLBL3B +
+015400120329     A                                           &§PSPE  *HRZ  &§PLU2)
+015500120329     A                                      LINE(&§PLBVC &§PLBL3B +
+015600120329     A                                           &§PSPE  *HRZ  &§PLU7)
+015700120329     A                                      LINE(&§PLBOA &§PLBL3C +
+015800120329     A                                           &§PLU3  *HRZ  &§PSPE)
+015900120329     A                                      LINE(&§PLBOB &§PLBL3C +
+016000120329     A                                           &§PLU3  *HRZ  &§PSPE)
+016100120329      *?-T-?
+016200120329     A                                      LINE(&§PLBOA &§PLBL4A +
+016300120329     A                                           &§PLU8  *HRZ  &§PSPE)
+016400120329     A                                      LINE(&§PLBVB &§PLBL4B +
+016500120329     A                                           &§PSPE  *HRZ  &§PLU4)
+016600120329      *
+016700120329      *?"CORRIERE" "ESPRESSO" di BRT?
+016800120329      *
+016900120329     A            *NONE                     'CORRIERE'
+017000120329     A                                      FONT(02305 +
+017100120329     A                                          (*POINTSIZE  6.0))
+017200120329     A                                      POSITION(&§PCC   &§PLBLV2)
+017300120329     A            *NONE                     'ESPRESSO'
+017400120329     A                                      FONT(02305 +
+017500120329     A                                          (*POINTSIZE  6.0))
+017600120329     A                                      POSITION(&§PCE   &§PLBLVS)
+017700120329      *
+017800120329      *-------------------------------------*
+017900120329      *
+018000120329      *?Parametri logo "BRT"?
+018100120329     A            §PLBLS         5S 3P
+018200120329     A            §PLBLI         5S 3P
+018300120329     A            §PLBLV2        5S 3P
+018400120329     A            §PLBLVS        5S 3P
+018500120329     A            §PLBLVD        5S 3P
+018600120329     A            §PLUL          5S 3P
+018700120329     A            §PLOI          5S 3P
+018800120329      *
+018900120329     A            §PCC           5S 3P
+019000120329     A            §PCE           5S 3P
+019100120329      *
+019200120329     A            §PSPE          5S 3P
+019300120329     A            §PLU1          5S 3P
+019400120329     A            §PLU2          5S 3P
+019500120329     A            §PLU3          5S 3P
+019600120329     A            §PLU4          5S 3P
+019700120329     A            §PLU7          5S 3P
+019800120329     A            §PLU8          5S 3P
+019900120329      *
+020000120329     A            §PLBVA         5S 3P
+020100120329     A            §PLBVB         5S 3P
+020200120329     A            §PLBVC         5S 3P
+020300120329     A            §PLBOA         5S 3P
+020400120329     A            §PLBOB         5S 3P
+020500120329     A            §PLBOC         5S 3P
+020600120329      *
+020700120329     A            §PLBL1A        5S 3P
+020800120329     A            §PLBL1B        5S 3P
+020900120329     A            §PLBL1C        5S 3P
+021000120329     A            §PLBL3A        5S 3P
+021100120329     A            §PLBL3B        5S 3P
+021200120329     A            §PLBL3C        5S 3P
+021300120329     A            §PLBL4A        5S 3P
+021400120329     A            §PLBL4B        5S 3P
+021500090112
+021600090112      *---------------------------------------------------------------*
+021700090114      *?Box x singolo Documento di Ritiro                            ?*
+021800090112      *---------------------------------------------------------------*
+021900090112
+022000100722     A          R LSB9BOX
+022100090114     A                                      TEXT('Box di singolo modul-
+022200090114     A                                      o "Documento di Ritiro"')
+022300090114      *
+022400090114     A                                      FONT(02304 +
+022500090114     A                                          (*POINTSIZE 4.0))
+022600090112      *- - - - - - - - - - - - - - - - - - -*
+022700090112      * Box generale
+022800090119     A                                      BOX(&§BOXA 0.250 +
+022900090112     A                                          &§BOXB 8.000 +
+023000090112     A                                          *NARROW)
+023100090114      *- - - - - - - - - - - - - - - - - - -*
+023200090114      * Box interni (di scelta)
+023300090114      * - Resa: Franco
+023400090119     A                                      BOX(&§BOX1A 4.780 +
+023500090119     A                                          &§BOX1B 4.880 +
+023600090119     A                                          *NARROW)
+023700090114      * - Resa: Assegnato
+023800090119     A                                      BOX(&§BOX1A 5.315 +
+023900090119     A                                          &§BOX1B 5.415 +
+024000090114     A                                          *NARROW)
+024100100722      * - Servizio: 1° (Espresso)
+024200100721     A                                      BOX(&§BOX1A 6.515 +
+024300100721     A                                          &§BOX1B 6.615 +
+024400090114     A                                          *NARROW)
+024500100722      * - Servizio: 2° (h 10:30)
+024600100721     A                                      BOX(&§BOX1A 7.115 +
+024700100721     A                                          &§BOX1B 7.215 +
+024800100721     A                                          *NARROW)
+024900090114      * - Fermo Deposito
+025000100721     A                                      BOX(&§BOX2A 7.115 +
+025100100721     A                                          &§BOX2B 7.215 +
+025200090114     A                                          *NARROW)
+025300090112      *- - - - - - - - - - - - - - - - - - -*
+025400090112      * Linee orizzontali
+025500090115      * - a sinistra
+025600090114      *                                     »  Mittente / ...
+025700090114     A                                      LINE(&§LO1  0.250 4.100 +
+025800090112     A                                           *HRZ *NARROW)
+025900090114      *                                     »  Destinatario / ...
+026000090114     A                                      LINE(&§LO2  0.250 4.100 +
+026100090114     A                                           *HRZ *NARROW)
+026200090115      * - a destra
+026300090114      *                                     »» | Intestaz.BARTOLINI
+026400090114     A                                      LINE(&§LO3  4.350 6.650 +
+026500090114     A                                           *HRZ *NARROW)
+026600090114      *                                     »» | Num. e data documento
+026700090114     A                                      LINE(&§LO4  4.350 6.650 +
+026800090114     A                                           *HRZ *NARROW)
+026900090114      *                                     »» | Resa, Servizio, F.Dep.
+027000090114     A                                      LINE(&§LO5  4.350 6.650 +
+027100090114     A                                           *HRZ *NARROW)
+027200090114      *                                     »» | Data cons.rich, Chius.
+027300090114     A                                      LINE(&§LO6  4.350 6.650 +
+027400090114     A                                           *HRZ *NARROW)
+027500100721      *                                     »» | Val.Assic., C/Assegno
+027600090114     A                                      LINE(&§LO7  4.350 6.650 +
+027700090114     A                                           *HRZ *NARROW)
+027800090114      *                                     »» | Colli, Peso, Volume
+027900090114     A                                      LINE(&§LO8  4.350 6.650 +
+028000090114     A                                           *HRZ *NARROW)
+028100090114      *                                     »» | Natura merce
+028200090114     A                                      LINE(&§LO9  4.350 6.650 +
+028300090114     A                                           *HRZ *NARROW)
+028400090114      *                                     »» | Note e Particolar.
+028500090114     A                                      LINE(&§LO0  4.350 6.650 +
+028600090114     A                                           *HRZ *NARROW)
+028700090114      *                                     »» | Firma x ritiro...
+028800090112      *- - - - - - - - - - - - - - - - - - -*
+028900090112      * Linee orizzontali "aggiuntive" (non separatrici nel box)
+029000090115      *                                     »» Per ritiro della merce)
+029100090115     A                                      LINE(&§LOA  4.420 3.500 +
+029200090112     A                                           *HRZ *NARROW)
+029300090112      *- - - - - - - - - - - - - - - - - - -*
+029400090112      * Linee verticali
+029500090114      *                                     »  Mittente | Num.Docum.
+029600090113     A                                      LINE(&§BOXA 4.350 &§LV1 +
+029700090112     A                                           *VRT *NARROW)
+029800100721      *                                     »» Num.Doc.   | Data Doc.
+029900100721      *                                        Cons.Rich. | Chius.
+030000100721      *                                        Val.Assic. | C/Ass.
+030100090114     A                                      LINE(&§LO3  6.000 &§LV2 +
+030200090114     A                                           *VRT *NARROW)
+030300090114      *                                     »» Colli | Peso | Volume
+030400100721     A                                      LINE(&§LO7  5.350 &§LV3 +
+030500090114     A                                           *VRT *NARROW)
+030600100721     A                                      LINE(&§LO7  6.650 &§LV3 +
+030700090114     A                                           *VRT *NARROW)
+030800100721      *                                     »» Nat.Merce | Fermo Dep.
+030900100721     A                                      LINE(&§LO8  7.000 &§LV4 +
+031000100721     A                                           *VRT *NARROW)
+031100090114      *- - - - - - - - - - - - - - - - - - -*
+031200090114      * "Costanti" in stampa
+031300100721      *- - - - - - - - - - - - - - - - - - -*
+031400110503      * -?Dati "BRT S.p.A."?(a sx del logo)
+031500100721     A            TBAR          50A
+031600110503     A                                      TEXT('"BRT S.p.A."')
+031700100721     A                                      FONT(02305 (*POINTSIZE 6))
+031800120329     A*//                                      POSITION(&§PC0 6.552)
+031900120329     A                                      POSITION(&§PC0 7.002)
+032000100721     A            TBA1          50A
+032100100721     A                                      TEXT('Indirizzo')
+032200100721     A                                      FONT(02304 (*POINTSIZE 5))
+032300120329     A*//                                      POSITION(&§PC1 5.870)
+032400120329     A                                      POSITION(&§PC1 6.318)
+032500100721     A            TBA2          50A
+032600100721     A                                      TEXT('C.F. - P.Iva')
+032700100721     A                                      FONT(02304 (*POINTSIZE 5))
+032800120329     A*//                                      POSITION(&§PC2 5.556)
+032900120329     A                                      POSITION(&§PC2 6.000)
+033000100721     A            TBA3          50A
+033100100721     A                                      TEXT('Capitale sociale')
+033200100721     A                                      FONT(02304 (*POINTSIZE 5))
+033300120329     A*//                                      POSITION(&§PC3 5.560)
+033400120329     A                                      POSITION(&§PC3 6.010)
+033500100721     A            TBA4          50A
+033600100721     A                                      TEXT('"info on-line"')
+033700100721     A                                      FONT(02304 (*POINTSIZE 6))
+033800120329     A*//                                      POSITION(&§PC4 5.750)
+033900120329     A                                      POSITION(&§PC4 6.440)
+034000100721     A            TBA5          50A
+034100100721     A                                      TEXT('Sito internet')
+034200100721     A                                      FONT(02304 (*POINTSIZE 7))
+034300120329     A*//                                      POSITION(&§PC4 6.243)
+034400120329     A                                      POSITION(&§PC4 6.923)
+034500100721      *- - - - - - - - - - - - - - - - - - -*
+034600100721      * - "Fermo Deposito"
+034700100721     A            PXFD      R               REFFLD($FLA)
+034800100721     A                                      TEXT('Flag "Fermo Deposito-
+034900100721     A                                      "')
+035000100721     A                                      FONT(00222)
+035100100721     A                                      POSITION(&§PKXFD 7.135)
+035200100721      *
+035300100721     A            *NONE                     'FERMO DEPOSITO'
+035400100721     A                                      FONT(02304 -
+035500100721     A                                          (*POINTSIZE 5.0))
+035600100721     A                                      POSITION(&§PKXFD 7.250)
+035700090114      * - "Per accettazione delle condizioni di trasporto..."
+035800100721     A            *NONE                     'PER ACCETTAZIONE DELLE CO-
+035900100721     A                                      NDIZIONI DI TRASPORTO.'
+036000090114     A                                      POSITION(&§PKFIR 0.300)
+036100090114      * - "(FIRMA)"
+036200100721     A            *NONE                     '(FIRMA)'
+036300090115     A                                      POSITION(&§PKFIR 4.450)
+036400090114      * - "(DATA)"
+036500100721     A            *NONE                     '(DATA)'
+036600090115     A                                      POSITION(&§PKFIR 6.900)
+036700090112      *-------------------------------------*
+036800090112      * Parametri
+036900090112     A            §BOXA          5S 3P
+037000090112     A            §BOXB          5S 3P
+037100090114     A            §BOX1A         5S 3P
+037200090114     A            §BOX1B         5S 3P
+037300100721     A            §BOX2A         5S 3P
+037400100721     A            §BOX2B         5S 3P
+037500090112     A            §LO1           5S 3P
+037600090114     A            §LO2           5S 3P
+037700090114     A            §LO3           5S 3P
+037800090114     A            §LO4           5S 3P
+037900090114     A            §LO5           5S 3P
+038000090112     A            §LO6           5S 3P
+038100090114     A            §LO7           5S 3P
+038200090114     A            §LO8           5S 3P
+038300090114     A            §LO9           5S 3P
+038400090114     A            §LO0           5S 3P
+038500090114     A            §LOA           5S 3P
+038600090113     A            §LV1           5S 3P
+038700090114     A            §LV2           5S 3P
+038800090114     A            §LV3           5S 3P
+038900100721     A            §LV4           5S 3P
+039000100721     A            §PC0           5S 3P
+039100100721     A            §PC1           5S 3P
+039200100721     A            §PC2           5S 3P
+039300100721     A            §PC3           5S 3P
+039400100721     A            §PC4           5S 3P
+039500100721     A            §PKXFD         5S 3P
+039600090114     A            §PKFIR         5S 3P
+039700090114
+039800090114      *---------------------------------------------------------------*
+039900090114      *?Descriz. dati da inserire "a mano" x Destinatario            ?*
+040000090114      *---------------------------------------------------------------*
+040100090114
+040200100722     A          R LSB9MAND
+040300090114     A                                      TEXT('Descriz. dati da ins-
+040400090114     A                                      erire "a mano" x Dest.')
+040500090114      *
+040600090114     A                                      FONT(02304 +
+040700090114     A                                          (*POINTSIZE 4.0))
+040800090115      *
+040900090115     A            KIND          11A
+041000090115     A                                      POSITION(&§PKIND 0.350)
+041100090115      *
+041200090115     A            KCAP           5A
+041300090115     A                                      POSITION(&§PKLOC 0.350)
+041400090115     A            KLOC          11A
+041500090115     A                                      POSITION(&§PKLOC 1.150)
+041600090116     A            KPRV          17A
+041700090115     A                                      POSITION(&§PKLOC 3.500)
+041800090114      *
+041900090114     A            KREF          11A
+042000090115     A                                      POSITION(&§PKREF 0.350)
+042100090114     A            KTEL          10A
+042200090115     A                                      POSITION(&§PKREF 3.000)
+042300090114      * Parametri
+042400090115     A            §PKIND         5S 3P
+042500090115     A            §PKLOC         5S 3P
+042600090114     A            §PKREF         5S 3P
+042700090112
+042800090112      *---------------------------------------------------------------*
+042900090112      *?Testo singolo modulo Documento di Ritiro (4 in ogni pag."A4")?*
+043000090112      *---------------------------------------------------------------*
+043100090112
+043200100722     A          R LSB9TXT
+043300090112     A                                      TEXT('Testo di singolo mod-
+043400090112     A                                      ulo "Documento di Ritiro"')
+043500090112      *
+043600090112     A                                      FONT(00066)
+043700090114      *- - - - - - - - - - - - - - - - - - -*
+043800090114      *  1ª RIGA
+043900090114     A                                     1' '
+044000090114     A                                      SPACEB(001)
+044100090112      *- - - - - - - - - - - - - - - - - - -*
+044200090114      *  2ª RIGA
+044300090112     A                                     1' '
+044400090112     A                                      SPACEB(001)
+044500090113      * >  Costanti
+044600090114     A                                     5' MITTENTE'
+044700090114     A                                      FONT(02305 -
+044800090114     A                                          (*POINTSIZE 6.0))
+044900090112      * >  Dati Mittente (codice)
+045000090112     A            PMITT00       35A       15
+045100090114     A                                      FONT(00085)
+045200090112      *- - - - - - - - - - - - - - - - - - -*
+045300090114      *  3ª RIGA
+045400090112     A                                     1' '
+045500090112     A                                      SPACEB(001)
+045600090113      * >  Dati Mittente (vuoto / ragione sociale)
+045700090114     A            PMITT01      100A        5
+045800090114     A     51                               FONT(00400 +
+045900090114     A                                          (*POINTSIZE 5.0))
+046000090114      * >> Costanti
+046100090114     A                                    68'DOCUMENTO'
+046200090114     A                                      FONT(02305 +
+046300090114     A                                          (*POINTSIZE 11.0))
+046400090112      *- - - - - - - - - - - - - - - - - - -*
+046500090114      *  4ª RIGA
+046600090112     A                                     1' '
+046700090112     A                                      SPACEB(001)
+046800090113      * >  Dati Mittente (ragione sociale)
+046900090114     A            PMITT02      100A        5
+047000090114     A     51                               FONT(00400 +
+047100090114     A                                          (*POINTSIZE 5.0))
+047200090112      *- - - - - - - - - - - - - - - - - - -*
+047300090114      *  5ª RIGA
+047400090112     A                                     1' '
+047500090112     A                                      SPACEB(001)
+047600090113      * >  Dati Mittente (vuoto / indirizzo)
+047700090114     A            PMITT03      100A        5
+047800090114     A     51                               FONT(00400 +
+047900090114     A                                          (*POINTSIZE 5.0))
+048000090114      * >>  Costanti
+048100090114     A                                    68'   DI RITIRO'
+048200090114     A                                      FONT(02305 +
+048300090114     A                                          (*POINTSIZE 11.0))
+048400090112      *- - - - - - - - - - - - - - - - - - -*
+048500090114      *  6ª RIGA
+048600090112     A                                     1' '
+048700090112     A                                      SPACEB(001)
+048800090113      * >  Dati Mittente (indirizzo)
+048900090114     A            PMITT04      100A        5
+049000090114     A     51                               FONT(00400 +
+049100090114     A                                          (*POINTSIZE 5.0))
+049200090112      *- - - - - - - - - - - - - - - - - - -*
+049300090114      *  7ª RIGA
+049400090112     A                                     1' '
+049500090112     A                                      SPACEB(001)
+049600090113      * >  Dati Mittente (vuoto / cap + località + provincia)
+049700090114     A            PMITT05      100A        5
+049800090114     A     51                               FONT(00400 +
+049900090114     A                                          (*POINTSIZE 5.0))
+050000090112      *- - - - - - - - - - - - - - - - - - -*
+050100090114      *  8ª RIGA
+050200090112     A                                     1' '
+050300090112     A                                      SPACEB(001)
+050400090113      * >  Dati Mittente (cap + località + provincia)
+050500090114     A            PMITT06      100A        5
+050600090114     A     51                               FONT(00400 +
+050700090114     A                                          (*POINTSIZE 5.0))
+050800090114      * >> Costanti
+050900090115     A                                    67'NUM. DOCUMENTO'
+051000090114     A                                      FONT(02304 -
+051100090114     A                                          (*POINTSIZE 5.0))
+051200090114     A                                    92'DATA DOCUMENTO'
+051300090114     A                                      FONT(02304 -
+051400090114     A                                          (*POINTSIZE 5.0))
+051500090112      *- - - - - - - - - - - - - - - - - - -*
+051600090114      *  9ª RIGA
+051700090112     A                                     1' '
+051800090112     A                                      SPACEB(001)
+051900090113      * >  Dati Mittente (vuoto)
+052000090114     A            PMITT07      100A        5
+052100090119     A     52                               FONT(00400 +
+052200090114     A                                          (*POINTSIZE 5.0))
+052300090115      * >> Numero documento
+052400090115     A            PNDC      R             78
+052500090115     A                                      REFFLD($NDC)
+052600090115     A                                      EDTCDE(K)
+052700090115      * >> Data documento
+052800090115     A            PDDC      R            104
+052900090115     A                                      REFFLD($DDC)
+053000090115     A                                      EDTWRD('  /  /    ')
+053100090112      *- - - - - - - - - - - - - - - - - - -*
+053200090114      * 10ª RIGA
+053300090112     A                                     1' '
+053400090112     A                                      SPACEB(001)
+053500090113      * >  Dati Mittente (rif. mittente originale)
+053600090114     A            PMITT08      100A        5
+053700090119     A     52                               FONT(00400 +
+053800090114     A                                          (*POINTSIZE 5.0))
+053900090114      * >> Costanti
+054000090114     A                                    67'RESA'
+054100090114     A                                      FONT(02304 -
+054200090114     A                                          (*POINTSIZE 5.0))
+054300090115     A                                    75' FRANCO'
+054400090115     A                                      FONT(02304 -
+054500090115     A                                          (*POINTSIZE 5.0))
+054600090115     A                                    83'ASSEGNATO'
+054700090115     A                                      FONT(02304 -
+054800090115     A                                          (*POINTSIZE 5.0))
+054900090115      *
+055000090114     A                                    92'SERVIZIO'
+055100090114     A                                      FONT(02304 -
+055200090114     A                                          (*POINTSIZE 5.0))
+055300100722     A            KXS1      R            101REFFLD(§5ED08     DS5E)
+055400100722     A                                      TEXT('1° servizio (Espress+
+055500100722     A                                      o)')
+055600090115     A                                      FONT(02304 -
+055700090115     A                                          (*POINTSIZE 5.0))
+055800090115      *
+055900100722     A            KXS2      R            110REFFLD(§5ED08     DS5E)
+056000100722     A                                      TEXT('2° servizio (h 10:30+
+056100100722     A                                      )')
+056200090115     A                                      FONT(02304 -
+056300090115     A                                          (*POINTSIZE 5.0))
+056400090115      * >> Flags
+056500090115     A            PXFR      R             73
+056600090115     A                                      REFFLD($FLA)
+056700090115     A                                      TEXT('Flag "Resa Franco"')
+056800090119     A                                      FONT(00222)
+056900090115     A            PXAS      R             81
+057000090115     A                                      REFFLD($FLA)
+057100090115     A                                      TEXT('Flag "Resa Assegnato-
+057200090115     A                                      "')
+057300090119     A                                      FONT(00222)
+057400100722     A            PXS1      R             99
+057500090115     A                                      REFFLD($FLA)
+057600100722     A                                      TEXT('Flag 1° servizio (Es-
+057700100722     A                                      presso)')
+057800090119     A                                      FONT(00222)
+057900100722     A            PXS2      R            108
+058000090115     A                                      REFFLD($FLA)
+058100100722     A                                      TEXT('Flag 2° servizio (h -
+058200100722     A                                      10:30)')
+058300090119     A                                      FONT(00222)
+058400090112      *- - - - - - - - - - - - - - - - - - -*
+058500090114      * 11ª RIGA
+058600090112     A                                     1' '
+058700090112     A                                      SPACEB(001)
+058800090114      * >> Costanti
+058900090115     A                                    67'DATA CONSEGNA RICHIESTA'
+059000090115     A                                      FONT(02304 -
+059100090115     A                                          (*POINTSIZE 5.0))
+059200090115     A                                    92'TURNO DI CHIUSURA'
+059300090115     A                                      FONT(02304 -
+059400090115     A                                          (*POINTSIZE 5.0))
+059500090112      *- - - - - - - - - - - - - - - - - - -*
+059600090114      * 12ª RIGA
+059700090112     A                                     1' '
+059800090112     A                                      SPACEB(001)
+059900090113      * >  Costanti
+060000090114     A                                     5' DESTINATARIO'
+060100090114     A                                      FONT(02305 -
+060200090114     A                                          (*POINTSIZE 6.0))
+060300090112      * >  Dati Destinatario (codice)
+060400090112     A            PDEST00       35A       15
+060500090114     A                                      FONT(00085)
+060600090115      * >> Data consegna richiesta
+060700090115     A            PTDR           5        67
+060800090115     A                                      TEXT('Consegna richiesta p-
+060900090115     A                                      rima/dopo il giorno/le ore-
+061000090115     A                                      ')
+061100090119     A                                      FONT(00230)
+061200090119     A            PDCR      R    6  0    + 2
+061300090115     A                                      REFFLD($DCR)
+061400090115     A                                      EDTWRD('  /  /  ')
+061500090119     A                                      FONT(00230)
+061600090119     A            PHCR           5A      + 2
+061700090115     A                                      TEXT('Orario Consegna Rich-
+061800090115     A                                      iesta')
+061900090119     A                                      FONT(00230)
+062000090115      * >> Turni di chiusura
+062100090115     A            PGC1           5A      104
+062200090115     A                                      TEXT('Desc. turno di chius-
+062300090115     A                                      ura 1')
+062400090115     A            PGC2           5A      112
+062500090115     A                                      TEXT('Desc. turno di chius-
+062600090115     A                                      ura 2')
+062700090112      *- - - - - - - - - - - - - - - - - - -*
+062800090114      * 13ª RIGA
+062900090112     A                                     1' '
+063000090112     A                                      SPACEB(001)
+063100090112      * >  Dati Destinatario (vuoto / ragione sociale)
+063200090114     A            PDEST01      100A        5
+063300090119     A     53                               FONT(00400 +
+063400090114     A                                          (*POINTSIZE 5.0))
+063500090115      * >> Costanti
+063600090115     A                                    67'VALORE DA ASSICURARE'
+063700090115     A                                      FONT(02304 -
+063800090115     A                                          (*POINTSIZE 5.0))
+063900090115     A                                    92'CONTRASSEGNO'
+064000090115     A                                      FONT(02304 -
+064100090115     A                                          (*POINTSIZE 5.0))
+064200090112      *- - - - - - - - - - - - - - - - - - -*
+064300090114      * 14ª RIGA
+064400090112     A                                     1' '
+064500090112     A                                      SPACEB(001)
+064600090112      * >  Dati Destinatario (ragione sociale)
+064700090114     A            PDEST02      100A        5
+064800090119     A     53                               FONT(00400 +
+064900090114     A                                          (*POINTSIZE 5.0))
+065000090115      * >> Valore merce da assicurare
+065100090115     A            PDAS      R             67
+065200090115     A                                      REFFLD($VAS)
+065300090119     A***                                   FONT(00230)
+065400090119     A                                      FONT(00085)
+065500090119     A            PIAS      R   -2  2    + 0
+065600090115     A                                      REFFLD($IAS)
+065700090115     A                                      EDTCDE(K)
+065800090119     A***                                   FONT(00230)
+065900090119     A                                      FONT(00085)
+066000090115      * >> Contrassegno
+066100090115     A            PDCA      R             92
+066200090115     A                                      REFFLD($VCA)
+066300090119     A                                      FONT(00230)
+066400090115     A                                      HIGHLIGHT
+066500090115     A            PCAS      R       2    + 3
+066600090115     A                                      REFFLD($CAS)
+066700090115     A                                      EDTCDE(K)
+066800090115     A                                      HIGHLIGHT
+066900090112      *- - - - - - - - - - - - - - - - - - -*
+067000090114      * 15ª RIGA
+067100090112     A                                     1' '
+067200090112     A                                      SPACEB(001)
+067300090113      * >  Dati Destinatario (vuoto / ragione sociale 2)
+067400090114     A            PDEST03      100A        5
+067500090119     A     53                               FONT(00400 +
+067600090114     A                                          (*POINTSIZE 5.0))
+067700090115      * >> Costanti
+067800090115     A                                    67'COLLI'
+067900090115     A                                      FONT(02304 -
+068000090115     A                                          (*POINTSIZE 5.0))
+068100090115     A                                    82'PESO'
+068200090115     A                                      FONT(02304 -
+068300090115     A                                          (*POINTSIZE 5.0))
+068400090115     A                                   102'VOLUME MC'
+068500090115     A                                      FONT(02304 -
+068600090115     A                                          (*POINTSIZE 5.0))
+068700090112      *- - - - - - - - - - - - - - - - - - -*
+068800090114      * 16ª RIGA
+068900090112     A                                     1' '
+069000090112     A                                      SPACEB(001)
+069100090113      * >  Dati Destinatario (ragione sociale 2)
+069200090114     A            PDEST04      100A        5
+069300090119     A     53                               FONT(00400 +
+069400090114     A                                          (*POINTSIZE 5.0))
+069500090115      * >> Numero colli
+069600090115     A            PNCL      R             72
+069700090115     A                                      REFFLD($NCL)
+069800090119     A                                      EDTCDE(2)
+069900090115      * >> Peso in kg
+070000090115     A            PPKF      R             87
+070100090115     A                                      REFFLD($PKF)
+070200090119     A                                      EDTCDE(2)
+070300090115      * >> Volume in mc
+070400090115     A            PVLF      R            111
+070500090115     A                                      REFFLD($VLF)
+070600090119     A                                      EDTCDE(2)
+070700090112      *- - - - - - - - - - - - - - - - - - -*
+070800090114      * 17ª RIGA
+070900090112     A                                     1' '
+071000090112     A                                      SPACEB(001)
+071100090113      * >  Dati Destinatario (vuoto / indirizzo)
+071200090114     A            PDEST05      100A        5
+071300090119     A     53                               FONT(00400 +
+071400090114     A                                          (*POINTSIZE 5.0))
+071500090115      * >> Costanti
+071600090115     A                                    67'NATURA DELLA MERCE'
+071700090115     A                                      FONT(02304 -
+071800090115     A                                          (*POINTSIZE 5.0))
+071900090112      *- - - - - - - - - - - - - - - - - - -*
+072000090114      * 18ª RIGA
+072100090112     A                                     1' '
+072200090112     A                                      SPACEB(001)
+072300090113      * >  Dati Destinatario (indirizzo)
+072400090114     A            PDEST06      100A        5
+072500090119     A     53                               FONT(00400 +
+072600090114     A                                          (*POINTSIZE 5.0))
+072700100721      * >> Colli: natura merce
+072800100721     A            PNAT      R             80
+072900100721     A                                      REFFLD(DB0NAS     FNLSB5DS)
+073000090112      *- - - - - - - - - - - - - - - - - - -*
+073100090114      * 19ª RIGA
+073200090112     A                                     1' '
+073300090112     A                                      SPACEB(001)
+073400090113      * >  Dati Destinatario (vuoto / cap + località + provincia)
+073500090114     A            PDEST07      100A        5
+073600090119     A     53                               FONT(00400 +
+073700090114     A                                          (*POINTSIZE 5.0))
+073800090115      * >> Costanti
+073900090115     A                                    67'NOTE E PARTICOLARITÀ'
+074000090115     A                                      FONT(02304 -
+074100090115     A                                          (*POINTSIZE 5.0))
+074200090112      *- - - - - - - - - - - - - - - - - - -*
+074300090114      * 20ª RIGA
+074400090112     A                                     1' '
+074500090112     A                                      SPACEB(001)
+074600090113      * >  Dati Destinatario (cap + località + provincia)
+074700090114     A            PDEST08      100A        5
+074800090119     A     53                               FONT(00400 +
+074900090114     A                                          (*POINTSIZE 5.0))
+075000100721      * >> Note e Particolarità
+075100090119     A            PNP1      R             67
+075200090115     A                                      REFFLD($NOT)
+075300090119     A                                      FONT(00085)
+075400090112      *- - - - - - - - - - - - - - - - - - -*
+075500090114      * 21ª RIGA
+075600090112     A                                     1' '
+075700090112     A                                      SPACEB(001)
+075800090114      * >  Dati Destinatario (vuoto / referente + telefono)
+075900090114     A            PDEST09      100A        5
+076000090119     A     53                               FONT(00400 +
+076100090114     A                                          (*POINTSIZE 5.0))
+076200090115      * >> Costanti
+076300090115     A                                    67'PER RITIRO DELLA MERCE'
+076400090115     A                                      FONT(02305 -
+076500090115     A                                          (*POINTSIZE 6.0))
+076600090112      *- - - - - - - - - - - - - - - - - - -*
+076700090114      * 22ª RIGA
+076800090112     A                                     1' '
+076900090112     A                                      SPACEB(001)
+077000090114      *- - - - - - - - - - - - - - - - - - -*
+077100090114      * 23ª RIGA
+077200090114     A                                     1' '
+077300090114     A                                      SPACEB(001)
+077400100721      * >> Costanti
+077500090114     A                                     5' FIRMA MITTENTE'
+077600090114     A                                      FONT(02305 -
+077700090114     A                                          (*POINTSIZE 5.0))

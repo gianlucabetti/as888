@@ -1,0 +1,307 @@
+000100000000     F*****************************************************************
+000200000000     F* RICERCA ALFABETICA SU ANAGRAFICA  BANCHE    - CNABI00F -
+000300000000     F*****************************************************************
+000400000000     FCNABI00FIF  E           K        DISK
+000500000000     FCNABI02LIF  E           K        DISK
+000600000000     F            CNABI000                          KRENAMECNABI999
+000700890727     FCNC592D CF  E                    WORKSTN
+000800000000     F                                        Y     KSFILE S1
+000900000000     E                    ER      1   5 60               ERRORI A VIDEO
+001000000000     IKPJBA     E DS
+001100920601     IPARAM       DS
+001200920601     I                                        1   50ABIP
+001300920601     I                                        6  100CABP
+001400920601     I                                       11  50 ISTP
+001500920601     I                                       51  52 PROP
+001600920601     I                                       53  53 FLGP
+001700890727     C*
+001800890727     C*----------------------------------------------------*
+001900890727     C*  CHIAVI UTILIZZATE A PROGRAMMA                    -*
+002000890727     C*----------------------------------------------------*
+002100890727     C*
+002200890727     C           KEYV      KLIST
+002300890727     C                     KFLD           ABIW
+002400890727     C                     KFLD           CABW
+002500890727     C*
+002600890727     C           KEYW      KLIST
+002700890727     C                     KFLD           ABI     50
+002800890727     C                     KFLD           CAB     50
+002900890727     C*
+003000890727     C           KEY       KLIST
+003100900726     C                     KFLD           VABI
+003200900726     C                     KFLD           VCAB
+003300900717     C           KEYIST    KLIST
+003400900717     C                     KFLD           CHIAVE
+003500900726     C                     KFLD           你BI
+003600900726     C                     KFLD           低AB
+003700890727     C*
+003800890727     C*----------------------------------------------------*
+003900890727     C*
+004000000000     C           *ENTRY    PLIST
+004100000000     C                     PARM           KPJBA
+004200920601     C                     MOVELKPJBU     PARAM
+004300890727     C*
+004400890727     C                     MOVELKNMUS     VKNMUS
+004500000000     C*
+004600000000     C           PRIMO     TAG
+004700920703     C* SE TROVATO ERRORE ESCO SE RICHIAMAMTO
+004800920703     C      90   FLGP      IFEQ 'R'
+004900920703     C                     GOTO FINE
+005000920703     C                     END
+005100920703     C*
+005200920601     C                     SETOF                     26
+005300920601     C                     EXSR PULIZ
+005400920601     C                     EXSR PULCAM
+005500920601     C* PROVENGO DA RICERCA
+005600930624    1C           FLGP      IFEQ 'R'
+005700920601     C                     Z-ADDABIP      ABIW
+005800920601     C                     Z-ADDCABP      CABW
+005900920601     C                     MOVELISTP      ISTW
+006000920601     C                     MOVELPROP      PROW
+006100930624   X1C                     ELSE
+006200920601     C                     Z-ADD0         ABIW
+006300920601     C                     Z-ADD0         CABW
+006400920601     C                     MOVEL*BLANKS   ISTW
+006500920601     C                     MOVEL*BLANKS   PROW
+006600000000     C*
+006700000000     C                     EXFMTF1
+006800000000     C                     SETOF                     90
+006900000000     C*
+007000890727     C   KL                GOTO FINE
+007100930624    1C                     END
+007200930624     C*
+007300930624     C           ABIW      IFEQ *ZEROS
+007400930624     C           CABW      ANDEQ*ZEROS
+007500930624     C           ISTW      ANDEQ*BLANKS
+007600930624     C           PROW      ANDEQ*BLANKS
+007700930624     C                     SETON                     90
+007800930624     C                     GOTO PRIMO
+007900930624     C                     END
+008000000000     C*
+008100000000     C           ABIW      IFNE *ZEROS
+008200000000     C           CABW      IFEQ *ZEROS
+008300000000     C                     Z-ADDABIW      ABI
+008400000000     C                     Z-ADD*ZEROS    CAB
+008500000000     C                     EXSR CARICA
+008600900726     C                     Z-ADD1         Y
+008700000000     C                     GOTO SUBE
+008800000000     C                     ELSE
+008900000000     C           KEYV      CHAINCNABI00F             90
+009000900601     C  N90      ABIANN    COMP '*'                      90
+009100000000     C   90                MOVELER,1      ERRORE
+009200920601     C*
+009300920601     C* SE PER RICERCA MEMORIZZO ED ESCO
+009400920601     C           FLGP      IFEQ 'R'
+009500920601     C                     MOVELABIW      ABIP
+009600920601     C                     MOVELCABW      CABP
+009700920601     C                     MOVELPARAM     KPJBU
+009800920601     C                     GOTO FINE
+009900920601     C                     ELSE
+010000920601     C                     Z-ADDABIW      VABI
+010100920601     C                     Z-ADDCABW      VCAB
+010200900716     C                     EXSR VID2
+010300900726     C                     GOTO PRIMO
+010400000000     C                     END
+010500920601     C                     END
+010600000000     C                     END
+010700000000     C*
+010800000000     C           ISTW      IFNE *BLANKS
+010900900716     C           PROW      ORNE *BLANKS
+011000930624     C           ISTW      OREQ *BLANKS
+011100930624     C           PROW      ANDEQ*BLANKS
+011200900716     C                     SETON                         26
+011300900716     C                     MOVELISTW      CHIAVE
+011400000000     C                     EXSR CARIC1
+011500000000     C                     END
+011600000000     C*
+011700000000     C           SUBE      TAG
+011800000000     C*
+011900900716     C                     WRITECMD
+012000890727     C                     EXFMTSC1
+012100920601     C   KL      FLGP      IFEQ 'R'
+012200920601     C                     GOTO FINE
+012300920601     C                     ELSE
+012400920601     C                     GOTO PRIMO
+012500920601     C                     END
+012600900716     C*PROSEGUI RICERCA
+012700900716     C   07                DO
+012800900716     C                     MOVE *BLANKS   CHIAVE 80
+012900900726     C                     MOVEL兌ST      CHIAVE
+013000900716     C                     EXSR CARIC1
+013100900724     C                     GOTO SUBE
+013200900716     C                     END
+013300900716     C*
+013400900724     C                     Z-ADD0         A
+013500900726     C                     Z-ADDY         即      40
+013600900724     C                     DO   *HIVAL    A
+013700900724     C           A         CHAINS1                   11
+013800900716     C   11                GOTO SUBE
+013900900713     C           VSCEL     IFEQ 'X'
+014000920601     C*
+014100920601     C* SE PER RICERCA MEMORIZZO ED ESCO
+014200920601     C           FLGP      IFEQ 'R'
+014300920601     C                     MOVELVABI      ABIP
+014400920601     C                     MOVELVCAB      CABP
+014500920601     C                     MOVELPARAM     KPJBU
+014600920601     C                     GOTO FINE
+014700920601     C                     ELSE
+014800920601     C*
+014900900716     C                     EXSR VID2
+015000920601     C                     END
+015100920601     C*
+015200900716     C                     MOVEL*BLANKS   VSCEL
+015300900726     C                     Z-ADD即        Y
+015400900716     C                     UPDATS1
+015500900716     C   KL                GOTO PRIMO
+015600900716     C  NKL                GOTO SUBE
+015700000000     C                     END
+015800900716     C                     END
+015900900716     C**
+016000890727     C*
+016100890727     C*----------------------------------------------------*
+016200890727     C*
+016300000000     C           FINE      TAG
+016400000000     C                     SETON                     LR
+016500890727     C*
+016600890727     C*----------------------------------------------------*
+016700890727     C*
+016800900716     C           VID2      BEGSR
+016900900716     C           KEY       CHAINCNABI00F             23
+017000900716     C  N23      ABIANN    COMP '*'                      23
+017100900726     C   23                MOVELER,1      ERRORE
+017200900726     C   23                GOTO PRIMO
+017300900716     C*
+017400900716     C*
+017500900726     C  N23                DO
+017600900726     C                     MOVELABIIST    VIST
+017700900716     C                     MOVELABIAGE    AGEV
+017800900716     C                     MOVELABIND     INDV
+017900900716     C                     MOVELABILOC    LOCV
+018000900716     C                     MOVELABICOM    COMV
+018100900726     C                     Z-ADDABICAP    CAPV
+018200900716     C*
+018300900726     C                     END
+018400900716     C                     EXFMTF2
+018500900716     C                     ENDSR
+018600890727     C/EJECT
+018700890727     C*
+018800890727     C*----------------------------------------------------*
+018900890727     C*-   CARICA =   CARICA SUB-FILE                     -*
+019000890727     C*----------------------------------------------------*
+019100890727     C*
+019200000000     C           CARICA    BEGSR
+019300000000     C*
+019400000000     C*
+019500000000     C           KEYW      SETLLCNABI00F
+019600000000     C*
+019700000000     C                     DO   *HIVAL
+019800000000     C           ABI       READECNABI00F                 23
+019900000000     C   23                GOTO OUT
+020000900601     C           ABIANN    CABEQ'*'       刨OT
+020100000000     C*
+020200900713     C                     MOVELABIIST    VIST
+020300900713     C                     MOVELABIAGE    VAGE
+020400900726     C                     Z-ADDABIABI    VABI
+020500900726     C                     Z-ADDABICAB    VCAB
+020600900726     C                     MOVELABIPRO    VPRO
+020700900713     C                     ADD  1         Y
+020800000000     C                     WRITES1
+020900000000     C*
+021000900601     C           刨OT      TAG
+021100000000     C                     END
+021200000000     C*
+021300000000     C           OUT       TAG
+021400000000     C*
+021500000000     C           Y         IFEQ 0
+021600000000     C                     SETON                     90
+021700000000     C                     MOVELER,2      ERRORE
+021800000000     C                     GOTO PRIMO
+021900000000     C                     END
+022000000000     C*
+022100000000     C*
+022200000000     C                     ENDSR
+022300890727     C*
+022400890727     C*----------------------------------------------------*
+022500890727     C*
+022600890727     C/EJECT
+022700890727     C*
+022800890727     C*----------------------------------------------------*
+022900890727     C*-   CARIC1 =   CARICA SUB-FILE                     -*
+023000890727     C*----------------------------------------------------*
+023100890727     C*
+023200000000     C           CARIC1    BEGSR
+023300000000     C*
+023400000000     C*
+023500900717     C  N07      CHIAVE    SETLLCNABI02L
+023600900724     C   07      KEYIST    SETLLCNABI02L
+023700000000     C*
+023800900724     C                     Z-ADD0         A       40
+023900900724     C                     DO   *HIVAL
+024000900724     C           A         IFGE 14
+024100900716     C                     GOTO FUORI
+024200900716     C                     END
+024300000000     C                     READ CNABI02L                 22
+024400000000     C   22                GOTO FUORI
+024500000000     C*
+024600900601     C           ABIANN    CABEQ'*'       壯SOT
+024700900716     C           PROW      IFGT *BLANKS
+024800900713     C           ABIPRO    ANDNEPROW
+024900900713     C                     GOTO 壯SOT
+025000900713     C                     END
+025100900716     C                     MOVEL*BLANKS   VSCEL
+025200900713     C                     MOVELABIIST    VIST
+025300900713     C                     MOVELABIAGE    VAGE
+025400900726     C                     Z-ADDABIABI    VABI
+025500900726     C                     Z-ADDABICAB    VCAB
+025600900726     C                     MOVELABIPRO    VPRO
+025700900726     C                     MOVEL*BLANKS   兌ST   20
+025800900726     C                     MOVELVIST      兌ST
+025900900726     C                     Z-ADDABIABI    你BI    50
+026000900726     C                     Z-ADDABICAB    低AB    50
+026100900726     C                     ADD  1         Y
+026200900724     C                     ADD  1         A
+026300000000     C                     WRITES1
+026400000000     C*
+026500900601     C*
+026600900601     C           壯SOT     TAG
+026700000000     C                     END
+026800000000     C*
+026900000000     C           FUORI     TAG
+027000000000     C*
+027100000000     C           Y         IFEQ 0
+027200000000     C                     SETON                     90
+027300000000     C                     MOVELER,2      ERRORE
+027400000000     C                     GOTO PRIMO
+027500000000     C                     END
+027600000000     C*
+027700000000     C                     ENDSR
+027800900724     C*----------------------------------------------------*
+027900900724     C*-   PULIZ  =   PULIZIA SUB-FILE                    -*
+028000900724     C*----------------------------------------------------*
+028100900724     C           PULIZ     BEGSR
+028200900724     C                     SETON                     55
+028300900724     C                     WRITESC1                        ** PULIZIA
+028400900724     C                     SETOF                     55
+028500900724     C                     Z-ADD0         Y       40
+028600900724     C                     ENDSR
+028700900726     C*----------------------------------------------------*
+028800900726     C*-   PULCAM =   PULIZIA CAMPI                       -*
+028900900726     C*----------------------------------------------------*
+029000900726     C           PULCAM    BEGSR
+029100900726     C                     MOVEL*BLANKS   VIST
+029200900726     C                     Z-ADD0         VABI
+029300900726     C                     Z-ADD0         VCAB
+029400900726     C                     MOVEL*BLANKS   VAGE
+029500900726     C                     MOVEL*BLANKS   VPRO
+029600900726     C                     MOVEL*BLANKS   AGEV
+029700900726     C                     MOVEL*BLANKS   INDV
+029800900726     C                     MOVEL*BLANKS   LOCV
+029900900726     C                     MOVEL*BLANKS   COMV
+030000900726     C                     Z-ADD0         CAPV
+030100900726     C                     ENDSR
+030200000000**
+030300000000Codice ABI/CAB non presente in Anagrafica !
+030400000000Nessun elemento ricercato in Anagrafica !
+0305000000003
+0306000000004
+0307000000005

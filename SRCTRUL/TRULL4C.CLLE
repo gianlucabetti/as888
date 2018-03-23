@@ -1,0 +1,56 @@
+000100010111     /*****************************************************************/
+000200010111     /*                                                               */
+000300100209     /* PROGRAM NAME: TRULL4C                                         */
+000400010111     /*                                                               */
+000500010111     /*                                                               */
+000600091221     /* DESCRIPTION:  Archivia i log bsafe per *secadm                */
+000700081014     /*                                                               */
+000800010111     /*                                                               */
+000900010111     /*****************************************************************/
+001000081014             PGM
+001100081014
+001200170314             DCL        VAR(&X) TYPE(*CHAR) LEN(3)
+001300091221             DCL        VAR(&year) TYPE(*CHAR) LEN(2)
+001400091221             DCL        VAR(&month) TYPE(*CHAR) LEN(2)
+001500091221             DCL        VAR(&day) TYPE(*CHAR) LEN(2)
+001600091222             DCL        VAR(&file) TYPE(*CHAR) LEN(10)
+001700170315             DCL        VAR(&file2) TYPE(*CHAR) LEN(10)
+001800010111
+001900091221             RTVSYSVAL  SYSVAL(QDAY) RTNVAR(&DAY)
+002000091221             RTVSYSVAL  SYSVAL(QMONTH) RTNVAR(&MONTH)
+002100091221             RTVSYSVAL  SYSVAL(QYEAR) RTNVAR(&YEAR)
+002200170315             CHGVAR     VAR(&X) VALUE('D20')
+002300091221
+002400091222             CHGVAR     VAR(&file) VALUE(&X *CAT &YEAR *CAT &MONTH +
+002500091221                          *CAT &DAY)
+002600170315
+002700170315             CHGVAR     VAR(&X) VALUE('SEC')
+002800170315
+002900170315             CHGVAR     VAR(&file2) VALUE(&X *CAT &YEAR *CAT &MONTH +
+003000170315                          *CAT &DAY)
+003100091221
+003200170418             DLYJOB     DLY(600)
+003300170314
+003400170314 /*          CPYF       FROMFILERMTFIL/SNKLGBCP) +
+003500170314                          TOFILE(EDPSECLOG/&FILE) TOMBR(&FILE) +
+003600170314                          MBROPT(*ADD) CRTFILE(*YES)                */
+003700170314
+003800170314
+003900170414             CPYF       FROMFILE(RMTLOG/&FILE) +
+004000170419                          TOFILE(qtemp/&FILE2) MBROPT(*ADD) +
+004100170414                          CRTFILE(*YES) ERRLVL(999999)
+004200170314
+004300170419             CRTSAVF    FILE(EDPSECLOG/&FILE2)
+004400170419             SAVOBJ     OBJ(&FILE2) LIB(QTEMP) DEV(*SAVF) +
+004500170419                          SAVF(EDPSECLOG/&FILE2) TGTRLS(*CURRENT) +
+004600170419                          DTACPR(*HIGH)
+004700091221
+004800170314/*           CLRPFM     FILE(RMTFIL/SNKLGBCP)   */
+004900100209/* Conversione Spool Stampe utenti *SECADM   */
+005000100211
+005100100211             ADDLIBLE   LIB(GAITRAOBJ) POSITION(*LAST)
+005200170314             MONMSG     MSGID(CPF0000)
+005300100209             CALL       PGM(TRULL6C)
+005400091221
+005500091221 FINE:       ENDPGM
+005600081014

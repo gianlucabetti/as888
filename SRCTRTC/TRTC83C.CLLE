@@ -1,0 +1,303 @@
+000100960528/********************************************************************/
+000200960528/*      B O R D E R I Z Z A Z I O N E  BOLLE  E X P O R T  :        */
+000300960528/*        DALLE SPUNTE DEL F. VIAGGIO REPERISCE FNARB01L            */
+000400960528/*                                                                  */
+000500960528/*      - RICEVE IL NR.FOGLIO VIAGGIO E IL MEMBRO(=M+KSC)           */
+000600971219/*      - STAMPA BORDERO' +                                         */
+000700971219/*      + TRASMISSIONE  E.D.I.                                      */
+000800971219/*         SCRIVE RECORD IFCSUM TD..  IN WORK FILE                  */
+000900960528/********************************************************************/
+001000960528             PGM        PARM(&KPJBA)
+001100120821
+001200960528             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001300050826             DCL        VAR(&SAVKPJBA) TYPE(*CHAR) LEN(502)
+001400050201             DCL        VAR(&LIBEDSUM) TYPE(*CHAR) LEN(10)
+001500960731             DCL        VAR(&DEF) TYPE(*CHAR) LEN(2)
+001600961023             DCL        VAR(&FTT) TYPE(*CHAR) LEN(1)
+001700971219             DCL        VAR(&KNMUS) TYPE(*CHAR) LEN(10)
+001800020916             DCL        VAR(&DSBS55)    TYPE(*CHAR)  LEN(214)
+001900110415             DCL        VAR(&AGILITYDK) TYPE(*CHAR) LEN(2) VALUE('NO')
+002000120720             DCL        VAR(&GEL_DE) TYPE(*CHAR) LEN(2) VALUE('NO')
+002100180312             DCL        VAR(&FED_UK) TYPE(*CHAR) LEN(2) VALUE('NO')
+002200050201             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+002300050201             DCL        VAR(&D82CPT) TYPE(*CHAR) LEN(7)
+002400110516             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1) VALUE(' ')
+002500110419
+002600050201             CHGVAR     VAR(&D82CPT) VALUE(%SST(&KPJBA 270 7))
+002700050201             CHGVAR     VAR(&KNMUS) VALUE(%SST(&KPJBA 1 10))
+002800050201             CHGVAR     VAR(&DEF) VALUE(%SST(&KPJBA 322 2))
+002900050201             CHGVAR     VAR(&FTT) VALUE(%SST(&KPJBA 406 1))
+003000110419
+003100110419/* ?Utente a cui inviare un eventuale messaggio di errore            */
+003200110419             CALLSUBR   SUBR(USER_MSG)
+003300110419
+003400110419/* ?Individua se si tratta  di uno dei Partners che hanno delle      */
+003500110419/* ?particolarità per cui nel D82CPT c'è il codice specifico         */
+003600110419             CALLSUBR   SUBR(CTRL_PTN)
+003700110617
+003800110617/*------                                                            -----*/
+003900110617/*? serve per i file del progressivo TIVIR                              ?*/
+004000110617/*------                                                            -----*/
+004100110617             ADDLIBLE   LIB(GAITRAGRU) POSITION(*LAST)
+004200110617             MONMSG     MSGID(CPF0000)
+004300110617
+004400111018             ADDLIBLE   LIB(GAITRAGRPS) POSITION(*LAST)
+004500111018             MONMSG     MSGID(CPF0000)
+004600111018
+004700050201/* ==================================================================*/
+004800970124             OVRDBF     FILE(FNARB01L) TOFILE(*LIBL/FNARB01L) +
+004900970124                          SHARE(*YES)
+005000970124             OVRDBF     FILE(FNART27L) TOFILE(*LIBL/FNART27L) +
+005100970124                          SHARE(*YES)
+005200990519             OVRDBF     FILE(FNANM10L) TOFILE(*LIBL/FNANM10L) +
+005300970124                          SHARE(*YES)
+005400050523/* ? Ridenominato il TREXP00F essendo un WRKFILE                        */
+005500050523             OVRDBF     FILE(WFMAN00F) TOFILE(*LIBL/WFMAN00F) +
+005600050523                          SHARE(*YES)
+005700970123
+005800050201/* ?       START     CONTROLLO DI SINCRONIA                             */
+005900060109             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+006000970123             MONMSG     MSGID(CPF8351)
+006100180312/*   ------------------------------------------------------------------- */
+006200050201/*?  E L A B O R A Z.  D E F I N I T I V A   E   T R A S M I S S I O N E */
+006300180312/*   ------------------------------------------------------------------- */
+006400961023             IF         COND(&DEF *EQ 'SI' *AND &FTT *NE ' ') THEN(DO)
+006500050201
+006600120720
+006700110419/* ?     ---> TRAMISSIONE E.D.I.             Flag Tipo Trasm. FTT     ---*/
+006800051221             IF         COND(&FTT *EQ 'W' *OR &FTT *EQ 'Z' *OR &FTT +
+006900120823                          *EQ 'N' *OR  &FTT +
+007000051221                          *EQ 'P' *OR &FTT *EQ 'S') THEN(DO)
+007100120720
+007200120720
+007300050201/*?  ------------------------------------------------------------------- */
+007400180312/*   CREA in QTEMP EDIFCSUMDE x scrivere il dettaglio del Flat File      */
+007500180312/*   ossia tutti i segmenti (TDxx) e, allo stesso tempo,                 */
+007600180312/*   CREA in QTEMP EDIFCSUMTS che avrà Testata (TTxx) e Dettagli         */
+007700180312/*   copyfilati                                           .              */
+007800050201/*?  ------------------------------------------------------------------- */
+007900110419
+008000110419/* ?Utente a cui inviare un eventuale messaggio di errore            */
+008100110419             CALLSUBR   SUBR(IN_QTEMP)
+008200110419
+008300050201/* ?------------------------------------------------------------------*/
+008400180312/*   Stampa Bordereau   +                                             */
+008500180312/*    Scrive DETTAGLIO EDI  sped. su Flat File  EDIFCSUM in QTEMP     */
+008600050201/* ?------------------------------------------------------------------*/
+008700050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMDE)
+008800960528             CALL       PGM(TRTC83R1) PARM(&KPJBA)
+008900050204             DLTOVR     FILE(EDIFCSUM)
+009000120720
+009100120720/* ?------------------------------------------------------------------*/
+009200180312/*   X  GEL scrive su EDIFCSUM il tracciato NEE ma NON è un EDIFACT   */
+009300120720/* ?------------------------------------------------------------------*/
+009400120720/* ?ALL'USCITA di questo Giro GEL salta tutto xchè nel TRTC83GEC      */
+009500120720/* ?è già stato inviato il Flat File secondo i criteri chiesti        */
+009600120720/* ?da GEL quindi è già tutto fatto.                                  */
+009700120720/* ?------------------------------------------------------------------*/
+009800120720             IF         COND(&GEL_DE *EQ 'SI') THEN(DO)
+009900120720             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMDE)
+010000120905             CALL       PGM(TRTC83VR) PARM(&KPJBA)
+010100120720             DLTOVR     FILE(EDIFCSUM)
+010200120720             ENDDO
+010300081210
+010400180312
+010500180312/* ?------------------------------------------------------------------*/
+010600180312/*   X  FEDEX UK   su EDIFCSUM il tracciato CSV ma NON è un EDIFACT   */
+010700180312/* ?------------------------------------------------------------------*/
+010800180312/* ?ALL'USCITA di questo Giro FEDEX UK ha un tracciato piatto         */
+010900180312/* ?come un CSV con i campi seprati da VIRGOLE.                       */
+011000180312/* ?------------------------------------------------------------------*/
+011100180312             IF         COND(&FED_UK *EQ 'SI') THEN(DO)
+011200180312             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMDE)
+011300180313             CALL       PGM(TRTC83U2R1) PARM(&KPJBA)
+011400180312             DLTOVR     FILE(EDIFCSUM)
+011500180312             ENDDO
+011600180312
+011700110415/* ?------------------------------------------------------------------*/
+011800110415/*?  X  AGILITY DK / FI QUESTO PROGRAMMA  PER DIVIDERE IN 2 IFCSUM    */
+011900110415/* ?------------------------------------------------------------------*/
+012000110415/* ?ALL'USCITA di questo Giro AGILITY salta tutto xchè nel TRTC83C3   */
+012100110415/* ?sono già stati inviati i 2 Flat Files secondo i criteri chiesti   */
+012200110415/* ?da AGILITY .....dividere in 2 i dati della Danimarca e Finlandia  */
+012300110415/* ?------------------------------------------------------------------*/
+012400110415             IF         COND(&AGILITYDK *EQ 'SI') THEN(DO)
+012500110415             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMDE)
+012600110415             CALL       PGM(TRTC83C3) PARM(&KPJBA)
+012700110415             DLTOVR     FILE(EDIFCSUM)
+012800110415             ENDDO
+012900110415
+013000050201/* ?------------------------------------------------------------------*/
+013100180312/*  FINE PARTE PER                AGILITY   GEL  o FEDEX UK            */
+013200110415/*    INIZIO PARTE            (Ossia tutti gli altri)                  */
+013300060104/* ? e non si tratta di DPD senza EDI quindi senza anche testata EDI   */
+013400060104/* ?-------------------------------------------------------------------*/
+013500180129             IF         COND((&GEL_DE *EQ 'NO') *AND (&AGILITYDK *EQ +
+013600180312                          'NO') *AND (&FED_UK *EQ 'NO')) THEN(DO)
+013700120720/* >>>>>>>>>>>>>>>> */
+013800120720/* >>>>>>>>>>>>>>>> */
+013900120720
+014000060109             IF         COND(&FTT *NE 'P') THEN(DO)
+014100060109
+014200050201/* Scrive i segmenti di testata su wrkfile QTEMP poi accoda i dettagli */
+014300050201/* precedentemente impostati  e Conferma con il COMMIT                */
+014400050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+014500960528             CALL       PGM(TRTC83R3) PARM(&KPJBA)
+014600050204             DLTOVR     FILE(EDIFCSUM)
+014700050204
+014800050201/* poi accoda i dettaglio precedentemente impostati                   */
+014900050204             CPYF       FROMFILE(QTEMP/EDIFCSUMDE) +
+015000050204                          TOFILE(QTEMP/EDIFCSUMTS) MBROPT(*ADD)
+015100110513
+015200180312
+015300180312
+015400110516             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+015500110525             CALL       PGM(TRTCT91R) PARM(&ESITO)
+015600110516             DLTOVR     FILE(EDIFCSUM)
+015700110513
+015800180312             ENDDO
+015900180129
+016000050204             COMMIT
+016100180129
+016200120720/* >>>>>>>>>>>>>>>> */
+016300120720/* >>>>>>>>>>>>>>>> */
+016400120720
+016500120720             ENDDO
+016600050201
+016700050201/* ?   Fine-> TRAMISSIONE E.D.I. via sede    Flag Tipo Trasm. FTT     ---*/
+016800960731             ENDDO
+016900020219
+017000050201/*?++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+017100180312/*   -----> TRAMISSIONE FEDEX                    ++++++++++++++++++++++*/
+017200050201/*?++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+017300020219             IF         COND(&FTT *EQ 'D') THEN(DO)
+017400050201/* - STAMPO BORDERO' + SCRIVO EDI SPEDIZIONI FEDEX x PC File         */
+017500050201/*      quindi Confermo con COMMIT i dati appena generati            */
+017600020219             CALL       PGM(TRTC83R1) PARM(&KPJBA)
+017700020219             COMMIT
+017800020219             ENDDO
+017900050201/*?++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+018000050201/* ?   Fine-> ELABORAZIONE DEFINITIVA                                 ---*/
+018100971219             ENDDO
+018200971219
+018300970123             ELSE       CMD(DO)
+018400050201/* ?------------------------------------------------------------------- */
+018500050203/* ?E L A B O R A Z.   P R O V V I S. NO  D E F I N I T I V A NO E.D.I. */
+018600050201/* ?------------------------------------------------------------------- */
+018700970123             CALL       PGM(TRTC83R1) PARM(&KPJBA)
+018800970124             COMMIT
+018900970123             ENDDO
+019000010426
+019100010426             ENDCMTCTL
+019200010426             MONMSG     MSGID(CPF8356)
+019300110513
+019400970127             RCLRSC     LVL(*CALLER)
+019500970123
+019600970123/* RICHIAMO PGM PER ESECUZIONE OPERAZIONI FINALI */
+019700970123             CALL       PGM(TRTC83R4) PARM(&KPJBA)
+019800960731
+019900990908/* SE MANIFEST DEFINITIVO SOTTOMETTO LA TRASMISSIONE BOLLE/FV IN SEDE */
+020000990908             IF         COND(&DEF *EQ 'SI') THEN(DO)
+020100990908             CHGVAR     VAR(%SST(&KPJBA 135 4)) VALUE('LSA3')
+020200990908             CHGVAR     VAR(%SST(&KPJBA 156 10)) VALUE('          ')
+020300070424/* passo in kpjbu cme ter-part 999 per non elaborare eventuali record*/
+020400070424/* presenti in fnblp46f in quanto non di competenza di questo pgm    */
+020500070424             CHGVAR     VAR(%SST(&KPJBA 252 3)) VALUE('999')
+020600990908             CALL       PGM(BCH10) PARM(&KPJBA)
+020700070424             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+020800990908             ENDDO
+020900110419
+021000110419/* ?******************************************************************* */
+021100120822/* ?**** fine del programma ***   seguono ROUTINES ******************** */
+021200120822/* ?******************************************************************* */
+021300110419/**********?---------------------------                       */
+021400180312             SUBR       SUBR(USER_MSG)
+021500110419/**********?---------------------------                       */
+021600110419
+021700110419             CHGVAR     VAR(&SAVKPJBA) VALUE(&KPJBA)
+021800110419
+021900110419/* ?Reperisce lo User a cui inviare msg di avviso                    */
+022000110419             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+022100110419             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+022200110419             MONMSG     MSGID(CPF0000) EXEC(DO)
+022300110419             CHGVAR     VAR(&USRMSG) VALUE(&KNMUS)
+022400110419             ENDDO
+022500110419             IF         COND(&USRMSG *EQ ' ') THEN(DO)
+022600110419             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+022700110419             ENDDO
+022800110419
+022900110419/* ?Reimposta KPJBA poichè aveva sporcato la KPJBU                   */
+023000110419             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+023100110419
+023200180312             ENDSUBR
+023300110419/* ?******************************************************************* */
+023400110419/**********?---------------------------                       */
+023500180312             SUBR       SUBR(CTRL_PTN)
+023600110419/**********?---------------------------                       */
+023700110419
+023800180312/* ==================================================================*/
+023900120720/*? G E L  Germania:                 su tab.:PT cod.: 311XXXX        */
+024000180312/*  ha una particolarità :                                           */
+024100180312/*     NON HA EDIFACT ma un suo FORMATO FILE circuito NEE.           */
+024200180312/*    QUINDI è il flag di TIPO TRASMISSIONE a pilotare. (D82FTT)     */
+024300180312/* ==================================================================*/
+024400120905             IF         COND(&FTT *EQ 'N') THEN(DO)
+024500120720             CHGVAR     VAR(&GEL_DE) VALUE('SI')
+024600110419             ENDDO
+024700120720
+024800180312/* ==================================================================*/
+024900110419/*? AGILITY DK / FI:                 su tab.:PT cod.: 3900005        */
+025000180312/*  ha una particolarità :                                           */
+025100180312/*  deve essere DIVISO IN 2 Flat Files e genera 2 IFCSUM separati    */
+025200180312/*   uno per la Danimarca e l'altro per la Finlandia                 */
+025300180312/* ==================================================================*/
+025400110419             IF         COND(&D82CPT *EQ '3900005') THEN(DO)
+025500110419             CHGVAR     VAR(&AGILITYDK) VALUE('SI')
+025600110419             ENDDO
+025700180312
+025800180312/* ==================================================================*/
+025900180312/*?  FEDEX  UK     :                 su tab.:PT cod.: 3500011        */
+026000180312/*   Vuole un file CSV :  con pochi campi destinatario               */
+026100180312/*  separato da VIRGOLE                                              */
+026200180312/* ==================================================================*/
+026300180312             IF         COND(&D82CPT *EQ '3500011') THEN(DO)
+026400180312             CHGVAR     VAR(&FED_UK) VALUE('SI')
+026500180312             ENDDO
+026600180312
+026700180312
+026800180312
+026900180312             ENDSUBR
+027000110419/* ?******************************************************************* */
+027100110419/**********?---------------------------                       */
+027200180312             SUBR       SUBR(IN_QTEMP)
+027300110419/**********?---------------------------                       */
+027400110419
+027500110419             RTVOBJD    OBJ(EDIFCSUM) OBJTYPE(*FILE) RTNLIB(&LIBEDSUM)
+027600110419
+027700110419             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(&LIBEDSUM) +
+027800110419                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+027900110419                          NEWOBJ(EDIFCSUMTS)
+028000110419             MONMSG     MSGID(CPF2110) EXEC(DO)
+028100110419/* ? NON TROVATA LIBRERIA: cerca LA LIBRERIA AZIENDALE E RIPETO IL CMD   */
+028200110419             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+028300110419             CHGVAR     VAR(%SST(&DSBS55 2 10)) VALUE(%SST(&KPJBA 92 10))
+028400110419             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('000')
+028500110419             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('000')
+028600110419             CALL       PGM(TIBS55R) PARM(&DSBS55)
+028700110419             CHGVAR VAR(&LIBEDSUM) VALUE(%SST(&DSBS55 73 10))
+028800110419
+028900110419             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(&LIBEDSUM) +
+029000110419                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+029100110419                          NEWOBJ(EDIFCSUMTS)
+029200110419             ENDDO
+029300110419
+029400110419             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(&LIBEDSUM) +
+029500110419                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+029600110419                          NEWOBJ(EDIFCSUMDE)
+029700990908
+029800110419
+029900180312             ENDSUBR
+030000110525/* ?******************************************************************* */
+030100110419/* ?******************************************************************* */
+030200110419
+030300960528FINE:        ENDPGM

@@ -1,0 +1,68 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200130410/*?******************************************************************/
+000300140220/*?      ELABORA IFTSTA dal TIVGD e TRAscrive per DWNLOAD           */
+000400140220/*?      l'EDI REPORT  x invio tramite server FTP clienti           */
+000500130410/*?******************************************************************/
+000600090225
+000700140220             PGM        PARM(&PARMPPT &PARMESITO)
+000800090225
+000900140220             DCL        VAR(&PARMPPT) TYPE(*CHAR) LEN(50)
+001000140220             DCL        VAR(&PARMESITO) TYPE(*CHAR) LEN(1)
+001100140220
+001200130502             DCL        VAR(&NOME) TYPE(*CHAR) LEN(10)
+001300130520             RTVNETA    SYSNAME(&NOME)
+001400130520
+001500130502
+001600140220             CRTDUPOBJ  OBJ(TRTCT95W) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+001700140220                          TOLIB(QTEMP)
+001800140220             MONMSG     MSGID(CPF0000)
+001900140220
+002000140220/* Workfile  sempre puntato  in QTEMP                          */
+002100140220             OVRDBF     FILE(TRTCT95W) TOFILE(QTEMP/TRTCT95W)
+002200140220             CLRPFM     FILE(QTEMP/TRTCT95W)
+002300140220
+002400140220
+002500140220 /* primo programma legge il TIVGD con il nostro IFTSTA e lo  */
+002600140220 /* e lo riporta sul file di WORK TRTCT95W per trasformarlo   */
+002700140220 /* nel formato richiesto da HAGER / CEVA Logistics           */
+002800140220             CALL       PGM(TRTCT95R0) PARM(&PARMPPT &PARMESITO)
+002900140220             MONMSG     MSGID(CPF0000) EXEC(DO)
+003000140220             CHGVAR     VAR(&PARMESITO) VALUE('2')
+003100140220             GOTO       CMDLBL(NO_TRAD)
+003200140220             ENDDO
+003300140220
+003400140220
+003500090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003600090213/* procedura/programma fosse finita in maniera anomala occorre */
+003700090213/* parare il colpo riducendo il male al male minore ossia      */
+003800090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+003900090213/* metà piuttosto che confermarle. E ripartendo da una         */
+004000090213/* situazione pulita.                                          */
+004100130502
+004200090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004300090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+004400090213             ENDCMTCTL
+004500090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004600090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004700090213             ENDDO
+004800140220
+004900140220
+005000140220 /* Trasforma il messaggio x HAGER / CEVA Logistics           */
+005100140220             CALL       PGM(TRTCT95R) PARM(&PARMPPT &PARMESITO)
+005200090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+005300140220             CHGVAR     VAR(&PARMESITO) VALUE('2')
+005400090213             ROLLBACK
+005500090213             ENDDO
+005600140220
+005700090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+005800090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+005900090213 /* in modo pulito senza lasciare transazioni a metà.            */
+006000130502
+006100090213             ENDCMTCTL
+006200140220
+006300140220NO_TRAD:
+006400140220
+006500140220             DLTOVR     FILE(*ALL)
+006600130520
+006700090216
+006800090212             ENDPGM

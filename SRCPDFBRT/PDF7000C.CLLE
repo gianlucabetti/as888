@@ -1,0 +1,37 @@
+000100130307/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600130307             PGM        PARM(&KPJBA)
+000700120123
+000800130307             DCL        VAR(&KPJBA)     TYPE(*CHAR)  LEN(502)
+000900120124             DCL        VAR(&DELAYSEC)  TYPE(*DEC)   LEN(4 0)
+001000120123
+001100130307             CHGVAR     VAR(&DELAYSEC)  VALUE(%SUBSTRING(&KPJBA 247 4))
+001200991111
+001300130307
+001400130307             XSQL       SQLSTMT('UPDATE PDFTABEL SET DATI = ''N'' +
+001500130307                          WHERE CHIAVE=''DDT'' and +
+001600130307                          ELEMENTO=''SERVER''') LOGSQL(*NO)
+001700130307
+001800130307             ENDPDFSRV
+001900130307             DLYJOB     DLY(&DELAYSEC)
+002000131230
+002100131230/* pulizia file di work per rcd più vecchi di 2 mesi */
+002200131230             XSQL       SQLSTMT('DELETE FROM PDFLOG +
+002300131230                          WHERE add_months(LOGDATE, 2) +
+002400131230                           < current_date') LOGSQL(*NO)
+002500131230             XSQL       SQLSTMT('DELETE FROM PDFLIST +
+002600131230                          WHERE add_months(PDFINSDT, 2) +
+002700131230                           < current_date') LOGSQL(*NO)
+002800131230
+002900130307             STRPDFSRV
+003000131223             DLYJOB     DLY(&DELAYSEC)
+003100130307
+003200130307             XSQL       SQLSTMT('UPDATE PDFTABEL SET DATI = ''S'' +
+003300130307                          WHERE CHIAVE=''DDT'' and +
+003400130307                          ELEMENTO=''SERVER''') LOGSQL(*NO)
+003500991111
+003600991111
+003700990907             ENDPGM

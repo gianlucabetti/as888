@@ -1,0 +1,6 @@
+000100091102       // - Attribuzione numero serie parziale libero per filiale
+000200091102     d tntb54r         pr                  extpgm('TNTB54R')
+000300110209     d   tntb54ds...
+000400110209     d                                     likeds(TNTB54ds)
+000500110209     d   P_ubLeg3C_skC...
+000600110209     d                                     like(ubLeg3C_skC)

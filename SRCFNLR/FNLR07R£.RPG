@@ -1,0 +1,377 @@
+000100000000     H              J
+000200940712     H* FNLR07R *----------------------------------------------------*
+000300940712     H*         - ELENCO FOGLI VARI
+000400000000     H*--------------------------------------------------------------*
+000500940712     FFNLR07D CF  E                    WORKSTN
+000600940712     FFNFVV01LIF  E           K        DISK
+000700920807     FTABEL00FIF  E           K        DISK
+000800920807     E                    DEC         6 12               DESCR CATEGOR
+000900920807     ITBLKEY      DS
+001000920807     I                                        1   1 ALF1
+001100940712     I***
+001200940712     I* PARAMETRI PER CONTROLLO DATA E TRASFORM IN GIORNI - XSRDA8 -
+001300940712     I***
+001400920807     IWLBDAT      DS
+001500940712     I                                        1   80G02DAT
+001600940712     I                                        9  160G02INV
+001700940712     I                                       17  17 G02ERR
+001800940712     I                                       18  220G02TGI
+001900941027     I*
+002000941027     I* DS PER FNLV50F - CONTROLLO FILIALE GESTIONE
+002100941027     IDSLV50    E DSFNLV50DS
+002200940802     I*
+002300940802     I* DS STANDARD FOGLI VARI - PASSGGIO DA AL FNLR08R
+002400940802     IDSLR01    E DS
+002500940802     I*
+002600920807     IDS7N      E DS
+002700920807     I                                        1  10 §7NDE2
+002800920807     ICNCR80    E DS
+002900920807     IKPJBA     E DS
+003000020424     I***                                     1   3 REM
+003100020424     I***                                     4   6 REMFIL
+003200920807     IUT§DSE    E DSUT§DSE0F
+003300000000     I/SPACE 3
+003400000000     C*---------------------------------------------------------------*
+003500000000     C           *ENTRY    PLIST
+003600000000     C                     PARM           KPJBA
+003700000000     C                     Z-ADD1         CODUT
+003800920807     C                     CALL 'X§PARUT'
+003900920807     C                     PARM           UT§DSE
+004000920807     C                     MOVELREC80     CNCR80
+004100940713     C                     MOVELRAGUT     V1CDSA
+004200900511     C*---------------------------------------------------------------*
+004300940712     C* CARICO TABELLE
+004400940712     C                     EXSR CARTAB
+004500940712     C* PULIZIA CAMPI
+004600940712     C                     EXSR INZD01
+004700940712     C*
+004800900509     C           FOR01     TAG
+004900940712     C                     EXFMTLR07D01
+005000941027     C*
+005100941027     C* SPENGO INDICATORI DI POSIZIONAMENTO CURSORE
+005200941027     C                     SETOF                     4928
+005300920807     C** CMD 3 - FINE LAVORO
+005400941027     C*
+005500900509     C   KC                GOTO FINE
+005600920807     C** CMD18 - CAMBIO FILIALE
+005700920807     C   KS                SETON                     04
+005800920807     C   KS                GOTO FOR01
+005900940712     C*
+006000940712     C* 04 ON - CONTROLLO FILIALE IN GESTIONE
+006100940712     C      04             EXSR CTRFGS
+006200940712     C      04 90          GOTO FOR01
+006300920807     C*
+006400940712     C* CONTROLLO FORMATO1
+006500940712     C                     EXSR CTRD01
+006600940712     C         90          GOTO FOR01
+006700940713     C**
+006800940713     C* SE CATEGORIA CONSEGNA IMPOSTO A "N" STAMPA VERBALI SCARICO
+006900940713     C           WNPG      IFEQ 4
+007000940713     C                     MOVEL'N'       V1CSTV
+007100940713     C                     END
+007200940712     C**
+007300911009     C           FOR02     TAG
+007400940713     C                     EXFMTLR07D02
+007500941027     C*
+007600941027     C* SPENGO INDICATORI DI POSIZIONAMENTO CURSORE
+007700941027     C                     SETOF                     4928
+007800940713     C*
+007900941027     C** CMD3 - FINE LAVORO
+008000911009     C   KC                GOTO FINE
+008100940713     C*
+008200920807     C** CMD18 - CAMBIO FILIALE
+008300920807     C   KS                SETON                     04
+008400920807     C   KS                GOTO FOR02
+008500940712     C*
+008600940712     C* 04 ON - CONTROLLO FILIALE IN GESTIONE
+008700940712     C      04             EXSR CTRFGS
+008800940713     C      04 90          GOTO FOR02
+008900920807     C*
+009000900524     C* CONTROLLO
+009100940712     C                     EXSR CTRD02
+009200940713     C  NKF
+009300911009     COR       90          GOTO FOR02
+009400900511     C* ELABORAZIONE
+009500940802     C                     MOVELV1CDFD    DLRGDA
+009600940802     C                     MOVELV1CDFA    DLRGAL
+009700940802     C                     MOVELV1CTFV    DLRTFV
+009800940802     C                     MOVELV1CNFV    DLRNFV
+009900940802     C                     MOVELV1CNPG    DLRNPG
+010000940802     C                     MOVELV1CSTE    DLRFS1
+010100940802     C                     MOVELV1CSTV    DLRFS2
+010200940802     C                     MOVELV1CFGS    DLRFGS
+010300940802     C                     MOVELDSLR01    KPJBU
+010400940713     C                     MOVEL'LR08'    KCOAZ
+010500900523     C                     CALL 'BCH10'
+010600900523     C                     PARM           KPJBA
+010700900523     C*
+010800000000     C           FINE      TAG
+010900000000     C                     SETON                     LR
+011000940712     C*----------------------------------------------------------------
+011100940712     C* CARICO TABELLE
+011200940712     C*----------------------------------------------------------------
+011300940712     C           CARTAB    BEGSR
+011400940712     C* CARICO LE CATEGORIE
+011500920807     C                     MOVEL'7N'      COD
+011600920807     C                     Z-ADD0         I       20
+011700920807     C           KTAB      SETLLTABEL
+011800920807     C           KTAB      READETABEL                    31
+011900920807     C           *IN31     DOWEQ'0'
+012000920807     C                     MOVELTBLUNI    DS7N
+012100920807     C* SOLO SE ABILITATA PER FOGLI VARI
+012200920807     C           §7NFFV    IFEQ 'S'
+012300920807     C                     ADD  1         I
+012400920807     C                     MOVEL' ='      DEC,I
+012500920807     C                     MOVELALF1      DEC,I
+012600920807     C                     MOVE §7NDE2    DEC,I
+012700920807     C           I         IFEQ 6
+012800920807     C                     SETON                     31
+012900920807     C                     END
+013000920807     C                     END
+013100920807     C*
+013200920807     C        N31KTAB      READETABEL                    31
+013300920807     C                     END
+013400920807     C*
+013500920807     C           DEC,1     IFNE *BLANKS
+013600920807     C                     MOVELDEC,1     DESCA1
+013700920807     C           DEC,2     IFNE *BLANKS
+013800920807     C                     MOVELDEC,2     DESCA2
+013900920807     C           DEC,3     IFNE *BLANKS
+014000920807     C                     MOVELDEC,3     DESCA3
+014100920807     C           DEC,4     IFNE *BLANKS
+014200920807     C                     MOVELDEC,4     DESCA4
+014300920807     C           DEC,5     IFNE *BLANKS
+014400920807     C                     MOVELDEC,5     DESCA5
+014500920807     C           DEC,6     IFNE *BLANKS
+014600920807     C                     MOVELDEC,6     DESCA6
+014700920807     C                     END
+014800920807     C                     END
+014900920807     C                     END
+015000920807     C                     END
+015100920807     C                     END
+015200920807     C                     END
+015300940712     C***
+015400020424     C* VEDO SE SONO PRIMO O SECONDO LIVELLO
+015500940712     C***
+015600020424     C***        REM       IFEQ 'REM'
+015700020424     C***        REMFIL    ANDGT*ZEROS
+015800020424     C***                  MOVELREMFIL    V1CFGS
+015900020424     C***                  SETON                     05
+016000020424     C***                  ELSE
+016100020424     C***                  MOVELSIMFEL    V1CFGS
+016200020424     C***                  END
+016300020424     C                     Z-ADDSIMPOU    V1CFGS
+016400020424     C           SIMTPP    IFEQ '2'
+016500020424     C           SIMTPP    OREQ *BLANKS
+016600020424     C                     SETON                     05
+016700020424     C                     ENDIF
+016800920807     C                     ENDSR
+016900940712     C*
+017000940712     C*----------------------------------------------------------------
+017100940712     C* PULIZIA CAMPI
+017200940712     C*----------------------------------------------------------------
+017300940712     C           INZD01    BEGSR
+017400940712     C                     SETOF                     04
+017500940713     C                     Z-ADD0         V1CDFD
+017600940713     C                     Z-ADD0         V1CDFA
+017700940713     C                     MOVEL' '       V1CNPG
+017800940713     C                     Z-ADD0         V1CNFV
+017900940713     C                     MOVEL'N'       V1CSTE
+018000940713     C                     MOVEL'A'       V1CTFV
+018100940713     C                     MOVEL'S'       V1CSTV
+018200940712     C                     ENDSR
+018300940712     C*----------------------------------------------------------------
+018400940712     C*--- CONTROLLI FORMATO2
+018500940712     C*----------------------------------------------------------------
+018600940712     C           CTRD02    BEGSR
+018700900524     C                     SETOF                     90
+018800940802     C                     CLEARDLRADA
+018900940802     C                     CLEARDLRAAL
+019000940712     C*
+019100940712     C* CONTROLLO LA CATEGORIA DA CTRD01
+019200940712     C                     EXSR CTRD01
+019300940712     C         90          GOTO ENDCT2
+019400910321     C*
+019500920807     C* O NUMERO FOGLIO O DATA DAL
+019600940712     C           V1CNFV    IFEQ 0
+019700940712     C           V1CDFD    ANDEQ0
+019800900613     C                     SETON                     4390
+019900940712     C                     GOTO ENDCT2
+020000900613     C                     END
+020100900613     C* NON SI POSSONO IMMETTERE ENTRAMBI
+020200940712     C           V1CNFV    IFNE 0
+020300940713     C           V1CDFD    IFNE 0
+020400940713     C           V1CDFA    ORNE 0
+020500940713     C                     SETON                     4390
+020600940712     C                     GOTO ENDCT2
+020700940713     C                     ENDIF
+020800940713     C                     ENDIF
+020900900613     C*
+021000920807     C* NUMERO FOGLIO
+021100940712     C           V1CNFV    IFNE 0
+021200940713     C           KFVV      CHAINFNFVV000             45
+021300910321     C        N45FVVATB    IFNE *BLANKS
+021400900626     C                     SETON                     45
+021500900626     C                     END
+021600941027     C* ERRORE
+021700900613     C         45          SETON                     90
+021800940712     C         45          GOTO ENDCT2
+021900941027     C                     END
+022000920807     C* DATA FOGLIO DAL
+022100940712     C           V1CDFD    IFNE 0
+022200940712     C                     MOVE V1CDFD    G02DAT
+022300920807     C                     MOVEL*BLANK    G02ERR
+022400940712     C                     CALL 'XSRDA8'
+022500920807     C                     PARM           WLBDAT
+022600920807     C           G02ERR    IFEQ '1'
+022700920807     C                     SETON                     40  90
+022800940712     C                     GOTO ENDCT2
+022900920807     C                     END
+023000940802     C                     Z-ADDG02INV    DLRADA
+023100940712     C                     Z-ADDG02DAT    V1CDFD
+023200920807     C                     END
+023300900524     C*
+023400920807     C* DATA FOGLIO AL
+023500940712     C           V1CDFA    IFNE 0
+023600940712     C                     MOVE V1CDFA    G02DAT
+023700920807     C                     MOVEL*BLANK    G02ERR
+023800940712     C                     CALL 'XSRDA8'
+023900920807     C                     PARM           WLBDAT
+024000920807     C           G02ERR    IFEQ '1'
+024100920807     C                     SETON                     41  90
+024200940712     C                     GOTO ENDCT2
+024300920807     C                     END
+024400940802     C                     Z-ADDG02INV    DLRAAL
+024500940712     C                     Z-ADDG02DAT    V1CDFA
+024600920807     C*
+024700900524     C* DATA DAL NO MAGGIORE DATA AL
+024800940802     C           DLRADA    IFGT DLRAAL
+024900900524     C                     SETON                     4290
+025000940712     C                     GOTO ENDCT2
+025100900524     C                     END
+025200900524     C*
+025300900524     C                     END
+025400940712     C*
+025500910321     C* CONTRLLO SE EFFETTUATA ALMENO UNA SCELTA DI STAMPA
+025600940712     C           V1CSTE    IFEQ 'N'
+025700940712     C           V1CSTV    ANDEQ'N'
+025800910321     C                     SETON                     4790
+025900940712     C                     GOTO ENDCT2
+026000910321     C                     END
+026100940713     C           ENDCT2    ENDSR
+026200940712      *----------------------------------------------------------------
+026300940712      * CONTROLLO LA FILIALE IN GESTIONE
+026400940712      *----------------------------------------------------------------
+026500940712     C           CTRFGS    BEGSR
+026600940712     C                     SETOF                     90
+026700941027     C*
+026800941027     C                     CLEARDSLV50
+026900941027     C                     MOVELKNMUS     D50PRU
+027000941027     C                     MOVELV1CFGS    D50FGS
+027100941027     C                     CALL 'FNLV50R'
+027200941027     C                     PARM           DSLV50
+027300941028     C* ERRORE SOLO SE E' FILIALE SBAGLIATA NON PER FIL GESTITA
+027400941028     C* DA ALTRE PERCHE' SE UN TEMPO NON LO ERA, POTREBBE  ORA
+027500941028     C* ESSERLO E QUINDI AVER PRIMA APERTO DEI FOGLI PROPRI
+027600941028     C           D50ERR    IFEQ '1'
+027700941027     C                     MOVELD50MSG    V1CMSG
+027800941027     C                     SETON                     499028
+027900941027     C                     GOTO ENDCTF
+028000941027     C                     ENDIF
+028100940712     C*
+028200940712     C           ENDCTF    ENDSR
+028300940712      *----------------------------------------------------------------
+028400940712      * CONTROLLO FORMATO1
+028500940712      *----------------------------------------------------------------
+028600940712     C           CTRD01    BEGSR
+028700940712     C                     SETOF                     90
+028800940712     C**
+028900940712     C* CONTROLLO CATEGORIA FOGLI
+029000940712     C           V1CNPG    IFEQ ' '
+029100940712     C                     SETON                     4690
+029200940712     C                     GOTO ENDCT1
+029300940712     C                     END
+029400940712     C* RICERCA IN TABELLA
+029500940712     C           V1CNPG    IFEQ '?'
+029600940712     C                     MOVELCODUT     §KUT
+029700940712     C                     MOVEL'7N'      §COD
+029800940712     C                     MOVE ' '       V1CNPG
+029900940712     C                     MOVEL*BLANKS   §KEY
+030000940712     C                     CALL 'X§TABER'
+030100940712     C                     PARM           §KUT    10
+030200940712     C                     PARM           §COD    2
+030300940712     C                     PARM           §KEY    8
+030400940712     C                     PARM           §DES   30
+030500940712     C                     MOVEL§KEY      V1CNPG
+030600940712     C                     SETON                     90
+030700940712     C                     GOTO ENDCT1
+030800940712     C                     END
+030900940712     C* CONTROLLO
+031000940712     C                     MOVEL'7N'      COD
+031100940712     C                     MOVEL*BLANKS   KEY
+031200940712     C                     MOVELV1CNPG    KEY
+031300940712     C* INESISTENTE
+031400940712     C           KTAB2     CHAINTABEL                46
+031500940712     C* ANNULLATA
+031600940712     C        N46TBLFLG    IFNE ' '
+031700940712     C                     SETON                     46
+031800940712     C                     ELSE
+031900940712     C                     MOVELTBLUNI    DS7N
+032000940712     C* NON E' CATEGORIA DI FOGLI VARI
+032100940712     C           §7NFFV    IFNE 'S'
+032200940712     C                     SETON                     46
+032300940712     C                     END
+032400940712     C                     END
+032500940712     C*
+032600940712     C         46          SETON                     90
+032700940712     C         46          GOTO ENDCT1
+032800940713     C*
+032900940713     C* §7NUTI = 9 CATEGORIA NON UTILIZZABILE
+033000940713     C           §7NUTI    IFEQ '9'
+033100940713     C                     SETON                     5690
+033200940713     C                     GOTO ENDCT1
+033300940713     C                     END
+033400940713     C*
+033500940713     C* FILIALE IN GESTIONE E' SIMFEL
+033600940713     C           SIMFEL    IFEQ V1CFGS
+033700940713     C*
+033800940713     C* §7NUTI= 2 CATEGORIA UTILIZZABILE SOLO DAI 2 LIVELLI
+033900940713     C           §7NUTI    IFEQ '2'
+034000940713     C                     SETON                     5790
+034100940713     C                     GOTO ENDCT1
+034200940713     C                     END
+034300940713     C*
+034400940713     C                     ELSE
+034500940713     C*
+034600940713     C* FILIALE IN GESTIONE NON E' SIMFEL
+034700940713     C* §7NUTI = 1 CATEGORIA UTILIZZABILE SOLO DAL 1 LIVELLO
+034800940713     C           §7NUTI    IFEQ '1'
+034900940713     C                     SETON                     5890
+035000940713     C                     GOTO ENDCT1
+035100940713     C                     END
+035200940713     C                     END
+035300940712     C*
+035400940712     C                     MOVELV1CNPG    WNPG
+035500940712     C*
+035600940712     C           ENDCT1    ENDSR
+035700940712      *----------------------------------------------------------------
+035800940712      * INZSR INIZIALE
+035900940712      *----------------------------------------------------------------
+036000940712     C           *INZSR    BEGSR
+036100940712      ***
+036200940712      * CHIAVI
+036300940712      ***
+036400940712     C           KFVV      KLIST
+036500940712     C                     KFLD           WNPG
+036600940712     C                     KFLD           V1CNFV
+036700941027     C                     KFLD           V1CFGS
+036800940712     C           KTAB      KLIST
+036900940712     C                     KFLD           CODUT
+037000940712     C                     KFLD           COD     2
+037100940712     C           KTAB2     KLIST
+037200940712     C                     KFLD           CODUT
+037300940712     C                     KFLD           COD     2
+037400940712     C                     KFLD           KEY     8
+037500940712     C* LIKE DEFN
+037600940712     C           *LIKE     DEFN FVVNPG    WNPG
+037700940712     C                     ENDSR

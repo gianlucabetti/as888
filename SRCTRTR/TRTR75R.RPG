@@ -1,0 +1,271 @@
+000100900529     H             /I
+000200900529     F* TRTR75R  *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400900529     F* - AGGIORNA PARAMETRI UTENTE IN FILIALE                       *
+000500900529     F*   - NON AGGIORNA FILIALE ELABORATORE
+000600900531     F*   - NON AGGIORNA FLAG OPERATIVI
+000700900529     F*   - METTE AL POSTO DELLA PRIMA DATA LA QUARTA RICEVUTA
+000800910211     F*   - NON AGGIORNA LA 2° DATA
+000900910520     F*   - IMPOSTA LA 3° DATA (CHIUS.BIL.) A 31.12.89
+001000000000     F*--------------------------------------------------------------*
+001100950623     FPARUT00RUF  E                    DISK                           UC
+001200900529     F            PARUT                             KRENAMEPARUTR
+001300900529     FPARUT00FUF  E           K        DISK                      A
+001400900517     FCMRIC01LUF  E           K        DISK
+001500900514     E                    CMD1    1   1 55
+001600900514     E                    CMD2    1   1 55
+001700900514     E                    CMD3    1   1 55
+001800900514     E                    CMD5    1   1 55
+001900900529     E                    RAR         8  6
+002000900529     E                    DTA        12  4
+002100910211     E                    AR          8  6
+002200910211     IPARUT
+002300910211     I              PAR1                            AR,1
+002400910211     I              PAR2                            AR,2
+002500910211     I              PAR3                            AR,3
+002600910211     I              PAR4                            AR,4
+002700910211     I              PAR5                            AR,5
+002800910211     I              PAR6                            AR,6
+002900910211     I              PAR7                            AR,7
+003000910211     I              PAR8                            AR,8
+003100900529     IPARUTR
+003200900529     I              TRB02                           RTRB02
+003300900529     I              ATB02                           RATB02
+003400900529     I              NRJOB                           RNRJOB
+003500900529     I              PARFLG                          RARFLG
+003600900529     I              PARKUT                          RARKUT
+003700900529     I              PARTIP                          RARTIP
+003800900529     I              PAR1                            RAR,1
+003900900529     I              PAR2                            RAR,2
+004000900529     I              PAR3                            RAR,3
+004100900529     I              PAR4                            RAR,4
+004200900529     I              PAR5                            RAR,5
+004300900529     I              PAR6                            RAR,6
+004400900529     I              PAR7                            RAR,7
+004500900529     I              PAR8                            RAR,8
+004600900529     I              PAR9                            RAR9
+004700900529     I              PAR10                           RAR10
+004800900529     I              PAR11                           RAR11
+004900900529     I              PAR12                           RAR12
+005000900529     I              PAR13                           RAR13
+005100900529     I              PAR14                           RAR14
+005200900529     I              PAR15                           RAR15
+005300900529     I              PAR16                           RAR16
+005400900529     I              PAR17                           RAR17
+005500900529     I              PAR18                           RAR18
+005600900529     I              PAR19                           RAR19
+005700900529     I              PAR20                           RAR20
+005800900529     I              PAR21                           RAR21
+005900900529     I              PAR22                           RAR22
+006000900529     I              PAR23                           RAR23
+006100900529     I              PAR24                           RAR24
+006200900529     I              PAR25                           RAR25
+006300910520     I            DS
+006400910520     I                                    P   1   40§PAK4
+006500910520     I                                        1   4 §ALF4
+006600910520     IKPJBA     E DS
+006700910520     I                                       92 101 LIBSYS
+006800900517     I                                      483 492 LEGFIL
+006900900514     I                                      493 502 MBRFIL
+007000000000     I/SPACE 3
+007100900411     C*
+007200900514     C                     EXSR DEFCAM
+007300900411     C*
+007400900514     C                     DO   *HIVAL
+007500900530     C                     READ PARUT00R                 21
+007600900514     C  N21                DO
+007700900530     C*
+007800900530     C           KKUT      CHAINPARUT00F             54
+007900900530     C*
+008000900529     C* QUANDO LEGGO IL TIPO RECORD 30 IN CUI SONO CONTENUTE
+008100930916     C* LE DATE DI PARUT METTO AL POSTO DELLA 1° LA NONA
+008200910520     C* NON REIMPOSTO LA 2°
+008300910520     C* IMPOSTO LA 3° DATA (CHIUS.BIL.) A 31.12.89
+008400900529     C           RARTIP    IFEQ 30                         DATE
+008500910211     C                     MOVEAAR        RARA   48
+008600910211     C                     MOVEARARA      DTA
+008700910520     C                     MOVE DTA,2     DTA2    4
+008800910211     C*
+008900900529     C                     MOVEARAR       RARA   48
+009000900530     C                     MOVEARARA      DTA
+009100930916     C                     MOVE DTA,9     DTA,1            1°
+009200910520     C                     MOVE DTA2      DTA,2            2°
+009300910520     C                     Z-ADD891231    §PAK4
+009400910520     C                     MOVE §ALF4     DTA,3            3°
+009500900530     C                     MOVEADTA       RARA
+009600900529     C                     MOVEARARA      RAR
+009700900529     C                     END
+009800900529     C*
+009900900529     C* QUANDO LEGGO IL TIPO RECORD 80 IN CUI E' CONTENUTA
+010000900529     C* ANCHE LA FILIALE ELEBORATORE NON L'AGGIORNO
+010100900529     C* MA REIMPOSTO QUELLA TROVATA SUL PARUT IN AGGIORNAMENTO
+010200900531     C* (SE SONO IN VARIAZIONE)
+010300900529     C  N54      RARTIP    IFEQ 80
+010400900529     C                     MOVELPAR10     ELA     3
+010500900529     C                     MOVELELA       RAR10
+010600900529     C                     END
+010700900529     C*
+010800900531     C* QUANDO LEGGO IL TIPO RECORD 10 IN CUI SONO CONTENUTI
+010900900531     C* ANCHE I FLAG OPERATIVI NON AGGIORNO QUESTI ULTIMI
+011000900531     C* MA REIMPOSTO QUELLI TROVATI SUL PARUT IN AGGIORNAMENTO
+011100900531     C* (SE SONO IN VARIAZIONE)
+011200900531     C  N54      RARTIP    IFEQ 10
+011300900531     C                     MOVE PAR11     COMO2   2
+011400900531     C                     MOVE COMO2     RAR11
+011500900531     C                     MOVE PAR12     RAR12
+011600900531     C                     MOVE PAR13     RAR13
+011700900531     C                     MOVE PAR14     RAR14
+011800900531     C                     MOVE PAR15     RAR15
+011900900531     C                     MOVE PAR16     RAR16
+012000900531     C                     END
+012100900531     C*
+012200900529     C                     MOVE RTRB02    TRB02
+012300900529     C                     MOVE RATB02    ATB02
+012400900529     C                     MOVE RNRJOB    NRJOB
+012500900529     C                     MOVE RARFLG    PARFLG
+012600900529     C                     MOVE RARKUT    PARKUT
+012700900529     C                     MOVE RARTIP    PARTIP
+012800910211     C                     MOVE RAR,1     AR,1
+012900910211     C                     MOVE RAR,2     AR,2
+013000910211     C                     MOVE RAR,3     AR,3
+013100910211     C                     MOVE RAR,4     AR,4
+013200910211     C                     MOVE RAR,5     AR,5
+013300910211     C                     MOVE RAR,6     AR,6
+013400910211     C                     MOVE RAR,7     AR,7
+013500910211     C                     MOVE RAR,8     AR,8
+013600900529     C                     MOVE RAR9      PAR9
+013700900529     C                     MOVE RAR10     PAR10
+013800900529     C                     MOVE RAR11     PAR11
+013900900529     C                     MOVE RAR12     PAR12
+014000900529     C                     MOVE RAR13     PAR13
+014100900529     C                     MOVE RAR14     PAR14
+014200900529     C                     MOVE RAR15     PAR15
+014300900529     C                     MOVE RAR16     PAR16
+014400900529     C                     MOVE RAR17     PAR17
+014500900529     C                     MOVE RAR18     PAR18
+014600900529     C                     MOVE RAR19     PAR19
+014700900529     C                     MOVE RAR20     PAR20
+014800900529     C                     MOVE RAR21     PAR21
+014900900529     C                     MOVE RAR22     PAR22
+015000900529     C                     MOVE RAR23     PAR23
+015100900529     C                     MOVE RAR24     PAR24
+015200900529     C                     MOVE RAR25     PAR25
+015300900529     C*
+015400900529     C   54                WRITEPARUT
+015500900529     C  N54                UPDATPARUT
+015600900529     C                     DELETPARUTR
+015700900530     C                     ADD  1         NUMREC  70
+015800900411     C                     END
+015900900514     C  N21                END
+016000900514     C*
+016100900514     C*
+016200900514     C* CHIUSURA E RIORGANIZZAZIONE MEMBRO TRASCODIFICATO
+016300900514     C*
+016400900514     C                     EXSR CAEXB
+016500900514     C*
+016600900517     C* AGGIORNA ARCHIVIO DI LOG
+016700900517     C           LEGFIL    CHAINCMRIC01L             20
+016800900517     C  N20                Z-ADDNUMREC    RICNR1
+016900900517     C  N20                MOVE '1'       RICFL2            AGG.TO
+017000900517     C  N20                UPDATCMRIC000
+017100900530     C           FINE      TAG
+017200900514     C                     SETON                     LR
+017300900411     C*
+017400900411     C/EJECT
+017500900411     C*---------------------------------------------------------------*
+017600900411     C           DEFCAM    BEGSR
+017700000000     C*---------------------------------------------------------------*
+017800000000     C           *ENTRY    PLIST
+017900000000     C                     PARM           KPJBA
+018000900524     C* SE IL MEMBRO DA TRASCODIFICARE NON E' STATO PASSATO
+018100900524     C* ASSUMO IL PRIMO MEMBRO DEL FILE
+018200900524     C           MBRFIL    IFEQ *BLANK
+018300900524     C                     MOVEL'*FIRST'  MBRFIL
+018400900524     C                     END
+018500891209     C*
+018600891213     C* KLIST
+018700891213     C*
+018800900529     C           KKUT      KLIST
+018900900529     C                     KFLD           RARKUT
+019000900529     C                     KFLD           RARTIP
+019100900514     C*
+019200900514     C* APERTURA MEMBRO DA TRASCODIFICARE
+019300900514     C*
+019400900514     C                     EXSR CAEXA
+019500900514     C*
+019600900529     C                     ENDSR
+019700900514     C/SPACE
+019800900514     C**---------------------------------------------------------
+019900900529     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI PARUT00R      -
+020000900514     C**---------------------------------------------------------
+020100900514     C           CAEXA     BEGSR
+020200900514     C                     MOVE ')'       VAR11  11
+020300900514     C                     MOVELMBRFIL    VAR11
+020400900514     C                     MOVE '))'      VAR12  12
+020500900514     C                     MOVELMBRFIL    VAR12
+020600900514     C                     Z-ADD55        LUNG   155
+020700900514     C*
+020800900514     C                     SETOF                     20
+020900900514     C                     MOVE VAR11     CMD1
+021000900514     C                     MOVEL*BLANKS   COMMAN
+021100900514     C                     MOVEACMD1,1    COMMAN 80
+021200900514     C                     CALL 'QCMDEXC'              20
+021300900514     C                     PARM           COMMAN
+021400900514     C                     PARM           LUNG
+021500900530     C   20                GOTO FINE
+021600900514     C** CONTROLLO SE ESISTE IL MEMBRO
+021700900514     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+021800900514     C                     SETOF                     20
+021900900514     C                     MOVE VAR12     CMD2
+022000900514     C                     MOVEL*BLANKS   COMMAN
+022100900514     C                     MOVEACMD2,1    COMMAN
+022200900514     C                     CALL 'QCMDEXC'              20
+022300900514     C                     PARM           COMMAN
+022400900514     C                     PARM           LUNG
+022500900530     C   20                GOTO FINE
+022600900514     C** ALLOCO MEMBRO
+022700900514     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+022800900514     C                     SETOF                     20
+022900900514     C                     MOVE VAR11     CMD3
+023000900514     C                     MOVEL*BLANKS   COMMAN
+023100900514     C                     MOVEACMD3,1    COMMAN
+023200900514     C                     CALL 'QCMDEXC'              20
+023300900514     C                     PARM           COMMAN
+023400900514     C                     PARM           LUNG
+023500900530     C   20                GOTO FINE
+023600900514     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+023700900514     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+023800900529     C                     OPEN PARUT00R
+023900900514     C                     ENDSR
+024000900514     C/SPACE 005
+024100900514     C**---------------------------------------------------------
+024200900529     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI PARUT00R      -
+024300900514     C**---------------------------------------------------------
+024400900514     C           CAEXB     BEGSR
+024500900514     C                     MOVE ')'       VAR11  11
+024600900514     C                     MOVELMBRFIL    VAR11
+024700900514     C                     MOVE '))'      VAR12  12
+024800900514     C                     MOVELMBRFIL    VAR12
+024900900514     C                     Z-ADD55        LUNG   155
+025000900514     C*
+025100940826     C                     CLOSEPARUT00R               20
+025200940825     C** RIORGANIZZA IL MEMBRO ELIMINATE SITRUZ.
+025300940826     C  N20                DO
+025400900514     C                     MOVE VAR12     CMD5
+025500900514     C                     MOVEL*BLANKS   COMMAN
+025600900514     C                     MOVEACMD5,1    COMMAN
+025700900514     C                     CALL 'QCMDEXC'
+025800900514     C                     PARM           COMMAN
+025900900514     C                     PARM           LUNG
+026000940826     C                     END
+026100900514     C** DISALLOCA IL MEMBRO AGG.TO
+026200900514     C                     ENDSR
+026300900514     C/SPACE 005
+026400900514**         CMD1
+026500900529CHKOBJ OBJ(PARUT00R) OBJTYPE(*FILE)     MBR(M234567890)
+026600900514**         CMD2
+026700900529ALCOBJ OBJ((PARUT00R *FILE *EXCL           M234567890))
+026800900514**         CMD3
+026900900529OVRDBF FILE(PARUT00R)                   MBR(M234567890)
+027000900514**         CMD5
+027100900529DLCOBJ OBJ((PARUT00R *FILE *EXCL           M234567890))

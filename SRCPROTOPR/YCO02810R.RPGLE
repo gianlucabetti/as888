@@ -1,0 +1,3 @@
+000100091223     D EON_ConversioneYEON2YNFE...
+000200091223     D                 PR                  EXTPGM('YCO02810R')
+000300091223     D  kpjba                              LIKEDS(kpjba)

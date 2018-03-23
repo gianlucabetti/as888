@@ -1,0 +1,206 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200090225/*?******************************************************************/
+000300100709/*?  RICEVE ED ELABORA IFCSUM                     da UPLOAD         */
+000400100709/*?  Ricezione in Sede tramite UPLOAD                               */
+000500090225/*?******************************************************************/
+000600090225
+000700090225             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000800090225
+000900090225             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+001000090225             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001100110208             DCL        VAR(&ESITO_SAV) TYPE(*CHAR) LEN(1) VALUE('0')
+001200110208             DCL        VAR(&TRADOTTO) TYPE(*CHAR) LEN(1)
+001300090225             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001400090225             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001500090225             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001600110208             DCL        VAR(&SECONDGIRO) TYPE(*CHAR) LEN(1) VALUE(' ')
+001700100927             DCL        VAR(&TIPO_FILE) TYPE(*CHAR) LEN(6) VALUE(' ')
+001800100927             DCL        VAR(&VERSIONE) TYPE(*CHAR) LEN(3) VALUE(' ')
+001900100927             DCL        VAR(&RELEASE) TYPE(*CHAR) LEN(3) VALUE(' ')
+002000100927             DCL        VAR(&AGENZIA) TYPE(*CHAR) LEN(3) VALUE(' ')
+002100100927             DCL        VAR(&ASSOCIAZ) TYPE(*CHAR) LEN(6) VALUE(' ')
+002200101005             DCL        VAR(&PGM_TRADUZ) TYPE(*CHAR) LEN(10) VALUE(' ')
+002300090225
+002400090225             CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))
+002500090212
+002600110208/* Aggiunge le librerie di Filiale su cui tradurre i dati      */
+002700090212
+002800090216             ADDLIBLE   LIB(FILTRAGRU) POSITION(*AFTER UNITRAGRU)
+002900090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+003000090216
+003100090216             ADDLIBLE   LIB(FILTRA201) POSITION(*AFTER FILTRAGRU)
+003200090216             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+003300090216
+003400090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003500090213/* procedura/programma fosse finita in maniera anomala occorre */
+003600090213/* parare il colpo riducendo il male al male minore ossia      */
+003700090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+003800090213/* metà piuttosto che confermarle. E ripartendo da una         */
+003900090213/* situazione pulita.                                          */
+004000090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004100090213/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+004200090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+004300090213             ENDCMTCTL
+004400090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004500090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004600090213             ENDDO
+004700090212
+004800110208/*-------------------------------------------------------------*/
+004900110208/* NON POSSONO ESSERCI PIU' FILE CONSECUTIVI SULLO STESSO      */
+005000110208/*  MEMBRO DEL TIVIN00R.     - QUESTA E'UNA REGOLA -           */
+005100110208/*                e va verificate  dopo aver finito la prima   */
+005200110208/*                traduzione si deve verificare che siano      */
+005300110208/*                finite le righe lette sul TIVIN.             */
+005400110208/*-------------------------------------------------------------*/
+005500110208
+005600110208/*   INIZIA IL GIRO .                                          */
+005700110208
+005800100726/*-------------------------------------------------------------*/
+005900110208/*  il TRTCT90R: interpreta quale tipo di messaggio sta        */
+006000110208/*    leggendo e decide quindi con quale programma eseguire    */
+006100110208/*   la traduzione.                                            */
+006200100726/*-------------------------------------------------------------*/
+006300100727 RILEGGE:
+006400100927             CALL       PGM(TRTCT90R) PARM(&ESITO &TIPO_FILE +
+006500101008                          &VERSIONE &RELEASE &AGENZIA &ASSOCIAZ +
+006600101008                          &PGM_TRADUZ)
+006700090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+006800110208             ROLLBACK
+006900110208             CHGVAR     VAR(&ESITO) VALUE('2')
+007000110208             GOTO       CMDLBL(FINE_EOF)
+007100090213             ENDDO
+007200100727
+007300110208/*-------------------------------------------------------------*/
+007400110208/*   F I N E     F i l e      o   P R O B L E M I              */
+007500110208/*                                                             */
+007600110208             IF         COND((&TIPO_FILE *EQ 'FINE_F') *OR (&ESITO +
+007700110208                          *NE '0')) THEN(GOTO CMDLBL(FINE_EOF))
+007800110208/*                                                             */
+007900110208/*-------------------------------------------------------------*/
+008000100727
+008100110208
+008200110208/*-------------------------------------------------------------*/
+008300110208/*   Se facendo un secondo giro si accorge che non è a EoFile  */
+008400110208/*   ha delle altre righe erroneamente attaccate al primo msg  */
+008500110208/* ->Deve dare errore poichè NON DEVONO eserci più files       */
+008600110208/*   accodati sullo stesso membro TIVIN00R.<-                  */
+008700110208/*                                                             */
+008800110208             IF         COND(&SECONDGIRO *EQ 'S') THEN(DO)
+008900110208             CHGVAR     VAR(&ESITO) VALUE('2')
+009000110208             GOTO       CMDLBL(FINE_EOF)
+009100110208             ENDDO
+009200110208/*                                                             */
+009300110208/* + File accodati su stesso membro TIVIN00R ->messaggi ERRORE */
+009400110208/*-------------------------------------------------------------*/
+009500090212
+009600110208
+009700100726/*   I F C S U M                                               */
+009800110208/*-------------------------------------------------------------*/
+009900110208/*   TRADUZIONE dello Standard S93A                            */
+010000110208/*                                                             */
+010100101005             IF         COND(&PGM_TRADUZ *EQ 'TRTCT93R') THEN(DO)
+010200110208             CHGVAR     VAR(&TRADOTTO) VALUE('1')
+010300100927             CALL       PGM(TRTCT93R) PARM(&ESITO)
+010400100726             ENDDO
+010500110208/*                                                             */
+010600110208/*-------------------------------------------------------------*/
+010700100726
+010800110208
+010900110208/*   I F C S U M                                               */
+011000110208/*-------------------------------------------------------------*/
+011100110208/*   TRADUZIONE dello Standard D96A                            */
+011200110208/*                                                             */
+011300101005             IF         COND(&PGM_TRADUZ *EQ 'TRTCT96R') THEN(DO)
+011400110208             CHGVAR     VAR(&TRADOTTO) VALUE('1')
+011500100927             CALL       PGM(TRTCT96R) PARM(&ESITO)
+011600100927             ENDDO
+011700110208/*                                                             */
+011800111223/*-------------------------------------------------------------*/
+011900111223
+012000111223/*   I F T S T A  DUCROS VERS. D96A                            */
+012100111223/*-------------------------------------------------------------*/
+012200111223/*   TRADUZIONE FUORI Standard                                 */
+012300111223/*                                                             */
+012400111223             IF         COND(&PGM_TRADUZ *EQ 'TRTCT14R') THEN(DO)
+012500111223             CHGVAR     VAR(&TRADOTTO) VALUE('1')
+012600120103             CALL       PGM(TRTCT14C) PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+012700111223             ENDDO
+012800111223/*                                                             */
+012900110208/*-------------------------------------------------------------*/
+013000100927
+013100100726/*   I F T S T A                                               */
+013200110208/*-------------------------------------------------------------*/
+013300110208/*   TRADUZIONE dello Standard D94A                            */
+013400110208/*                                                             */
+013500101018             IF         COND(&PGM_TRADUZ *EQ 'TRTCT94R') THEN(DO)
+013600110208             CHGVAR     VAR(&TRADOTTO) VALUE('1')
+013700101025             CALL       PGM(TRTCT94C) PARM(&ESITO)
+013800100726             ENDDO
+013900110208/*                                                             */
+014000110208/*-------------------------------------------------------------*/
+014100100726
+014200100928
+014300110208/*-------------------------------------------------------------*/
+014400110208/*  SE NON HA TRADOTTO NULLA DEVE SEGNALARLO ALTRIMENTI NON    */
+014500110208/*  CI SI ACCORGE DI NULLA .                                   */
+014600110208/*                                                             */
+014700110208             IF         COND(&TRADOTTO *NE '1') THEN(DO)
+014800110208             CHGVAR     VAR(&ESITO) VALUE('2')
+014900100928             GOTO       CMDLBL(FINE_EOF)
+015000100928             ENDDO
+015100110208/*                                                             */
+015200110208/*  File NON TRADOTTO ->  SEGNALAZIONE di Errore               */
+015300110208/*-------------------------------------------------------------*/
+015400100928
+015500101008
+015600110208
+015700110208 /*-------------------------------------------------------------*/
+015800110208 /* Qui salva l'esito se deve segnalare un'anomalia da errori   */
+015900110208 /*                                                             */
+016000110208             IF         COND(&ESITO *NE '0') THEN(CHGVAR +
+016100110208                          VAR(&ESITO_SAV) VALUE(&ESITO))
+016200110208 /*                                                             */
+016300110208 /*  Dopo aver TRADOTTO ->  lo salva x NON sporcarlo dopo       */
+016400110208 /*-------------------------------------------------------------*/
+016500101008
+016600110208
+016700110208
+016800110208 /*-------------------------------------------------------------*/
+016900110208 /*  Tenta un secondo Giro per verificare che tutte le righe    */
+017000110208 /*  del TIVIN siano state elaborate e NON vi sia sullo stesso  */
+017100110208 /*  membro un altro file attaccato al primo .....altrimenti    */
+017200110208 /*  deve segnalare l'errore.                                   */
+017300110208 /*                                                             */
+017400110208             CHGVAR     VAR(&SECONDGIRO) VALUE('S')
+017500100727             GOTO       CMDLBL(RILEGGE)
+017600110208 /*                                                             */
+017700110208 /*-------------------------------------------------------------*/
+017800100727
+017900100727 FINE_EOF:
+018000110208
+018100110208 /*-------------------------------------------------------------*/
+018200110208 /* se doveva segnalare un'anomalia se l'era salvata            */
+018300110208 /*    così se la reimposta -> e segnala l'errore.              */
+018400110208 /*                                                             */
+018500110208             IF         COND(&ESITO_SAV *NE '0') THEN(CHGVAR +
+018600110208                          VAR(&ESITO) VALUE(&ESITO_SAV))
+018700110208 /*                                                             */
+018800110208 /*-------------------------------------------------------------*/
+018900100727
+019000110208 /*--------------------------------------------------------------*/
+019100090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+019200090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+019300090213 /* in modo pulito senza lasciare transazioni a metà.            */
+019400110208 /*                                                              */
+019500090213             ENDCMTCTL
+019600100726             MONMSG     MSGID(CPF0000)
+019700110208 /*                                                             */
+019800110208 /*-------------------------------------------------------------*/
+019900090216
+020000090216             rmvLIBLE   LIB(FILTRAGRU)
+020100090216             MONMSG     MSGID(CPF0000)
+020200090216             rmvLIBLE   LIB(FILTRA201)
+020300090216             MONMSG     MSGID(CPF0000)
+020400090216
+020500090212             ENDPGM
+020600110208 /*-------------------------------------------------------------*/

@@ -1,0 +1,80 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600100906             PGM        PARM(&PRMUSERI &PRMPWD &PRMRAG &PRMRSP &PRMSUN +
+000700081103                             &ESITO &OPERAZ &PRMEML)
+000800991026
+000900100906             DCL        VAR(&PRMUSERI) TYPE(*CHAR) LEN(7)
+001000100906             DCL        VAR(&PRMUSERO) TYPE(*CHAR) LEN(40)
+001100081103             DCL        VAR(&PRMPWD)   TYPE(*CHAR) LEN(20)
+001200081103             DCL        VAR(&PRMRAG)   TYPE(*CHAR) LEN(20)
+001300081103             DCL        VAR(&PRMRSP)   TYPE(*CHAR) LEN(30)
+001400081103             DCL        VAR(&PRMSUN)   TYPE(*CHAR) LEN(9)
+001500081103             DCL        VAR(&ESITO)    TYPE(*CHAR) LEN(1)
+001600081103             DCL        VAR(&OPERAZ)   TYPE(*CHAR) LEN(1)
+001700081103             DCL        VAR(&PRMEML)   TYPE(*CHAR) LEN(64)
+001800081103
+001900081103             DCL        VAR(&USERID)   TYPE(*CHAR) LEN(10) +
+002000081103                                       VALUE('VAS777')
+002100081103
+002200081103             DCL        VAR(&PWD)      TYPE(*CHAR) LEN(50) +
+002300081103                                       VALUE('wwwVAS')
+002400081103
+002500081103             DCL        VAR(&PWDLEN)   TYPE(*CHAR) LEN(4)  +
+002600081103                                       VALUE(X'00000010')
+002700081103
+002800081103             DCL        VAR(&PWDCCSID) TYPE(*CHAR) LEN(4) +
+002900081103                                       VALUE( X'FFFFFFFF')
+003000081103
+003100081103             DCL        VAR(&ERRCODE)  TYPE(*CHAR) LEN(8) +
+003200081103                                       VALUE( X'0000000000000000')
+003300081103
+003400081103             DCL        VAR(&CURPWD)   TYPE(*CHAR) LEN(10) +
+003500081103                                       VALUE('          ')
+003600081103
+003700081103             DCL        VAR(&PRFHNDL1) TYPE(*CHAR) LEN(12)
+003800081103             DCL        VAR(&PRFHNDL2) TYPE(*CHAR) LEN(12)
+003900081103
+004000081103
+004100100906             CHGVAR     VAR(&PRMUSERO) VALUE(&PRMUSERI)
+004200100906
+004300081103
+004400081103             CALL       PGM(QSYGETPH)   PARM('*CURRENT  ' +
+004500081103                                             &CURPWD      +
+004600081103                                             &PRFHNDL1)
+004700081103             MONMSG     MSGID(CPF0000)
+004800081103
+004900081103             CALL       PGM(QSYGETPH)   PARM(&USERID      +
+005000081103                                             &PWD         +
+005100081103                                             &PRFHNDL2    +
+005200081103                                             &ERRCODE     +
+005300081103                                             &PWDLEN      +
+005400081103                                             &PWDCCSID)
+005500081103             MONMSG     MSGID(CPF0000)
+005600081103
+005700081103             CALL       PGM(QWTSETP)    PARM(&PRFHNDL2)
+005800081103             MONMSG     MSGID(CPF0000)
+005900081103
+006000081103
+006100081103
+006200081103   /* Chiamo il *pgm preposto */
+006300081103             CALL       PGM(TIS730R1)                     +
+006400100906                        PARM(&PRMUSERO &PRMPWD &PRMRAG &PRMRSP &PRMSUN +
+006500081103                             &ESITO &OPERAZ &PRMEML)
+006600081103             MONMSG     MSGID(CPF0000)
+006700081103
+006800081103
+006900081103   /* ----------------------- */
+007000081103
+007100081103             CALL       PGM(QWTSETP)    PARM(&PRFHNDL1)
+007200081103             MONMSG     MSGID(CPF0000)
+007300081103
+007400081103             CALL       PGM(QSYRLSPH)   PARM(&PRFHNDL1)
+007500081103             MONMSG     MSGID(CPF0000)
+007600081103             CALL       PGM(QSYRLSPH)   PARM(&PRFHNDL2)
+007700081103             MONMSG     MSGID(CPF0000)
+007800081103
+007900991026
+008000990907             ENDPGM

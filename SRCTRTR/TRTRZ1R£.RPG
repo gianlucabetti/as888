@@ -1,0 +1,290 @@
+000100000000     H              J
+000200900606     F* TRTRZ1R  *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400900606     F* - TRASMISSIONE ORGANIGRAMMA AZIENDALE
+000500000000     F*--------------------------------------------------------------*
+000600900614     FAZORG01LUF  E           K        DISK
+000700900614     FAZORG0ATO   E                    DISK                      A    UC
+000800900614     FAZORG0BTO   E                    DISK                      A    UC
+000900971229     E                    AS4       100  3 0
+001000900605     E                    CMD1    1   1 45
+001100900605     E                    CMD2    1   1 45
+001200900605     E                    CMD3    1   1 45
+001300900614     E                    CMD4    1   1 45
+001400900614     E                    CMB1    1   1 45
+001500900614     E                    CMB2    1   1 45
+001600900614     E                    CMB3    1   1 45
+001700900614     E                    CMB4    1   1 45
+001800900605     IDSCMZ     E DS
+001900000000     IKPJBA     E DS
+002000971112     I*-------------------
+002100971112     I* DS "TIBS55R" - REPERIMENTO LIBRERIE JOB
+002200971112     I*-------------------
+002300971112     IBS50DS    E DSTIBS50DS
+002400980324     I              'GAITRA201 '          C         LIB201
+002500000000     C*---------------------------------------------------------------*
+002600000000     C           *ENTRY    PLIST
+002700971229     C                     PARM           KPJBA
+002800971117     C*
+002900971117     C* REPERIMENTO DATA TRASMISSIONE
+003000971117     C                     Z-ADD*ZEROS    NUMTRA  60
+003100971117     C                     Z-ADDUDATE     NUMTRA
+003200971117     C                     MOVE UDAY      NUMTRA
+003300971117     C                     MOVELUYEAR     NUMTRA
+003400971112     C*
+003500971112     C* REPERIMENTO LIBRERIE JOB
+003600020802     C* ELIMINARE QUESTA CALL E FARLO DOPO PER OGNI P.O./AS A CUI TRASM
+003700020802     C* ETTO PASSATO DAL PGM TIBS56R PERCHE' LA LIBRERIA  DI PARTENZA E
+003800020802     C* ARRIVO POTREBBERO ESSERE DIVERSE
+003900971112     C                     CLEARBS50DS
+004000971112     C                     MOVEL'L'       I50TLA
+004100971112     C                     MOVELKNSIF     I50PSI
+004200971112     C                     CALL 'TIBS50R'
+004300971112     C                     PARM           BS50DS
+004400900614     C*
+004500900614     C*CARICA SCHIERA AS INSTALLATI
+004600900614     C                     EXSR CARTAB
+004700900614     C*
+004800900614     C* APERTURA FILES TRASMISSIONE
+004900971229     C                     EXSR CAEX
+005000900614     C*
+005100020802     C* IL LOOP DI LETTURA NON CAMBIA TUTTO A TUTTI COME ORA
+005200900614     C           *LOVAL    SETLLAZORG
+005300900606     C                     READ AZORG                    02
+005400971229DO  1C           *IN02     DOWEQ*OFF
+005500971229IF  2C           ORGFTR    IFEQ *BLANKS
+005600000000     C                     EXSR CRETAB
+005700900606     C                     MOVEL'T'       ORGFTR
+005800971117     C                     Z-ADDNUMTRA    ORGNTR
+005900900606     C                     UPDATAZORG
+006000971229E   2C                     ENDIF
+006100971229     C                     READ AZORG                    02
+006200971229E   1C                     ENDDO
+006300900614     C* TRASMISSIONE
+006400900622     C           NUREC     IFGT *ZERO
+006500900605     C                     EXSR X25
+006600900622     C                     END
+006700900614     C*
+006800000000     C                     SETON                     LR
+006900900614     C**-------------------------------
+007000971229     C** CARICAMENTO SCHIER
+007100900614     C***------------------------------
+007200900614     C           CARTAB    BEGSR
+007300020802     C* TOGLIERE QUESTO CARICAMENTO DELLA SCHIERA AS4 E CHIAMARE TIBS56
+007400020802     C*  CON MODALITA' "GRU"
+007500971229     C                     Z-ADD*ZEROS    C       40
+007600971229     C           *LOVAL    SETLLAZORG01L
+007700971229     C                     READ AZORG01L                 31
+007800971229DO  1C           *IN31     DOWEQ*OFF
+007900971229IF  2C           ORGFAG    IFNE 'V'                        *FILIALE/AGENZIA
+008000971229IF  3C           ORGFVA    IFEQ *BLANKS                    *VALIDE
+008100971229IF  4C           ORGFIL    IFEQ ORGFEL                     *VALIDE
+008200971229     C                     ADD  1         C
+008300971229     C                     Z-ADDORGFEL    AS4,C
+008400971229E   4C                     ENDIF
+008500971229E   3C                     ENDIF
+008600971229E   2C                     ENDIF
+008700971229     C                     READ AZORG01L                 31
+008800971229E   1C                     ENDDO
+008900971229     C                     ENDSR
+009000000000     C**----------------------------------
+009100900606     C** CREA RECORD AZORG
+009200000000     C**----------------------------------
+009300000000     C           CRETAB    BEGSR
+009400900605     C                     ADD  1         NUREC   70
+009500900614     C                     WRITEAZORGA
+009600900614     C                     WRITEAZORGB
+009700000000     C                     ENDSR
+009800900605     C/SPACE 005
+009900900605     C**-------------------------------------
+010000900605     C** PREPARA SOTTOMISSIONE TRASMISSIONE
+010100900605     C**-------------------------------------
+010200900605     C           X25       BEGSR
+010300971229     C*
+010400971229     C* CHIUDE I FILE
+010500900614     C                     CLOSEAZORG0AT
+010600900614     C                     CLOSEAZORG0BT
+010700971229     C*
+010800971229     C* TRASMETTE I MEMBRI CREATI A TUTTI I PRIMI LIVELLO
+010900971229     C                     Z-ADD1         C       40
+011000020802     C* LUPPARE SU NUOVA SCHIERA DEL TIBS56
+011100020802     C* PER OGNI P.O. DELLA SCHIERA CHIAMARE IL TIBS55R PASSATO
+011200020802     C* P.O. PARTENZA=46 P.O. ARRIVO QUELLO DELLA SCHIERA
+011300971229DO  1C           AS4,C     DOWGT*ZEROS
+011400020802     C* DENTRO A X25A E X25B MODIFICARE:
+011500020802     C* NOME  MEMBRI DA E A
+011600020802     C*  LIBRERIE DA (O50PLG) LIBRERIA A (O50ALG)
+011700020802     C* PGM TIBS53C AL POSTO DEL CMZ002R CON PARAM CORRETTE
+011800020802     C* O50LCL QUELLO PASSATO DAL TIBS55R E CMZ236 VUOTO
+011900020802     C* IL DESTINATARIO (CMZDST) E' IL P.O. DELLA SCHIERA)
+012000020802     C* CMZSYF ' IL S.I. DEL P.O. DI ARRIVO (O50ASI)
+012100971229     C                     EXSR X25A                        1°PARTE
+012200971229     C                     EXSR X25B                        2°PARTE
+012300971229     C                     ADD  1         C
+012400971229E   1C                     ENDDO
+012500900614     C*
+012600971229     C* PULISCE IL FILE TRASMESSO
+012700971229     C                     MOVEACMD4,1    COMMAN 80 P
+012800900614     C                     CALL 'QCMDEXC'              20
+012900900614     C                     PARM           COMMAN
+013000900614     C                     PARM           LUNG
+013100900614     C*
+013200971229     C                     MOVEACMB4,1    COMMAN 80 P
+013300900614     C                     CALL 'QCMDEXC'              20
+013400900614     C                     PARM           COMMAN
+013500900614     C                     PARM           LUNG
+013600971229     C*
+013700900605     C                     ENDSR
+013800900605     C**----------------------------------
+013900900614     C** SOTTOMETTE TRASMISSIONE 1° PARTE
+014000900605     C**----------------------------------
+014100900614     C           X25A      BEGSR
+014200971229     C                     MOVELAS4,C     CMZDST            DESTINAT.
+014300900614     C                     MOVEL'AZORG0AT'CMZFLD            DA: >>>
+014400971229     C                     MOVEL'M000'    CMZMBD
+014500971112     C                     MOVELO50PLG    CMZLBD
+014600900614     C                     MOVEL'AZORG0AR'CMZFLA            A: >>>
+014700971229     C                     MOVEL'M000'    CMZMBA
+014800971117     C                     MOVELO50PLG    CMZLBA
+014900900605     C                     MOVE '0000'    CMZORI            ORA
+015000900605     C                     MOVE '0000000' CMZDTI            DATA
+015100900605     C                     MOVE 'T'       CMZURG            NOTTE
+015200900605     C                     MOVE 'A'       CMZADD            IN ADD
+015300971229     C                     MOVE 'N'       CMZCLR            CLEAR
+015400900605     C                     MOVE 'S'       CMZFTR            DA TRANS.
+015500900605     C                     MOVE *BLANK    CMZERR            1= ERR.
+015600900614     C                     MOVE *BLANK    CMZAZN            AZIONE
+015700980324     C                     MOVELLIB201    CMZSYF            SIST.INFORMATIVO
+015800900605     C                     MOVE NUREC     CMZNRR            N.REC.
+015900900605     C                     MOVE *BLANK    CMZPRR            PRE-REQ.
+016000900605     C                     CALL 'CMZ002R'
+016100900605     C                     PARM           CMZDST
+016200900605     C                     PARM           CMZFLD
+016300900605     C                     PARM           CMZMBD
+016400900605     C                     PARM           CMZLBD
+016500900605     C                     PARM           CMZFLA
+016600900605     C                     PARM           CMZMBA
+016700900605     C                     PARM           CMZLBA
+016800900605     C                     PARM           CMZORI
+016900900605     C                     PARM           CMZDTI
+017000900605     C                     PARM           CMZURG
+017100900605     C                     PARM           CMZADD
+017200900605     C                     PARM           CMZCLR
+017300900605     C                     PARM           CMZFTR
+017400900605     C                     PARM           CMZERR
+017500900605     C                     PARM           CMZAZN
+017600900605     C                     PARM           CMZSYF
+017700900605     C                     PARM           CMZNRR
+017800900605     C                     PARM           CMZPRR
+017900900605     C                     ENDSR
+018000900614     C/SPACE 005
+018100900614     C**----------------------------------
+018200900614     C** SOTTOMETTE TRASMISSIONE 2° PARTE
+018300900614     C**----------------------------------
+018400900614     C           X25B      BEGSR
+018500971229     C                     MOVELAS4,C     CMZDST            DESTINAT.
+018600900614     C                     MOVEL'AZORG0BT'CMZFLD            DA: >>>
+018700971229     C                     MOVEL'M000'    CMZMBD
+018800971112     C                     MOVELO50PLG    CMZLBD
+018900900614     C                     MOVEL'AZORG0BR'CMZFLA            A: >>>
+019000971229     C                     MOVEL'M000'    CMZMBA
+019100971117     C                     MOVELO50PLG    CMZLBA
+019200900614     C                     MOVE '0000'    CMZORI            ORA
+019300900614     C                     MOVE '0000000' CMZDTI            DATA
+019400900614     C                     MOVE 'T'       CMZURG            NOTTE
+019500900614     C                     MOVE 'A'       CMZADD            IN ADD
+019600971229     C                     MOVE 'N'       CMZCLR            CLEAR
+019700900614     C                     MOVE 'S'       CMZFTR            DA TRANS.
+019800900614     C                     MOVE *BLANK    CMZERR            1= ERR.
+019900900614     C                     MOVE 'TRZ3'    CMZAZN            AZIONE
+020000980324     C                     MOVELLIB201    CMZSYF            SIST.INFORMATIVO
+020100900614     C                     MOVE NUREC     CMZNRR            N.REC.
+020200900614     C                     CALL 'CMZ002R'
+020300900614     C                     PARM           CMZDST
+020400900614     C                     PARM           CMZFLD
+020500900614     C                     PARM           CMZMBD
+020600900614     C                     PARM           CMZLBD
+020700900614     C                     PARM           CMZFLA
+020800900614     C                     PARM           CMZMBA
+020900900614     C                     PARM           CMZLBA
+021000900614     C                     PARM           CMZORI
+021100900614     C                     PARM           CMZDTI
+021200900614     C                     PARM           CMZURG
+021300900614     C                     PARM           CMZADD
+021400900614     C                     PARM           CMZCLR
+021500900614     C                     PARM           CMZFTR
+021600900614     C                     PARM           CMZERR
+021700900614     C                     PARM           CMZAZN
+021800900614     C                     PARM           CMZSYF
+021900900614     C                     PARM           CMZNRR
+022000900614     C                     PARM           CMZPRR
+022100900614     C                     ENDSR
+022200900605     C/SPACE
+022300900605     C**---------------------------------------------
+022400020802     C** ESEGUE QCAEXEC SUL MEMBRO DI AZORG0AT      -
+022500900614     C**                SUL MEMBRO DI AZORG0BT      -
+022600900605     C**---------------------------------------------
+022700900605     C           CAEX      BEGSR
+022800900605     C                     Z-ADD45        LUNG   155
+022900020802     C* SISTEMARE NELLE SCHIERE IN FONDO IL NOME DEL MENVRO E LA LUNGHE
+023000020802     C*  ZZA DELLE SCHIERE E DEL COMMAN
+023100900614     C*
+023200900614     C* 1° PARTE DEL FILE
+023300900605     C                     SETOF                     20
+023400971229     C                     MOVEACMD3,1    COMMAN 80 P
+023500900605     C                     CALL 'QCMDEXC'              20
+023600900605     C                     PARM           COMMAN
+023700900605     C                     PARM           LUNG
+023800900605     C** CONTROLLO SE ESISTE IL MEMBRO
+023900900605     C   20                DO
+024000971229     C                     MOVEACMD1,1    COMMAN    P
+024100900605     C                     CALL 'QCMDEXC'
+024200900605     C                     PARM           COMMAN
+024300900605     C                     PARM           LUNG
+024400900605     C                     END
+024500900605     C** ESEGUE ADDPFM DEL MEMBRO NUOVO
+024600971229     C                     MOVEACMD2,1    COMMAN    P
+024700900605     C                     CALL 'QCMDEXC'
+024800900605     C                     PARM           COMMAN
+024900900605     C                     PARM           LUNG
+025000971229     C** ESEGUE IN OGNI CASO OVRDBF DEL MEMBRO DESIDERATO
+025100900614     C                     OPEN AZORG0AT
+025200900614     C*
+025300900614     C* 2° PARTE DEL FILE
+025400900614     C                     SETOF                     20
+025500971229     C                     MOVEACMB3,1    COMMAN 80 P
+025600900614     C                     CALL 'QCMDEXC'              20
+025700900614     C                     PARM           COMMAN
+025800900614     C                     PARM           LUNG
+025900900614     C** CONTROLLO SE ESISTE IL MEMBRO
+026000900614     C   20                DO
+026100971229     C                     MOVEACMB1,1    COMMAN    P
+026200900614     C                     CALL 'QCMDEXC'
+026300900614     C                     PARM           COMMAN
+026400900614     C                     PARM           LUNG
+026500900614     C                     END
+026600900614     C** ESEGUE ADDPFM DEL MEMBRO NUOVO
+026700971229     C                     MOVEACMB2,1    COMMAN    P
+026800900614     C                     CALL 'QCMDEXC'
+026900900614     C                     PARM           COMMAN
+027000900614     C                     PARM           LUNG
+027100900614     C*+ ESEGUE IN OGNI CASO OVRDBF DEL MEMBRO DESIDERATO
+027200900614     C                     OPEN AZORG0BT
+027300900605     C                     ENDSR
+027400971229     C*------------------------------------------------------------------------*
+027500900605**         CMD1
+027600900614ADDPFM FILE(AZORG0AT)               MBR(M000)
+027700900605**         CMD2
+027800900614OVRDBF FILE(AZORG0AT)               MBR(M000)
+027900900605**         CMD3
+028000900614CHKOBJ OBJ(AZORG0AT) OBJTYPE(*FILE) MBR(M000)
+028100900614**         CMD4
+028200900614CLRPFM FILE(AZORG0AT)               MBR(M000)
+028300900614**         CMB1
+028400900614ADDPFM FILE(AZORG0BT)               MBR(M000)
+028500900614**         CMB2
+028600900614OVRDBF FILE(AZORG0BT)               MBR(M000)
+028700900614**         CMB3
+028800900614CHKOBJ OBJ(AZORG0BT) OBJTYPE(*FILE) MBR(M000)
+028900900614**         CMB4
+029000900614CLRPFM FILE(AZORG0BT)               MBR(M000)

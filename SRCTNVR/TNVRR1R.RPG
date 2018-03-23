@@ -1,0 +1,229 @@
+000100950428     H              J
+000200950428     H*--------------------------------------------------------------*
+000300950428     H*       - AGGIORNAMENTO IN FILIALE DI PARTENZA DATE DI -       *
+000400950428     H*                  CONSEGNA SU BOLLE ORIGINALI                 *
+000500950428     H*--------------------------------------------------------------*
+000600950428     FFNARBC0RUF  E                    DISK                           UC
+000700950428     FFNBLP01LUF  E           K        DISK
+000800950428     FFNBLT01LUF  E           K        DISK
+000900950428     FQSYSPRT O   F     132     OF     PRINTER
+001000950428     E*--------------------------------------------------------------*
+001100950428     E*    S C H I E R E                                             *
+001200950428     E*--------------------------------------------------------------*
+001300950428     E                    CMD1    1   1 55
+001400950428     E                    CMD2    1   1 55
+001500950428     E                    CMD3    1   1 55
+001600950428     E                    CMD5    1   1 55
+001700950428     I*--------------------------------------------------------------*
+001800950428     I*    D S                                                       *
+001900950428     I*--------------------------------------------------------------*
+002000950428     IWLBDA8      DS
+002100950428     I                                        1   80G08DAT
+002200950428     I                                        9  160G08INV
+002300950428     I                                       17  17 G08ERR
+002400950428     I                                       18  220G08TGI
+002500950428     C*--------------------------------------------------------------*
+002600950428     C*  C I C L O     P R I N C I P A L E                           *
+002700950428     C*--------------------------------------------------------------*
+002800950428     C* Apertura membro da trascodificare  Fnarbc0r
+002900950428     C                     EXSR CAEXA
+003000950428     C*
+003100950428     C                     READ FNARBC0R                 31
+003200950428     C           *IN31     DOWEQ'0'
+003300950428     C                     Z-ADDARBAAS    KAAS
+003400950428     C                     Z-ADDARBLNP    KLNP
+003500950428     C                     Z-ADDARBNRS    KNRS
+003600950428     C                     Z-ADDARBNSP    KNSP
+003700950428     C           KBLP      CHAINFNBLP01L             32
+003800950428      * AGGIORNO
+003900950428     C           WAGGIO    IFEQ 'S'
+004000950428     C           *IN32     ANDEQ'0'
+004100950428     C                     MOVE ARBNPI    BLPNPI           NON CONF.PART.INTER
+004200950428     C                     MOVE ARBNCI    BLPNCI           NON CONF.CONS.INTER
+004300950428     C                     MOVE ARBNRC    BLPNRC           NON CONF.RESA CL.
+004400950428     C                     Z-ADDARBNDC    BLPNDC           NR.DIST.CONS.
+004500950428     C                     Z-ADDARBDCM    BLPDCM           DATA CONSEGNA
+004600950428     C                     Z-ADDARBHMC    BLPHMC           ORA CONSEGNA
+004700950428     C                     Z-ADDARBDAM    BLPDAM           DATA ARRIVO
+004800950428     C                     EXCPTAGGBL0
+004900950428     C*
+005000950428     C           KBLP      CHAINFNBLT01L             33
+005100950428     C           *IN33     IFEQ '0'
+005200950428     C           BLTDAM    IFEQ 0
+005300950428     C                     MOVE ARBDAM    BLTDAM
+005400950428     C                     ENDIF
+005500950428     C           BLTDCM    IFEQ 0
+005600950428     C                     MOVE ARBDCM    BLTDCM
+005700950428     C                     END
+005800950428     C                     MOVEL'R'       BLTFTR
+005900950428     C                     MOVELAMGUDT    BLTDTR
+006000950428     C                     EXCPTAGBLT0
+006100950428     C                     END
+006200950428     C                     END
+006300950428      *  STAMPO
+006400950428     C   OF                EXCPTTESTA
+006500950428     C                     EXCPTDETTA
+006600950428      *
+006700950428     C           WAGGIO    IFEQ 'S'
+006800950428     C                     DELETFNARBC00
+006900950428     C                     END
+007000950428     C                     READ FNARBC0R                 31
+007100950428     C                     END
+007200950428     C*
+007300950428     C* Chiusura membro trascodificato FNARBC0R
+007400950428     C                     EXSR CAEXB
+007500950428     C*
+007600950428     C           STOP      TAG
+007700950428     C                     SETON                     LR
+007800950428     C**---------------------------------------------------------
+007900950428     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI FNARBC0R
+008000950428     C**---------------------------------------------------------
+008100950428     C           CAEXA     BEGSR
+008200950428     C                     MOVE ')'       VAR11  11
+008300950428     C                     MOVELMBRFIL    VAR11
+008400950428     C                     MOVE '))'      VAR12  12
+008500950428     C                     MOVELMBRFIL    VAR12
+008600950428     C                     Z-ADD55        LUNG   155
+008700950428     C*
+008800950428     C                     SETOF                     20
+008900950428     C                     MOVE VAR11     CMD1,1
+009000950428     C                     MOVEL*BLANKS   COMMAN
+009100950428     C                     MOVEACMD1,1    COMMAN 80
+009200950428     C                     CALL 'QCMDEXC'              20
+009300950428     C                     PARM           COMMAN
+009400950428     C                     PARM           LUNG
+009500950428     C   20                GOTO STOP
+009600950428     C** CONTROLLO SE ESISTE IL MEMBRO
+009700950428     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+009800950428     C                     SETOF                     20
+009900950428     C                     MOVE VAR12     CMD2,1
+010000950428     C                     MOVEL*BLANKS   COMMAN
+010100950428     C                     MOVEACMD2,1    COMMAN
+010200950428     C                     CALL 'QCMDEXC'              20
+010300950428     C                     PARM           COMMAN
+010400950428     C                     PARM           LUNG
+010500950428     C   20                GOTO STOP
+010600950428     C** ALLOCO MEMBRO
+010700950428     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+010800950428     C                     SETOF                     20
+010900950428     C                     MOVE VAR11     CMD3,1
+011000950428     C                     MOVEL*BLANKS   COMMAN
+011100950428     C                     MOVEACMD3,1    COMMAN
+011200950428     C                     CALL 'QCMDEXC'              20
+011300950428     C                     PARM           COMMAN
+011400950428     C                     PARM           LUNG
+011500950428     C   20                GOTO STOP
+011600950428     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+011700950428     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+011800950428     C                     OPEN FNARBC0R
+011900950428     C                     ENDSR
+012000950428     C**------------------------------------------------------------
+012100950428     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI FNARBC0R
+012200950428     C**------------------------------------------------------------
+012300950428     C           CAEXB     BEGSR
+012400950428     C                     MOVE ')'       VAR11  11
+012500950428     C                     MOVELMBRFIL    VAR11
+012600950428     C                     MOVE '))'      VAR12  12
+012700950428     C                     MOVELMBRFIL    VAR12
+012800950428     C                     Z-ADD55        LUNG   155
+012900950428     C*
+013000950428     C                     CLOSEFNARBC0R
+013100950428     C*
+013200950428     C                     MOVE VAR12     CMD5,1
+013300950428     C                     MOVEL*BLANKS   COMMAN
+013400950428     C                     MOVEACMD5,1    COMMAN
+013500950428     C                     CALL 'QCMDEXC'
+013600950428     C                     PARM           COMMAN
+013700950428     C                     PARM           LUNG
+013800950428     C** DISALLOCA IL MEMBRO AGG.TO
+013900950428     C                     ENDSR
+014000950428     C*---------------------------------------------------------------*
+014100950428     C           *INZSR    BEGSR
+014200950428     C*---------------------------------------------------------------*
+014300950428     C           *ENTRY    PLIST
+014400950428     C                     PARM           WAGGIO  1
+014500950428     C                     PARM           MBRFIL 10
+014600950428     C*
+014700950428     C           KBLP      KLIST
+014800950428     C                     KFLD           KAAS
+014900950428     C                     KFLD           KLNP
+015000950428     C                     KFLD           KNRS
+015100950428     C                     KFLD           KNSP
+015200950428     C* Definizione variabili
+015300950428     C           *LIKE     DEFN BLPAAS    KAAS
+015400950428     C           *LIKE     DEFN BLPLNP    KLNP
+015500950428     C           *LIKE     DEFN BLPNRS    KNRS
+015600950428     C           *LIKE     DEFN BLPNSP    KNSP
+015700950428     C*
+015800950428     C                     TIME           WHHUDT 140
+015900950428     C                     MOVELWHHUDT    ORA     60
+016000950428     C                     MOVE WHHUDT    G08DAT
+016100950428     C                     MOVE *ZEROS    G08INV
+016200950428     C                     MOVEL*BLANK    G08ERR
+016300950428     C                     CALL 'XSRDA8'
+016400950428     C                     PARM           WLBDA8
+016500950428     C                     Z-ADDG08INV    AMGUDT  80
+016600950428     C                     Z-ADDG08DAT    GMAUDT  80
+016700950428     C*
+016800950428     C                     SETON                     OF
+016900950428     C*
+017000950428     C                     ENDSR
+017100950428     O*--------------------------------------------------------------*
+017200950428     O*   RECORD X AGIORNAMENTO                                      *
+017300950428     O*--------------------------------------------------------------*
+017400950428     OFNBLP000E                AGGBL0
+017500950428     O                         BLPNPI
+017600950428     O                         BLPNCI
+017700950428     O                         BLPNRC
+017800950428     O                         BLPNDC
+017900950428     O                         BLPDCM
+018000950428     O                         BLPHMC
+018100950428     O                         BLPDAM
+018200950428     OFNBLT000E                AGBLT0
+018300950428     O                         BLTDAM
+018400950428     O                         BLTDCM
+018500950428     O                         BLTFTR
+018600950428     O                         BLTDTR
+018700950428     O*--------------------------------------------------------------*
+018800950428     O*   STAMPA                                                     *
+018900950428     O*--------------------------------------------------------------*
+019000950428     OQSYSPRT E   01           TESTA
+019100950428     O                                 + 35 '***'
+019200950428     O                                 +  3 'RICEZIONE DATI CONSEGNA'
+019300950428     O                                 +  3 '***'
+019400950428     O                         GMAUDT  +  5 '  /  /    '
+019500950428     O                                 + 10 'TNVRR1R'
+019600950428     O                                  126 'PAG.'
+019700950428     O                         PAGE  Z  132
+019800950503     O        E  102           TESTA
+019900950428     O                                   19 'Anno lnp Spedizione'
+020000950428     O                                   31 'Conformità'
+020100950428     O                                   40 'Distinta'
+020200950428     O                                   59 'Ora/Data Consegna'
+020300950428     O                                   72 'Arr. Collo'
+020400950428     O                                 +  2 'Aggiornamento dettaglio'
+020500950428     O                                 +  1 'segnacolli'
+020600950428     O        E  1             DETTA
+020700950428     O                         ARBAASZ    4
+020800950428     O                         ARBLNPZ    8
+020900950428     O                         ARBNRSZ   11
+021000950428     O                         ARBNSPZ   19
+021100950428     O                         ARBNPIZ   23
+021200950428     O                         ARBNCIZ   27
+021300950428     O                         ARBNRCZ   31
+021400950428     O                         ARBNDCZ   39
+021500950428     O                         ARBDCM    52 '    /  /  '
+021600950428     O                         ARBHMC    61 '  :  :  '
+021700950428     O                         ARBDAM    72 '    /  /  '
+021800950428     O                 32                90 'NON TROVATA BOLLA'
+021900950503     O                         ARBDAM   101 '    /  /  '
+022000950503     O                         ARBDCM   112 '    /  /  '
+022100950428     O                 33               132 'NO DETTAGLIO COLLI'
+022200950428**         CMD1
+022300950428CHKOBJ OBJ(FNARBC0R) OBJTYPE(*FILE)     MBR(M234567890)
+022400950428**         CMD2
+022500950428ALCOBJ OBJ((FNARBC0R *FILE *EXCL           M234567890))
+022600950428**         CMD3
+022700950428OVRDBF FILE(FNARBC0R)                   MBR(M234567890)
+022800950428**         CMD5
+022900950428DLCOBJ OBJ((FNARBC0R *FILE *EXCL           M234567890))

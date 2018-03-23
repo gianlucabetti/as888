@@ -1,0 +1,72 @@
+000100971127/*----------------------------------------------------------------------------*/
+000200150923/* Gyufo di Sottomissione scrittura file spia per Controalert                 */
+000400971127/*----------------------------------------------------------------------------*/
+000500971127             PGM
+000700111007             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+000701150925             DCL        VAR(&ORASYS) TYPE(*CHAR) LEN(2)
+000800111007             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000801150930             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000900111114             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+001000111114             DCL        VAR(&SYS5) TYPE(*CHAR) LEN(5)
+001100111114
+001200111114             RTVNETA    SYSNAME(&SYSNAM)
+001300111114             CHGVAR     VAR(&SYS5) VALUE(%SST(&SYSNAM  1 5))
+001301150930/* IMPOSTAZIONE KPJBA PER LANCIO PROGRAMMI CHE LA USANO */
+001302150930    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE('EDPCEDXXX ')                 /*KNMUS*/
+001303150930    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                            /*KNRAZ*/
+001304150930    CHGVAR VAR(%SST(&KPJBA 20 10)) VALUE('EDPCEDXXX ')        /*KNMTD*/
+001305150930    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                            /*KNRVJ*/
+001306150930    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(0)                            /*KNRJO*/
+001307150930    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                          /*KSTJO*/
+001308150930    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                            /*KTMIN*/
+001309150930    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                          /*KTPAZ*/
+001310150930    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                            /*KNMSB*/
+001311150930    CHGVAR VAR(%SST(&KPJBA 77 10)) VALUE('AZNAUTO   ')                 /*KNMEB*/
+001312150930    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                            /*KKEYF*/
+001313150930    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                            /*KRCDS*/
+001314150930    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                          /*KEXCN*/
+001315150930    CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('  ')                         /*KCOJB*/
+001316150930    CHGVAR VAR(%SST(&KPJBA 156 7)) VALUE('       ')                    /*KQEBI*/
+001317150930    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')                          /*KCANC*/
+001400971127
+001700040621
+001800040621/* se sono su As di backup esco dal pgm  */
+001900040621             CHKOBJ     OBJ(QGPL/MIMIXBACK) OBJTYPE(*DTAARA)
+002000040621             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOBACK))
+002100040621             goto       fine
+002200040621NOBACK:
+002300111114
+002400111114/* Se sottosistema non è SETTRAS --> ambiente di prova           */
+002500111114
+002600111114             IF         COND(&SYS5   *EQ 'AS888') THEN(do)
+002700111114
+002701150930             CHGVAR     VAR(&KNSIF) VALUE('FILTRAPFP ')
+002800150930             CALL       PGM(TRUL07C) PARM(&KNSIF)
+002900040507
+003000111007             GOTO       CMDLBL(GUFO)
+003100040507             enddo
+003200111114
+003300111114/* Se sottosistema     è SETTRAS -->                             */
+003400111114             IF         COND(&SYS5   *NE 'AS888') THEN(do)
+003402150930             CHGVAR     VAR(&KNSIF) VALUE('FILTRA201 ')
+003500150930             CALL       PGM(TRUL07C) PARM(&KNSIF)
+003600111007             ENDDO
+003700111007
+003800111007 GUFO:
+003801150925             RTVSYSVAL  SYSVAL(QHOUR) RTNVAR(&ORASYS)
+003802150925             IF         COND(&ORASYS *LT '06' *OR &ORASYS *GT '17') +
+003803150925                          THEN(GOTO CMDLBL(TAGDLY))
+003804150925
+003805150930             CHGVAR     VAR(%SST(&KPJBA 92 10)) VALUE(&KNSIF)
+003900150923             CALL       PGM(FNLRC6R) PARM(&KPJBA &CHIUDI)
+004000111007
+004100111007             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(FINE))
+004101130206
+004102130206             RCLRSC
+004200111007
+004201150925 tagdly:
+004300150923             DLYJOB     DLY(1800)
+004400111007             GOTO       CMDLBL(GUFO)
+004500111007
+004600111007 FINE:
+004700111007             ENDPGM

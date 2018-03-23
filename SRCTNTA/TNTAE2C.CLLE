@@ -1,0 +1,36 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200111020/* Tntae2c - Analisi clienti con servizio avviso email al destinatario        */
+000300000000/*----------------------------------------------------------------------------*/
+000400111020 TNTAE2C:    PGM        PARM(&KPJBA)
+000500000000
+000600080317             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000601111024             dcl        var(&KNSIF)      type(*char)          len(10)
+000700080317             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000701090922             DCL        VAR(&crt) TYPE(*CHAR) LEN(1)
+000702111020             CHGVAR     VAR(&crt) VALUE(%SUBSTRING(&KPJBA 273 1))
+000703111024             CHGVAR     VAR(&LIB) VALUE('GAITRAAZM')
+000704111024    /* Controllo Sistema Informativo per reperimento libreria file */
+000705111024             chgvar     var(&KNSIF)      value(%sst(&KPJBA  92  10))
+000800000000
+000900080317/* CREO FILE DI LAVORO IN QTEMP */
+000901090922             IF         COND(&crt *ne 'S') THEN(DO)
+001000111020             DLTF       FILE(QTEMP/WFEMD*)
+001100080317             MONMSG     MSGID(CPF0000)
+001101111024             select
+001102111024             when       cond(%sst(&KNSIF 1 3) = 'GAI')      then(+
+001103111024               chgvar     var(&Lib)      value('*LIBL     ') )
+001104111024             when       cond(%sst(&KNSIF 7 1) = 'P')        then(+
+001105111024               chgvar     var(&Lib)      value('GAITRAAZP ') )
+001106111024             otherwise  (+
+001107111024               chgvar     var(&Lib)      value('GAITRAAZM ') )
+001108111024             endselect
+001600111020             CRTDUPOBJ  OBJ(WFEMD*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001700080317                          TOLIB(QTEMP)
+001701090922             enddo
+001702111020             ELSE       CMD(CLRPFM FILE(WFEMD00F))
+001800090828/* lancia elaborazione            */
+001900111020             CALL       PGM(TNTAE2R) PARM(&KPJBA)
+002000000000
+002400000000             RCLRSC     LVL(*CALLER)
+002500000000
+002600080317 FINE:       ENDPGM

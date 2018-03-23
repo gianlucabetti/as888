@@ -1,0 +1,263 @@
+000100000000     H            D J
+000200000000      *****************************************************************
+000300000000      *  Description : ATTN
+000400000000      *                Gestione del tasto Attn.
+000500000000      *
+000600000000      *  Created by  : Stefano                       Period :  12 / 90
+000700000000      *****************************************************************
+000800000000     FSTCATTNVCF  E                    WORKSTN
+000900000000      *
+001000000000     E                    GIO     1   7 10               GIORNO SETTIMANA
+001100000000      *
+001200000000     I            DS
+001300000000     I                                        1  38 PRIMAV
+001400000000     I                                        3  24 WHO
+001500000000     I                                       27  36 GIORV
+001600000000      *
+001700000000     C                     MOVE *BLANKS   PRIMAV
+001800000000     C                     CALL 'STCUTENT'
+001900000000     C                     PARM           JOB    10
+002000000000     C                     PARM           UTENTE 10
+002100000000     C                     PARM           NBRJOB  6
+002200000000      *
+002300000000      * Compongo utente e lavoro da scrivere in alto
+002400000000     C           UTENTE    CAT  '/':1     WHO
+002500000000     C           WHO       CAT  JOB:1     WHO
+002600000000      *
+002700000000     C           INIZIO    TAG
+002800000000      *
+002900000000      * Determino il giorno della settimana
+003000000000     C                     Z-ADDUDATE     TMGDAT  60
+003100000000     C                     EXSR GIORNO
+003200000000     C                     Z-ADDTMGSET    X       10
+003300000000     C                     MOVE GIO,X     GIORV
+003400000000      *
+003500000000      *  Emetto il formato per la scelta
+003600000000     C                     Z-ADD*ZERO     OPZION
+003700000000     C                     EXFMTUNO                    20
+003800000000      *
+003900000000      *  Controllo le scelte fatte o se premuto F3
+004000000000     C   20
+004100000000     COR KL
+004200000000     COR KC                GOTO FINE
+004300000000      *
+004400000000      *  Per F1 attivo la richiesta per i lavori alternativi
+004500000000     C   KA                CALL 'BRI12'
+004600000000      *
+004700000000      * AIUTO
+004800000000     C   90                DO
+004900000000     C                     EXFMTAIUTO
+005000000000     C                     WRITEVUOTO
+005100000000     C                     GOTO INIZIO
+005200000000     C                     END
+005300000000      *
+005400000000      * Scelta 1 =
+005500000000      *
+005600000000     C           OPZION    IFEQ 1
+005700000000     C                     CALL 'TNSY94C'              20
+005800000000     C                     END
+005900000000      *
+006000000000      * Scelta 2 = Gestione Stampe
+006100000000      *
+006200000000     C           OPZION    IFEQ 2
+006300000000     C                     MOVE *BLANKS   CMDI   80
+006400000000     C                     Z-ADD*ZERO     LUNGHQ 155
+006500000000     C  NKD                MOVEL'WRKSPLF 'CMD8    8
+006600000000     C   KD                MOVEL'?WRKSPLF'CMD8
+006700000000     C                     CALL 'QCMDEXC'              20
+006800000000     C                     PARM CMD8      CMDI
+006900000000     C                     PARM 8         LUNGHQ
+007000000000     C                     END
+007100000000      *
+007200000000      * Scelta 3 = Gestione Lavori Sottomessi
+007300000000      *
+007400000000     C           OPZION    IFEQ 3
+007500000000     C                     MOVE *BLANKS   CMDI
+007600000000     C                     Z-ADD*ZERO     LUNGHQ
+007700000000     C                     MOVE *BLANK    CMD10
+007800000000     C  NKD      'WRKSBMJO'CAT  'B'       CMD10
+007900000000     C   KD      '?WRKSBMJ'CAT  'OB'      CMD10
+008000000000     C                     CALL 'QCMDEXC'              20
+008100000000     C                     PARM CMD10     CMDI
+008200000000     C                     PARM 10        LUNGHQ
+008300000000     C                     END
+008400000000      *
+008500000000      * Scelta 4 = Gestione Lavori Attivi
+008600000000      *
+008700000000     C           OPZION    IFEQ 4
+008800000000     C                     MOVE *BLANKS   CMDI
+008900000000     C                     Z-ADD*ZERO     LUNGHQ
+009000000000     C                     MOVE *BLANK    CMD10  10
+009100000000     C  NKD      'WRKACTJO'CAT  'B'       CMD10
+009200000000     C   KD      '?WRKACTJ'CAT  'OB'      CMD10
+009300000000     C                     CALL 'QCMDEXC'              20
+009400000000     C                     PARM CMD10     CMDI
+009500000000     C                     PARM 10        LUNGHQ
+009600000000     C                     END
+009700000000      *
+009800000000      * Scelta 5 = Gestione PDM
+009900000000      *
+010000000000     C           OPZION    IFEQ 5
+010100000000     C                     MOVE *BLANKS   CMDI
+010200000000     C                     MOVE *BLANKS   CMD10
+010300000000     C                     Z-ADD*ZERO     LUNGHQ
+010400000000     C                     MOVEL'STRPDM'  CMD10
+010500000000     C                     CALL 'QCMDEXC'              20
+010600000000     C                     PARM CMD10     CMDI
+010700000000     C                     PARM 10        LUNGHQ
+010800000000     C                     END
+010900000000      *
+011000000000      * Scelta 6 = Linea Comandi
+011100000000      *
+011200000000     C           OPZION    IFEQ 6
+011300000000     C                     CALL 'QUSCMDLN'
+011400000000     C                     END
+011500000000      *
+011600000000      * Scelta 7 = Gestione ambiente di lavoro
+011700000000      *
+011800000000     C*          OPZION    IFEQ 7
+011900000000     C*                    MOVE *BLANKS   CMDI
+012000000000     C*                    MOVE *BLANKS   CMD10
+012100000000     C*                    Z-ADD*ZERO     LUNGHQ
+012200000000     C* NKD                MOVEL'AMBIENTE'CMD10
+012300000000     C*  KD      'AMBIENTE'CAT  '*':1     CMD10
+012400000000     C*                    CALL 'QCMDEXC'              20
+012500000000     C*                    PARM CMD10     CMDI
+012600000000     C*                    PARM 10        LUNGHQ
+012700000000     C*                    END
+012800000000      *
+012900000000      * Scelta 8 = Gestione file con SQL
+013000000000      *
+013100000000     C           OPZION    IFEQ 8
+013200000000     C                     MOVE *BLANKS   CMDI
+013300000000     C                     MOVE *BLANKS   CMD10
+013400000000     C                     Z-ADD*ZERO     LUNGHQ
+013500000000     C  NKD                MOVEL'STRSQL'  CMD10
+013600000000     C   KD                MOVEL'?STRSQL' CMD10
+013700000000     C                     CALL 'QCMDEXC'              20
+013800000000     C                     PARM CMD10     CMDI
+013900000000     C                     PARM 10        LUNGHQ
+014000000000     C                     END
+014100000000      *
+014200000000      * Scelta 9 = Gestione file con QUERY
+014300000000      *
+014400000000     C           OPZION    IFEQ 9
+014500000000     C                     MOVE *BLANKS   CMDI
+014600000000     C                     MOVE *BLANKS   CMD8
+014700000000     C                     Z-ADD*ZERO     LUNGHQ
+014800000000     C                     MOVEL'WRKQRY'  CMD8
+014900000000     C                     CALL 'QCMDEXC'              20
+015000000000     C                     PARM CMD8      CMDI
+015100000000     C                     PARM 8         LUNGHQ
+015200000000     C                     END
+015300000000      *
+015400000000      * Scelta 10 = Gestione file con DFU
+015500000000      *
+015600000000     C           OPZION    IFEQ 10
+015700000000     C                     MOVE *BLANKS   CMDI
+015800000000     C                     MOVE *BLANKS   CMD8
+015900000000     C                     Z-ADD*ZERO     LUNGHQ
+016000000000     C                     MOVEL'UPDDTA'  CMD8
+016100000000     C                     CALL 'QCMDEXC'              20
+016200000000     C                     PARM CMD8      CMDI
+016300000000     C                     PARM 8         LUNGHQ
+016400000000     C                     END
+016500000000      *
+016600000000      * Scelta 11 = Calcolatrice
+016700000000      *
+016800000000     C           OPZION    IFEQ 11
+016900000000     C                     MOVE *BLANKS   CMDI
+017000000000     C                     Z-ADD*ZERO     LUNGHQ
+017100000000     C                     CALL 'QCMDEXC'              20
+017200000000     C                     PARM 'CALC'    CMDI
+017300000000     C                     PARM 4         LUNGHQ
+017400000000     C                     END
+017500000000      *
+017600000000      * Scelta 12 = Calendario
+017700000000      *
+017800000000     C           OPZION    IFEQ 12
+017900000000     C                     MOVE *BLANKS   CMDI
+018000000000     C                     Z-ADD*ZERO     LUNGHQ
+018100000000     C                     CALL 'QCMDEXC'              20
+018200000000     C                     PARM 'CALE'    CMDI
+018300000000     C                     PARM 4         LUNGHQ
+018400000000     C                     END
+018500000000      *
+018600000000      * Scelta 0 = Selezione dei comandi principali
+018700000000      *
+018800000000     C   KD      OPZION    IFEQ 0
+018900000000     C                     MOVE *BLANKS   CMDI
+019000000000     C                     Z-ADD*ZERO     LUNGHQ
+019100000000     C                     CALL 'QCMDEXC'              20
+019200000000     C                     PARM 'GO MAJOR'CMDI
+019300000000     C                     PARM 8         LUNGHQ
+019400000000     C                     END
+019500000000      *
+019600000000     C                     GOTO INIZIO
+019700000000      *
+019800000000     C           FINE      TAG
+019900000000     C                     SETON                     LR
+020000000000      *****************************************************************
+020100000000      *
+020200000000      * DETERMINA GIORNO DELLA SETTIMANA (1-7)
+020300000000      *
+020400000000      *****************************************************************
+020500000000      *  PARM - TMGDAT   6.0   Data da DETERMINARE
+020600000000      *         TMGSET   1.0   Giorno della settimana
+020700000000      *                        1 - Lunedì
+020800000000      *                        2 - Martedì
+020900000000      *                        3 - Mercoledì
+021000000000      *                        4 - Giovedì
+021100000000      *                        5 - Venerdì
+021200000000      *                        6 - Sabato
+021300000000      *                        7 - Domenica
+021400000000      *****************************************************************
+021500000000     C           GIORNO    BEGSR
+021600000000      *
+021700000000     C                     MOVE 010300    TMBASE  60
+021800000000      *
+021900000000     C                     Z-ADD*ZERO     TMXXGG  50
+022000000000      *
+022100000000     C                     Z-ADDTMGDAT    TMGGXX  60
+022200000000     C                     EXSR CALC
+022300000000     C                     Z-ADDTMXXGG    TMGIOR  50
+022400000000      *
+022500000000     C                     Z-ADDTMBASE    TMGGXX
+022600000000     C                     EXSR CALC
+022700000000      *
+022800000000     C                     SUB  TMXXGG    TMGIOR
+022900000000      *
+023000000000      *
+023100000000     C           TMGIOR    DIV  7         XXUSO   40
+023200000000     C                     MVR            TMGSET  10
+023300000000     C                     SUB  3         TMGSET
+023400000000     C           TMGSET    IFLE *ZERO
+023500000000     C                     ADD  7         TMGSET
+023600000000     C                     END
+023700000000      *
+023800000000     C                     ENDSR
+023900000000      *************************************************************
+024000000000     C           CALC      BEGSR
+024100000000      *
+024200000000     C                     MOVELTMGGXX    XXGG    20
+024300000000     C                     MOVE TMGGXX    XXUSO   40
+024400000000     C                     MOVELXXUSO     XXMM    20
+024500000000     C                     MOVE XXUSO     XXAA    20
+024600000000     C           XXAA      MULT 36525     XXT7    70
+024700000000     C           XXMM      COMP 03                     88
+024800000000     C   88                ADD  180       XXT7
+024900000000     C           XXMM      MULT 3057      XXS5    50
+025000000000     C                     MOVELXXT7      XXT5    50
+025100000000     C                     MOVELXXS5      XXS3    30
+025200000000     C           XXS3      ADD  XXT5      TMXXGG
+025300000000     C                     ADD  XXGG      TMXXGG
+025400000000      *
+025500000000     C                     ENDSR
+025600000000** Tabella giorni della settimana
+025700000000    Lunedì
+025800000000   Martedì
+025900000000 Mercoledì
+026000000000   Giovedì
+026100000000   Venerdì
+026200000000    Sabato
+026300000000  Domenica

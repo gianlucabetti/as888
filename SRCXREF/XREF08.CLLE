@@ -1,0 +1,59 @@
+000100990524/*PARMS DFTACTGRP(*YES)                                                       */
+000200990525             PGM        PARM(&SRCLIB &SRCFIL &SRCMBR &SRCTYP &SRCTXT)
+000300990525
+000400990524             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+000500990524             DCL        VAR(&SRCFIL) TYPE(*CHAR) LEN(10)
+000600990524             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+000700990525             DCL        VAR(&SRCTYP) TYPE(*CHAR) LEN(10)
+000800990524             DCL        VAR(&SRCTXT) TYPE(*CHAR) LEN(50)
+000900990525
+001000990524             SNDPGMMSG  MSGID(CPA2401) MSGF(QCPFMSG) MSGDTA('Analisi +
+001100990524                          membro origine ' *BCAT &SRCLIB *TCAT '/' +
+001200990524                          *TCAT &SRCFIL *TCAT '(' *TCAT &SRCMBR +
+001300990524                          *TCAT ') . . .') TOPGMQ(*EXT) +
+001400990524                          MSGTYPE(*STATUS)
+001500990525
+001600990525             IF         COND((&SRCTYP *EQ 'RPGLE') *OR (&SRCTYP *EQ +
+001700990525                          'SQLRPGLE')) THEN(DO)
+001800990524             OVRDBF     FILE(QRPGLESRC) TOFILE(&SRCLIB/&SRCFIL) +
+001900990524                          MBR(&SRCMBR)
+002000990525             CALL       PGM(XREF09) PARM(&SRCLIB &SRCFIL &SRCMBR +
+002100990525                          &SRCTYP &SRCTXT)
+002200990525             MONMSG     MSGID(CPF0000)
+002300990521             DLTOVR     FILE(QRPGLESRC)
+002400990525             ENDDO
+002500990525
+002600990525             IF         COND((&SRCTYP *EQ 'RPG') *OR (&SRCTYP *EQ +
+002700990525                          'SQLRPG')) THEN(DO)
+002800990525             OVRDBF     FILE(QRPGLESRC) TOFILE(&SRCLIB/&SRCFIL) +
+002900990525                          MBR(&SRCMBR)
+003000990525             CALL       PGM(XREF10) PARM(&SRCLIB &SRCFIL &SRCMBR +
+003100990525                          &SRCTYP &SRCTXT)
+003200021023             MONMSG     MSGID(CPF0000) EXEC(DO)
+003300021023             SNDDST     TYPE(*LMSG) +
+003400021023                          TOINTNET(('danilo.cussini@bartolini.it')) +
+003500021023                          DSTD('Errore generazione X-Ref.') +
+003600021023                          LONGMSG('Membro origine ' *BCAT &SRCLIB +
+003700021023                          *TCAT '/' *TCAT &SRCFIL *TCAT '(' *TCAT +
+003800021023                          &SRCMBR *TCAT ')')
+003900021023             ENDDO
+004000990525             DLTOVR     FILE(QRPGLESRC)
+004100990525             ENDDO
+004200990531
+004300990531             IF         COND(&SRCTYP *EQ 'PF') THEN(DO)
+004400990531             OVRDBF     FILE(QRPGLESRC) TOFILE(&SRCLIB/&SRCFIL) +
+004500990531                          MBR(&SRCMBR)
+004600990531             CALL       PGM(XREF11) PARM(&SRCLIB &SRCFIL &SRCMBR +
+004700990531                          &SRCTYP &SRCTXT)
+004800021023             MONMSG     MSGID(CPF0000) EXEC(DO)
+004900021023             SNDDST     TYPE(*LMSG) +
+005000021023                          TOINTNET(('danilo.cussini@bartolini.it')) +
+005100021023                          DSTD('Errore generazione X-Ref.') +
+005200021023                          LONGMSG('Membro origine ' *BCAT &SRCLIB +
+005300021023                          *TCAT '/' *TCAT &SRCFIL *TCAT '(' *TCAT +
+005400021023                          &SRCMBR *TCAT ')')
+005500021023             ENDDO
+005600990531             DLTOVR     FILE(QRPGLESRC)
+005700990531             ENDDO
+005800990525
+005900990521             ENDPGM

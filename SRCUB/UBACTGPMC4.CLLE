@@ -1,0 +1,44 @@
+000100141111/* per compilare questo pgm bisogna creare il file QTEMP/WFLPGMTMP mediante: */
+000200140819/*           DSPOBJD    OBJ(&LIB/*ALL) OBJTYPE(*PGM) +                      */
+000300141113/*                        OUTPUT(*OUTFILE) OUTFILE(QTEMP/WFLPGMTMP)               */
+000400140819/* dando una libreria qualunque (non interessano i dati ma la struttura  */
+000500140819/* e poi cancellare il file */
+000600141113             PGM        PARM(&LIB &CLR &ESITO)
+000700140819             DCLF       FILE(WFLPGMTMP)
+000800140819             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000900140819             DCL        VAR(&CLR) TYPE(*CHAR) LEN(1)
+001000140819             DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(500)
+001100140819             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+001200140819             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+001300141113             DCL        VAR(&CRTUSER) TYPE(*CHAR) LEN(10)
+001400140819             DCL        VAR(&ERRCODE) TYPE(*CHAR) LEN(8)
+001500140819/* pulisco il file di arrivo se richiesto */
+001600140819             IF         COND(&CLR = 'S') THEN(CLRPFM FILE(WFACTGR0F))
+001700140819/* estraggo la lista dei pgm della libreria */
+001800140819             DSPOBJD    OBJ(&LIB/*ALL) OBJTYPE(*PGM) +
+001900141113                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/WFLPGMTMP)
+002000140819 RCVF:       RCVF       RCDFMT(QLIDOBJD)
+002100140819             MONMSG     MSGID(CPF0000) EXEC(DO)
+002200140819/* non c'è un esito particolare perché dà errore anche a fine file */
+002300140819             GOTO       CMDLBL(FINE)
+002400140819             ENDDO
+002500140819             CHGVAR     VAR(&PGM) VALUE(&ODOBNM)
+002600160112/* controllo se esiste un *SRVPGM con lo stesso nome del pgm */
+002700160112/* in questo caso il controllo tra ACTGRP indicato sul sorgente e quello sull'oggetto */
+002800160112/* sarebbe inutile perché nel sorgente NON si può indicare l'ACTGRP in quanto serve in primis  */
+002900160112/* a creare il modulo, e quindi il test direbbe sempre DFTACTGRP(*YES) da sorgente, ma */
+003000160112/* sicuramente l'oggetto avrà un suo ACTGRP */
+003100160112             CHKOBJ     OBJ(&LIB/&PGM) OBJTYPE(*SRVPGM)
+003200160112/* se NON trovo il *SRVPGM allora testo congruenza *PGM con sorgente */
+003300160112             MONMSG     MSGID(CPF0000) EXEC(DO)
+003400160112
+003500141111             CALL       PGM(UBACTGPMC) PARM(&PGM &LIB +
+003600140819                          &RCVVAR &ERRCODE)
+003700141113/* recupero il profilo creatore */
+003800141113             RTVOBJD    OBJ(&LIB/&PGM) OBJTYPE(*PGM) CRTUSER(&CRTUSER)
+003900141113/* scrivo il rcd del file finale */
+004000141113             CALL       PGM(UBACTGPMR2) PARM(&RCVVAR &CRTUSER &ERRCODE)
+004100160112             ENDDO
+004200160112/* leggo l'oggetto *PGM successivo */
+004300140819             GOTO       CMDLBL(RCVF)
+004400140819FINE:        ENDPGM

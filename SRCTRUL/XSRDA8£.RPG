@@ -1,0 +1,162 @@
+000100020920      *--------------------------------------------------------------------------------------------*
+000200020920      *?NB: INVIARE IL PGM ANCHE SU AS777 IN STRATEOBJ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+000300020920      *--------------------------------------------------------------------------------------------*
+000400000000      *------------------------------------------------------------------
+000500000000      *   ROUTINE GENERALIZZATA DI CONTROLLO DELLA DATA
+000600000000      *   + INVERSIONE DELLA STESSA
+000700000000      *   + CALCOLO N. ASSOLUTO GIORNI DELLA DATA
+000800000000      *------------------------------------------------------------------
+000900000000      *   CAMPO G08DAT - DEVE CONTENERE LA DATA IN ESAME -GG/MM/AAAA-
+001000000000      *         G08INV - CONTIENE LA DATA INVERTITA -AAAA/MM/GG-
+001100000000      *         G08ERR - EQ 0 SE DATA CORRETTA - EQ 1 SE DATA ERRATA
+001200000000      *         G08ERR - EQ 3 SIGNIFICA CHE LA DATA E' STATA PASSATA
+001300000000      *                  NEL FORMATO AAAA/MM/GG NEL CAMPO G08INV
+001400000000      *         G08TGI - CONTIENE LA DATA ESPRESSA IN GIORNI DAL 1/1/01
+001500000000      *------------------------------------------------------------------
+001600000000     E                    MES    12  12  2 0             GIORNI DEL MESE
+001700000000      *------------------------------------------------------------------
+001800000000      * WLBDA8 - PARAMETRI DI I/O DEL PROGRAMMA
+001900000000     IWLBDA8      DS
+002000000000     I                                        1   80G08DAT
+002100000000     I                                        9  160G08INV
+002200000000     I                                       17  17 G08ERR
+002300000000     I                                       18  220G08TGI
+002400000000      * $GMA - DATA NEL FORMATO GG/MM/AAAA
+002500000000     I            DS
+002600000000     I                                        1   80$GMA
+002700000000     I                                        1   20$GIOR1
+002800000000     I                                        3   40$MESE1
+002900000000     I                                        5   80$ANNO1
+003000000000      * $AMG - DATA NEL FORMATO AAAA/MM/GG
+003100000000     I            DS
+003200000000     I                                        1   80$AMG
+003300000000     I                                        1   40$ANNO2
+003400000000     I                                        5   60$MESE2
+003500000000     I                                        7   80$GIOR2
+003600000000      * $COMOD - CAMPI DI COMODO PER CONTROLLI SULLA DATA
+003700000000     I            DS
+003800000000     I                                        1   80$COMOD
+003900000000     I                                        1   20$COMO1
+004000000000     I                                        3   40$COMO2
+004100000000     I                                        5   60$COMO3
+004200000000     I                                        7   80$COMO4
+004300000000      *------------------------------------------------------------------
+004400000000     C           *ENTRY    PLIST
+004500000000     C                     PARM           WLBDA8
+004600000000     C*
+004700000000     C                     Z-ADD31        G08SUP  20
+004800000000     C*
+004900000000     C* TESTO IL FLAG PER SAPERE SE LA DATA IN INGRESSO E DRITTA O ROVESCIATA
+005000000000     C           G08ERR    IFNE '3'                        GG/MM/AAAA
+005100000000     C                     EXSR SR01                       INVERSIONE
+005200000000     C                     ELSE                            AAAA/MM/GG
+005300000000     C                     EXSR SR02                       INVERSIONE
+005400000000     C                     END
+005500000000     C*
+005600000000     C* SOTTRAGGO DALL'ANNO 1900 PER AVERE UN NUMERO GIORNI PIU' CONTENUTO
+005700000000     C* COSI' IL CONTEGGIO E' UGUALE ALLA ROUTINE DELLA DATA DI 6 CARATTERI
+005800000000     C           $ANNO1    SUB  1900      AA      40       ANNO (4 CIFRE)
+005900000000     C                     Z-ADD$MESE1    MM      20       MESE
+006000000000     C                     Z-ADD$GIOR1    GG      20       GIORNO
+006100000000     C*
+006200000000     C                     MOVE '0'       G08ERR
+006300000000     C*
+006400000000     C           AA        DIV  4         G08QUA  40
+006500000000     C                     MVR            G08RES  10
+006600000000     C           AA        COMP 0                        72
+006700000000     C   72                MOVE '1'       G08ERR
+006800000000     C   72                GOTO FINE
+006900000000     C*****  - ESAME MESE
+007000000000     C           MM        COMP 1                      72
+007100000000     C  N72      MM        COMP 12                   72
+007200000000     C*****  - MESE FUORI LIMITI
+007300000000     C   72                MOVE '1'       G08ERR
+007400000000     C   72                GOTO FINE
+007500000000     C           G08RES    COMP 0                        73            5
+007600000000     C   73                MOVEL29        MES,2
+007700000000     C*****  - ESAME GIORNO
+007800000000     C           GG        COMP 1                      72
+007900000000     C  N72      MM        IFGT 0
+008000000000     C           GG        COMP MES,MM               72
+008100000000     C                     END
+008200000000     C*****  - GIORNO FUORI LIMITI
+008300000000     C   72                MOVE '1'       G08ERR
+008400000000     C   72                GOTO FINE
+008500000000     C*****  - DETERMINAZIONE GIORNI
+008600000000     C                     MOVE 28        MES,2
+008700000000     C           AA        MULT 365       G08TGI
+008800000000     C                     ADD  G08QUA    G08TGI
+008900000000     C                     ADD  GG        G08TGI
+009000000000     C           MM        SUB  1         MC      30
+009100000000     C                     DO   MC        WX      30
+009200000000     C                     ADD  MES,WX    G08TGI
+009300000000     C                     END
+009400000000     C   73      MM        IFLE 2
+009500000000     C                     SUB  1         G08TGI
+009600000000     C                     END
+009700000000     C*
+009800000000     C           FINE      TAG
+009900000000     C                     SETON                     LR
+010000000000     C*-------------------------------------------------------------------------
+010100000000     C* RIBALTAMENTO DATA:  DA  GG/MM/AAAA  A  AAAA/MM/GG
+010200000000     C*-------------------------------------------------------------------------
+010300000000     C           SR01      BEGSR
+010400000000     C                     Z-ADD*ZERO     $GMA
+010500000000     C*
+010600000000     C* PER PRIMA COSA VERIFICO SE LA DATA E' DI 6 CARATTERI O 8 CARATTERI
+010700000000     C                     MOVELG08DAT    $COMOD           DI COMODO
+010800000000     C           $COMO1    IFEQ *ZERO                      PRIMI DUE CARATTERI
+010900000000     C           $COMO2    ANDNE*ZERO                      3° E 4° CARATTERE
+011000000000     C           $COMO3    ANDNE*ZERO                      5° E 6° CARATTERE
+011100990519     C****       $COMO4    ANDNE*ZERO     00=2000          7° E 8° CARATTERE
+011200000000     C                     Z-ADD$COMO2    $GIOR1
+011300000000     C                     Z-ADD$COMO3    $MESE1
+011400000000     C                     Z-ADD$COMO4    $ANNO1
+011500000000     C           $COMO4    IFGT 60                         TEST INDICATIVO
+011600000000     C           $COMO4    ADD  1900      $ANNO1
+011700000000     C                     ELSE
+011800000000     C           $COMO4    ADD  2000      $ANNO1
+011900000000     C                     ENDIF
+012000000000     C                     Z-ADD$GMA      G08DAT
+012100000000     C                     ELSE
+012200000000     C                     Z-ADDG08DAT    $GMA
+012300000000     C                     ENDIF
+012400000000     C*
+012500000000     C                     Z-ADD$GIOR1    $GIOR2
+012600000000     C                     Z-ADD$MESE1    $MESE2
+012700000000     C                     Z-ADD$ANNO1    $ANNO2
+012800000000     C                     Z-ADD$AMG      G08INV
+012900000000     C                     ENDSR
+013000000000     C*-------------------------------------------------------------------------
+013100000000     C* RIBALTAMENTO DATA:  DA  AAAA/MM/GG  A  GG/MM/AAAA
+013200000000     C*-------------------------------------------------------------------------
+013300000000     C           SR02      BEGSR
+013400000000     C                     Z-ADD*ZERO     $AMG
+013500000000     C*
+013600000000     C* PER PRIMA COSA VERIFICO SE LA DATA E' DI 6 CARATTERI O 8 CARATTERI
+013700000000     C                     MOVELG08INV    $COMOD           DI COMODO
+013800000000     C           $COMO1    IFEQ *ZERO                      PRIMI DUE CARATTERI
+013900990519     C**         $COMO2    ANDNE*ZERO   00=2000            3° E 4° CARATTERE
+014000000000     C           $COMO3    ANDNE*ZERO                      5° E 6° CARATTERE
+014100000000     C           $COMO4    ANDNE*ZERO                      7° E 8° CARATTERE
+014200000000     C                     Z-ADD$COMO4    $GIOR2
+014300000000     C                     Z-ADD$COMO3    $MESE2
+014400000000     C                     Z-ADD$COMO2    $ANNO2
+014500000000     C           $COMO2    IFGT 60                         TEST INDICATIVO
+014600000000     C           $COMO2    ADD  1900      $ANNO2
+014700000000     C                     ELSE
+014800000000     C           $COMO2    ADD  2000      $ANNO2
+014900000000     C                     ENDIF
+015000000000     C                     Z-ADD$AMG      G08INV
+015100000000     C                     ELSE
+015200000000     C                     Z-ADDG08INV    $AMG
+015300000000     C                     ENDIF
+015400000000     C*
+015500000000     C                     Z-ADD$GIOR2    $GIOR1
+015600000000     C                     Z-ADD$MESE2    $MESE1
+015700000000     C                     Z-ADD$ANNO2    $ANNO1
+015800000000     C                     Z-ADD$GMA      G08DAT
+015900000000     C                     ENDSR
+016000000000     C*-------------------------------------------------------------------------
+016100000000**
+016200000000312831303130313130313031

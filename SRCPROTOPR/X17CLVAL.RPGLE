@@ -1,0 +1,3 @@
+000100151117     D Proj_CalcoloDataValuta...
+000200151117     D                 PR                  EXTPGM('X17CLVAL')
+000300151117     D  x17clValDs                         LIKEDS(x17clValDs)

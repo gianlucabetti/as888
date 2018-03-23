@@ -1,0 +1,271 @@
+000100000000     H              J
+000200941221     H* FNLS78R *----------------------------------------------------*
+000300910219     H*      GESTIONE DETTAGLIO STAMPA SEGNACOLLI
+000400000000     H*--------------------------------------------------------------*
+000500941221     FFNLS78D CF  E                    WORKSTN
+000600941221     F                                        NRR   KSFILE LS78DSF
+000700910219     FAZORG01LIF  E           K        DISK
+000800910219     FCNACO00FIF  E           K        DISK
+000900941221     FFNVAD01LUF  E           K        DISK                      A
+001000950718     FFNVAD02LUF  E           K        DISK
+001100950718     F            FNVAD000                          KRENAMEFNVAD002
+001200900523     IPARAM       DS
+001300910219     I                                      101 1070VIDKSC
+001400941221     I                                      108 1110VI2AAS
+001500941221     I                                      112 1140VI2LNP
+001600941221     I                                      115 1160VI2NRS
+001700941221     I                                      117 1230VI2NSP
+001800941221     I                                      124 1260VI2LNA
+001900941221     I                                      127 127 VI2FLG
+002000941221     I                                      128 1310KCI
+002100900517     IKPJBA     E DS
+002200000000     IUTEDSE    E DSUTEDSE0F
+002300000000     C*---------------------------------------------------------------*
+002400000000     C           *ENTRY    PLIST
+002500000000     C                     PARM           KPJBA
+002600000000     C                     Z-ADD1         CODUT
+002700000000     C                     CALL 'XPARUT'
+002800000000     C                     PARM           UTEDSE
+002900000000     C                     MOVELRAGUT     RSUT   20
+003000910219     C*----------------------------------------------------*
+003100910205     C* ACCESSO   CNACO                                    *
+003200910205     C           KACO      KLIST                           *
+003300910205     C                     KFLD           CODUT            *
+003400910219     C                     KFLD           KCI              *
+003500910219     C                     KFLD           VIDKSC  70       *
+003600941221     C* ACCESSO   FNVAD                                    *
+003700941221     C           KVAD      KLIST                           *
+003800910219     C                     KFLD           VIDKSC           *
+003900910219     C                     KFLD           VI2AAS           *
+004000910219     C                     KFLD           VI2LNP           *
+004100910219     C                     KFLD           VI2NRS           *
+004200910219     C                     KFLD           VI2NSP           *
+004300910205     C*                                                    *
+004400941221     C           KVAD1     KLIST                           *
+004500910219     C                     KFLD           VIDKSC           *
+004600910219     C                     KFLD           VI2AAS           *
+004700910219     C                     KFLD           VI2LNP           *
+004800910219     C                     KFLD           VI2NRS           *
+004900910219     C                     KFLD           VI2NSP           *
+005000910219     C                     KFLD           VIDCDP           *
+005100950718     C           KVAD2     KLIST                           *
+005200950718     C                     KFLD           VIDKSC           *
+005300950718     C                     KFLD           VI2AAS           *
+005400950718     C                     KFLD           VI2LNP           *
+005500950718     C                     KFLD           VI2NRS           *
+005600950718     C                     KFLD           VI2NSP           *
+005700950718     C                     KFLD           VIDNSC           *
+005800950718     C                     KFLD           VIDCDP           *
+005900910205     C*---------------------------------------------------------------*
+006000900517     C*
+006100910219     C                     MOVELKPJBU     PARAM
+006200910219     C* IMPOSTO CAMPI PER SCRITTURE
+006300910219     C                     EXSR IMPO
+006400910219     C*
+006500910219     C* DECODIFICA CODICE CLIENTE
+006600910219     C           KACO      CHAINCNACO000             30
+006700910219     C        N30          MOVELACORAG    DESKSC
+006800910219     C         30          MOVEL*BLANKS   DESKSC
+006900910219     C*
+007000910220     C* DECODIFICA LINEA DI ARRIVO
+007100910219     C           VI2LNA    CHAINAZORG                30
+007200910219     C        N30          MOVELORGDES    DESLNA
+007300910219     C         30          MOVEL*BLANKS   DESLNA
+007400910219     C*
+007500910219     C* CARICO RIGHE DI DETTAGLIO STAMPA BOLLA
+007600910219     C                     EXSR CARBLD
+007700910219     C*
+007800941221     C                     WRITELS78D02
+007900900509     C           FOR01     TAG
+008000941221     C                     EXFMTLS78DCT
+008100920921     C** CMD12 - RITORNO
+008200920921     C   KL                GOTO FINE
+008300910219     C** CMD09-AGGIUNTA RIGHE DETTAGLIO
+008400910805     C   KIN02             EXSR AGGRIG
+008500910805     C   KIN02             GOTO FOR01
+008600910219     C** CONTROLLO
+008700910219     C                     EXSR CONTR
+008800910220     C   36                GOTO FOR01
+008900910219     C** CMD16-ANNULLAMENTO
+009000910219     C   KQ                EXSR ANNULL
+009100910219     C   KQ                EXSR CARBLD
+009200910219     C** CMD06-AGGIORNAMENTO
+009300910219     C   KF                EXSR AGGIOR
+009400930204     C  NKF
+009500930204     COR KF 36             GOTO FOR01
+009600910219     C   KF                GOTO FINE
+009700910219     C*
+009800000000     C           FINE      TAG
+009900000000     C                     SETON                     LR
+010000910205     C*
+010100910219     C* CARICO RECORD DELLA BOLLA ------------------------------------*
+010200910219     C           CARBLD    BEGSR
+010300910205     C                     EXSR PULSF
+010400910205     C                     Z-ADD0         NRR     40
+010500941221     C           KVAD      SETLLFNVAD000                 30
+010600910220     C*** I M M I S S I O N E
+010700910220     C        N30          Z-ADD0         SAVNRR
+010800910220     C        N30          EXSR AGGRIG
+010900910220     C*
+011000910220     C*** M A N U T E N Z I O N E
+011100910220     C         30          SETON                     10
+011200910220     C         30          DO   *HIVAL
+011300941221     C           KVAD      READEFNVAD000                 30
+011400910219     C*
+011500910219     C        N30          DO
+011600910219     C                     MOVEL*BLANKS   VIDSCE
+011700941221     C                     MOVELVADNCL    VIDNCL
+011800941221     C                     MOVELVADCDP    VIDCDP
+011900941221     C                     MOVELVADNCD    VIDNSC
+012000941221     C           VADNCD    IFGT *ZEROS
+012100920921     C                     SETON                     02
+012200920921     C                     END
+012300941221     C                     Z-ADDVADNCA    VIDNCA
+012400930204     C                     Z-ADD1         VIDNRR
+012500910205     C* SCRIVO SUBFILE
+012600910205     C                     ADD  1         NRR
+012700941221     C                     WRITELS78DSF
+012800910205     C                     END
+012900910205     C*
+013000910205     C        N30          END
+013100910219     C                     Z-ADDNRR       SAVNRR  40
+013200930204     C                     SETOF                     10
+013300910205     C*
+013400910205     C                     ENDSR
+013500910205     C*
+013600910205     C* PULIZIA SUBFILE ---------------------------------------------
+013700910205     C           PULSF     BEGSR
+013800910205     C                     SETON                     35
+013900941221     C                     WRITELS78DCT
+014000910205     C                     SETOF                     35
+014100910205     C                     ENDSR
+014200910205     C*
+014300910219     C* AGGIUNTA RIGHE DI DETTAGLIO COLLI ---------------------------
+014400910219     C           AGGRIG    BEGSR
+014500930204     C                     SETOF                     10
+014600910219     C                     Z-ADDSAVNRR    NRR
+014700910220     C                     DO   14
+014800910219     C                     MOVEL*BLANKS   VIDSCE
+014900910219     C                     MOVEL*BLANKS   VIDCDP
+015000910219     C                     MOVEL*ZEROS    VIDNCL
+015100910219     C                     MOVEL*ZEROS    VIDNRR
+015200950718     C                     CLEARVIDNSC
+015300910219     C* SCRIVO SUBFILE
+015400910219     C                     ADD  1         NRR
+015500941221     C                     WRITELS78DSF
+015600910219     C                     END
+015700910219     C*
+015800910219     C                     Z-ADDNRR       SAVNRR
+015900910205     C                     ENDSR
+016000910219     C*
+016100910219     C* CONTROLLI ---------------------------------------------------
+016200910219     C           CONTR     BEGSR
+016300910219     C* NUMERO COLLI OBBLIGATORIO
+016400910219     C                     SETOF                     3136
+016500910219     C                     DO   *HIVAL
+016600941221     C                     READCLS78DSF                  31
+016700910219     C*
+016800910219     C        N31VIDNRR    IFNE 0
+016900930204     C*
+017000910219     C* NUMERO COLLI OBBLIGATORIO
+017100910219     C           VIDNCL    IFEQ 0
+017200930204     C                     SETON                     4036
+017300910219     C                     END
+017400910219     C*
+017500910219     C                     ELSE
+017600910219     C* SE IMMESSO CODICE PRODOTTO E NON NUMERO COLLI ERRORE
+017700910219     C           VIDNCL    IFEQ 0
+017800930204     C           VIDCDP    ANDNE*BLANKS
+017900910219     C                     SETON                     4036
+018000910219     C                     END
+018100910219     C* SE IMMESSO NUMERO COLLI E NON CODICE PRODOTTO ERRORE
+018200910219     C           VIDNCL    IFNE 0
+018300930204     C           VIDCDP    ANDEQ*BLANKS
+018400910219     C                     SETON                     4136
+018500910219     C                     END
+018600910219     C* SE IMMESSI ENTRAMBI CONTROLLO SE GIA' ESISTENTE
+018700910219     C           VIDNCL    IFNE 0
+018800910219     C           VIDCDP    ANDNE*BLANKS
+018900941221     C           KVAD1     SETLLFNVAD000                 42
+019000910219     C         42          SETON                     36
+019100910219     C                     END
+019200910219     C*
+019300910219     C                     END
+019400910219     C*
+019500930204     C  N31      VIDNRR    IFNE 0
+019600930204     C                     SETON                     10
+019700930204     C                     END
+019800930204     C*
+019900941221     C  N31                UPDATLS78DSF
+020000930204     C                     SETOF                     10
+020100930204     C     N36N31          END
+020200910219     C*
+020300910219     C                     ENDSR
+020400910219     C*
+020500910219     C* ANNULLAMENTO RIGHE ------------------------------------------
+020600910219     C           ANNULL    BEGSR
+020700910219     C                     Z-ADD1         NRR
+020800910219     C*
+020900910219     C           NRR       DOWLESAVNRR
+021000941221     C           NRR       CHAINLS78DSF              31
+021100910219     C*
+021200910219     C        N31VIDSCE    IFEQ 'A'
+021300950718     C           VIDNRR    ANDNE0
+021400950718     C           KVAD2     CHAINFNVAD002             32
+021500950718     C        N32          DELETFNVAD002
+021600950718     C                     ENDIF
+021700950718     C*
+021800910219     C                     ADD  1         NRR
+021900950718     C                     ENDDO
+022000910219     C*
+022100910219     C                     ENDSR
+022200910219     C*
+022300910219     C* AGGIORNAMENTO RIGHE DETTAGLIO -------------------------------
+022400910219     C           AGGIOR    BEGSR
+022500910219     C                     EXSR IMPO
+022600910219     C                     Z-ADD1         NRR
+022700910219     C*
+022800910219     C           NRR       DOWLESAVNRR
+022900941221     C           NRR       CHAINLS78DSF              31
+023000910219     C*
+023100910219     C        N31VIDNCL    IFNE 0
+023200930204     C*
+023300930204     C* NON E' DA ANNULLARE
+023400930204     C           VIDSCE    IFEQ ' '
+023500941221     C           KVAD1     CHAINFNVAD000             32
+023600941221     C                     MOVELVIDCDP    VADCDP
+023700941221     C                     MOVELVIDNCL    VADNCL
+023800941221     C        N32          UPDATFNVAD000
+023900941221     C         32          WRITEFNVAD000
+024000930204     C                     Z-ADD1         VIDNRR
+024100930204     C* RECORD DA ANNULLARE
+024200930204     C                     ELSE
+024300930204     C*
+024400930204     C                     SETON                     4336
+024500930204     C                     END
+024600930204     C*
+024700930204     C           VIDNRR    IFNE 0
+024800930204     C                     SETON                     10
+024900930204     C                     ELSE
+025000930204     C                     SETOF                     10
+025100930204     C                     END
+025200930204     C*
+025300941221     C                     UPDATLS78DSF
+025400930204     C                     END
+025500930204     C*
+025600910219     C                     ADD  1         NRR
+025700910219     C                     END
+025800910219     C*
+025900910219     C                     ENDSR
+026000910219     C*
+026100910219     C* IMPOSTAZIONE CAMPI ------------------------------------------
+026200910219     C           IMPO      BEGSR
+026300941221     C                     MOVEL*BLANKS   VADATB
+026400941221     C                     MOVELVIDKSC    VADCCM
+026500941221     C                     MOVELVI2AAS    VADAAS
+026600941221     C                     MOVELVI2LNP    VADLNP
+026700941221     C                     MOVELVI2NRS    VADNRS
+026800941221     C                     MOVELVI2NSP    VADNSP
+026900941221     C                     MOVEL*ZEROS    VADNCD
+027000941221     C                     MOVEL*ZEROS    VADNCA
+027100910219     C                     ENDSR

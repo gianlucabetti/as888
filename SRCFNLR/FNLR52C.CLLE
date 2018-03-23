@@ -1,0 +1,32 @@
+000100030826/* ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯ */
+000200030826/* CREAZIONE FILE DI LAVORO PER CONTROLLO BOLLE IN BUCA              */
+000300030826/* _________________________________________________________________ */
+000400030826
+000500030826             pgm        parm(&KPJBA)
+000600030826
+000700030826             dcl        var(&KPJBA) type(*char) len(502)
+000800030826             dcl        var(&KPJBU) type(*char) len(256) value(' ')
+000900030826             dcl        var(&WFLIB) type(*char) len(10)  value(' ')
+001000030826
+001100030826/* Reperisco variabili da KPJBA                                      */
+001200030826             chgvar     var(&KPJBU) value(%sst(&KPJBA 247 256))
+001300030826
+001400030826/* Se questo cl non è stato richiamato per la creazione del wrkf     */
+001500030826/*    richiamo direttamente il pgm. di stampa                        */
+001600030826             if         cond(%sst(&KPJBU 252 5) *ne 'WRKF ') +
+001700030826                          then(goto cmdlbl(Call_LR52))
+001800030826
+001900030826/* Duplico i file WFCBB* (vuoti) in QTEMP                            */
+002000030826             dltf       file(QTEMP/WFCBB*)
+002100030826             monmsg     msgid(CPF0000)
+002200030826
+002300030826             rtvobjd    obj(*libl/WFCBB00F) objtype(*file)   +
+002400030826                          rtnlib(&WFLIB)
+002500030826             crtdupobj  obj(WFCBB*) fromlib(&WFLIB) objtype(*file) +
+002600030826                          tolib(QTEMP) data(*no)
+002700030826
+002800030826/* Richiamo pgm. per la estrazione dei dati per il file WFCBB00F     */
+002900030826   Call_LR52:
+003000030826             call       pgm(FNLR52R) parm(&KPJBA)
+003100030826
+003200030826             ENDPGM

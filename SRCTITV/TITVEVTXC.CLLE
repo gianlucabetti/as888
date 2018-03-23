@@ -1,0 +1,76 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600010202             PGM        PARM(&CCM &MBR &OPZ)
+000700990908
+000800010202             DCL        VAR(&CCM) TYPE(*CHAR) LEN(8)
+000900010202             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001000010202             DCL        VAR(&OPZ) TYPE(*CHAR) LEN(1)
+001100000710
+001200990908
+001300010202             IF         COND(&OPZ = '1') THEN(DO)
+001400090911/* Aggiungo il membro al file di arrivo EDIVAT ----------------------*/
+001500090911             CHKOBJ     OBJ(EDIVATWR) OBJTYPE(*FILE) MBR(&MBR)
+001600001013             MONMSG     MSGID(CPF9815) EXEC(DO)
+001700090911             ADDPFM     FILE(EDIVATWR) MBR(&MBR) TEXT(&CCM)
+001800001013             MONMSG     MSGID(CPF0000) EXEC(DO)
+001900001013             DLYJOB     DLY(300)
+002000090911             ADDPFM     FILE(EDIVATWR) MBR(&MBR) TEXT(&CCM)
+002100001013             ENDDO
+002200001013             ENDDO
+002300060225
+002400090911/* Aggiungo il membro al file di arrivo EDIVAX ----------------------*/
+002500090911             CHKOBJ     OBJ(EDIVAXWR) OBJTYPE(*FILE) MBR(&MBR)
+002600060225             MONMSG     MSGID(CPF9815) EXEC(DO)
+002700090911             ADDPFM     FILE(EDIVAXWR) MBR(&MBR) TEXT(&CCM)
+002800060225             MONMSG     MSGID(CPF0000) EXEC(DO)
+002900060225             DLYJOB     DLY(300)
+003000090911             ADDPFM     FILE(EDIVAXWR) MBR(&MBR) TEXT(&CCM)
+003100060225             ENDDO
+003200060225             ENDDO
+003300001013
+003400090911/* Alloco il membro nel file EDIVAT ---------------------------------*/
+003500001214/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+003600090911             ALCOBJ     OBJ((EDIVATWR *FILE *EXCL &MBR))
+003700990910
+003800001214/* Punto al membro e sostituisco a 1 il "Force-RCcord-RATIO" --------*/
+003900090911             OVRDBF     FILE(EDIVATWR) MBR(&MBR) FRCRATIO(1) +
+004000001214                          OVRSCOPE(*JOB)
+004100060225
+004200090911/* Alloco il membro nel file EDIVAX ---------------------------------*/
+004300060225/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+004400090911             ALCOBJ     OBJ((EDIVAXWR *FILE *EXCL &MBR))
+004500060225
+004600060225/* Punto al membro e sostituisco a 1 il "Force-RCcord-RATIO" --------*/
+004700090911             OVRDBF     FILE(EDIVAXWR) MBR(&MBR) FRCRATIO(1) +
+004800060225                          OVRSCOPE(*JOB)
+004900010202             ENDDO
+005000990915
+005100010202
+005200010202
+005300010202
+005400010202             IF         COND(&OPZ = '2') THEN(DO)
+005500090911/* Cancello le override su file EDIVAT ------------------------------*/
+005600090911             DLTOVR     FILE(EDIVATWR) LVL(*JOB)
+005700041206
+005800090911/* Disalloco e rimuovo membri EDIVAT --------------------------------*/
+005900090911             DLCOBJ     OBJ((EDIVATWR *FILE *EXCL &MBR))
+006000060225
+006100090911/* Elimino il membro del file (di output) tradotto/inviato EDIVAT ---*/
+006200090911             RMVM       FILE(EDIVATWR) MBR(&MBR)
+006300060225
+006400090911/* Cancello le override su file EDIVAX ------------------------------*/
+006500090911             DLTOVR     FILE(EDIVAXWR) LVL(*JOB)
+006600060225
+006700090911/* Disalloco e rimuovo membri EDIVAX --------------------------------*/
+006800090911             DLCOBJ     OBJ((EDIVAXWR *FILE *EXCL &MBR))
+006900060225
+007000090911/* Elimino il membro del file (di output) tradotto/inviato EDIVAX ---*/
+007100090911             RMVM       FILE(EDIVAXWR) MBR(&MBR)
+007200010202             ENDDO
+007300990908
+007400010202
+007500010202
+007600990907             ENDPGM

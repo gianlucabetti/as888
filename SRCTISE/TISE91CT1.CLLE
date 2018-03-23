@@ -1,0 +1,48 @@
+000100000000/*------------------------------------------------------------------------------------------------*/
+000200080916/* STATISTICHE DELTA -                                                                            */
+000300080916/*      questo programma deve girare ASSOLUTAMENTE con il Superlancio                             */
+000400080916/*        ossia prima deve essere elaborato l'ITALIA e poi l'ESTERO                               */
+000500080916/*      altrimenti                                                                                */
+000600080916/*        i dati non saranno corretti.                                                            */
+000700000000/*------------------------------------------------------------------------------------------------*/
+000800080916/*          ?   - 18/04/2007 aggiunti 2 WFiles WADELPCF/E come i WFDELPCF/E   ? stesso tracciato  */
+000900080916/*          ?   - 16/09/2008 aggiunto WADELPCT somma dei 2 WADELPC*           ? dei 2 WADELPCF/E  */
+001000080916/*            statistica DELTA                                                                    */
+001100080916/*            il File WADELPCT deve contenere semplicemente la somma x cliente dei 2 file Italia  */
+001200080916/*            +  Estero.                                                                          */
+001300000000/*------------------------------------------------------------------------------------------------*/
+001400080916 TISE91C1:   PGM        PARM(&KPJBA)
+001500000000
+001600000000/* DICHIARAZIONI VARIABILI ---------------------------------------------------------------------- */
+001700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001800080918             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+001900030311             DCL        VAR(&FPC)   TYPE(*CHAR) LEN(1)
+002000050224             DCL        VAR(&IOE)   TYPE(*CHAR) LEN(1)
+002100081015             DCL        VAR(&LIBTEST) TYPE(*CHAR) LEN(10) +
+002200081015                          VALUE('EDPABCUR  ')
+002300000000
+002400000000/* VALORIZZAZIONE VARIABILI --------------------------------------------------------------------- */
+002500080918             CHGVAR     VAR(&KPJBU) VALUE(%SUBSTRING(&KPJBA 247 256))
+002600080918             CHGVAR     VAR(&IOE) VALUE(%SUBSTRING(&KPJBA 281 1))
+002700030311             CHGVAR     VAR(&FPC) VALUE(%SUBSTRING(&KPJBA 331 1))
+002800030311
+002900080916/* CANCELLA IL FILE DI WRK PC (WADELPCT) - ricoprendolo con il WADELPCF ----ITALIA--- */
+003000080918             IF         COND((&FPC *EQ 'S') *AND ((&IOE *EQ 'I') *OR +
+003100080918                          (&IOE *EQ ' ')) *OR (&KPJBU *EQ ' ')) +
+003200080918                          THEN(DO)
+003300080916
+003400081015             CPYF       FROMFILE(&LIBTEST/WADELPCF) +
+003500081015                          TOFILE(&LIBTEST/WADELPCT) MBROPT(*REPLACE)
+003600080916
+003700030311             ENDDO
+003800000000
+003900080916/* CANCELLA IL FILE DI WRK PC (WFDELPCE) -SE RICHIESTO- --------------------ESTERO--- */
+004000080918             IF         COND(((&FPC *EQ 'S') *AND (&IOE *EQ 'E')) +
+004100080918                          *OR (&KPJBU *EQ ' ')) THEN(DO)
+004200080916
+004300080916/* ESEGUE la somma dell'estero  sull'ITALIA copiato prima --------------------------- */
+004400080916             CALL       PGM(TISE91R1) PARM(&KPJBA)
+004500080916
+004600050224             ENDDO
+004700000000
+004800000000             ENDPGM

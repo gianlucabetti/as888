@@ -1,0 +1,192 @@
+000100000000     F*------------------------------------------------------------------------*
+000200000000     F* DATA BASE
+000300000000     F*------------------------------------------------------------------------*
+000400010110     FECEVD01LUF  E           K        DISK                      A
+000500010111     E*------------------------------------------------------------------------*
+000600010111     E* SCHIERE
+000700010111     E*------------------------------------------------------------------------*
+000800010111     E* SCHIERE PER MESSAGGI, OPZIONI E FUNZIONI
+000900010111     E                    MSG     1   5 78               *MESSAGGI
+001000000000     I*------------------------------------------------------------------------*
+001100000000     I* INPUT
+001200000000     I*------------------------------------------------------------------------*
+001300000000     I*-------------------
+001400000000     I* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+001500000000     I*-------------------
+001600000000     I           SDS
+001700000000     I                                      254 263 USER                  UTENTE
+001800000000     I*---------------------
+001900000000     I* DS ESTERNA DI PROCEDURA
+002000000000     I*---------------------
+002100000000     IDS60      E DSTREC60DS
+002200010111     IDS61      E DSTREC61DS
+002300000000     I*-------------------
+002400000000     I* ARCHITETTURA
+002500000000     I*-------------------
+002600000000     IKPJBA     E DS
+002700000000     I*------------------
+002800000000     I* CALL XSRDA8 - CONTROLLO DATE
+002900000000     I*------------------
+003000000000     IWLBDAT     IDS
+003100000000     I                                        1   80G02DAT
+003200000000     I                                        9  160G02INV
+003300000000     I                                       17  17 G02ERR
+003400000000     I                                       18  220G02TGI
+003500000000     C*------------------------------------------------------------------------*
+003600000000     C* MAIN LINE
+003700000000     C*------------------------------------------------------------------------*
+003800000000     C*
+003900010110     C* VEERIFICO INNANZITUTTO L'OPZIONE IN ENTRATA
+004000010110     C                     EXSR EXEOPE
+004100010110     C*
+004200000000     C                     SETON                     LR
+004300000000     C*------------------------------------------------------------------------*
+004400010110     C* EXEOPE - VERIFICA E LANCIO OPERAZIONE DELL'OPZIONE RICHIESTA IN ENTRATA
+004500000000     C*------------------------------------------------------------------------*
+004600010110     C           EXEOPE    BEGSR
+004700010112     C*
+004800010112     C* INIZIALIZZO FLAG DUI ERRORE
+004900010112     C                     MOVEL'0'       D60ERR
+005000000000     C*
+005100000000     C* LANCIO LA ROUTINE DI CONFERMA INTERESSATA
+005200010111     C           D60OP1    IFEQ 'O03'
+005300010110     C                     EXSR DUPLIC                     *DUPLICAZIONE
+005400010111     C                     ENDIF
+005500010112     C           D60OP1    IFEQ 'CHK'
+005600010112     C                     EXSR MODCHK                     *CHECK X MODIFICA
+005700010111     C                     ENDIF
+005800010112     C           D60OP1    IFEQ 'O02'
+005900010112     C                     EXSR MODEXE                     *ESEGUE MODIFICA
+006000010112     C                     ENDIF
+006100000000     C*
+006200000000     C                     ENDSR
+006300000000     C*------------------------------------------------------------------------*
+006400010112     C* MODCHK - FUNZIONE DI CONTROLLO PER MODIFICA
+006500000000     C*------------------------------------------------------------------------*
+006600010112     C           MODCHK    BEGSR
+006700000000     C*
+006800010112     C* ESEGUO UN PRIMO GIRO DI VERIFICA CONGRUITA' DELLE DATE PER CUI...
+006900010112     C*
+007000010112     C* ... COSTRUISCO LA CHIAVE
+007100010112     C                     Z-ADDI61VOC    KVDVOC
+007200010112     C                     Z-ADDI61PRG    KVDPRG
+007300010112     C*
+007400010112     C* ... ESEGUO IL POSIZIONAMENTO E CICLO FINO A FINE O FINO A PRIMA NON OK
+007500010112     C           KEYEVD    SETLLECEVD01L             91
+007600010112     C           KEYEVD    READEECEVD01L                 91
+007700010112     C           *IN91     DOWEQ*OFF
+007800010112     C           EVDATB    IFEQ *BLANKS
+007900010112     C           EVDDDT    ANDGEI61DAF
+008000010112     C                     MOVEL'1'       D60ERR
+008100010112     C                     LEAVE
+008200010112     C                     ENDIF
+008300010112     C           KEYEVD    READEECEVD01L                 91
+008400010112     C                     ENDDO
+008500010112     C*
+008600000000     C                     ENDSR
+008700010112     C*------------------------------------------------------------------------*
+008800010112     C* MODEXE - FUNZIONE DI MODIFICA
+008900010112     C*------------------------------------------------------------------------*
+009000010112     C           MODEXE    BEGSR
+009100010112     C*
+009200010112     C* ESEGUO IL SECONDO GIRO PER ESEGUIRE LE MODFICHE PER CUI...
+009300010112     C*
+009400010112     C* ... COSTRUISCO LA CHIAVE
+009500010112     C                     Z-ADDI61VOC    KVDVOC
+009600010112     C                     Z-ADDI61PRG    KVDPRG
+009700010112     C*
+009800010112     C* ... ESEGUO IL POSIZIONAMENTO E CICLO FINO A FINE VOCE/PROG
+009900010112     C           KEYEVD    SETLLECEVD01L             91
+010000010112     C           KEYEVD    READEECEVD01L                 91
+010100010112     C           *IN91     DOWEQ*OFF
+010200010112     C           EVDATB    IFEQ *BLANKS
+010300010112     C           EVDDST    ANDGTI61DAF
+010400010112     C                     Z-ADDI61DAF    EVDDST
+010500010808     C                     Z-ADDDATCOR    EVDDUV
+010600010808     C                     UPDATECEVD000
+010700010112     C                     ENDIF
+010800010112     C           KEYEVD    READEECEVD01L                 91
+010900010112     C                     ENDDO
+011000010112     C*
+011100010112     C                     ENDSR
+011200010110     C*------------------------------------------------------------------------*
+011300010111     C* DUPLIC - FUNZIONE DI DUPLICAZIONE
+011400010110     C*------------------------------------------------------------------------*
+011500010110     C           DUPLIC    BEGSR
+011600010110     C*
+011700010110     C* COSTRUISCO LA CHIAVE
+011800010111     C                     Z-ADDO61VOC    KVDVOC
+011900010111     C                     Z-ADDO61PRG    KVDPRG
+012000010110     C*
+012100010111     C* CONTROLLO PREV. CHE NON VI SIANO GIA' TARIFFE PER LA VOCE RICHIESTA
+012200010110     C           KEYEVD    CHAINECEVD01L             91
+012300010110     C           *IN91     IFEQ *ON
+012400010111     C* SE NON ESISTONO => ESEGUO LA RICHIESTA
+012500010111     C*
+012600010111     C* PER CUI COSTRUISCO LA CHIAVE (DA CUI LEGGERE)...
+012700010111     C                     Z-ADDI61VOC    KVDVOC
+012800010111     C                     Z-ADDI61PRG    KVDPRG
+012900010110     C*
+013000010111     C* ESEGUO IL POSIZIONAMENTO E CICLO...
+013100010111     C           KEYEVD    SETLLECEVD01L             91
+013200010111     C           KEYEVD    READEECEVD01L                 91
+013300010111     C           *IN91     DOWEQ*OFF
+013400010111     C           EVDATB    IFEQ *BLANKS
+013500010111     C           EVDDDT    ANDLEI61DRI
+013600010111     C           EVDDST    ANDGEI61DRI
+013700010111     C                     Z-ADDO61VOC    EVDVOC
+013800010111     C                     Z-ADDO61PRG    EVDPRG
+013900010111     C                     Z-ADDI61DAI    EVDDDT
+014000010111     C                     Z-ADDI61DAF    EVDDST
+014100010115     C                     MOVEL*BLANKS   EVDFTR
+014200010115     C                     Z-ADD*ZEROS    EVDDTR
+014300010808     C                     Z-ADDDATCOR    EVDDIR
+014400010813     C                     Z-ADDDATCOR    EVDDIR
+014500010813     C                     Z-ADD*ZEROS    EVDDUV
+014600010808     C                     WRITEECEVD000
+014700010111     C                     ENDIF
+014800010111     C           KEYEVD    READEECEVD01L                 91
+014900010111     C                     ENDDO
+015000010111     C                     ELSE
+015100010111     C                     MOVEL'1'       D60ERR
+015200010111     C                     MOVELMSG,1     D60MSG
+015300010111     C                     ENDIF
+015400010110     C*
+015500010110     C                     ENDSR
+015600000000     C*------------------------------------------------------------------------*
+015700000000     C*  *INZSR - ROUTINE INIZIALE
+015800000000     C*------------------------------------------------------------------------*
+015900000000     C           *INZSR    BEGSR
+016000000000     C*
+016100000000     C* RICEVIMENTO PARAMETRI
+016200000000     C           *ENTRY    PLIST
+016300010111     C                     PARM           DS60
+016400010111     C                     PARM           DS61
+016500000000     C*
+016600000000     C* DEFINIZIONE VARIABILI
+016700000000     C           *LIKE     DEFN EVDVOC    KVDVOC           *ECEVD00F
+016800000000     C           *LIKE     DEFN EVDPRG    KVDPRG
+016900000000     C*
+017000000000     C* CHIAVE LETTURA ECEVD01L - PARZIALE
+017100000000     C           KEYEVD    KLIST
+017200000000     C                     KFLD           KVDVOC           *CODICE VOCE
+017300000000     C                     KFLD           KVDPRG           *PROGRESSIVO
+017400010808     C*
+017500010808     C* IMPOSTA DATA E ORA CORRENTE
+017600010808     C                     TIME           N14    140       *ORA (6)+ DATA (8)
+017700010808     C                     MOVE N14       N8      80       *DATA (8) IN G/M/AA
+017800010808     C                     Z-ADDN8        G02DAT
+017900010808     C                     Z-ADD*ZEROS    G02INV
+018000010808     C                     MOVEL'0'       G02ERR
+018100010808     C                     CALL 'XSRDA8'
+018200010808     C                     PARM           WLBDAT
+018300010808     C                     Z-ADDG02INV    DATCOR  80       *DATA CORRENTE AA/M/G
+018400010808     C                     MOVE 00        DATCO0  80       *DATA CORRENTE AA/M/0
+018500000000     C*
+018600000000     C                     ENDSR
+018700010111** ======== SCHIERA: MSG  (MESSAGGI)                       ================
+018800010111TREC61R1 - ERRORE esistono già tariffe per la nuova voce richiesta!!!          1
+0189000101112
+0190000101113
+0191000101114
+0192000101115

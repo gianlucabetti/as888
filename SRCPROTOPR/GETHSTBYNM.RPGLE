@@ -1,0 +1,3 @@
+000100100612     D getHostByName...
+000200100612     D                 PR              *   ExtProc('gethostbyname')
+000300100612     D  host_name                      *   value options(*string)

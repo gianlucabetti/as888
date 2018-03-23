@@ -1,0 +1,176 @@
+000100960221     H              J
+000200960221?     *--------------------------------------------------------------*
+000300960221      * BAR800R                                                      *
+000400960221      *  *---------------------------------------------------------* *
+000500960221      *    STAMPA RELAZIONI AZIONI/MENU'  -> MENU'PRINCIP./PROFILO   *
+000600960221      *                     RICHIESTA PARAMETRI                      *
+000700960221      *  *---------------------------------------------------------* *
+000800960221      *                                                              *
+000900960221?     *--------------------------------------------------------------*
+001000960221      * KC - FINE LAVORO                                             *
+001100960221      * KF - CONFERMA                                                *
+001200960221      * KV - PE.BATCH                                                *
+001300960221?     *--------------------------------------------------------------*
+001400960221      * 28 - Visualizzazione messaggio di errore                     *
+001500960221      * 30 - Chain siu KPMNU02L                                      *
+001600960221      * 40 - Reverse Immage su data spedizione da                    *
+001700960221      * 41 - Reverse Immage su data spedizione a                     *
+001800960221?     *--------------------------------------------------------------*
+001900960221     FKPMNU01LIF  E           K        DISK
+002000960221     F*--------
+002100960221     FKFAZN11LIF  E           K        DISK
+002200960221     F*--------
+002300960221     FBAR800D CF  E                    WORKSTN
+002400960221     E*---------------------------------------------------------------*
+002500960221     E* SCHIERA
+002600960221     E*---------------------------------------------------------------*
+002700960221     E                    ERR     1   4 70               Errori
+002800960221?     *--------------------------------------------------------------*
+002900960221?     *  DS                                                          *
+003000960221?     *--------------------------------------------------------------*
+003100960221     IKPJBA     E DS
+003200960221     IUTEDSE    E DSUT§DSE0F
+003300960221     ICNCR80    E DS
+003400960221     IBAR800    E DSBAR800DS
+003500960221     IWLBDA8      DS
+003600960221     I                                        1   80G02DAT
+003700960221     I                                        9  160G02INV
+003800960221     I                                       17  17 G02ERR
+003900960221     I                                       18  220G02TGI
+004000960221     I           SDS
+004100960221     I                                        1  10 NOMPGM
+004200960221?     *--------------------------------------------------------------*
+004300960221?     *  CICLO PRINCIPALE                                            *
+004400960221?     *--------------------------------------------------------------*
+004500960221      *  Impostazione parametri prima videata
+004600960221     C                     EXSR INZ01
+004700960221      *  Loop gestione videata
+004800960221     C           WFINE     DOUEQ'S'
+004900960221     C           WTPVID    CASEQ'1'       GESD01
+005000960221     C                     END
+005100960221     C                     END
+005200960221      *  Fine Lavoro
+005300960221     C           FINE      TAG
+005400960221     C                     SETON                     LR
+005500960221?     *--------------------------------------------------------------*
+005600960221?     *  INZ01: Inizializzazione prima videata                       *
+005700960221?     *--------------------------------------------------------------*
+005800960221     C           INZ01     BEGSR
+005900960221      *
+006000960221     C                     SETOF                     404128
+006100960221     C                     MOVEL*BLANKS   $MSG
+006200960221     C                     MOVEL*BLANKS   V1CAZN
+006300960221     C                     MOVEL*BLANKS   V1CMNU
+006400960221     C                     MOVEL'1'       WTPVID  1
+006500960221      *
+006600960221     C                     ENDSR
+006700960221?     *--------------------------------------------------------------*
+006800960221?     *  GESD01: Gestione prima videata di richiesta parametri       *
+006900960221?     *--------------------------------------------------------------*
+007000960221     C           GESD01    BEGSR
+007100960221      *
+007200960221     C                     EXFMTR800D01
+007300960221     C                     SETOF                     404128
+007400960221      *  Fine Lavoro
+007500960221     C           *INKC     IFEQ '1'
+007600960221     C                     MOVEL'S'       WFINE   1
+007700960221     C                     GOTO FINVD1
+007800960221     C                     END
+007900960221      *  Controlli
+008000960221     C                     EXSR CTR01
+008100960221     C   28                GOTO FINVD1
+008200960221      *  Pe.Batch
+008300960221     C           *INKV     IFEQ '1'
+008400960221     C                     CALL 'BCH09'
+008500960221     C                     PARM           KPJBA
+008600960221     C                     END
+008700960221      *  Conferma
+008800960221     C           *INKF     IFEQ '1'
+008900960221     C                     EXSR SBM801
+009000960221     C                     EXSR INZ01
+009100960221     C                     END
+009200960221      *
+009300960221     C           FINVD1    ENDSR
+009400960221?     *--------------------------------------------------------------*
+009500960221?     *  CTR01: Controllo validità dati immessi nella prima videata  *
+009600960221?     *--------------------------------------------------------------*
+009700960221     C           CTR01     BEGSR
+009800960221      *
+009900960221      *  Immettere un codice di azione o di menù
+010000960221     C           V1CAZN    IFEQ *BLANKS
+010100960221     C           V1CMNU    ANDEQ*BLANKS
+010200960221     C                     SETON                     404128
+010300960221     C                     MOVELERR,1     $MSG
+010400960221     C                     GOTO FINCT1
+010500960221     C                     END
+010600960221      *  Impossibile selezionare entrambe le opzioni
+010700960221     C           V1CAZN    IFNE *BLANKS
+010800960221     C           V1CMNU    ANDNE*BLANKS
+010900960221     C                     SETON                     404128
+011000960221     C                     MOVELERR,2     $MSG
+011100960221     C                     GOTO FINCT1
+011200960221     C                     END
+011300960221      *  Controllo se esiste azione
+011400960221     C           V1CAZN    IFNE *BLANKS
+011500960221     C                     MOVELV1CAZN    KAZM
+011600960221     C           KAZM      CHAINKFAZN11L             30
+011700960221     C           *IN30     IFEQ '1'
+011800960221     C                     MOVELERR,3     $MSG
+011900960221     C                     SETON                     4028
+012000960221     C                     GOTO FINCT1
+012100960221     C                     END
+012200960221     C                     END
+012300960221      *  Controllo se esiste menù
+012400960221     C           V1CMNU    IFNE *BLANKS
+012500960221     C                     MOVELV1CMNU    KAZM
+012600960221     C           KAZM      CHAINKPMNU01L             30
+012700960221     C           *IN30     IFEQ '1'
+012800960221     C                     MOVELERR,4     $MSG
+012900960221     C                     SETON                     4128
+013000960221     C                     GOTO FINCT1
+013100960221     C                     END
+013200960221     C                     END
+013300960221      *
+013400960221     C           FINCT1    ENDSR
+013500960221?     *--------------------------------------------------------------*
+013600960221?     *  SBM801: Sottometto stampa relazioni azioni/menù             *
+013700960221?     *--------------------------------------------------------------*
+013800960221     C           SBM801    BEGSR
+013900960221      *
+014000960221      * Testo se richiesta ricerca azione/menù
+014100960221     C           V1CAZN    IFNE *BLANKS
+014200960221     C                     MOVELV1CAZN    D00AZM
+014300960221     C                     MOVEL'A'       D00TAM
+014400960221     C                     ELSE
+014500960221     C                     MOVELV1CMNU    D00AZM
+014600960221     C                     MOVEL'M'       D00TAM
+014700960221     C                     END
+014800960221      *
+014900960221     C                     MOVELBAR800    KPJBU
+015000960221     C                     MOVEL'R801'    KCOAZ
+015100960221     C                     CALL 'BCH10'
+015200960221     C                     PARM           KPJBA
+015300960221      *
+015400960221     C                     ENDSR
+015500960221?     *--------------------------------------------------------------*
+015600960221?     *  *INZSR: Operazioni iniziali                                 *
+015700960221?     *--------------------------------------------------------------*
+015800960221     C           *INZSR    BEGSR
+015900960221      *
+016000960221     C           *ENTRY    PLIST
+016100960221     C                     PARM           KPJBA
+016200960221      *  Richiamo XPARUT
+016300960221     C                     Z-ADD1         CODUT
+016400960221     C                     CALL 'X§PARUT'
+016500960221     C                     PARM           UTEDSE
+016600960221     C                     MOVELREC80     CNCR80
+016700960221     C                     MOVELRAGUT     RSUT
+016800960221      *  Definizione delle variabili
+016900960221     C           *LIKE     DEFN MNUAZM    KAZM
+017000960221      *
+017100960221     C                     ENDSR
+017200960221**
+017300960221Immettere un codice di azione o un codice menù                        01
+017400960221Impossibile selezionare entrambe le opzioni                           02
+017500960221Codice azione inesistente                                             03
+017600960221Codice menù inesistente                                               04

@@ -1,0 +1,81 @@
+000100000314 TIS7I8C:    PGM
+000200000000
+000300991230
+000400040607/* --------- Dichiaro le variabili d wrk ---------------------- */
+000500040607             DCL        VAR(&DATA) TYPE(*CHAR) LEN(6) VALUE('000000')
+000600040607             DCL        VAR(&VASLIB) TYPE(*CHAR) LEN(10) VALUE('VAS000000')
+000700040607
+000800991230/* --------- Aggiunge le lirerie occorrenti in lista ---------- */
+000900041206             ADDLIBLE   LIB(GAITRAOBJ)
+001000041206             MONMSG     MSGID(CPF0000)
+001100041206             ADDLIBLE   LIB(GAITRAGRU)
+001200041206             MONMSG     MSGID(CPF0000)
+001300020912             ADDLIBLE   LIB(UNITRAGRU)
+001400020912             MONMSG     MSGID(CPF0000)
+001500040607
+001600040607/* --------- Reperisco la data d sistema ---------------------- */
+001700040607             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&DATA)
+001800040607
+001900040607/* --------- Giro la data in formato AAMMGG ------------------- */
+002000040607             CHGVAR     VAR(&DATA) VALUE(%SST(&DATA 5 2) *TCAT  +
+002100040607                          %SST(&DATA 3 2) *TCAT  %SST(&DATA 1 2))
+002200040607
+002300040607/* --------- Creao la libreria "VAS" del giorno corrente ------ */
+002400040607             CHGVAR     VAR(&VASLIB) VALUE('VAS' *TCAT &DATA)
+002500100613             CRTLIB     LIB(&VASLIB) TEXT('Libreria storicizzazione +
+002600100613                          TIVIN00S al' *BCAT &DATA)
+002700040607             MONMSG     MSGID(CPF0000)
+002800040607
+002900040607/* --------- Verifico se VASxxxxxx/TIVINSTO già esiste -------- */
+003000040607             CHKOBJ     OBJ(&VASLIB/TIVINSTO) OBJTYPE(*FILE)
+003100040607             MONMSG     MSGID(CPF0000) EXEC(DO)
+003200040607
+003300040607/* --------- Solo se NN esiste => procedo --------------------- */
+003400040607/* --------- Duplico il file TIVIN00S nella libreria VASxxxxxx  */
+003500040712             CRTDUPOBJ  OBJ(TIVIN00S) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+003600040712                          TOLIB(&VASLIB) NEWOBJ(TIVINSTO)
+003700040607             MONMSG     MSGID(CPF0000)
+003800040607             ENDDO
+003900120925
+004000120925/* --------- Verifico se VASxxxxxx/TIMALSTO già esiste -------- */
+004100120925             CHKOBJ     OBJ(&VASLIB/TIMALSTO) OBJTYPE(*FILE)
+004200120925             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300120925
+004400120925/* --------- Solo se NN esiste => procedo --------------------- */
+004500120925/* --------- Duplico il file TIMAL10F nella libreria VASxxxxxx  */
+004600120925             CRTDUPOBJ  OBJ(TIMAL10F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004700120925                          TOLIB(&VASLIB) NEWOBJ(TIMALSTO)
+004800120925             MONMSG     MSGID(CPF0000)
+004900120925             ENDDO
+005000040607
+005100040607/* --------- Aggiungo la libreria VASxxxxxx in lista ---------- */
+005200040607             ADDLIBLE   LIB(&VASLIB)
+005300040607             MONMSG     MSGID(CPF0000)
+005400991230
+005500991230/* --------- Chiama il PGM di cancellazione file di LOG ---------- */
+005600000314             CALL       PGM(GAITRAOBJ/TIS7I9R)
+005700000314             MONMSG     MSGID(CPF0000)
+005800120522
+005900120522/* --------- Chiama il PGM di pulizia libreria VASUPLOAD --------- */
+006000120522             CALL       PGM(GAITRAOBJ/TIS782R1)
+006100120522             MONMSG     MSGID(CPF0000)
+006200120925
+006300120925/* --------- Chiama il PGM di storicizzazione TIMAL10F ----------- */
+006400120925             CALL       PGM(GAITRAOBJ/TRTCM7R1)
+006500120925             MONMSG     MSGID(CPF0000)
+006600040607
+006700040607/* --------- Rimuovo la libreria VASxxxxxx dalla lista ----------- */
+006800040607             RMVLIBLE   LIB(&VASLIB)
+006900040607             MONMSG     MSGID(CPF0000)
+007000991230
+007100991230/* --------- Riorganizza i file di LOG ---------- */
+007200041206/*           CALL       PGM(GAITRAOBJ/TIS7I9C)    */
+007300041206/*           MONMSG     MSGID(CPF0000)            */
+007400010226
+007500010226/* --------- Rimuove le lirerie precedentemente aggiunte in lista ---------- */
+007600010226             RMVLIBLE   LIB(GAITRAGRU)
+007700010226             MONMSG     MSGID(CPF0000)
+007800010226             RMVLIBLE   LIB(GAITRAOBJ)
+007900010226             MONMSG     MSGID(CPF0000)
+008000991230
+008100000000             ENDPGM

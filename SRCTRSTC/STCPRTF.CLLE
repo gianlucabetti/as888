@@ -1,0 +1,131 @@
+000100070911/*********************************************************************/
+000200070911/*                                                                   */
+000300070911/*            VISUALIZZAZIONE E STAMPA DIZIONARIO FILE               */
+000400070911/*                                                                   */
+000500070911/*********************************************************************/
+000600070911             pgm        parm(&NOME &OUTPUT &CODA &COPIE &CAMPI &SAVE)
+000700070911
+000800070911             dcl        var(&NOME)     type(*char) len(20)
+000900070911             dcl        var(&FILE)     type(*char) len(10)
+001000070911             dcl        var(&LIBRERIA) type(*char) len(10)
+001100070911             dcl        var(&OUTPUT)   type(*char) len(6)
+001200070911             dcl        var(&CODA)     type(*char) len(20)
+001300070911             dcl        var(&OUTQ)     type(*char) len(10)
+001400070911             dcl        var(&OUTQLIB)  type(*char) len(10)
+001500070911             dcl        var(&COPIE)    type(*dec)  len(3 0)
+001600070911             dcl        var(&CAMPI)    type(*char) len(3)
+001700070911             dcl        var(&SAVE)     type(*char) len(4)
+001800070911             dcl        var(&TEXT)     type(*char) len(50)
+001900080509
+002000080509             chgjob     logclpgm(*no)
+002100070911
+002200070911             chgvar     var(&FILE)     value(%sst(&NOME  1 10))
+002300070911             chgvar     var(&LIBRERIA) value(%sst(&NOME 11 10))
+002400070911             chgvar     var(&OUTQ)     value(%sst(&CODA  1 10))
+002500070911             chgvar     var(&OUTQLIB)  value(%sst(&CODA 11 10))
+002600070911
+002700070911/* Verifica la libreria ed il file ----------------------------------*/
+002800070911
+002900070911             if         cond(&LIBRERIA *ne '*LIBL')  then(do)
+003000070911               chkobj     obj(&LIBRERIA)      objtype(*lib)
+003100070911               monmsg     msgid(CPF0000)      exec(do)
+003200070911                 sndpgmmsg  msg('La libreria indicata non esiste nel +
+003300070911                            sistema')
+003400070911                 goto       cmdlbl(Fine)
+003500070911                 enddo
+003600070911               enddo
+003700070911
+003800070911             chkobj     obj(&LIBRERIA/&FILE)  objtype(*FILE)
+003900070911             monmsg     msgid(CPF0000)        exec(do)
+004000070911               sndpgmmsg  msg('Il file non e'' stato trovato nella +
+004100070911                          libreria indicata o in lista di librerie')
+004200070911               goto       cmdlbl(Fine)
+004300070911               enddo
+004400070911
+004500070911/* Verifica la libreria ed il file della coda di stampa -------------*/
+004600070911
+004700070911             IF         cond(&OUTQ *ne '          ') then(DO)
+004800070911
+004900070911               if         cond(&OUTQLIB *ne '*LIBL') then(do)
+005000070911                 chkobj     obj(&OUTQLIB)     objtype(*lib)
+005100070911                 monmsg     msgid(CPF0000)    exec(do)
+005200070911                   sndpgmmsg  msg('La libreria indicata non esiste nel +
+005300070911                              sistema')
+005400070911                   goto       cmdlbl(Fine)
+005500070911                   enddo
+005600070911                 enddo
+005700070911
+005800080509               chkobj     obj(&OUTQLIB/&OUTQ) objtype(*outq)
+005900070911               monmsg     msgid(CPF0000)      exec(do)
+006000070911                 sndpgmmsg  msg('La coda di emissione non e'' ststa +
+006100070911                            trovata nella libreria indicata o in +
+006200070911                            lista di librerie')
+006300070911                 goto       cmdlbl(Fine)
+006400070911                 enddo
+006500070911
+006600070911               ENDDO
+006700080509
+006800080509/* Prepara gli archivi da elaborare (DSPFD e DSPFFD) ----------------*/
+006900070911
+007000070911             dspfd      file(&LIBRERIA/&FILE) +
+007100070911                        type(*accpth) +
+007200070911                        output(*outfile) +
+007300070911                        outfile(QTEMP/PDSPFD) +
+007400070911                        outmbr(*first *replace)
+007500070911
+007600070911             dspffd     file(&LIBRERIA/&FILE) +
+007700070911                        output(*outfile) +
+007800070911                        outfile(QTEMP/PDSPFFD) +
+007900070911                        outmbr(*first *replace)
+008000070911
+008100070911/* Se c'è la coda di emissione si pone quest'ultima nel file printer */
+008200070911
+008300070911             if         cond(&OUTQ *eq '          ') then(do)
+008400070911               rtvjoba    outq(&OUTQ)  outqlib(&OUTQLIB)
+008500080509               if         cond(&OUTQ *eq '*DEV      ') then( +
+008600080509                 chgvar     var(&OUTQ)   value('          ') )
+008700070911               enddo
+008800070911
+008900080509             if         cond(&OUTQ   *ne '          ') then(do)
+009000080509               if         cond(&OUTPUT *eq '*         ') then( +
+009100080509                 ovrprtf    file(STCPRTFP) +
+009200080509                            outq(&OUTQLIB/&OUTQ) +
+009300080509                            hold(*yes) +
+009400080509                            usrdta(&FILE) +
+009500080509                            splfname(PRTF) )
+009600080509               else       cmd( +
+009700080509                 ovrprtf    file(STCPRTFP) +
+009800080509                            outq(&OUTQLIB/&OUTQ) +
+009900080509                            copies(&COPIE) +
+010000080509                            save(&SAVE) +
+010100080509                            usrdta(&FILE) +
+010200080509                            splfname(PRTF) )
+010300080509               enddo
+010400080509             else       cmd(do)
+010500080509               if         cond(&OUTPUT *eq '*         ') then( +
+010600080509                 ovrprtf    file(STCPRTFP) +
+010700080509                            hold(*yes) +
+010800080509                            usrdta(&FILE) +
+010900080509                            splfname(PRTF) )
+011000080509               else       cmd( +
+011100080509                 ovrprtf    file(STCPRTFP) +
+011200080509                            copies(&COPIE) +
+011300080509                            save(&SAVE) +
+011400080509                            usrdta(&FILE) +
+011500080509                            splfname(PRTF) )
+011600080509               enddo
+011700070911
+011800070911             rtvobjd    obj(&LIBRERIA/&FILE)  objtype(*file) +
+011900070911                        text(&TEXT)
+012000070911
+012100070911             call       pgm(STCPRTF1)         parm(&TEXT &CAMPI)
+012200070911
+012300070911             if         cond(&OUTPUT *eq '*') then(do)
+012400070911               dspsplf    file(PRTF)          splnbr(*last)
+012500070911               monmsg     msgid(CPF0000)
+012600070911               dltsplf    file(PRTF)          splnbr(*last)
+012700070911               monmsg     msgid(CPF0000)
+012800070911               enddo
+012900070911
+013000070911    Fine:
+013100070911             endpgm

@@ -1,0 +1,102 @@
+000100000000/*-------------------------------------------------------------------*/
+000200020605/*  TRMZ50C                                                          */
+000300000000/*-------------------------------------------------------------------*/
+000400000000             PGM        PARM(&KPJBA)
+000500020605             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600030116             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000700030113             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000800030116             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+000900030116             DCL        VAR(&POSTADET) TYPE(*CHAR) LEN(198)
+001000030116             DCL        VAR(&ESEDAT) TYPE(*CHAR) LEN(6)
+001100030116             DCL        VAR(&ESETIM) TYPE(*CHAR) LEN(6)
+001200041102             DCL        VAR(&NOAGIP) TYPE(*CHAR) LEN(1) VALUE(' ')
+001300041102             DCL        VAR(&NOENI) TYPE(*CHAR) LEN(1) VALUE(' ')
+001400030116
+001500110331             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) VALUE('fatture@setras.eu')
+001600100819             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253)
+001700100819             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44)
+001800100819             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000)
+001900100819
+002000100819             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+002100170317             DCL        VAR(&prova) TYPE(*CHAR) LEN(1)
+002200100819/*-------------------------------------------------------------------*/
+002300100819
+002400030116             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&ESETIM)
+002500030116             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&ESEDAT)
+002600030113             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+002700170317             CHGVAR     VAR(&prova) VALUE(%SST(&Knsif 7 1))
+002800041102
+002900030116 /* le stampe del gestionale vengono immesse nella coda uff. automez.*/
+003000120315             OVRPRTF    FILE(QSYSPRT) OUTQ(P046058AU) SAVE(*YES) +
+003100040416                          SECURE(*YES) OVRSCOPE(*JOB)
+003200041102
+003300041102 /* CONTROLLO SE ESISTE IL FILE PCAGIP ( file excel) */
+003400041102             RTVOBJD    OBJ(PCAGIP) OBJTYPE(*FILE)
+003500041102             MONMSG     MSGID(CPF0000) EXEC(DO)
+003600041102             CHGVAR     VAR(&NOAGIP) VALUE('1')
+003700041102             ENDDO
+003800030113 /* controllo se il campo dell'aliquota è numerico */
+003900041102             IF         COND(&NOAGIP *EQ ' ') THEN(DO)
+004000040302             DSPFFD     FILE(PCAGIP) OUTPUT(*OUTFILE) +
+004100040302                          OUTFILE(QTEMP/DDSPCAGIP)
+004200041102 /* copia il file ricevuto a PC nel file AGIP */
+004300021210             CALL       PGM(TRMZ52R)
+004400041102             DLTF       FILE(QTEMP/DDSPCAGIP)
+004500041102             ENDDO
+004600041102
+004700041102 /* CONTROLLO SE ESISTE IL FILE PCENI ( file nuovo txt) */
+004800041102             RTVOBJD    OBJ(PCENI) OBJTYPE(*FILE)
+004900041102             MONMSG     MSGID(CPF0000) EXEC(DO)
+005000041102             CHGVAR     VAR(&NOENI) VALUE('1')
+005100041102             ENDDO
+005200041122 /* attivo controllo di sincronia */
+005300041122             IF         COND(&NOENI *EQ ' ') THEN(STRCMTCTL +
+005400041122                          LCKLVL(*CHG) CMTSCOPE(*JOB))
+005500041103 /* copia il file ricevuto a PC nel file AGIP */
+005600041102             IF         COND(&NOENI *EQ ' ') THEN(CALL PGM(TRMZ53R))
+005700041122 /* disattivo controllo di sincronia */
+005800041122             IF         COND(&NOENI *EQ ' ') THEN(ENDCMTCTL)
+005900041102
+006000041102 /* CONTINUO SOLO SE HO ALMENO UN FILE */
+006100041102             IF         COND((&NOAGIP *NE '1') *OR (&NOENI *NE '1')) +
+006200041102                          THEN(DO)
+006300041122 /* scrive file mzagi00f */
+006400041122             CALL       PGM(TRMZ50R) PARM(&KPJBA)
+006500030113 /* scrive file mzimp00f */
+006600020801             CALL       PGM(TRMZ51R) PARM(&KPJBA)
+006700030113 /* cancello file PC */
+006800040302             DLTF       FILE(PCAGIP)
+006900041102             MONMSG     MSGID(CPF0000)
+007000041102             DLTF       FILE(PCENI)
+007100041102             MONMSG     MSGID(CPF0000)
+007200021025             DLTOVR     FILE(*ALL)
+007300030116 /* TRADUTTORE  x contabilizzaz. */
+007400030116             CALL       PGM(TRMZ60C) PARM(&KNSIF '201' &ESITO)
+007500041102             ENDDO
+007600170317 /* Se sistema informativo di prova non invia mail segnalazioni errore */
+007700170317          if         COND(&PROVA *NE 'P') THEN(DO)
+007800041102
+007900041102 /* SE non HO ALMENO UN FILE  mando messaggio d'errore*/
+008000041102             IF         COND((&NOAGIP *NE '1') *AND (&NOENI *NE +
+008100041102                          '1')) THEN(CHGVAR VAR(&ESITO) VALUE('1'))
+008200041102
+008300041102 /* invio messaggio di ricezione movimenti agip x contab.  */
+008400030116             IF         COND(&ESITO *NE '1') THEN(CHGVAR +
+008500030116                          VAR(&POSTATES) VALUE('- OK RICEZIONE +
+008600030116                          MOVIMENTI FATTURA AGIP '))
+008700030116             IF         COND(&ESITO *EQ '1') THEN(CHGVAR +
+008800030116                          VAR(&POSTATES) VALUE('- ERRORI IN +
+008900030116                          RICEZIONE MOVIMENTI FATTURA AGIP '))
+009000110331             CHGVAR     VAR(&POSTADET) VALUE('Visualizzare l''esito +
+009100110331                          della traduzione ')
+009200110331             CHGVAR     VAR(%SST(&POSTADET 42 5)) VALUE('DATA:')
+009300110331             CHGVAR     VAR(%SST(&POSTADET 47 6)) VALUE(&ESEDAT)
+009400110331             CHGVAR     VAR(%SST(&POSTADET 55 4)) VALUE('ORA:')
+009500110331             CHGVAR     VAR(%SST(&POSTADET 59 6)) VALUE(&ESETIM)
+009600110331
+009700110331             CHGVAR     VAR(&emogg) VALUE(&postates)
+009800110331             CHGVAR     VAR(&emmsg) VALUE(&postadet)
+009900110331             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+010000170317          ENDdo
+010100170317
+010200110331             ENDPGM

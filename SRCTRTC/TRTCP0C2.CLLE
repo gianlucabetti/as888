@@ -1,0 +1,42 @@
+000100070214/*----------------------------------------------------------------------------*/
+000200070214/*  CARICAMENTO SPUNTE DA impianto RPVP rilevatore pesi e volumi              */
+000300010713/* -------------------------------------------------------------------------- */
+000400170125/* 1) DALLE SPUNTE LETTE -FLTR5xxx- SCRIVE IL FILE "STANDARD" FITR400F        */
+000500170126/* 2) RICHIAMA TRTCP7C1                                                       */
+000600000000/*                                                                            */
+000700030704/* INPUT --> P.O. CHE SPUNTA                                                  */
+000800030704/*           SISTEMA INFORMATIVO                                              */
+000900030704/*           FILE DELLE SPUNTE LETTE "GREZZE"     (FLTR5xxx)                  */
+001000030716/*           TIPO FOGLIO VIAGGIO                                              */
+001100030716/*           NUMERO FOGLIO VIAGGIO                                            */
+001200000000/*                                                                            */
+001300170126/* I PARAMETRI NON DEVONO INIZIARE CON UN NUMERO                              */
+001400000000/* -------------------------------------------------------------------------- */
+001500170126             PGM        PARM(&FILW &SYF &FILGRE &NPG &NFV)
+001600170126
+001700000000
+001800000000/* Dichiarazione variabili __________________________________________________ */
+001900170125             DCL        VAR(&FILW)   TYPE(*CHAR) LEN(4)    /* Tipo + FIL spunta */
+002000170125             DCL        VAR(&FIL)    TYPE(*CHAR) LEN(3)    /* FIL spunta */
+002100170125             DCL        VAR(&SYF)    TYPE(*CHAR) LEN(10)   /* S.I. */
+002200030716             DCL        VAR(&FILGRE) TYPE(*CHAR) LEN(10)   /* File da impianto "grezzo" */
+002300030716             DCL        VAR(&NPG)    TYPE(*CHAR) LEN(2)    /* Tipo foglio viaggio */
+002400030716             DCL        VAR(&NFV)    TYPE(*CHAR) LEN(7)    /* Numero foglio viaggio */
+002500170125
+002600170308/* Reperisco il codice filiale corrente _____________________________________ */
+002700170125             CHGVAR     VAR(&FIL)    VALUE(%SST(&FILW 2 3))
+002800020618
+002900000000/* Esegue le sostituzioni dei file con quelli passati da parametri __________ */
+003000170308             OVRDBF     FILE(FLTR500F) TOFILE(&FILGRE) OVRSCOPE(*JOB)
+003100170125
+003200170125/* Richiamo pgm per normalizzare il file ricevuto dall'impianto _____________ */
+003300170125             CALL       PGM(FIMS05R1) PARM(&FILW &NPG &NFV)
+003400170125
+003500170125/* Elimino sostituzioni ai file _____________________________________________ */
+003600170308             DLTOVR     FILE(*ALL) LVL(*JOB)
+003700000000
+003800170126/* Dopo aver popolato il file spunte "standard" FITR400F richiama il TRTCP7C1 */
+003900170126             CALL       PGM(TRTCP7C1) PARM(&FIL)
+004000170126             MONMSG     MSGID(CPF0000)
+004100030716
+004200000000             ENDPGM

@@ -1,0 +1,107 @@
+000100140120/* per compilare questo pgm bisogna creare il file QTEMP/WFTITTMP mediante: */
+000200140120/*           DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE)         */
+000300140120/*                        OUTFILE(QTEMP/WFTITTMP)                           */
+000400140120/* dando una libreria/file qualunque (non interessano i dati ma la struttura  */
+000500140120/* e poi cancellare il file */
+000600150407             PGM        PARM(&L &F &M &POSRSD &POSIND &POSLOD +
+000700150407                          &POSPRD &POSCAD &POTNOTE &POTNOTI &VAORSR +
+000800150408                          &VAOTER &VAORFA &SELTXT &ESITO)
+000900941110
+001000980324/* Parametri in ingresso:                                                                         */
+001100980324/*              &L - Libreria                                                                     */
+001200980324/*              &F - File sorgente                                                                */
+001300140818/*              &M - Membro sorgente                                                              */
+001400140116/*              &POS* - posizioni campi diagnostica */
+001500140116/*              &SELTXT - per selezione su descrizione */
+001600140116/*              &ESITO - esito */
+001700980326
+001800140117             DCLF       FILE(QTEMP/WFTITTMP)
+001900140116             DCL        VAR(&L) TYPE(*CHAR) LEN(10)
+002000941110             DCL        VAR(&F) TYPE(*CHAR) LEN(10)
+002100140818             DCL        VAR(&M) TYPE(*CHAR) LEN(10)
+002200140116             DCL        VAR(&POSRSD) TYPE(*DEC) LEN(4 0)
+002300140116             DCL        VAR(&POSIND) TYPE(*DEC) LEN(4 0)
+002400140116             DCL        VAR(&POSLOD) TYPE(*DEC) LEN(4 0)
+002500140116             DCL        VAR(&POSPRD) TYPE(*DEC) LEN(4 0)
+002600140116             DCL        VAR(&POSCAD) TYPE(*DEC) LEN(4 0)
+002700140312             DCL        VAR(&POTNOTE) TYPE(*DEC) LEN(4 0)
+002800140312             DCL        VAR(&POTNOTI) TYPE(*DEC) LEN(4 0)
+002900150407             DCL        VAR(&VAORSR) TYPE(*DEC) LEN(4 0)
+003000150407             DCL        VAR(&VAOTER) TYPE(*DEC) LEN(4 0)
+003100150407             DCL        VAR(&VAORFA) TYPE(*DEC) LEN(4 0)
+003200140116             DCL        VAR(&SELTXT) TYPE(*CHAR) LEN(50)
+003300140116             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+003400140818             DCL        VAR(&POS) TYPE(*DEC) LEN(2 0)
+003500140312
+003600140312/* Creo il file con tutti i membri presenti nel source file in input  */
+003700140312             DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+003800140312                          OUTFILE(QTEMP/WFTITTMP)
+003900140116
+004000140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+004100140116             CHGVAR     VAR(&Esito) VALUE(1)
+004200140116             GOTO       CMDLBL(FINE)
+004300140116             ENDDO
+004400140818
+004500140818/* se è stato indicato un nome membro */
+004600140818             IF         COND(&M *NE ' ') THEN(DO)
+004700140818/* ciclo per scoprire se c'è un asterico nel nome e dove */
+004800140818             CHGVAR     VAR(&POS) VALUE(1)
+004900140818/* se alla posizione indicata non c'è l'asterisco né il blank */
+005000140818 CICLO:      IF         COND((%SST(&M &POS 1) *NE '*') *AND (%SST(&M +
+005100140818                          &POS 1) *NE ' ')) THEN(DO)
+005200140818/* incremento la posizione da controllare */
+005300140818             CHGVAR     VAR(&POS) VALUE(&POS + 1)
+005400140818/* se la posizione è > 10 char, dichiaro che il nome è lungo 10 ed esco dal ciclo */
+005500140818             IF         COND(&POS *EQ 11) THEN(DO)
+005600140818             CHGVAR     VAR(&POS) VALUE(&POS - 1)
+005700140818             GOTO       CMDLBL(RCVF)
+005800140818             ENDDO
+005900140818/* se sono qui, alla posizione indicata non c'è né asterisco nè blank e torno al ciclo */
+006000140818             GOTO       CMDLBL(CICLO)
+006100140818             ENDDO
+006200140818
+006300140818/* se alla posizione indicata c'è l'asterisco o il blank */
+006400140818             ELSE       CMD(DO)
+006500140818/* la posizione finale è quella testata - 1 */
+006600140818             CHGVAR     VAR(&POS) VALUE(&POS - 1)
+006700140818             ENDDO
+006800140116
+006900140818             ENDDO
+007000140818
+007100140116 RCVF:       RCVF       RCDFMT(QWHFDML)
+007200140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+007300140117/* non c'è un esito particolare perché dà errore anche a fine file */
+007400140116             GOTO       CMDLBL(FINE)
+007500140116             ENDDO
+007600140116
+007700140116/* la diagnostica deve essere fatta girare solo per RPGLE e/o SQLRPGLE */
+007800140116/* gli altri test li faccio nel pgm chiamato */
+007900140116             IF         COND((&MLSEU2 *EQ 'RPGLE') *OR (&MLSEU2 *EQ +
+008000140116                          'SQLRPGLE')) THEN(DO)
+008100140818
+008200140818/* se è stato indicato un nome membro */
+008300140818             IF         COND(&M *NE ' ') THEN(DO)
+008400140818/* se il nome parziale è diverso, leggo il prossimo */
+008500140818             IF         COND((%SST(&MLNAME 1 &POS)) *NE (%SST(&M 1 &POS))) +
+008600140818                          THEN(GOTO CMDLBL(RCVF))
+008700140818             ENDDO
+008800140116
+008900140116/* OVRDBF per programma RPG                                                                       */
+009000140116             OVRDBF     FILE(INPUTBND) TOFILE(&L/&F) MBR(&MLNAME) +
+009100140116                          OVRSCOPE(*JOB)
+009200140116
+009300140116/* Richiamo programma diagnostico                                                                 */
+009400150407             CALL       PGM(UBFMTTITR2) PARM(&L &F &POSRSD &POSIND +
+009500150407                          &POSLOD &POSPRD &POSCAD &POTNOTE &POTNOTI +
+009600150408                          &VAORSR &VAOTER &VAORFA &SELTXT +
+009700150407                          &MLNAME &MLMTXT &ESITO)
+009800140116
+009900140116/* Elimino le sostituzioni file attive e il membro dal file in QTEMP                              */
+010000140117             DLTOVR     FILE(INPUTBND) LVL(*JOB)
+010100140116
+010200140116             ENDDO
+010300140116
+010400140116             GOTO       CMDLBL(RCVF)
+010500140116ENDRCVF:
+010600980325
+010700140116 FINE:       ENDPGM

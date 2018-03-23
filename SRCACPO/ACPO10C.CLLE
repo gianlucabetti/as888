@@ -1,0 +1,151 @@
+000100140915/*PRM dftactgrp(*no)                                                 */
+000200140912/*END                                                                */
+000300140912/*===================================================================*/
+000400140912/*?ACPO10C - Aggiornamento/Acquisizione Potenziali (su SETRAS)      ?*/
+000500140912/*===================================================================*/
+000600140912
+000700140912             pgm        parm(&KPJBA)
+000800140912
+000900140912             dcl        var(&KPJBA)      type(*char) len(502)
+001000140915             dcl        var(&Aggio)      type(*char) len(1)
+001100140912             dcl        var(&Libr)       type(*char) len(10)
+001200140912             dcl        var(&File)       type(*char) len(10)
+001300140912
+001400140915             chgvar     var(&Aggio)      value(%sst(&KPJBA 247  1))
+001500140915             chgvar     var(&Libr)       value('EDPCRIBIS ')
+001600140912
+001700140912             sndpgmmsg  msgid(CPDA0FF)   msgf(QCPFMSG) +
+001800140912                          msgdta('Elaborazione in corso. Attendere, +
+001900140912                          prego...') +
+002000140912                          topgmq(*ext)   msgtype(*status)
+002100140915
+002200140912
+002300140912/* -?Copia dei file in Aggiornamento (SE non chiesta solo Lista)?--- */
+002400140929             IF         cond(&Aggio *eq 'A')   then(DO)
+002500140912
+002600140912               /* -?File TNCPO00F?---------------------------------- */
+002700140912               dltf       file(&Libr/TNCPO0*)
+002800140912               monmsg     msgid(CPF2125)
+002900140929               chgvar     var(&File)     value('TNCPO00F  ')
+003000140929               cpyf       fromfile(UNITRAGRU/&File) +
+003100140929                          tofile(&Libr/&File) +
+003200140912                          mbropt(*replace) +
+003300140912                          crtfile(*yes)
+003400140912
+003500140912               /* -?File TNCPO10F?---------------------------------- */
+003600140912               dltf       file(&Libr/TNCPO1*)
+003700140912               monmsg     msgid(CPF2125)
+003800140929               chgvar     var(&File)     value('TNCPO10F  ')
+003900140929               cpyf       fromfile(UNITRAGRU/&File) +
+004000140929                          tofile(&Libr/&File) +
+004100140912                          mbropt(*replace) +
+004200140912                          crtfile(*yes)
+004300140912
+004400140912               /* -?File TICPI00F?---------------------------------- */
+004500140912               dltf       file(&Libr/TICPI*)
+004600140912               monmsg     msgid(CPF2125)
+004700140929               chgvar     var(&File)     value('TICPI00F  ')
+004800140929               cpyf       fromfile(UNITRAGRU/&File) +
+004900140929                          tofile(&Libr/&File) +
+005000140912                          mbropt(*replace) +
+005100140912                          crtfile(*yes)
+005200140929
+005300140929               /* -?File TIATC00F?---------------------------------- */
+005400140929               dltf       file(&Libr/TIATC*)
+005500140929               monmsg     msgid(CPF2125)
+005600140929               chgvar     var(&File)     value('TIATC00F  ')
+005700140929               cpyf       fromfile(UNITRAGRU/&File) +
+005800140929                          tofile(&Libr/&File) +
+005900140929                          mbropt(*replace) +
+006000140929                          crtfile(*yes)
+006100140929
+006200140929               /* -?File TICPN00F?---------------------------------- */
+006300140929               dltf       file(&Libr/TICPN*)
+006400140929               monmsg     msgid(CPF2125)
+006500140929               chgvar     var(&File)     value('TICPN00F  ')
+006600140929               cpyf       fromfile(UNITRAGRU/&File) +
+006700140929                          tofile(&Libr/&File) +
+006800140929                          mbropt(*replace) +
+006900140929                          crtfile(*yes)
+007000140912
+007100140912             ENDDO
+007200140912
+007300140912
+007400140912/* -?Richiamo *pgm di AGGIORNAMENTO?-------------------------------- */
+007500141001             if         cond(&Aggio *eq 'A')   then( +
+007600141001               chgvar   var(%sst(&KPJBA 247  3)) value('A  ') )
+007700141001             else       cmd( +
+007800141001               chgvar   var(%sst(&KPJBA 247  3)) value('   ') )
+007900140912
+008000140912             call       pgm(ACPO06R)     parm(&KPJBA)
+008100140929
+008200140929/* -?Richiamo *pgm (1) di ELIMINAZIONE?----------------------------- */
+008300141001             if         cond(&Aggio *eq 'A')   then( +
+008400141001               chgvar   var(%sst(&KPJBA 247  3)) value('A  ') )
+008500141001             else       cmd( +
+008600141001               chgvar   var(%sst(&KPJBA 247  3)) value('   ') )
+008700140929
+008800140929             call       pgm(ACPO05R)     parm(&KPJBA)
+008900140929
+009000140929/* -?Salvataggi "intermedi"?---------------------------------------- */
+009100140929             IF         cond(&Aggio *eq 'A')   then(DO)
+009200140929
+009300140929               /* -?File TNCPO00F?---------------------------------- */
+009400140929               chgvar     var(&File)     value('TNCPO00F  ')
+009500140929               cpyf       fromfile(UNITRAGRU/&File) +
+009600140929                          tofile(&Libr/TNCPO00SAV) +
+009700140929                          mbropt(*replace) +
+009800140929                          crtfile(*yes)
+009900140929
+010000140929               /* -?File TIATC00F?---------------------------------- */
+010100140929               chgvar     var(&File)     value('TIATC00F  ')
+010200140929               cpyf       fromfile(UNITRAGRU/&File) +
+010300140929                          tofile(&Libr/TIATC00SAV) +
+010400140929                          mbropt(*replace) +
+010500140929                          crtfile(*yes)
+010600140929
+010700140929               /* -?File TICPN00F?---------------------------------- */
+010800140929               chgvar     var(&File)     value('TICPN00F  ')
+010900140929               cpyf       fromfile(UNITRAGRU/&File) +
+011000140929                          tofile(&Libr/TICPN00SAV) +
+011100140929                          mbropt(*replace) +
+011200140929                          crtfile(*yes)
+011300140929
+011400140929             ENDDO
+011500140929
+011600140929/* -?Richiamo *pgm (2) di ELIMINAZIONE?----------------------------- */
+011700141001             if         cond(&Aggio *eq 'A')   then( +
+011800141001               chgvar   var(%sst(&KPJBA 247  3)) value('A  ') )
+011900141001             else       cmd( +
+012000141001               chgvar   var(%sst(&KPJBA 247  3)) value('   ') )
+012100140929
+012200140929             call       pgm(ACPO11R)     parm(&KPJBA)
+012300140912
+012400140912/* -?Richiamo *pgm di INSERIMENTO?---------------------------------- */
+012500141001             if         cond(&Aggio *eq 'A')   then( +
+012600141001               chgvar   var(%sst(&KPJBA 247  3)) value('A  ') )
+012700141001             else       cmd( +
+012800141001               chgvar   var(%sst(&KPJBA 247  3)) value('   ') )
+012900140912
+013000140912             call       pgm(ACPO07R)     parm(&KPJBA)
+013100140912
+013200140912
+013300140929/* -?Richiamo *pgm di MODIFICA Info Comm.li?------------------------ */
+013400140929             IF         cond(&Aggio *eq 'A')   then(DO)
+013500140929
+013600140929               /* -?Richiamo *pgm di MODIFICA Info Comm.li?--------- */
+013700140929               call       pgm(TNVRMB21R)
+013800140929
+013900140929               /* -?Richiamo *pgm di MODIF. Dt.Ult.Conf.Info Comm.li?*/
+014000140929               call       pgm(TNVRMB22R)
+014100140929
+014200140929               /* -?Richiamo *pgm di MODIFICA Info Comm.li NO BRT?-- */
+014300140929               call       pgm(TNVRMB23R)
+014400140929
+014500140929             ENDDO
+014600140929
+014700140912
+014800140912/* -?Fine?---------------------------------------------------------- */
+014900140912             rclrsc
+015000140912
+015100140912             EndPgm

@@ -1,0 +1,141 @@
+000100060613
+000200060613             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000300060609
+000400080711             DCL        VAR(&TIVLRDS)    TYPE(*CHAR) LEN(339)
+000500080711             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1)
+000600080711             DCL        VAR(&PRMLIT)     TYPE(*CHAR) LEN(10)
+000700080711             DCL        VAR(&PRMFIR)     TYPE(*CHAR) LEN(10)
+000800100322
+000900100608             DCL        VAR(&TIVLREDS)   TYPE(*CHAR) LEN(2632)
+001000080709
+001100080711             DCL        VAR(&KSC)        TYPE(*CHAR) LEN(8)
+001200081113             DCL        VAR(&TIP)        TYPE(*CHAR) LEN(2)
+001300080711             DCL        VAR(&HDL)        TYPE(*CHAR) LEN(10)
+001400100322             DCL        VAR(&ISV)        TYPE(*CHAR) LEN(2)
+001500100322             DCL        VAR(&PRG)        TYPE(*CHAR) LEN(10)
+001600080711             DCL        VAR(&PPT)        TYPE(*CHAR) LEN(50)
+001700081126             DCL        VAR(&PPTLIB)     TYPE(*CHAR) LEN(10)
+001800080711             DCL        VAR(&PPTPGM)     TYPE(*CHAR) LEN(10)
+001900081126             DCL        VAR(&PPTLEN)     TYPE(*DEC)  LEN(5 0)
+002000081127             DCL        VAR(&PPTELF)     TYPE(*CHAR) LEN(6)
+002100081201             DCL        VAR(&PPTCCSID)   TYPE(*DEC)  LEN(5 0)
+002200170920             DCL        VAR(&PPTTRIM)    TYPE(*CHAR) LEN(1)         /* Y or ' ' */
+002300081113             DCL        VAR(&MSG)        TYPE(*CHAR) LEN(80)
+002400100322
+002500100322             DCL        VAR(&VLRETRC)    TYPE(*CHAR) LEN(5)
+002600100608             DCL        VAR(&VLREFIL)    TYPE(*CHAR) LEN(258)
+002700080711
+002800080711             DCL        VAR(&LIBIN)      TYPE(*CHAR) LEN(10)
+002900080711             DCL        VAR(&FILIN)      TYPE(*CHAR) LEN(10)
+003000080711             DCL        VAR(&MBRIN)      TYPE(*CHAR) LEN(10)
+003100110615             DCL        VAR(&FLDSELIN)   TYPE(*CHAR) LEN(20)
+003200110615             DCL        VAR(&NOMEALIAS)  TYPE(*CHAR) LEN(22)
+003300080711             DCL        VAR(&PATHIFS)    TYPE(*CHAR) LEN(255)
+003400080711             DCL        VAR(&FILIFS)     TYPE(*CHAR) LEN(255)
+003500080711             DCL        VAR(&EXTIFS)     TYPE(*CHAR) LEN(255)
+003600080711             DCL        VAR(&PATHFILIFS) TYPE(*CHAR) LEN(255)
+003700080711             DCL        VAR(&MESSAGGIO)  TYPE(*CHAR) LEN(80)
+003800090319
+003900090319             DCL        VAR(&EML)        TYPE(*CHAR) LEN(253)
+004000090319             DCL        VAR(&OGG)        TYPE(*CHAR) LEN(44)
+004100090319             DCL        VAR(&TXT)        TYPE(*CHAR) LEN(5000)
+004200090319
+004300080709
+004400081113             CHGVAR     VAR(&KSC)      VALUE(%SST(&TIVLRDS   1  8))
+004500081113             CHGVAR     VAR(&TIP)      VALUE(%SST(&TIVLRDS   9  2))
+004600080709             CHGVAR     VAR(&HDL)      VALUE(%SST(&TIVLRDS 140 10))
+004700080709             CHGVAR     VAR(&PPT)      VALUE(%SST(&TIVLRDS 160 50))
+004800081113             CHGVAR     VAR(&MSG)      VALUE(%SST(&TIVLRDS 223 80))
+004900100322             CHGVAR     VAR(&ISV)      VALUE(%SST(&TIVLRDS 314  2))
+005000100322             CHGVAR     VAR(&PRG)      VALUE(%SST(&TIVLRDS 317 10))
+005100120222             CHGVAR     VAR(&PPTLIB)   VALUE(%SST(&PPT 13 10))
+005200120222             CHGVAR     VAR(&PPTPGM)   VALUE(%SST(&PPT 23 10))
+005300120222             CHGVAR     VAR(&PPTLEN)   VALUE(%SST(&PPT 33  5))
+005400120222             CHGVAR     VAR(&PPTELF)   VALUE(%SST(&PPT 38  6))
+005500120222             CHGVAR     VAR(&PPTCCSID) VALUE(%SST(&PPT 44  5))
+005600170920             CHGVAR     VAR(&PPTTRIM)  VALUE(%SST(&PPT 49  1))
+005700100322
+005800100322             CHGVAR     VAR(&VLRETRC)  VALUE('FIL' *TCAT &ISV)
+005900080709
+006000100322
+006100100322    /* Reperisco le infos sul file di unput                         */
+006200100322             CALL       PGM(TIS703R) PARM(&VLRETRC &PRG &TIVLREDS &ESITO)
+006300100322             MONMSG     MSGID(CPF0000) EXEC(DO)
+006400100322             CHGVAR     VAR(&ESITO) VALUE('2')
+006500100322             ENDDO
+006600100322
+006700100322    /* Se errore vado a fine                                        */
+006800100322             IF         COND(&ESITO *EQ '2') THEN(DO)
+006900100322             GOTO       CMDLBL(FINE)
+007000100322             ENDDO
+007100100322
+007200100608             CHGVAR     VAR(&VLREFIL)  VALUE(%SST(&TIVLREDS 286 256))
+007300100322
+007400080709
+007500080709    /* Compongo il nome del file nel IFS                            */
+007600080711             CHGVAR     VAR(&LIBIN)     VALUE(' ')
+007700080711             CHGVAR     VAR(&FILIN)     VALUE('TIVIN00R')
+007800080711             CHGVAR     VAR(&MBRIN)     VALUE(&HDL)
+007900110615             CHGVAR     VAR(&FLDSELIN)  VALUE('VINDTA')
+008000080711             CHGVAR     VAR(&MESSAGGIO) VALUE(' ')
+008100080709             CHGVAR     VAR(&PATHIFS)   VALUE('/BARTVAS/UPLOAD/')
+008200100322             CHGVAR     VAR(&FILIFS) VALUE(&KSC *TCAT '_' *TCAT &TIP *TCAT '_' +
+008300100322                                     *TCAT &HDL *TCAT '_' *TCAT &VLREFIL)
+008400080711             CHGVAR     VAR(&EXTIFS) VALUE('.WRK')
+008500080711             CHGVAR     VAR(&PATHFILIFS)  VALUE(&PATHIFS *TCAT &FILIFS *TCAT &EXTIFS)
+008600100322
+008700100322
+008800100322
+008900080709    /* Genero il file da elaborare nel IFS                          */
+009000110615             CALL       PGM(TRBMF2IFC) PARM(&LIBIN &FILIN &MBRIN &FLDSELIN &NOMEALIAS +
+009100170920                          &PATHIFS &FILIFS &EXTIFS &PPTLEN &PPTTRIM &PPTELF &PPTCCSID +
+009200081201                          &MESSAGGIO &ESITO)
+009300080711             MONMSG     MSGID(CPF0000) EXEC(DO)
+009400080711             CHGVAR     VAR(&ESITO) VALUE('2')
+009500080711             GOTO       CMDLBL(FINE)
+009600080711             ENDDO
+009700080711
+009800080711
+009900080711    /* Se tutto ok => procedo                                       */
+010000080711             IF         COND(&ESITO *NE '2') THEN(DO)
+010100080709
+010200081113    /* Quindi chiamo il *pgm x l'elaborazione del file (se presente)*/
+010300081113             IF         COND(&PPTPGM *NE ' ') THEN(DO)
+010400120222             ADDLIBLE   LIB(&PPTLIB) POSITION(*LAST)
+010500120222             MONMSG     MSGID(CPF0000)
+010600120222
+010700120222             CALL       PGM(&PPTPGM) PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR +
+010800120222                                          &PATHIFS &FILIFS &EXTIFS)
+010900080711             MONMSG     MSGID(CPF0000) EXEC(DO)
+011000080711             CHGVAR     VAR(&ESITO)   VALUE('2')
+011100080711             ENDDO
+011200090319
+011300090319             IF         COND(&ESITO *EQ '1') THEN(DO)
+011400120307             CHGVAR     VAR(&EML)   VALUE('cedalert@brt.it')
+011500090319             CHGVAR     VAR(&OGG)   VALUE('VAS - WARNING!!!')
+011600090319             CHGVAR     VAR(&TXT)   VALUE('Cliente  : ' *BCAT &KSC    *BCAT ':/N' *BCAT +
+011700090319                                          'Tipo file: ' *BCAT &TIP    *BCAT ':/N' *BCAT +
+011800090319                                          'ID elab. : ' *BCAT &HDL    *BCAT ':/N' *BCAT +
+011900090319                                          'Parametri: ' *BCAT &PPT    *BCAT ':/N' *BCAT +
+012000090319                                          'File     : ' *BCAT &FILIFS *BCAT ':/N')
+012100090319             CALL       PGM(TIS701C) PARM(&EML &OGG &TXT)
+012200090319             ENDDO
+012300090319
+012400080709
+012500080709    /* Al termine della elaborazione elimino il file dal IFS        */
+012600090319             IF         COND(&ESITO *NE '1' *AND &ESITO *NE '2') THEN(DO)
+012700120222             CALL       PGM(TIS72IFSR) PARM(&HDL &PATHIFS &FILIFS &EXTIFS &ESITO)
+012800081126             MONMSG     MSGID(CPF0000)
+012900081216             ENDDO
+013000081113
+013100081113             ENDDO
+013200080709
+013300080709    /* Se tutto ok battezzo ESITO = OK                              */
+013400090319             IF         COND(&ESITO *NE '1' *AND &ESITO *NE '2') THEN(DO)
+013500080711             CHGVAR     VAR(&ESITO)   VALUE('0')
+013600080711             ENDDO
+013700080709
+013800080711             ENDDO
+013900060614
+014000050413FINE:
+014100020911             ENDPGM

@@ -1,0 +1,1165 @@
+000100970526     H*------------------------------------------------------------------------*
+000200970527     H* CAPPARIO - GESTIONE TEMPI DI CONSEGNA - ROUTINE
+000300970526     H*------------------------------------------------------------------------*
+000400970526     H              J
+000500970526     F*------------------------------------------------------------------------*
+000600970526     F* DATA BASE
+000700970526     F*------------------------------------------------------------------------*
+000800970527     FTISI42D CF  E                    WORKSTN      KINFDS DEVDS1
+000900970527     F                                        MSGULTKSFILE SI42DMS
+001000970527     FTABEL00FIF  E           K        DISK
+001100970527     F*------------
+001200970527     F* TEMPI DI CONSEGNA
+001300970527     F*------------
+001400970527     FAZCPT01LUF  E           K        DISK                      A
+001500970526     E*------------------------------------------------------------------------*
+001600970526     E* SCHIERE
+001700970526     E*------------------------------------------------------------------------*
+001800970526     E*------------
+001900970526     E* DECODIFICHE
+002000970526     E*------------
+002100010322     E                    DEC     1   7 66
+002200970526     E*------------
+002300970526     E* MESSAGGI
+002400970526     E*------------
+002500970527     E                    MSG     1  20 78
+002600970526     E*------------
+002700970526     E* DESCRIZIONI TASTI FUNZIONALI
+002800970526     E*------------
+002900970526     E                    FUD     1  24 80
+003000970526     E*------------
+003100970526     E* FUNZIONI DA CARICARE A VIDEO
+003200970526     E*------------
+003300970526     E                    FUV        24 19
+003400970526     I*------------------------------------------------------------------------*
+003500970526     I* INPUT
+003600970526     I*------------------------------------------------------------------------*
+003700970526     I*------------
+003800970526     I* RIDEFINIZIONE FUNZIONI VIDEO
+003900970526     I*------------
+004000970526     IFUDDS       DS
+004100970526     I                                        1   1 FUDDE1
+004200970526     I                                        2   3 FUDFUN
+004300970526     I                                        4  19 FUDDE2
+004400970526     I                                       20  34 FUDFI0
+004500970526     I                                       35  35 FUDATT
+004600970526     I                                       36  80 FUDFI1
+004700970526     I                                        1  19 FUDDES
+004800970526     I                                        1  80 FUDRIG
+004900970526     I*------------
+005000970526     I* DS GESTIONE TASTI FUNZIONALI
+005100970526     I*------------
+005200970526     IDSKEY     E DS
+005300970526     IDEVDS1      DS
+005400970526     I                                      369 369 KEY
+005500970526     I*------------
+005600970526     I* DS "XMSG" - GESTIONE MESSAGGI
+005700970526     I*------------
+005800970526     IDSMSG     E DS
+005900970527     I*------------
+006000970527     I* DS TIPI SERVIZIO
+006100970527     I*------------
+006200970527     IDS5E      E DS
+006300970526     I*------------
+006400970526     I* DS DI PROCEDURA
+006500970526     I*------------
+006600970526     IDSSI00    E DSTISI00DS
+006700970526     I*------------
+006800970526     I* ARCHITETTURA
+006900970526     I*------------
+007000970526     IKPJBA     E DS
+007100970526     C*------------------------------------------------------------------------*
+007200970526     C* MAIN LINES
+007300970526     C*------------------------------------------------------------------------*
+007400970526     C*
+007500970526     C* NON CI SONO ERRORI IN ENTRATA
+007600970526IF  1C           ERRL00    IFEQ '0'
+007700970526     C*
+007800970526     C* CICLO FINO A CHE NON VIENE PREMUTO F03 O F12
+007900970526DO  2C           F03L00    DOUEQ'1'                        *F03 PREMUTO
+008000970526     C           F12L00    OREQ '1'                        *F12 PREMUTO
+008100970526     C           FINL00    OREQ '1'                        *FINE PGM
+008200970526     C*
+008300970526     C* EMETTE FORMATO VIDEO
+008400970526     C                     EXSR BUTFMR
+008500970526     C*
+008600970526     C* GESTIONE TASTI FUNZIONALI
+008700970526     C                     EXSR FUNCON
+008800970526E   2C                     ENDDO
+008900970526     C*
+009000970526     C* CI SONO ERRORI IN ENTRATA
+009100970527X   1C                     ELSE
+009200970526     C                     MOVEL'1'       D00ERR
+009300970526     C                     MOVELDSMSMS    D00MSG
+009400970526E   1C                     ENDIF
+009500970526     C* FINE PGM
+009600970526     C                     SETON                     LR
+009700970526     C*------------------------------------------------------------------------*
+009800970526     C* BUTFMR - EMISSIONE FORMATO A VIDEO
+009900970526     C*------------------------------------------------------------------------*
+010000970526     C           BUTFMR    BEGSR
+010100970526     C*
+010200970526     C* EMETTE LA TESTATA
+010300970527     C                     WRITESI42D01
+010400970526     C*
+010500970526     C* SPEDISCE EVENTUALE MESSAGGIO
+010600970526     C                     EXSR SNDMSG
+010700970526     C*
+010800970526     C* EMETTE LE FUNZIONI
+010900970527     C                     WRITESI42D02
+011000970526     C*
+011100970526     C* EMETTE IL VIDEO
+011200970527     C                     EXFMTSI42D03
+011300970526     C*
+011400970526     C* REIMPOSTA FLAG DI ERRORE
+011500970526     C                     MOVEL'0'       ERRL00
+011600970526     C*
+011700970526     C* REIMPOSTA INDICATORI DI ERRORE
+011800970526     C                     SETOF                       5859
+011900970526     C                     SETOF                     606162
+012000970526     C                     SETOF                     636465
+012100970526     C                     SETOF                     666768
+012200970526     C                     SETOF                     697071
+012300970526     C                     SETOF                     727374
+012400970526     C                     SETOF                     757677
+012500970526     C                     SETOF                     787980
+012600970526     C                     SETOF                     818283
+012700970526     C                     SETOF                     848586
+012800970526     C                     SETOF                     878889
+012900970526     C*
+013000970526     C                     ENDSR
+013100970526     C*------------------------------------------------------------------------*
+013200970526     C* SNDMSG - SPEDISCE EVENTUALE MESSAGGIO
+013300970526     C*------------------------------------------------------------------------*
+013400970526     C           SNDMSG    BEGSR
+013500970526     C*
+013600970526     C* PULISCE IL SFILE MESSAGGI
+013700970526     C                     MOVEL'1'       *IN40
+013800970527     C                     WRITESI42DMC
+013900970526     C                     MOVEL'0'       *IN40
+014000970526     C*
+014100970526     C* VISUALIZZA IL MESSAGGIO
+014200970526     C                     Z-ADD*ZEROS    MSGULT  40
+014300970526     C                     CALL 'XMSG'    XMSGPA
+014400970526IF  1C           DSMSER    IFEQ *ZEROS
+014500970526     C                     MOVELDSMSKE    MSGKEY
+014600970526E   1C                     ENDIF
+014700970526     C                     Z-ADD1         MSGULT
+014800970527     C                     WRITESI42DMS
+014900970527     C                     WRITESI42DMC
+015000970526     C*
+015100970526     C* MANDA MESSAGGIO A *BLANKS PER PULIRLO
+015200970526     C                     MOVEL*BLANKS   DSMSMS
+015300970526     C*
+015400970526     C                     ENDSR
+015500970526     C*------------------------------------------------------------------------*
+015600970526     C* ENTGES - GESTIONE ENTER -> INVIO
+015700970526     C*------------------------------------------------------------------------*
+015800970526     C           ENTGES    BEGSR
+015900970526     C*
+016000970526     C* CONTROLLA I CAMPI IMMESSI
+016100970526     C                     EXSR DECODI
+016200970526     C*
+016300970526     C* SE DA VISUALIZZAZIONE CON ENTER RITORNA AL PGM CHIAMANTE
+016400970526IF  1C           DEPOP1    IFEQ 'O05'
+016500970526     C                     MOVEL'1'       FINL00
+016600970526E   1C                     ENDIF
+016700970526     C*
+016800970526     C                     ENDSR
+016900970526     C*------------------------------------------------------------------------*
+017000970526     C* F03GES - GESTIONE F03 -> FINE
+017100970526     C*------------------------------------------------------------------------*
+017200970526     C           F03GES    BEGSR
+017300970526     C*
+017400970526     C* IMPOSTA "PREMUTO F03"
+017500970526     C                     MOVEL'1'       F03L00           *A PROGRAMMA
+017600970526     C                     MOVEL'1'       D00F03           *DI PROCEDURA
+017700970526     C*
+017800970526     C                     ENDSR
+017900970526     C*------------------------------------------------------------------------*
+018000970526     C* F06GES - GESTIONE F06 -> AGGIORNAMENTO
+018100970526     C*------------------------------------------------------------------------*
+018200970526     C           F06GES    BEGSR
+018300970526     C*
+018400970527     C* LANCIA LA ROUTINE DI CONFERMA INTERESSATA
+018500970526IF  1C           DEPOP1    IFEQ 'F06'
+018600970526     C                     EXSR INSERI
+018700970526E   1C                     ENDIF
+018800970526IF  1C           DEPOP1    IFEQ 'O02'
+018900970526     C                     EXSR MODIFI
+019000970526E   1C                     ENDIF
+019100970526IF  1C           DEPOP1    IFEQ 'O04'
+019200970526     C                     EXSR ANNULL
+019300970526E   1C                     ENDIF
+019400970526IF  1C           DEPOP1    IFEQ 'O07'
+019500970526     C                     EXSR RIPRIS
+019600970526E   1C                     ENDIF
+019700970526     C*
+019800970526     C                     ENDSR
+019900970526     C*------------------------------------------------------------------------*
+020000970526     C* F12GES - GESTIONE F12 -> RITORNO
+020100970526     C*------------------------------------------------------------------------*
+020200970526     C           F12GES    BEGSR
+020300970526     C*
+020400010322     C* IMPOSTA "PREMUTO F12" A SECONDA DELLE OPZIONI DI ENTRATA
+020500010322     C           DEPOP1    IFNE 'F06'
+020600970526     C                     MOVEL'1'       F12L00           *A PROGRAMMA
+020700970526     C                     MOVEL'1'       D00F12           *DI PROCEDURA
+020800010322     C                     ELSE
+020900010322     C                     SETOF                     92
+021000010322     C                     SETON                     61
+021100010322     C                     ENDIF
+021200970526     C*
+021300970526     C                     ENDSR
+021400970526     C*------------------------------------------------------------------------*
+021500970526     C* F24GES - GESTIONE F24 -> ALTRE FUNZIONI
+021600970526     C*------------------------------------------------------------------------*
+021700970526     C           F24GES    BEGSR
+021800970526     C*
+021900970526     C                     EXSR FUNGES                     *GESTIONE FUNZIONI
+022000970526     C*
+022100970526     C                     ENDSR
+022200970526     C*------------------------------------------------------------------------*
+022300970526     C* INSERI - OPERAZIONI DI INSERIMENTO RECORD
+022400970526     C*------------------------------------------------------------------------*
+022500970526     C           INSERI    BEGSR
+022600970526     C*
+022700970526     C* CONTROLLA I CAMPI IMMESSI
+022800970526     C                     EXSR DECODI
+022900970526     C*
+023000970526     C* IMPOSTA I CAMPI DEL RECORD DA SCRIVERE
+023100970526IF  1C           ERRL00    IFEQ '0'                        *NO ERRORI
+023200970527     C                     Z-ADDD00VER    CPTVER           *CHIAVE
+023300970527     C                     Z-ADDVIDTTC    CPTTTC
+023400970527     C                     MOVELVIDTSP    CPTTSP
+023500970527     C                     EXSR IMPCPT                     *ALTRI CAMPI
+023600970527     C                     Z-ADD*ZEROS    CPTDTR           *DATA TRASMISSIONE
+023700970527     C                     MOVEL*BLANKS   CPTFTR           *FLAG TRASMISSIONE
+023800970527     C                     MOVEL*BLANKS   CPTATB           *ANNULLAMENTO
+023900970527     C                     WRITEAZCPT000
+024000970526     C                     MOVELMSG,2     D00MSG           *MESSAGGIO
+024100970602     C*
+024200970602     C* PULISCE LA VIDEATA PER UN ALTRO INSERIMENTO
+024300970602     C                     EXSR AZZVID
+024400970526E   1C                     ENDIF
+024500970526     C*
+024600970526     C                     ENDSR
+024700970526     C*------------------------------------------------------------------------*
+024800970526     C* MODIFI - OPERAZIONI DI MODIFICA
+024900970526     C*------------------------------------------------------------------------*
+025000970526     C           MODIFI    BEGSR
+025100970526     C*
+025200970526     C* CONTROLLA I CAMPI IMMESSI
+025300970526     C                     EXSR DECODI
+025400970526     C*
+025500970526     C* LEGGE IL RECORD PERL'AGGIORNAMENTO
+025600970526IF  1C           ERRL00    IFEQ '0'                        *NO ERRORI
+025700970527     C                     EXSR LETCPT
+025800970526     C*
+025900970526     C* IMPOSTA I CAMPI DEL RECORD DA SCRIVERE
+026000970526IF  2C           ERRL00    IFEQ '0'                        *NO ERRORI
+026100970527     C                     EXSR IMPCPT                     *IMPOSTA I CAMPI
+026200970527     C                     MOVEL*BLANKS   CPTFTR           *FLAG TRASMISSIONE
+026300970527     C                     MOVEL*BLANKS   CPTATB           *ANNULLAMENTO
+026400970527     C                     UPDATAZCPT000
+026500970526     C                     MOVELMSG,3     D00MSG
+026600970526     C                     MOVEL'1'       FINL00           *FINE PGM
+026700970526E   2C                     ENDIF
+026800970526E   1C                     ENDIF
+026900970526     C*
+027000970526     C                     ENDSR
+027100970526     C*------------------------------------------------------------------------*
+027200970526     C* ANNULL - OPERAZIONI DI ANNULLAMENTO
+027300970526     C*------------------------------------------------------------------------*
+027400970526     C           ANNULL    BEGSR
+027500970526     C*
+027600970526     C* LEGGE IL RECORD PERL'AGGIORNAMENTO
+027700970527     C                     EXSR LETCPT
+027800970527     C*
+027900970527     C* IMPOSTA I CAMPI DEL RECORD DA SCRIVERE
+028000970527IF  1C           ERRL00    IFEQ '0'                        *NO ERRORI
+028100970527IF  2C           CPTATB    IFEQ *BLANKS                    *NO ANNULLATI
+028200970527IF  3C           CPTDTR    IFGT *ZEROS                     *GIA' TRASMESSO
+028300970527     C                     MOVEL'A'       CPTATB           *FLAG ANNULLAMENTO
+028400970527     C                     MOVEL*BLANKS   CPTFTR           *FLAG TRASMISSIONE
+028500970527     C                     UPDATAZCPT000                   *ANNULLA
+028600970526X   3C                     ELSE                            *MAI TRASMESSO
+028700970527     C                     DELETAZCPT000                   *CANCELLA
+028800970526E   3C                     ENDIF
+028900970526E   2C                     ENDIF
+029000970526     C                     MOVELMSG,4     D00MSG           *MESSAGGIO
+029100970526     C                     MOVEL'1'       FINL00           *FINE PGM
+029200970526E   1C                     ENDIF
+029300970526     C*
+029400970526     C                     ENDSR
+029500970526     C*------------------------------------------------------------------------*
+029600970526     C* RIPRIS - OPERAZIONI DI RIPRISTINO
+029700970526     C*------------------------------------------------------------------------*
+029800970526     C           RIPRIS    BEGSR
+029900970526     C*
+030000970526     C* CONTROLLA I CAMPI IMMESSI
+030100970526     C                     EXSR DECODI
+030200970526     C*
+030300970526     C* LEGGE IL RECORD PERL'AGGIORNAMENTO
+030400970526IF  1C           ERRL00    IFEQ '0'                        *NO ERRORI
+030500970527     C                     EXSR LETCPT
+030600970526     C*
+030700970526     C* IMPOSTA IL RECORD DA SCRIVERE
+030800970526IF  2C           ERRL00    IFEQ '0'                        *NO ERRORI
+030900970527     C                     MOVEL*BLANKS   CPTATB           *FLAG ANNULLAMENTO
+031000970527     C                     MOVEL*BLANKS   CPTFTR           *FLAG TRASMISSIONE
+031100970527     C                     UPDATAZCPT000                   *ANNULLA
+031200970526E   2C                     ENDIF
+031300970526     C                     MOVELMSG,5     D00MSG           *MESSAGGIO
+031400970526     C                     MOVEL'1'       FINL00           *FINE PGM
+031500970526E   1C                     ENDIF
+031600970526     C*
+031700970526     C                     ENDSR
+031800970526     C*------------------------------------------------------------------------*
+031900970527     C* LETCPT - LEGGE IL RECORD PERL'AGGIORNAMENTO
+032000970526     C*------------------------------------------------------------------------*
+032100970527     C           LETCPT    BEGSR
+032200970526     C*
+032300970527     C                     Z-ADDD00VER    KCTVER
+032400980127     C                     MOVELD00TTC    KCTTTC
+032500980127     C                     MOVELD00TSP    KCTTSP
+032600970527     C           KEYCPT    CHAINAZCPT01L             9998
+032700970526IF  1C           *IN98     IFEQ *ON                        *ALLOCATO
+032800970526     C                     MOVEL'1'       ERRL00           *ERRORE
+032900970526     C                     MOVELMSG,7     D00MSG           *MESSAGGIO
+033000970526     C                     MOVEL'1'       FINL00           *FINE PGM
+033100970526E   1C                     ENDIF
+033200970526IF  1C           *IN99     IFEQ *ON                        *INSESISTENTE
+033300970526     C                     MOVEL'1'       ERRL00           *ERRORE
+033400970526     C                     MOVELMSG,6     D00MSG           *MESSAGGIO
+033500970526     C                     MOVEL'1'       FINL00           *FINE PGM
+033600970526E   1C                     ENDIF
+033700970526     C*
+033800970526     C                     ENDSR
+033900970526     C*------------------------------------------------------------------------*
+034000970526     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+034100970526     C*------------------------------------------------------------------------*
+034200970526     C           DECODI    BEGSR
+034300970527     C*--------------------
+034400970527     C* CODICE TEMPO
+034500970527     C*--------------------
+034600970527IF  1C           ERRL00    IFEQ '0'
+034700970527IF  2C           VIDTTC    IFEQ *ZEROS
+034800970527     C                     MOVEL'1'       ERRL00
+034900970527     C                     SETON                     60
+035000970527     C                     MOVELMSG,11    DSMSMS
+035100010322     C                     ELSE
+035200010322     C* VERIFICO SE TRATTASI DI TEMPO CONSEGNA O TEMPO RITIRO => EFFETTUO OPERAZIONI DEL CASO
+035300010322     C* ... SEMPRE IN CASO DI INSERIMENTO
+035400010322     C           DEPOP1    IFEQ 'F06'
+035500010322     C                     MOVELVIDTTC    DEPTTC  3
+035600010322     C           DEPTTC    IFEQ '999'
+035700010322     C                     MOVEL'MAT'     VID00M
+035800010322     C                     MOVEL'POM'     VID12P
+035900010322     C                     MOVELDEC,7     VDDINS
+036000010322     C                     SETON                     92
+036100010322     C                     ELSE
+036200010322     C                     MOVEL'00 '     VID00M
+036300010322     C                     MOVEL' 12'     VID12P
+036400010322     C                     MOVELDEC,6     VDDINS
+036500010322     C                     SETON                     92
+036600010322     C                     ENDIF
+036700010322     C                     ENDIF
+036800970527E   2C                     ENDIF
+036900970527E   1C                     ENDIF
+037000970527     C*--------------------
+037100970527     C* TIPO SERVIZIO
+037200970527     C*--------------------
+037300970527IF  1C           ERRL00    IFEQ '0'
+037400970527     C                     MOVEL*BLANKS   VDDTSP
+037500970527     C                     MOVELVIDTSP    WTSP
+037600970527     C                     MOVEL*BLANKS   WDTSP
+037700970527     C                     EXSR CHKTSP
+037800970527     C                     MOVELWTSP      VIDTSP
+037900970527     C                     MOVELWDTSP     VDDTSP
+038000970527IF  2C           ERRL00    IFEQ '1'
+038100970527     C                     SETON                     61
+038200970527     C                     MOVELMSG,12    DSMSMS
+038300970527E   2C                     ENDIF
+038400970527E   1C                     ENDIF
+038500970526     C*--------------------
+038600970527     C* CODICE TEMPO + TIPO SERVIZIO
+038700970526     C*--------------------
+038800970527     C* INSERIMENTO -> RECORD INESISTENTE
+038900970526IF  1C           ERRL00    IFEQ '0'
+039000970527IF  2C           DEPOP1    IFEQ 'F06'
+039100970527     C                     Z-ADDD00VER    KCTVER
+039200970527     C                     Z-ADDVIDTTC    KCTTTC
+039300970527     C                     MOVELVIDTSP    KCTTSP
+039400970527     C           KEYCPT    CHAINAZCPT01L            N99
+039500970526IF  3C           *IN99     IFEQ *OFF
+039600970527     C                     SETON                     6061
+039700970526     C                     MOVEL'1'       ERRL00
+039800970527     C                     MOVELMSG,8     DSMSMS
+039900970526E   3C                     ENDIF
+040000970526E   2C                     ENDIF
+040100970526E   1C                     ENDIF
+040200970526     C*--------------------
+040300970527     C* DESCRIZIONE
+040400970526     C*--------------------
+040500970526IF  1C           ERRL00    IFEQ '0'
+040600970527IF  2C           VIDDTC    IFEQ *BLANKS
+040700970527     C                     MOVEL'1'       ERRL00
+040800970527     C                     SETON                     62
+040900970527     C                     MOVELMSG,13    DSMSMS
+041000970527E   2C                     ENDIF
+041100970527E   1C                     ENDIF
+041200970527     C*--------------------
+041300970527     C* TEMPO INTERNO 00
+041400970527     C*--------------------
+041500970527IF  1C           ERRL00    IFEQ '0'
+041600970527     C                     MOVELVID0IN    WTEM
+041700970527     C                     EXSR CHKTEM
+041800970527     C                     MOVELWTEM      VID0IN
+041900970527IF  2C           ERRL00    IFEQ '1'
+042000970527     C                     SETON                     63
+042100970527     C                     MOVELMSG,14    DSMSMS
+042200970527E   2C                     ENDIF
+042300970527E   1C                     ENDIF
+042400970527     C*--------------------
+042500970527     C* TEMPO INTERNO 12
+042600970527     C*--------------------
+042700970527IF  1C           ERRL00    IFEQ '0'
+042800970527     C                     MOVELVID1IN    WTEM
+042900970527     C                     EXSR CHKTEM
+043000970527     C                     MOVELWTEM      VID1IN
+043100970527IF  2C           ERRL00    IFEQ '1'
+043200970527     C                     SETON                     64
+043300970527     C                     MOVELMSG,14    DSMSMS
+043400970527E   2C                     ENDIF
+043500970527E   1C                     ENDIF
+043600970527     C*--------------------
+043700970527     C* TEMPO CLIENTE 00
+043800970527     C*--------------------
+043900970527IF  1C           ERRL00    IFEQ '0'
+044000970527     C                     MOVELVID0CN    WTEM
+044100970527     C                     EXSR CHKTEM
+044200970527     C                     MOVELWTEM      VID0CN
+044300970527IF  2C           ERRL00    IFEQ '1'
+044400970527     C                     SETON                     65
+044500970527     C                     MOVELMSG,14    DSMSMS
+044600970527E   2C                     ENDIF
+044700970527E   1C                     ENDIF
+044800970527     C*--------------------
+044900970527     C* TEMPO CLIENTE 12
+045000970527     C*--------------------
+045100970527IF  1C           ERRL00    IFEQ '0'
+045200970527     C                     MOVELVID1CN    WTEM
+045300970527     C                     EXSR CHKTEM
+045400970527     C                     MOVELWTEM      VID1CN
+045500970527IF  2C           ERRL00    IFEQ '1'
+045600970527     C                     SETON                     66
+045700970527     C                     MOVELMSG,14    DSMSMS
+045800970527E   2C                     ENDIF
+045900970527E   1C                     ENDIF
+046000970527     C*--------------------
+046100970527     C* TEMPO ISOLA
+046200970527     C*--------------------
+046300970527IF  1C           ERRL00    IFEQ '0'
+046400970527     C                     MOVELVIDTIS    WTEM
+046500970527     C                     EXSR CHKTEM
+046600970527     C                     MOVELWTEM      VIDTIS
+046700970527IF  2C           ERRL00    IFEQ '1'
+046800970527     C                     SETON                     67
+046900970527     C                     MOVELMSG,14    DSMSMS
+047000970527E   2C                     ENDIF
+047100970527E   1C                     ENDIF
+047200970527     C*--------------------
+047300970527     C* TEMPO CENTRO STORICO
+047400970527     C*--------------------
+047500970527IF  1C           ERRL00    IFEQ '0'
+047600970527     C                     MOVELVIDTCS    WTEM
+047700970527     C                     EXSR CHKTEM
+047800970527     C                     MOVELWTEM      VIDTCS
+047900970527IF  2C           ERRL00    IFEQ '1'
+048000970527     C                     SETON                     68
+048100970527     C                     MOVELMSG,14    DSMSMS
+048200970527E   2C                     ENDIF
+048300970527E   1C                     ENDIF
+048400970527     C*--------------------
+048500970527     C* TEMPO LOCALITA' DISAGIATA
+048600970527     C*--------------------
+048700970527IF  1C           ERRL00    IFEQ '0'
+048800970527     C                     MOVELVIDTLD    WTEM
+048900970527     C                     EXSR CHKTEM
+049000970527     C                     MOVELWTEM      VIDTLD
+049100970527IF  2C           ERRL00    IFEQ '1'
+049200970527     C                     SETON                     69
+049300970527     C                     MOVELMSG,14    DSMSMS
+049400970527E   2C                     ENDIF
+049500970527E   1C                     ENDIF
+049600970527     C*
+049700970527     C                     ENDSR
+049800970526     C*------------------------------------------------------------------------*
+049900970527     C* CHKTSP - CONTROLLA IL TIPO SERVIZIO
+050000970526     C*------------------------------------------------------------------------*
+050100970527     C           CHKTSP    BEGSR
+050200970526     C*
+050300970527     C           *LIKE     DEFN VIDTSP    WTSP
+050400970527     C           *LIKE     DEFN VDDTSP    WDTSP
+050500970526     C*
+050600970526     C* RICHIESTO ELENCO
+050700970526     C                     SETOF                         28
+050800970527     C           '?'       SCAN WTSP                     28
+050900970526IF  1C           *IN28     IFEQ *ON
+051000020906     C                     Z-ADD1         §KUT    10
+051100970527     C                     MOVEL'5E'      §COD    2
+051200970526     C                     MOVEL*BLANKS   §KEY    8
+051300970526     C                     MOVEL*BLANKS   §DES   30
+051400970526     C                     CALL 'X§TABER'
+051500970526     C                     PARM           §KUT
+051600970526     C                     PARM           §COD
+051700970526     C                     PARM           §KEY
+051800970526     C                     PARM           §DES
+051900970527     C                     MOVEL§KEY      WTSP
+052000970527     C                     MOVEL§DES      WDTSP
+052100970526E   1C                     ENDIF
+052200970526     C*
+052300970526     C* CONTROLLA ESISTENZA CODICE
+052400020906     C                     MOVEL1         KTBKUT
+052500970527     C                     MOVEL'5E'      KTBCOD
+052600970527     C                     MOVELWTSP      KTBKEY    P
+052700970526     C           KEYTAB    CHAINTABEL00F             99
+052800970526IF  1C           *IN99     IFEQ *OFF
+052900970526     C           TBLFLG    ANDEQ*BLANKS
+053000970527     C                     MOVELTBLUNI    DS5E
+053100970527     C                     MOVEL§5EDES    WDTSP
+053200970526X   1C                     ELSE
+053300970526     C                     MOVEL'1'       ERRL00
+053400970526E   1C                     ENDIF
+053500970526     C*
+053600970526     C                     ENDSR
+053700970527     C*------------------------------------------------------------------------*
+053800970527     C* CHKTEM - CONTROLLA IL TEMPO
+053900970527     C*------------------------------------------------------------------------*
+054000970527     C           CHKTEM    BEGSR
+054100970527     C*
+054200970527     C           *LIKE     DEFN VID0IN    WTEM
+054300970527     C*
+054400970527     C* RICHIESTO ELENCO
+054500970527     C                     SETOF                         28
+054600970527     C           '?'       SCAN WTEM                     28
+054700970527IF  1C           *IN28     IFEQ *ON
+054800020906     C                     Z-ADD1         §KUT    10
+054900970527     C                     MOVEL'1W'      §COD    2
+055000970527     C                     MOVEL*BLANKS   §KEY    8
+055100970527     C                     MOVEL*BLANKS   §DES   30
+055200970527     C                     CALL 'X§TABER'
+055300970527     C                     PARM           §KUT
+055400970527     C                     PARM           §COD
+055500970527     C                     PARM           §KEY
+055600970527     C                     PARM           §DES
+055700970527     C                     MOVEL§KEY      WTEM
+055800970527E   1C                     ENDIF
+055900970527     C*
+056000970527     C* SOLO CARATTERI NUMERICI
+056100970527     C                     SETOF                     28
+056200970527     C                     TESTN          WTEM       28
+056300970527IF  1C           *IN28     IFEQ *OFF                       *NON E'NUMERO
+056400970527     C                     MOVEL'1'       ERRL00
+056500970527X   1C                     ELSE                            *E'NUMERO DA TESTN
+056600970527     C                     MOVE WTEM      W001    1
+056700970527IF  2C           W001      IFLT '0'                        *TROVATA UN LETTERA
+056800970527     C                     MOVEL'1'       ERRL00
+056900970527X   2C                     ELSE                            *NUMERO
+057000970527     C*
+057100970527     C* CONTROLLA ESISTENZA CODICE
+057200020906     C                     Z-ADD1         KTBKUT
+057300970527     C                     MOVEL'1W'      KTBCOD
+057400970527     C                     MOVELWTEM      KTBKEY    P
+057500970527     C           KEYTAB    CHAINTABEL00F             99
+057600970527IF  3C           *IN99     IFEQ *ON                        *NON TROVATA
+057700970527     C           TBLFLG    ORNE *BLANKS                    *ANNULLATA
+057800970527     C                     MOVEL'1'       ERRL00
+057900970527E   3C                     ENDIF
+058000970527E   2C                     ENDIF
+058100970527E   1C                     ENDIF
+058200970527     C*
+058300970527     C                     ENDSR
+058400970526     C*------------------------------------------------------------------------*
+058500970526     C* IREVID - IMPOSTA I CAMPI DEL VIDEO DAL FILE DI DATA BASE
+058600970526     C*------------------------------------------------------------------------*
+058700970526     C           IREVID    BEGSR
+058800970526     C* CAMPI
+058900970527     C                     Z-ADDCPTTTC    VIDTTC
+059000970527     C                     MOVELCPTTSP    VIDTSP
+059100970527     C                     MOVELCPTDTC    VIDDTC
+059200970527     C                     MOVELCPT0IN    VID0IN
+059300970527     C                     MOVELCPT1IN    VID1IN
+059400970527     C                     MOVELCPT0CN    VID0CN
+059500970527     C                     MOVELCPT1CN    VID1CN
+059600970527     C                     MOVELCPTTIS    VIDTIS
+059700970527     C                     MOVELCPTTCS    VIDTCS
+059800970527     C                     MOVELCPTTLD    VIDTLD
+059900970527     C* MESSAGGIO
+060000970527     C                     Z-ADD*ZEROS    I
+060100970527     C                     Z-ADDD00VER    KCTVER
+060200970527     C                     Z-ADDCPTTTC    KCTTTC
+060300970527     C           KE2CPT    SETLLAZCPT01L
+060400970527     C           KE2CPT    READEAZCPT01L                 98
+060500970527DO  1C           *IN98     DOWEQ*OFF
+060600970527IF  2C           CPTATB    IFEQ *BLANKS
+060700970527     C                     ADD  1         I
+060800970527E   2C                     ENDIF
+060900970527     C           KE2CPT    READEAZCPT01L                 98
+061000970527E   1C                     ENDDO                           *FINE TEMPI
+061100970527IF  1C           I         IFLT 3
+061200970527     C                     MOVELMSG,20    VIDMSG           *NON TUTTI I TEMPI
+061300970527E   1C                     ENDIF
+061400970527     C*
+061500970526     C                     ENDSR
+061600970526     C*------------------------------------------------------------------------*
+061700970526     C* AZZVID - AZZERA I CAMPI DEL VIDEO
+061800970526     C*------------------------------------------------------------------------*
+061900970526     C           AZZVID    BEGSR
+062000970526     C* CAMPI
+062100970527     C                     Z-ADD*ZEROS    VIDTTC
+062200970527     C                     MOVEL*BLANKS   VIDTSP
+062300970527     C                     MOVEL*BLANKS   VIDDTC
+062400970527     C                     MOVEL*ZEROS    VID0IN
+062500970527     C                     MOVEL*ZEROS    VID1IN
+062600970527     C                     MOVEL*ZEROS    VID0CN
+062700970527     C                     MOVEL*ZEROS    VID1CN
+062800970527     C                     MOVEL*ZEROS    VIDTIS
+062900970527     C                     MOVEL*ZEROS    VIDTCS
+063000970527     C                     MOVEL*ZEROS    VIDTLD
+063100970526     C* DECODIFICHE
+063200970527     C                     MOVEL*BLANKS   VDDTSP
+063300970527     C* MESSAGGIO
+063400970527     C                     MOVEL*BLANKS   VIDMSG
+063500970526     C*
+063600970526     C                     ENDSR
+063700970526     C*------------------------------------------------------------------------*
+063800970527     C* IMPCPT - IMPOSTA IL RECORD DA SCRIVERE SUL FILE
+063900970526     C*------------------------------------------------------------------------*
+064000970527     C           IMPCPT    BEGSR
+064100970526     C*
+064200970527     C                     MOVELVIDDTC    CPTDTC
+064300970527     C                     MOVELVID0IN    CPT0IN
+064400970527     C                     MOVELVID1IN    CPT1IN
+064500970527     C                     MOVELVID0CN    CPT0CN
+064600970527     C                     MOVELVID1CN    CPT1CN
+064700970527     C                     MOVELVIDTIS    CPTTIS
+064800970527     C                     MOVELVIDTCS    CPTTCS
+064900970527     C                     MOVELVIDTLD    CPTTLD
+065000970526     C*
+065100970526     C                     ENDSR
+065200970526     C*------------------------------------------------------------------------*
+065300970526     C* IMPFUN - IMPOSTA LE FUNZIONI DI INGRESSO
+065400970526     C*------------------------------------------------------------------------*
+065500970526     C           IMPFUN    BEGSR
+065600970526     C*
+065700970526     C* SE VISUALIZZAZIONE TOGLIE LA FUNZIONE DI AGGIORNAMENTO
+065800970526IF  1C           DEPOP1    IFEQ 'O05'
+065900970526     C                     MOVELFUD,6     FUDRIG           *AGGIORNAMENTO
+066000970526     C                     MOVEL'N'       FUDATT
+066100970526     C                     MOVELFUDRIG    FUD,6
+066200970526E   1C                     ENDIF
+066300970526     C*
+066400970526     C* GESTIONE TASTI FUNZIONALI A VIDEO
+066500970526     C                     Z-ADD*ZEROS    FUNGRU  50
+066600970526     C                     EXSR FUNGES
+066700970526     C*
+066800970526     C* IMPOSTA LA PROTEZIONE CAMPI IN BASE ALLA FUNZIONE DI ENTRATA:
+066900970526     C*---
+067000970526     C* 90 -> PROTEZIONE CHIAVE
+067100970526     C* 91 -> PROTEZIONE TOTALE
+067200970526     C*---
+067300970527IF  1C           DEPOP0    IFEQ 'T02'                      G E S T I O N E
+067400970526IF  2C           DEPOP1    IFEQ 'F06'                      *INSERIMENTO
+067500970526     C                     SETOF                     90    *NESSUNA PROTEZIONE
+067600970526     C                     SETOF                     91
+067700970526E   2C                     ENDIF
+067800970526IF  2C           DEPOP1    IFEQ 'O02'                      *MODIFICA
+067900970526     C                     SETON                     90    *PROTEZIONE CHIAVE
+068000970526     C                     SETOF                     91    *NO PROTEZIONE CAMPI
+068100970526E   2C                     ENDIF
+068200970526IF  2C           DEPOP1    IFEQ 'O04'                      *ANNULLAMENTO
+068300970526     C           DEPOP1    OREQ 'O05'                      *VISUALIZZAZIONE
+068400970526     C           DEPOP1    OREQ 'O07'                      *RIPRISTINO
+068500970526     C                     SETON                     90    *TUTTE LE PROTEZIONI
+068600970526     C                     SETON                     91
+068700970526E   2C                     ENDIF
+068800970526X   1C                     ELSE                            *I N T E R R O G A
+068900970526     C                     SETON                     90    *TUTTE LE PROTEZIONI
+069000970526     C                     SETON                     91
+069100970526E   1C                     ENDIF
+069200970526     C*
+069300970526     C* LETTURA DEL RECORD DA AGGIORNARE -NO IN INSERIMENTO-
+069400970526IF  1C           DEPOP1    IFNE 'F06'                      *NO INSERIMENTO
+069500970527     C                     Z-ADDD00VER    KCTVER
+069600970527     C                     Z-ADDD00TTC    KCTTTC
+069700970527     C                     MOVELD00TSP    KCTTSP
+069800970527     C           KEYCPT    CHAINAZCPT01L            N99
+069900970526IF  2C           *IN99     IFEQ *ON                        *CAP NON TROVATO
+070000970526     C                     MOVEL'1'       ERRL00           *ERRORE
+070100970526     C                     MOVELMSG,6     DSMSMS
+070200970526X   2C                     ELSE
+070300970526     C                     EXSR IREVID                     *IMPOSTA CAMPI
+070400980128IF  3C           DEPOP1    IFEQ 'O05'
+070500980128     C                     EXSR DECODI                     *DECODIFICA CAMPI
+070600980128     C                     MOVEL'0'       ERRL00           *TOGLIE L'ERRORE
+070700980128E   3C                     ENDIF
+070800970526E   2C                     ENDIF
+070900970526X   1C                     ELSE                            *INSERIMENTO
+071000970526     C                     EXSR AZZVID                     *AZZERA CAMPI
+071100970526E   1C                     ENDIF
+071200970526     C*
+071300970526     C* IMPOSTA LA DESCRIZIONE DELLA FUNZIONE
+071400970526IF  1C           DEPOP1    IFEQ 'O02'
+071500970526     C                     MOVELDEC,1     VIDFUN
+071600970526E   1C                     ENDIF
+071700970526IF  1C           DEPOP1    IFEQ 'O04'
+071800970526     C                     MOVELDEC,2     VIDFUN
+071900970526E   1C                     ENDIF
+072000970526IF  1C           DEPOP1    IFEQ 'O05'
+072100970526     C                     MOVELDEC,3     VIDFUN
+072200970526E   1C                     ENDIF
+072300970526IF  1C           DEPOP1    IFEQ 'O07'
+072400970526     C                     MOVELDEC,4     VIDFUN
+072500970526E   1C                     ENDIF
+072600970526IF  1C           DEPOP1    IFEQ 'F06'
+072700970526     C                     MOVELDEC,5     VIDFUN
+072800970526E   1C                     ENDIF
+072900970526     C*
+073000970526     C                     ENDSR
+073100970526     C*------------------------------------------------------------------------*
+073200970526     C* *INZSR - OPERAZIONI INIZIALI
+073300970526     C*------------------------------------------------------------------------*
+073400970526     C           *INZSR    BEGSR
+073500970526     C*---
+073600970526     C* RICEVIMENTO PARAMETRI
+073700970526     C*---
+073800970526     C           *ENTRY    PLIST
+073900970612     C                     PARM           KPJBA
+074000970612     C                     PARM           DSSI00
+074100970526     C*
+074200970526     C* DS PARAMETRI PER "XMSG" - MESSAGGI PGM
+074300970526     C           XMSGPA    PLIST
+074400970526     C                     PARM           DSMSMS
+074500970526     C                     PARM           DSMSPG
+074600970526     C                     PARM           DSMSKE
+074700970526     C                     PARM           DSMSER
+074800970526     C*
+074900970526     C* IMPOSTA LA DS -TASTI PREMUTI-
+075000970526     C                     CALL 'XKEY'
+075100970526     C                     PARM           DSKEY
+075200970526     C*---
+075300970526     C* VARIABILI NON RIFERITE AL DATA BASE
+075400970526     C*---
+075500970526     C           *LIKE     DEFN FUDFUN    FUNKEY
+075600970526     C           *LIKE     DEFN D00OP0    DEPOP0
+075700970526     C           *LIKE     DEFN D00OP1    DEPOP1
+075800970526     C           *LIKE     DEFN D00OP0    WOP0
+075900970526     C           *LIKE     DEFN D00OP1    WOP1
+076000970526     C*---
+076100970526     C* VARIABILI DI CONTROLLO
+076200970526     C*---
+076300970526     C                     MOVEL'0'       FINL00  1        *FINE PROGRAMMA
+076400970526     C                     MOVEL'0'       F03L00  1        *PREMUTO F03
+076500970526     C                     MOVEL'0'       F12L00  1        *PREMUTO F12
+076600970526     C                     MOVEL'0'       ERRL00  1        *ERRORE
+076700970526     C*
+076800970526     C* IMPOSTA LA DS -INVIO MESSAGGI-
+076900970527     C                     MOVEL'TISI42R' DSMSPG
+077000970527     C                     MOVEL'TISI42R' MSGQUE
+077100970526     C                     MOVEL*BLANKS   MSGKEY
+077200970526     C                     MOVEL*BLANKS   DSMSMS
+077300970526     C*---
+077400970526     C* VARIABILI RIFERITE AL DATA BASE
+077500970526     C*---
+077600970526     C           *LIKE     DEFN TBLKUT    KTBKUT           *TABEL00F
+077700970526     C           *LIKE     DEFN TBLCOD    KTBCOD
+077800970526     C           *LIKE     DEFN TBLKEY    KTBKEY
+077900970526     C           *LIKE     DEFN CPTVER    KCTVER           *AZCPT00F
+078000970526     C           *LIKE     DEFN CPTTTC    KCTTTC
+078100970526     C           *LIKE     DEFN CPTTSP    KCTTSP
+078200970526     C*---
+078300970526     C* CHIAVI DI LETTURA
+078400970526     C*---
+078500970526     C* LETTURA TABEL00F - COMPLETA
+078600970526     C           KEYTAB    KLIST
+078700970526     C                     KFLD           KTBKUT           *CODICE UTENTE
+078800970526     C                     KFLD           KTBCOD           *TABELLA
+078900970526     C                     KFLD           KTBKEY           *CHIAVE TABELLA
+079000970527     C* LETTURA AZCPT01L - COMPLETA
+079100970526     C           KEYCPT    KLIST
+079200970526     C                     KFLD           KCTVER           *VERSIONE
+079300970526     C                     KFLD           KCTTTC           *TEMPO CONSEGNA
+079400970526     C                     KFLD           KCTTSP           *TIPO SERVIZIO
+079500970527     C* LETTURA AZCPT01L - PARZIALE
+079600970527     C           KE2CPT    KLIST
+079700970527     C                     KFLD           KCTVER           *VERSIONE
+079800970527     C                     KFLD           KCTTTC           *TEMPO CONSEGNA
+079900970526     C*
+080000970526     C* DEPOSITA LE OPZIONI DI ENTRATA
+080100970526     C                     MOVELD00OP0    DEPOP0           *LIVELLO PROCEDURA
+080200970526     C                     MOVELD00OP1    DEPOP1           *LIVELLO PROGRAMMA
+080300010322     C*
+080400010322     C* EFFETTUO PRIMISSIME CONSIDERAZIONI SULLE OPZIONI DI ENTRATA PROCEDURA
+080500010322     C           DEPOP1    IFEQ 'F06'
+080600010322     C                     SETOF                     92
+080700010322     C                     ELSE
+080800010426     C                     MOVELD00TTC    DEPTTC
+080900010426     C           DEPTTC    IFEQ '000'
+081000010426     C                     MOVEL'00 '     VID00M
+081100010426     C                     MOVEL'12 '     VID12P
+081200010426     C                     ELSE
+081300010426     C                     MOVEL'MAT'     VID00M
+081400010426     C                     MOVEL'POM'     VID12P
+081500010426     C                     ENDIF
+081600010322     C                     SETON                     92
+081700010322     C                     ENDIF
+081800970526     C*
+081900970526     C* IMPOSTA LE FUNZIONI DI INGRESSO
+082000970526     C                     EXSR IMPFUN
+082100970526     C*
+082200970526     C                     ENDSR
+082300970526     C*------------------------------------------------------------------------*
+082400970526     C* FUNGES - GESTIONE TASTI FUNZIONALI DEL PROGRAMMA
+082500970526     C*------------------------------------------------------------------------*
+082600970526     C           FUNGES    BEGSR
+082700970526     C*
+082800970526     C* PULISCO CAMPI DI LAVORO
+082900970526     C                     Z-ADD0         W       50
+083000970526     C*
+083100970526     C* RICERCO QUANTE FUNZIONI SONO ATTIVE
+083200970526     C* E CARICO TABELLA FUNZIONI ATTIVE
+083300970526     C           1         DO   24        I
+083400970526     C                     MOVELFUD,I     FUDRIG
+083500970526     C*
+083600970526     C* PULIZIA FUNZIONI PRECEDENTI
+083700970526     C                     MOVEL*BLANKS   FUV,I
+083800970526     C*
+083900970526     C* IMPOSTA FUNZIONI ATTIVE IN TABELLA
+084000970526     C* (SALTA F24)
+084100970526     C           FUDATT    IFEQ 'S'
+084200970526     C           FUDFUN    ANDNE'24'
+084300970526     C                     ADD  1         W
+084400970526     C                     MOVELFUDDES    FUV,W
+084500970526     C                     END
+084600970526     C                     END                             DO WHILE
+084700970526     C*
+084800970526     C* SE VI SONO PIU' DI 6 FUNZIONI ATTIVE, ATTIVO FUNZIONE F24
+084900970526     C* ALTRIMENTI DISATTIVO F24
+085000970526     C           1         DO   24        I
+085100970526     C                     MOVELFUD,I     FUDRIG
+085200970526     C*
+085300970526     C           FUDFUN    IFEQ '24'
+085400970526     C           W         IFGT 6
+085500970526     C                     MOVEL'S'       FUDATT
+085600970526     C                     ELSE
+085700970526     C                     MOVEL*BLANKS   FUDATT
+085800970526     C                     END                             W GT 8
+085900970526     C                     MOVELFUDRIG    FUD,I
+086000970526     C                     END
+086100970526     C                     END                             DO WHILE
+086200970526     C*
+086300970526     C* IMPOSTO QUANTI GRUPPI DI 6 FUNZIONI SI POSSONO VISUALIZZARE
+086400970526     C           W         DIV  6         I
+086500970526     C                     MVR            Z
+086600970526     C*
+086700970526     C           Z         IFNE 0
+086800970526     C           I         ADD  1         Z
+086900970526     C                     ELSE
+087000970526     C                     Z-ADDI         Z       50
+087100970526     C                     END
+087200970526     C*
+087300970526     C* IMPOSTO SUCCESSIVE 6 FUNZIONI ATTIVE A VIDEO
+087400970526     C                     ADD  1         FUNGRU
+087500970526     C           FUNGRU    IFGT Z
+087600970526     C           FUNGRU    ORLT 1
+087700970526     C                     Z-ADD1         FUNGRU
+087800970526     C                     END
+087900970526     C*
+088000970526     C* PRIMO GRUPPO DI 6 FUNZIONI
+088100970526     C           FUNGRU    IFEQ 1
+088200970526     C                     MOVELFUV,1     FUN001
+088300970526     C                     MOVELFUV,2     FUN002
+088400970526     C                     MOVELFUV,3     FUN003
+088500970526     C                     MOVELFUV,4     FUN004
+088600970526     C                     MOVELFUV,5     FUN005
+088700970526     C                     MOVELFUV,6     FUN006
+088800970526     C                     END
+088900970526     C*
+089000970526     C* SECONDO GRUPPO DI 6 FUNZIONI
+089100970526     C           FUNGRU    IFEQ 2
+089200970526     C                     MOVELFUV,7     FUN001
+089300970526     C                     MOVELFUV,8     FUN002
+089400970526     C                     MOVELFUV,9     FUN003
+089500970526     C                     MOVELFUV,10    FUN004
+089600970526     C                     MOVELFUV,11    FUN005
+089700970526     C                     MOVELFUV,12    FUN006
+089800970526     C                     END
+089900970526     C*
+090000970526     C* TERZO GRUPPO DI 6 FUNZIONI
+090100970526     C           FUNGRU    IFEQ 3
+090200970526     C                     MOVELFUV,13    FUN001
+090300970526     C                     MOVELFUV,14    FUN002
+090400970526     C                     MOVELFUV,15    FUN003
+090500970526     C                     MOVELFUV,16    FUN004
+090600970526     C                     MOVELFUV,17    FUN005
+090700970526     C                     MOVELFUV,18    FUN006
+090800970526     C                     END
+090900970526     C*
+091000970526     C* QUARTO GRUPPO DI 6 FUNZIONI
+091100970526     C           FUNGRU    IFEQ 4
+091200970526     C                     MOVELFUV,19    FUN001
+091300970526     C                     MOVELFUV,20    FUN002
+091400970526     C                     MOVELFUV,21    FUN003
+091500970526     C                     MOVELFUV,22    FUN004
+091600970526     C                     MOVEL*BLANKS   FUN005
+091700970526     C                     MOVEL*BLANKS   FUN006
+091800970526     C                     END
+091900970526     C*
+092000970526     C* F24 SE C'E' VIENE SEMPRE VISUALIZZATO
+092100970526     C                     MOVEL*BLANKS   FUN007
+092200970526     C                     MOVEL*BLANKS   FUN008
+092300970526     C*
+092400970526     C           1         DO   24        I
+092500970526     C                     MOVELFUD,I     FUDRIG
+092600970526     C           FUDFUN    IFEQ '24'
+092700970526     C           FUDATT    ANDEQ'S'
+092800970526     C                     MOVELFUDDES    FUN008
+092900970526     C                     END
+093000970526     C                     END                             DO
+093100970526     C*
+093200970526     C                     ENDSR
+093300970526     C*------------------------------------------------------------------------*
+093400970526     C* FUNCON - GESTIONE TASTI FUNZIONALI DELL'UTENTE
+093500970526     C*------------------------------------------------------------------------*
+093600970526     C           FUNCON    BEGSR
+093700970526     C*
+093800970526     C* TRADUCE TASTI FUNZIONALI IN VARIABILE -FUNKEY-
+093900970526     C                     EXSR FUNVAR
+094000970526     C*
+094100970526     C* PULISCO CAMPI DI LAVORO
+094200970526     C                     Z-ADD0         I       50
+094300970526     C                     Z-ADD0         W       50
+094400970526     C*
+094500970526     C* RICERCA FUNZIONE (DIVERSA DA ENTER) SCELTA IN TABELLA FUNZIONI
+094600970526     C           FUNKEY    IFNE *BLANKS
+094700970526     C           1         DO   24        I
+094800970526     C                     MOVELFUD,I     FUDRIG
+094900970526     C*
+095000970526     C* SALVO INDICE DI FUNZIONE TROVATA ED ATTIVA (W)
+095100970526     C           FUNKEY    IFEQ FUDFUN
+095200970526     C           FUDATT    ANDEQ'S'
+095300970526     C                     Z-ADDI         W
+095400970526     C                     END
+095500970526     C                     END                             DO WHILE
+095600970526     C*
+095700970526     C* FUNZIONE NON ATTIVA (ERRORE)
+095800970526     C           W         IFEQ 0
+095900970526     C*
+096000970526     C* EMISSIONE MESSAGGIO DI ERRORE
+096100970526     C                     MOVELMSG,1     DSMSMS
+096200970526     C*
+096300970526     C                     END                             W=0
+096400970526     C                     END                             FUNKEY NE *BLANKS
+096500970526     C*
+096600970526     C* FUNZIONE ATTIVA (PROCEDI ...)
+096700970526     C           W         IFNE 0
+096800970526     C           FUNKEY    OREQ *BLANKS
+096900970526     C           FUNKEY    IFEQ *BLANKS
+097000970526     C                     EXSR ENTGES
+097100970526     C                     END
+097200970526     C           FUNKEY    IFEQ '03'
+097300970526     C                     EXSR F03GES
+097400970526     C                     END
+097500970526     C           FUNKEY    IFEQ '06'
+097600970526     C                     EXSR F06GES
+097700970526     C                     END
+097800970526     C           FUNKEY    IFEQ '12'
+097900970526     C                     EXSR F12GES
+098000970526     C                     END
+098100970526     C           FUNKEY    IFEQ '24'
+098200970526     C                     EXSR F24GES
+098300970526     C                     END
+098400970526     C                     END
+098500970526     C*
+098600970526     C                     ENDSR
+098700970526     C*------------------------------------------------------------------------*
+098800970526     C* FUNVAR -TRADUCE GLI INDICATORI DI TASTO FUNZIONALE IN VARIABILE
+098900970526     C*------------------------------------------------------------------------*
+099000970526     C           FUNVAR    BEGSR
+099100970526     C*
+099200970526     C* INIZIALIZZA VARIABILE -FUNKEY-
+099300970526     C*
+099400970526     C* FUNKEY=*BLANKS SIGNIFICA ENTER
+099500970526     C           KEY       IFEQ ENTER
+099600970526     C                     MOVEL*BLANKS   FUNKEY
+099700970526     C                     END
+099800970526     C           KEY       IFEQ F1
+099900970526     C                     MOVEL'01'      FUNKEY
+100000970526     C                     END
+100100970526     C           KEY       IFEQ F2
+100200970526     C                     MOVEL'02'      FUNKEY
+100300970526     C                     END
+100400970526     C           KEY       IFEQ F3
+100500970526     C                     MOVEL'03'      FUNKEY
+100600970526     C                     END
+100700970526     C           KEY       IFEQ F4
+100800970526     C                     MOVEL'04'      FUNKEY
+100900970526     C                     END
+101000970526     C           KEY       IFEQ F5
+101100970526     C                     MOVEL'05'      FUNKEY
+101200970526     C                     END
+101300970526     C           KEY       IFEQ F6
+101400970526     C                     MOVEL'06'      FUNKEY
+101500970526     C                     END
+101600970526     C           KEY       IFEQ F7
+101700970526     C                     MOVEL'07'      FUNKEY
+101800970526     C                     END
+101900970526     C           KEY       IFEQ F8
+102000970526     C                     MOVEL'08'      FUNKEY
+102100970526     C                     END
+102200970526     C           KEY       IFEQ F9
+102300970526     C                     MOVEL'09'      FUNKEY
+102400970526     C                     END
+102500970526     C           KEY       IFEQ F10
+102600970526     C                     MOVEL'10'      FUNKEY
+102700970526     C                     END
+102800970526     C           KEY       IFEQ F11
+102900970526     C                     MOVEL'11'      FUNKEY
+103000970526     C                     END
+103100970526     C           KEY       IFEQ F12
+103200970526     C                     MOVEL'12'      FUNKEY
+103300970526     C                     END
+103400970526     C           KEY       IFEQ F13
+103500970526     C                     MOVEL'13'      FUNKEY
+103600970526     C                     END
+103700970526     C           KEY       IFEQ F14
+103800970526     C                     MOVEL'14'      FUNKEY
+103900970526     C                     END
+104000970526     C           KEY       IFEQ F15
+104100970526     C                     MOVEL'15'      FUNKEY
+104200970526     C                     END
+104300970526     C           KEY       IFEQ F16
+104400970526     C                     MOVEL'16'      FUNKEY
+104500970526     C                     END
+104600970526     C           KEY       IFEQ F17
+104700970526     C                     MOVEL'17'      FUNKEY
+104800970526     C                     END
+104900970526     C           KEY       IFEQ F18
+105000970526     C                     MOVEL'18'      FUNKEY
+105100970526     C                     END
+105200970526     C           KEY       IFEQ F19
+105300970526     C                     MOVEL'19'      FUNKEY
+105400970526     C                     END
+105500970526     C           KEY       IFEQ F20
+105600970526     C                     MOVEL'20'      FUNKEY
+105700970526     C                     END
+105800970526     C           KEY       IFEQ F21
+105900970526     C                     MOVEL'21'      FUNKEY
+106000970526     C                     END
+106100970526     C           KEY       IFEQ F22
+106200970526     C                     MOVEL'22'      FUNKEY
+106300970526     C                     END
+106400970526     C           KEY       IFEQ F23
+106500970526     C                     MOVEL'23'      FUNKEY
+106600970526     C                     END
+106700970526     C           KEY       IFEQ F24
+106800970526     C                     MOVEL'24'      FUNKEY
+106900970526     C                     END
+107000970526     C           KEY       IFEQ ROLLUP
+107100970526     C                     MOVEL'RU'      FUNKEY
+107200970526     C                     END
+107300970526     C           KEY       IFEQ HELP
+107400970526     C                     MOVEL'HP'      FUNKEY
+107500970526     C                     END
+107600970526     C                     ENDSR
+107700970526     C*------------------------------------------------------------------------*
+107800970526     C* NOTE COSTRUZIONE SCHIERE
+107900970526     C*------------------------------------------------------------------------*
+108000970526     C*
+108100970526     C* -MSG-MESSAGGI
+108200970526     C* INSERIRE I VARI MESSAGGI EMESSI DAL PGM
+108300970526     C* (NON TOCCARE MSG,1 E MSG,2)
+108400970526     C*
+108500970526     C* -CMD-COMANDI
+108600970526     C* INSERIRE I VARI COMANDI DI SISTEMA RICHIESTI NEL PGM
+108700970526     C*
+108800970526     C* -OPD-OPZIONI
+108900970526     C* INSERIRE LE VARIE OPZIONI GESTITE DAL PGM
+109000970526     C*  . SI PUO' USARE LA OPZIONE ALTERNATIVA PER GESTIRE
+109100970526     C*    I CASI DI OPZIONI CON UN SOLO CARATTERE
+109200970526     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+109300970526     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+109400970526     C*  . POSSONO ESSERE IN ORDINE SPARSO
+109500970526     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+109600970526     C*    VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO
+109700970526     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA
+109800970526     C*    VIENE VISUALIZZATA A VIDEO MA IL PGM NON FA NULLA
+109900970526     C*
+110000970526     C* -FUD-FUNZIONI
+110100970526     C* INSERIRE LE VARIE FUNZIONI GESTITE DAL PGM
+110200970526     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+110300970526     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+110400970526     C*  . POSSONO ESSERE IN ORDINE SPARSO
+110500970526     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+110600970526     C*    VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO
+110700970526     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA
+110800970526     C*    VIENE VISUALIZZATA A VIDEO MA IL PGM DICE "NON GESTITA"
+110900970526     C*  . METTERE F23 E F24 CON S/N=S (RICALCOLATE DAL PGM)
+111000970526     C*  . SEGUIRE LE NOTE MESSE NELLA SCHIERA
+111100970526     O*------------------------------------------------------------------------*
+111200970526** DEC - DECODIFICHE
+111300970526    MODIFICA                                                      1
+111400970526  ANNULLAMENTO                                                    2
+111500970526VISUALIZZAZIONE                                                   3
+111600970526   RIPRISTINO                                                     4
+111700970526  INSERIMENTO                                                     5
+111800010322INSERIMENTO TEMPO DI CONSEGNA                                     6
+111900010322INSERIMENTO TEMPO DI RITIRO                                       7
+112000970526** MSG - MESSAGGI
+112100970527TISI42R- Tasto funzionale non gestito                                          1
+112200970527TISI42R- Inserimento effettuato                                                2
+112300970527TISI42R- Modifica effettuata                                                   3
+112400970527TISI42R- Annullamento effettuato                                               4
+112500970527TISI42R- Ripristino effettuato                                                 5
+112600970527TISI42R- Richiesta funzione per record inesistente                             6
+112700970527TISI42R- Record momentaneamente allocato: riprovare più tardi                  7
+112800970527TISI42R- Richiesta funzione per record esistente                               8
+112900970527TISI42R- 9
+113000970527TISI42R- 10
+113100970527TISI42R- Codice tempo errato                                                  11
+113200970527TISI42R- Tipo servizio errato                                                 12
+113300970527TISI42R- Descrizione errata                                                   13
+113400970527TISI42R- Tempo errato                                                         14
+113500970527TISI42R- 15
+113600970527TISI42R- 16
+113700970527TISI42R- 17
+113800970527TISI42R- 18
+113900970527TISI42R- 19
+114000970527TISI42R- Inserire i tempi di tutti i tipi servizio !!                         20
+114100970526** FUD - FUNZIONI
+114200970526                   -        (S/N)=N                        funz.01¬
+114300970526                   -        (S/N)=N                        funz.02¬
+114400970526F03=Fine           -        (S/N)=S  <== S-FISSO           funz.03¬
+114500970526                   -        (S/N)=N                        funz.04¬
+114600970526                   -        (S/N)=N                        funz.05¬
+114700970526F06=Aggiornamento  -        (S/N)=S                        funz.06¬
+114800970527                   -        (S/N)=N                        funz.07¬
+114900970527                   -        (S/N)=N                        funz.08¬
+115000970527                   -        (S/N)=N                        funz.09¬
+115100970527                   -        (S/N)=N                        funz.10¬
+115200970526                   -        (S/N)=N                        funz.11¬
+115300970526F12=Ritorno        -        (S/N)=S  <= S-FISSO            funz.12¬
+115400970526                   -        (S/N)=N                        funz.13¬
+115500970526                   -        (S/N)=N                        funz.14¬
+115600970526                   -        (S/N)=N                        funz.15¬
+115700970526                   -        (S/N)=N                        funz.16¬
+115800970526                   -        (S/N)=N                        funz.17¬
+115900970526                   -        (S/N)=N                        funz.18¬
+116000970526                   -        (S/N)=N                        funz.19¬
+116100970526                   -        (S/N)=N                        funz.20¬
+116200970526                   -        (S/N)=N                        funz.21¬
+116300970526                   -        (S/N)=N                        funz.22¬
+116400970526                   -        (S/N)=N                        funz.23¬
+116500970526F24=Altri tasti    -        (S/N)=S  <== S-FISSO           funz.24¬

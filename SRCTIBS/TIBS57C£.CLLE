@@ -1,0 +1,49 @@
+000100020902             PGM        PARM(&I57SIN &I57MBR &o57PRF)
+000600020902             DCL        VAR(&i57sin) TYPE(*CHAR) LEN(10)
+000700020902             DCL        VAR(&i57mbr) TYPE(*CHAR) LEN(10)
+000701020902             DCL        VAR(&o57prf) TYPE(*CHAR) LEN(10)
+000702020902             DCL        VAR(&TSTPRF) TYPE(*CHAR) LEN(10) +
+000703020902                          VALUE('EDPCED    ')
+003900971104
+003901020902             DCL        VAR(&gg) TYPE(*CHAR) LEN(2)
+003902020902             DCL        VAR(&Mm) TYPE(*CHAR) LEN(2)
+003903020902             DCL        VAR(&aa) TYPE(*CHAR) LEN(2)
+003905020902
+003906020902             DCLF       FILE(tibs55ds) RCDFMT(D50rec)
+003907020902             DCLF       FILE(fnlv55ds) RCDFMT(d55rec)
+003908020902
+004000020902             RTVSYSVAL  SYSVAL(QDAY) RTNVAR(&gg)
+004100020902             RTVSYSVAL  SYSVAL(QMONTH) RTNVAR(&Mm)
+004200020902             RTVSYSVAL  SYSVAL(QYEAR) RTNVAR(&aa)
+004201020902 /* se a blank imposto EDPCED come profilo */
+004202020902             IF         COND(&o57prf *eq '          ') THEN(+
+004203020902             CHGVAR     VAR(&o57prf) VALUE('EDPCED    '))
+004204020902 /* per i S.I. GAI e SDI lascio utente impostato   */
+004205020902             IF         COND(%SST(&i57sin 1 3) *ne 'FIL') THEN(GOTO +
+004206020902                          CMDLBL(FINE))
+004207020902 /* se a blank imposto EDPCEDXXX come profilo */
+004208020902             IF         COND(&o57prf *eq '          ') THEN(+
+004209020902             CHGVAR     VAR(&o57prf) VALUE('EDPCEDXXX '))
+004500020902 /* imposto le librerie del S.I. (GRU) */
+004505020902             CHGVAR     VAR(&i50psi) VALUE(&I57sin)
+004600020902             CALL       PGM(TIBS55R) PARM(&dsbs55)
+004601020902             ADDLIBLE   LIB(&o50plg)
+004602020902             MONMSG     MSGID(CPF0000)
+004603020902             ADDLIBLE   LIB(&o50plo)
+004604020902             MONMSG     MSGID(CPF0000)
+004800971103
+004801020902 /* ricerco il terminal partenza */
+004802020902             CHGVAR     VAR(&D55DRF) VALUE('20' *CAT &AA *CAT &MM +
+004803020902                          *CAT &GG) /* data riferim. */
+004804020902             CHGVAR     VAR(&D55ERR) VALUE(' ') /* Errore */
+004805020902             CHGVAR     VAR(&D55TLA) VALUE(' ') /* Tipo lancio */
+004806020902             CHGVAR     VAR(&D55TFP) VALUE('   ') /* Term.part. */
+004807020902             CHGVAR     VAR(&D55LIN) VALUE(%SST(&I57MBR 5 3))
+005300020902             CALL       PGM(fnlv55R) PARM(&fnlv55ds)
+005301020902             CHGVAR     VAR(%SST(&TSTPRF 7 3)) VALUE(&D55TFA)
+005400020902             CHKOBJ     OBJ(&TSTPRF) OBJTYPE(*USRPRF)
+005401020902             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(fine))
+005402020902
+005403020902             CHGVAR     VAR(&o57prf) VALUE(&tstprf)
+019400971106
+019500981022 fine:       ENDPGM

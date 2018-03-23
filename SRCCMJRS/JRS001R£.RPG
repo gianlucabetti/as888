@@ -1,0 +1,445 @@
+000100921016     H*--------INIZIO SPECIFICHE --------------------------*
+000200921009     H            Y J
+000300921016     F* JRS001R  *-----------------------------------------*
+000400921016     F*----------*                                         *
+000500921016     F*          ?GESTIONE SALVATAGGI GIORNALI?            *
+000600921016     F*                                                    *
+000700921016     F*----------------------------------------------------*
+000800921016     F*?Indicatori usati?                                                 BRJ61
+000900921016     F*                                                                   BRJ61
+001000921016     F*                                                                   BRJ61
+001100921016     C/EJECT
+001200921016     F*----------------------------------------------------*           ***BRJ61
+001300921016     FJRJRN00FUF  E                    DISK                      A        BRJ61
+001400921016     F                                              KINFDS INF1
+001500921016     FJRS001D CF  E                    WORKSTN
+001600921016     F                                        REC1  KSFILE S001S1
+001700921016     F                                              KINFDS INFO
+001800921016     F*                                                                   BRJ61
+001900921016     F*----------------------------------------------------*           ***BRJ61
+002000921123     E                    CMD    80  80  1               WRKJRNA
+002100921016     IINFO        DS
+002200921016     I*--------- Sfl
+002300921016     I                                    B 378 3790NRRULT
+002400921016     I*-------------
+002500921016     IINF1        DS                            502
+002600921016     I*-------------
+002700921016     I                                    B 397 4000NREL
+002800921016     I*-------------
+002900921016     I* COSTANTE X TEST CAMPO STATO SUL SFL (S1STA)
+003000921016     I*-------------
+003100921016     I              'RUN '                C         STA1
+003200921016     I              'STOP'                C         STA2
+003300921016     I              'CHG '                C         STA3
+003400921016     I*-------------
+003500921016     I* COSTANTE X TEST LANCIO TUTTI I GIORNALI
+003600921016     I*-------------
+003700921016     I              '*ALL      '          C         TUTTI
+003800921016     I*                                                                   BRJ61
+003900921016     I*----------------------------------------------------*           ***BRJ61
+004000921016     C* Operazioni iniziali pgm
+004100921016     C                     EXSR DEFCAM
+004200921016     C* Flusso principale
+0043009210161    C           $FINE     DOWEQ'N'
+0044009210162    C           $GEST     CASEQ'S01'     GESS01
+0045009210162-   C                     ENDCS
+0046009210161-   C                     ENDDO
+004700921006     C*
+004800920904     C                     SETON                         LR
+004900921016     C*----------------------------------------------------*
+005000921013     C/EJECT
+005100921016     C******************************************************
+005200921016     C** GESTIONE 1° VIDEATA (SUBFILE 1)
+005300921016     C           GESS01    BEGSR
+005400921016     C*
+005500921013     C* se richiesto inizializzo il ctl e il sfl
+005600921016     C           $INZS1    IFEQ 'S'
+005700921016     C                     EXSR INZS01
+005800921016     C                     ENDIF
+005900921016     C*
+006000921016     C* scrivo messaggio di non trovati rec. su JRJRN00F
+006100921016     C  N70                WRITES001D3
+006200921016     C*
+006300921016     C* emetto sfl a video
+006400921016     C                     EXFMTS001C1
+006500921016     C                     Z-ADDNRRULT    RIG1
+006600921016     C*
+0067009210061    C                     SELEC
+006800921016     C*
+006900921006     C*---
+007000921016     C* F3=Fine Lavoro
+007100921016     C           *INKC     WHEQ *ON
+007200921006     C                     MOVE 'S'       $FINE
+007300921006     C*---
+007400921016     C* F2=Rivisualizza
+007500921016     C           *INKE     WHEQ *ON
+007600921016     C                     MOVE 'S'       $INZS1
+007700921006     C*---
+007800921016      * F6=Aggiunta
+007900921016     C           *INKF     WHEQ *ON
+008000921016     C                     MOVE *OFF      PGSFL
+008100921016     C                     MOVE 'S'       $INZW1
+008200921016     C                     MOVE 'N'       $FINE2
+0083009210162    C           $FINE2    DOWEQ'N'
+008400921016     C                     EXSR GESW01
+0085009210162-   C                     ENDDO
+008600921006     C*---
+008700921016     C* F8=Disattiva Tutto
+008800921016     C           *INKH     WHEQ *ON
+008900921016     C                     EXSR CAL023
+009000921016     C                     MOVE 'S'       $INZS1
+009100921016     C*---
+009200921016     C* F10=Attiva Tutto
+009300921016     C           *INKJ     WHEQ *ON
+009400921016     C                     EXSR CAL023
+009500921016     C                     MOVE 'S'       $INZS1
+009600921006     C*---
+0097009210061o   C                     OTHER
+009800921006     C*---
+009900921016     C* eseguo ctl solo esistono righe SFL
+0100009210162    C           REC1      IFGT 0
+010100921014     C* controlli
+010200921016     C                     EXSR CTRS01
+010300921016     C* riemetto SFL
+0104009210162-   C                     ENDIF
+010500921016     C*
+0106009210161-   C                     ENDSL
+010700921016     C*
+010800921009     C                     ENDSR
+010900921013     C/EJECT
+011000921016     C******************************************************
+011100921016     C** CONTROLLO SCELTE SFL
+011200921016     C           CTRS01    BEGSR
+011300921016     C*
+011400921016     C                     READCS001S1                   90
+0115009210191    C           *IN90     DOWEQ*OFF
+011600921016     C*
+0117009210162    C           S1SCE     IFGT 0
+011800921016     C* controlli sul SFL
+011900921016     C                     EXSR RECS01
+012000921016     C                     Z-ADD0         S1SCE
+0121009210162-   C                     ENDIF
+012200921016     C* aggiorno sfl
+012300921016     C                     UPDATS001S1
+012400921016     C*
+012500921019     C                     READCS001S1                   90
+0126009210191-   C                     ENDDO
+012700921016     C*
+012800921016     C                     ENDSR
+012900921016     C******************************************************
+013000921016     C** CONTROLLO CAMPI DEL SFL
+013100921013     C           RECS01    BEGSR
+013200921016     C*
+013300921016     C*valorizzo campi per call varie
+013400921016     C                     MOVELS1JRN     JRN                             BRJ61
+013500921016     C                     MOVELS1LIB     LIB                             BRJ61
+013600921016     C                     MOVELS1DEV     DEV                             BRJ61
+013700921016     C                     Z-ADDS1INT     INT                             BRJ61
+013800921016     C                     MOVELS1VOL     VOL                             BRJ61
+013900921016     C* ctl scelta
+0140009210161    C                     SELEC
+014100921016     C*---
+014200921016     C* 2=Modifica
+014300921016     C           S1SCE     WHEQ 2
+014400921016     C                     MOVE *ON       PGSFL
+014500921016     C                     MOVE 'S'       $INZW1
+014600921016     C                     MOVE 'N'       $FINE2
+0147009210162    C           $FINE2    DOWEQ'N'
+014800921016     C                     EXSR GESW01
+0149009210162-   C                     ENDDO
+015000921016     C*---
+015100921016     C* 4=Annulla
+015200921016     C           S1SCE     WHEQ 4
+015300921016     C           S1NRL     CHAINJRJRN00F             90
+015400921016     C  N90                DELETJRJRN000
+015500921016     C                     MOVE 'S'       $INZS1
+015600921123     C*---
+015700921123     C* 5=WRKJRNA
+015800921123     C           S1SCE     WHEQ 5
+015900921123     C                     MOVE *BLANK    W021
+016000921123     C           LIB       CAT  '/':0     W021   21
+016100921123     C           W021      CAT  JRN:0     W021
+016200921123     C                     MOVEAW021      CMD,12
+016300921123     C                     CALL 'QCMDEXC'
+016400921123     C                     PARM           CMD
+016500921123     C                     PARM 80        LEN    155
+016600921016     C*---
+016700921016     C* 11=Attiva salvataggio
+016800921016     C           S1SCE     WHEQ 11
+016900921019     C                     CALL 'JRS002R'
+017000921016     C                     PARM           JRN                             BRJ61
+017100921016     C                     PARM           LIB                             BRJ61
+017200921016     C*---
+017300921016     C* 14=Interrompe salvataggio
+017400921016     C           S1SCE     WHEQ 14
+017500921019     C                     CALL 'JRS003R'
+017600921016     C                     PARM           JRN                             BRJ61
+017700921016     C                     PARM           LIB                             BRJ61
+017800921019     C                     PARM 'I'       FLG                             BRJ61
+017900921016     C*---
+018000921016     C* 16=Forza salvataggio
+018100921016     C           S1SCE     WHEQ 16
+018200921019     C                     CALL 'JRS003R'
+018300921016     C                     PARM           JRN                             BRJ61
+018400921016     C                     PARM           LIB                             BRJ61
+018500921019     C                     PARM 'F'       FLG     1                       BRJ61
+018600921012     C*
+0187009210161-   C                     ENDSL
+018800921016     C*
+018900921016     C* Siccome è stata effettuata una scelta lo stato del job cambia
+019000921016     C                     MOVELSTA3      S1STA                           BRJ61
+019100921016     C*
+019200921009     C                     ENDSR
+019300921013     C/EJECT
+019400921016     C******************************************************
+019500921016     C** INIZIALIZZAZIONE SFL e Abilitazione campi
+019600921016     C           INZS01    BEGSR
+019700921016     C*
+019800921016     C                     MOVE 'N'       $INZS1
+019900921016     C                     Z-ADD0         REC1    50
+020000921016     C                     Z-ADD0         S1REC   50
+020100921016     C* scrivo piede
+020200921016     C                     WRITES001D2
+020300921007     C* pulisco sfl
+020400921016     C                     SETON                     70  71
+020500921016     C                     WRITES001C1
+020600921016     C                     SETOF                     70  71
+020700921016     C* Carico sfl
+020800921016     C                     EXSR CARS01
+020900921016     C*
+021000920907     C                     ENDSR
+021100921013     C/EJECT
+021200921016     C******************************************************
+021300921016     C** CARICAMENTO SUBFILE
+021400921012     C           CARS01    BEGSR
+021500921016     C*
+021600921016     C                     CLEARS001S1                     pulisco sflrcd
+021700921016     C                     MOVE *OFF      $FINE1           cond. ciclo
+021800921016     C* posizionamento
+021900921016     C           1         SETLLJRJRN00F
+022000921016     C*
+022100921007     C                     EXSR LEGGI                      leggo 1 rcd
+022200921007     C*
+0223009210161    C           $FINE1    DOWEQ*OFF
+022400921016     C* valorizzo campi del sfl
+022500921016     C                     Z-ADDNREL      S1NRL                           BRJ61
+022600921016     C                     MOVELJRNJRN    S1JRN                           BRJ61
+022700921016     C                     MOVELJRNLIB    S1LIB                           BRJ61
+022800921016     C                     MOVELJRNDEV    S1DEV                           BRJ61
+022900921016     C                     Z-ADDJRNINT    S1INT                           BRJ61
+023000921016     C                     MOVELJRNVOL    S1VOL                           BRJ61
+023100921016     C* ctl de lavoro è attivo
+023200921019     C                     MOVEL*OFF      $FLG    1
+023300921019     C                     CALL 'JRS007C'
+023400921019     C                     PARM           $FLG
+023500921019     C                     PARM           S1JRN
+023600921019     C                     PARM           S1LIB
+0237009210192    C           $FLG      IFEQ *ON
+023800921019     C                     MOVELSTA2      S1STA                           BRJ61
+023900921019     C                     CALL 'JRS007C'
+024000921019     C                     PARM           $FLG
+024100921019     C                     PARM           S1JRN
+024200921019     C                     PARM           S1LIB
+0243009210192X   C                     ELSE
+024400921019     C                     MOVELSTA1      S1STA                           BRJ61
+0245009210192-   C                     ENDIF
+024600921016     C*
+024700921007     C* aggiungo rcd al sfl
+024800921016     C                     ADD  1         REC1
+024900921016     C                     WRITES001S1
+025000921007     C*
+025100921007     C                     EXSR LEGGI
+0252009210191-   C                     ENDDO
+025300921016     C* Testo se scritti rec. Se no disabilito SFLDSP
+025400921016     C           REC1      COMP 0                        71
+025500921016     C* Imposto a 1 SFLRCDNBR x emettere SFL sulla Ia pag.
+025600921016     C                     Z-ADD1         RIG1
+025700921016     C* Imposto ultimo record caricato in un campo di comodo
+025800921016     C                     Z-ADDREC1      S1REC
+025900921016     C*
+026000920908     C                     ENDSR
+026100921013     C/EJECT
+026200921016     C******************************************************
+026300921016     C**  LEGGE UN RCD DA JRJRN00F
+026400921007     C           LEGGI     BEGSR
+026500921016     C*
+026600921016     C                     READ JRJRN00F                 90
+026700921007     C* uscita dal ciclo x fine file
+0268009210161    C           *IN90     IFEQ *ON
+026900921016     C                     MOVE *ON       $FINE1
+0270009210191-   C                     ENDIF
+027100921007     C*
+027200921007     C                     ENDSR
+027300921016     C/EJECT
+027400921016     C******************************************************
+027500921016     C** CALL ATTIVA TUTTO/DISATTIVA TUTTO
+027600921016     C           CAL023    BEGSR
+027700921016     C*
+027800921016     C*valorizzo campi per call varie
+027900921016     C                     MOVELTUTTI     JRN                             BRJ61
+028000921016     C                     MOVEL*BLANK    LIB                             BRJ61
+028100921016     C                     MOVEL*BLANK    DEV                             BRJ61
+028200921016     C                     Z-ADD0         INT                             BRJ61
+028300921016     C                     MOVEL*BLANK    VOL                             BRJ61
+028400921016     C*
+0285009210161    C                     SELEC
+028600921016     C*---
+028700921016     C* Attiva tutto
+028800921016     C           *INKJ     WHEQ *ON
+028900921019     C                     CALL 'JRS002R'
+029000921016     C                     PARM           JRN                             BRJ61
+029100921016     C                     PARM           LIB                             BRJ61
+029200921024     C***                  PARM           DEV                             BRJ61
+029300921024     C***                  PARM           INT                             BRJ61
+029400921024     C***                  PARM           VOL                             BRJ61
+029500921016     C*---
+029600921016     C* Disattiva tutto
+029700921016     C           *INKH     WHEQ *ON
+029800921019     C                     CALL 'JRS003R'
+029900921016     C                     PARM           JRN                             BRJ61
+030000921016     C                     PARM           LIB                             BRJ61
+030100921019     C                     PARM 'I'       FLG                             BRJ61
+030200921016     C*
+0303009210161-   C                     ENDSL
+030400921016     C*
+030500921016     C                     ENDSR
+030600921013     C/EJECT
+030700921016     C******************************************************
+030800921016     C** GESTIONE 1° Finestra
+030900921016     C           GESW01    BEGSR
+031000921016     C*
+031100921016     C* se richiesto inizializzo i campi a video
+031200921016     C           $INZW1    IFEQ 'S'
+031300921016     C                     EXSR INZW01
+031400921016     C                     ENDIF
+031500921016     C*
+031600921016     C* emetto sfl a video
+031700921016     C                     EXFMTS001W1
+031800921016     C*
+0319009210161    C                     SELEC
+032000921016     C*
+032100921016     C*---
+032200921016     C* F12=Ritorno
+032300921016     C           *INKL     WHEQ *ON
+0324009210191    C           PGSFL     IFEQ *OFF
+032500921019     C                     MOVE 'S'       $INZS1
+0326009210191-   C                     ENDIF
+032700921016     C                     MOVE 'S'       $FINE2
+032800921016     C*
+032900921016     C*---
+0330009210161o   C                     OTHER
+033100921016     C*---
+033200921019     C                     EXSR CTRW01
+033300921016     C* eseguo aggiornamenti
+0334009210162    C           *INKF     IFEQ *ON
+033500921019     C           *IN99     ANDEQ*OFF
+033600921016     C                     MOVELW1JRN     S1JRN                           BRJ61
+033700921016     C                     MOVELW1LIB     S1LIB                           BRJ61
+033800921016     C                     MOVELW1DEV     S1DEV                           BRJ61
+033900921016     C                     Z-ADDW1INT     S1INT                           BRJ61
+034000921016     C                     MOVELW1VOL     S1VOL                           BRJ61
+034100921016     C           S1NRL     CHAINJRJRN00F             90
+034200921016     C                     MOVELW1JRN     JRNJRN                          BRJ61
+034300921016     C                     MOVELW1LIB     JRNLIB                          BRJ61
+034400921016     C                     MOVELW1DEV     JRNDEV                          BRJ61
+034500921016     C                     Z-ADDW1INT     JRNINT                          BRJ61
+034600921016     C                     MOVELW1VOL     JRNVOL                          BRJ61
+0347009210163    C           PGSFL     IFEQ *OFF
+034800921016     C                     Z-ADDS1REC     REC1
+034900921016     C                     ADD  1         REC1
+035000921016     C                     WRITES001S1
+035100921016     C                     WRITEJRJRN000
+035200921016     C                     Z-ADDREC1      S1REC
+035300921019     C                     MOVE 'S'       $INZW1
+0354009210163X   C                     ELSE
+035500921016     C  N90                UPDATJRJRN000
+035600921019     C                     MOVE 'S'       $INZS1
+035700921019     C                     MOVE 'S'       $FINE2
+0358009210163-   C                     ENDIF
+0359009210162-   C                     ENDIF
+036000921016     C*
+0361009210161-   C                     ENDSL
+036200921016     C*
+036300921016     C                     ENDSR
+036400921016     C/EJECT
+036500921016     C******************************************************
+036600921016     C** GESTIONE 1° Finestra
+036700921016     C           INZW01    BEGSR
+036800921016     C*
+036900921016     C                     MOVE 'N'       $INZW1
+037000921016     C*
+0371009210161    C           PGSFL     IFEQ *ON
+037200921016     C                     MOVELS1JRN     W1JRN                           BRJ61
+037300921016     C                     MOVELS1LIB     W1LIB                           BRJ61
+037400921016     C                     MOVELS1DEV     W1DEV                           BRJ61
+037500921016     C                     Z-ADDS1INT     W1INT                           BRJ61
+037600921016     C                     MOVELS1VOL     W1VOL                           BRJ61
+0377009210161X   C                     ELSE
+037800921016     C                     CLEARS001W1                                    BRJ61
+0379009210161-   C                     ENDIF
+038000921016     C*
+038100921016     C                     ENDSR
+038200921019     C/EJECT
+038300921019     C******************************************************
+038400921019     C** CONTROLLO CAMPI FINESTRA W01
+038500921019     C           CTRW01    BEGSR
+038600921019     C*
+038700921019     C                     SETOF                         99
+038800921019     C* Giornale/Libreria
+0389009210191    C           W1JRN     IFNE *BLANK
+039000921019     C           W1LIB     ORNE *BLANK
+039100921019     C                     MOVEL*OFF      $FLG
+039200921019     C                     MOVEL'*JRN '   $TIP    5
+039300921019     C                     CALL 'JRS008C'
+039400921019     C                     PARM           $FLG
+039500921019     C                     PARM           W1JRN
+039600921019     C                     PARM           W1LIB
+039700921019     C                     PARM           $TIP
+0398009210192    C           $FLG      IFEQ *ON
+039900921019     C                     SETON                     10  99
+0400009210192-   C                     ENDIF
+0401009210191-   C                     ENDIF
+040200921019     C* Unità
+0403009210191    C           W1DEV     IFNE *BLANK
+040400921019     C                     MOVEL*OFF      $FLG
+040500921019     C                     MOVEL'*DEVD'   $TIP
+040600921019     C                     MOVEL'*LIBL'   $LIB
+040700921019     C                     CALL 'JRS008C'
+040800921019     C                     PARM           $FLG
+040900921019     C                     PARM           W1DEV
+041000921019     C                     PARM           $LIB
+041100921019     C                     PARM           $TIP
+0412009210192    C           $FLG      IFEQ *ON
+041300921019     C                     SETON                     11  99
+0414009210192-   C                     ENDIF
+0415009210191-   C                     ENDIF
+041600921019     C*
+041700921019     C                     ENDSR
+041800921016     C/EJECT
+041900921013     C******************************************************
+042000921016     C** Operazioni Iniziali
+042100920904     C           DEFCAM    BEGSR
+042200921008     C*
+042300921008     C* Imposto variabili di programma
+042400921008     C                     MOVE 'N'       $FINE   1
+042500921008     C                     MOVE 'N'       $FINE1  1
+042600921016     C                     MOVE 'N'       $FINE2  1
+042700921008     C* Variabile x gestione videate / sfl:
+042800921016     C                     MOVE 'S01'     $GEST   3
+042900921008     C* Variabile x inizializzazioni dei fmt video:
+043000921016     C                     MOVE 'S'       $INZW1  1
+043100921009     C                     MOVE 'S'       $INZS1  1
+043200921016     C* Variabili per test vari
+043300921016     C                     MOVE *BLANK    PGSFL   1
+043400921016     C* Definisco parametri per call varie
+043500921016     C           *LIKE     DEFN JRNJRN    JRN
+043600921016     C           *LIKE     DEFN JRNLIB    LIB
+043700921016     C           *LIKE     DEFN JRNDEV    DEV
+043800921016     C           *LIKE     DEFN JRNINT    INT
+043900921016     C           *LIKE     DEFN JRNVOL    VOL
+044000921019     C           *LIKE     DEFN JRNLIB    $LIB
+044100921019     C*
+044200921013     C                     ENDSR
+044300921016     C******************************************************
+044400921123**
+044500921123WRKJRNA

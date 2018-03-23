@@ -1,0 +1,83 @@
+000100070214/*---------------------------------------------------------------*/
+000200070214/*  Caricamento spunte da pistole LASER BANCOLINI O SYMBOL       */
+000300070214/*---------------------------------------------------------------*/
+000400070214/* 1) DALLE SPUNTE LETTE -FIBAAxxx- CREA IL FILE FIBARxxxLy                   */
+000500070214/* 2) SOTTOMETTE aggiornamento su AS400 dei dati accodati IN FIBARxxxLy       */
+000600070214/*    a file spunte  AS400  (FNBRV00F)                                        */
+000700070214/*                                                                            */
+000800070214/* INPUT --> FILE DELLE SPUNTE LETTE              (FIBAAxxx)                  */
+000900070214/*           SISTEMA INFORMATIVO                                              */
+001000070214/*---------------------------------------------------------------*/
+001100070214 TRTCP5C:    PGM        PARM(&FILE &SYF)
+001200930308
+001300921111             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+001400021001             DCL        VAR(&SYF)  TYPE(*CHAR) LEN(10) /* s.i. */
+001500000626             DCL        VAR(&FILE2) TYPE(*CHAR) LEN(10) +
+001600000626                          VALUE('FNBA1xxx  ')
+001700070214             DCL        VAR(&NEWFILE) TYPE(*CHAR) LEN(10) +
+001800070214                          VALUE('FIBARxxxL ')
+001900961129             DCL        VAR(&FIL) TYPE(*CHAR) LEN(3)
+002000000626             DCL        VAR(&FINE) TYPE(*CHAR) LEN(5)
+002100021003             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+002200021003             DCL        VAR(&CMD)  TYPE(*CHAR) LEN(350)
+002300021003             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+002400021012             DCL        VAR(&UTENT) TYPE(*CHAR) LEN(10) +
+002500021012                          VALUE('PSTxxx    ')
+002600021012             DCL        VAR(&NOMEJOB) TYPE(*CHAR) LEN(10) +
+002700021012                          VALUE('PSTxxx_P5 ')
+002800021003
+002900021003/* Reperisco la lista librerie CORRENTE */
+003000021003             RTVJOBA    USRLIBL(&L275)
+003100971129
+003200021001/* Chiamata al pgm di cambio sistema informativo */
+003300021001             call       pgm(GAITRAOBJ/TRUL07C) parm(&SYF)
+003400010823
+003500070214             OVRDBF     FILE(FIBAA00F) TOFILE(&FILE)
+003600910321
+003700070214
+003800971129/* DETERMINO NOME FILE OUTPUT  */
+003900930308             CHGVAR     VAR(&FIL) VALUE(%SST(&FILE 6 3))
+004000070214
+004100070516/* Richiamo : nuovo caricamento se Bari                        */
+004200070528/*           IF         COND(&FIL = '007') THEN(DO)            */
+004300070214             CHGVAR     VAR(%SST(&NEWFILE 6 3)) VALUE(&FIL)
+004400070214             CHGVAR     VAR(%SST(&NEWFILE 10 1)) VALUE(%SST(&FILE 9 1))
+004500070214
+004600070214             OVRDBF     FILE(FIBAR00F) TOFILE(&NEWFILE)
+004700070214             CALL       PGM(TRTCP5R) PARM(&FIL)
+004800070214
+004900070214/* DETERMINO NOME UTENTE e JOB */
+005000070214             CHGVAR     VAR(%SST(&UTENT 4 3)) VALUE(&FIL)
+005100070214             CHGVAR     VAR(%SST(&NOMEJOB 4 3)) VALUE(&FIL)
+005200070214
+005300070214/* Dal file scritto FIBARxxxLy scrive il file spunte su AS ->FNBRV00F  ______ */
+005400070214             SBMJOB     CMD(CALL PGM(FNLS45C5) PARM(&FIL &NEWFILE)) +
+005500070214                          JOB(&NOMEJOB) JOBQ(AGGPC) USER(&UTENT)
+005600070528/*           enddo                                                */
+005700930308
+005800070528/*           ELSE       CMD(DO)                            */
+005900070528/* ACCODO SPUNTE CARICATE      */
+006000070528/*           CHGVAR     VAR(&FINE) VALUE(%SST(&FILE 6 5))  */
+006100070528/*           CHGVAR     VAR(%SST(&FILE2 6 5)) VALUE(&FINE) */
+006200070214
+006300070528/*           OVRDBF     FILE(FNBA100F) TOFILE(&FILE2)      */
+006400930309
+006500070528/*           CALL       PGM(TRTCP7R)                       */
+006600000922
+006700021012/* DETERMINO NOME UTENTE e JOB */
+006800070528/*           CHGVAR     VAR(%SST(&UTENT 4 3)) VALUE(&FIL)  */
+006900070528/*           CHGVAR     VAR(%SST(&NOMEJOB 4 3)) VALUE(&FIL)*/
+007000021012
+007100971129/* SOTTOMETTO AGGIORNAMENTO SPUNTE                       */
+007200930531
+007300070528/*           SBMJOB     CMD(CALL PGM(FNLS44C5) PARM(&FILE2)) +  */
+007400070528/*                        JOB(&NOMEJOB) JOBQ(AGGPC) USER(&UTENT)*/
+007500070528/*           enddo                                        */
+007600971129
+007700021003/* Reimposto la lista librerie originale */
+007800021003             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+007900021003                          *CAT ' )')
+008000021003             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+008100021003
+008200000000             RCLRSC     LVL(*CALLER)
+008300000000             ENDPGM

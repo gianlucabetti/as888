@@ -1,0 +1,358 @@
+000100930604     H             /J
+000200990804     H* TRTB79R *-----------------------------------------------------*
+000300991130     H*               - GESTIONE TABELLA TIPI PESO   -                *
+000400930304     H*---------------------------------------------------------------*
+000500930603     H* FILE   : -------- - -------------------------------------------
+000600990804     H*          TRTB79D  - FILE VIDEO
+000700991130     H*                     TB79D1 / RICHIESTA TIPO PESO
+000800991130     H*                     TB79D2 / RICHIESTA DATI TIPO PESO
+000900930603     H*          TABEL00F - TABELLE GENERICHE
+001000990804     H*                     7Y / TIPI PESI
+001100930603     H* PGM    : -------- - -------------------------------------------
+001200930603     H*          X§PARUT  - RICERCA RAGIONE SOCIALE
+001300930604     H*          X§TABER  - RICERCA GENERICA SUL FILE TABELLE
+001400930603     H* SBR    : -------- - -------------------------------------------
+001500930603     H*          DEFVAR   - DEFINIZIONE VARIABILI, KLIST E PLIST
+001600930604     H*          CTLD1    - CONTROLLO DATI PRIMO FORMATO VIDEO
+001700930609     H*          RIEMP    - RIEMPIMENTO II FORMATO CON CAMPI TABELLA
+001800930609     H*          VALOR    - RIEMPIMENTO II FORMATO CON CAMPI VUOTI
+001900930609     H*          CTLD2    - CONTROLLO DATI SECONDO FORMATO VIDEO
+002000930609     H*          RIPRI    - RIPRISTINO    RECORD TABELLA
+002100930609     H*          AGGIO    - AGGIORNAMENTO RECORD TABELLA
+002200930609     H*          ANNUL    - ANNULLAMENTO  RECORD TABELLA
+002300930603     H*---------------------------------------------------------------*
+002400930603     H* INDICATORI USATI                                              *
+002500930603     H*---------------------------------------------------------------*
+002600990804     H* 01 - TIPO PESO OBBLIGATORIO
+002700930604     H* 02 - DESCRIZIONE OBBLIGATORIA
+002800930609     H* 03 - INVIARE SE SOSTITUISCO PER I FRANCHI
+002900930609     H* 04 - INVIARE SE SOSTITUISCO PER GLI ASSEGNATI
+003000930604     H* 05 - CM5-RIPRISTINO  ABILITATO
+003100930604     H* 06 - CM5-AGGIORNAMENTO  ABILITATO
+003200930604     H* 07 - CAMPI PROTETTI PER CM5-RIPRISTINO
+003300930609     H* 08 - SOSTITUIRE SE INVIO PER I FRANCHI
+003400930609     H* 09 - SOSTITUIRE SE INVIO PER GLI ASSEGNATI
+003500930604     H* 16 - CM16-ANNULLAMENTO  ABILITATO
+003600930604     H* 30 - LETTURA TABELLE
+003700930604     H* 90 - ERRORE GENERICO
+003800930603     H*---------------------------------------------------------------*
+003900930604     FTABEL00FUF  E           K        DISK                      A
+004000990804     FTRTB79D CF  E                    WORKSTN
+004100930604     E*---------------------------------------------------------------*
+004200930604     E                    COM     1   3 10
+004300930603     I*---------------------------------------------------------------*
+004400930603     IKPJBA     E DS
+004500930603     I                                       92 100 LIBSYS
+004600930603     IUT§DSE    E DSUT§DSE0F
+004700990804     IDS7Y      E DS
+004800930603     C*---------------------------------------------------------------*
+004900930603     C*                    MAIN                                       *
+005000990804     C* PROGRAMMA DI GESTIONE TABELLA TIPI PESI                       *
+005100930603     C*---------------------------------------------------------------*
+005200930603     C*
+005300930603     C* DEFINIZIONI VARIABILI E KLIST
+005400930603     C                     EXSR DEFVAR
+005500930603     C*
+005600990804     C* EMISSIONE I FORMATO - RICHIESTA TIPO PESI
+005700930604     C                     MOVEL'?'       VIDKEY
+005800930604     C           FMTD1     TAG
+005900990804     C                     EXFMTTB79D1
+006000930604     C*
+006100930604     C* CM3 - FINE LAVORO
+006200930604     C   KC                GOTO FINE
+006300930604     C*
+006400930604     C* CONTROLLO DATI I FORMATO
+006500930604     C                     EXSR CTLD1
+006600930604     C*
+006700930604     C* ERRORI: RIEMETTO IL PRIMO FORMATO
+006800930604IF  1C           *IN90     IFEQ '1'
+006900930604     C                     GOTO FMTD1
+007000930604X   1C                     ELSE
+007100930604     C*
+007200990804     C* NO ERRORI: EMISSIONE II FORMATO - DATI TIPO PESI
+007300930604     C           FMTD2     TAG
+007400990804     C                     EXFMTTB79D2
+007500930604     C*
+007600930604     C* CM3 - FINE LAVORO
+007700930604     C   KC                GOTO FINE
+007800930604     C*
+007900930604     C* CM12 - RITORNO VIDEATA PRECEDENTE
+008000930604     C   KL                GOTO FMTD1
+008100930604     C*
+008200930604     C* CONTROLLO DATI II FORMATO
+008300930604     C                     EXSR CTLD2
+008400930604     C*
+008500930604     C* ERRORI: RIEMETTO IL SECONDO FORMATO
+008600930604IF  2C           *IN90     IFEQ '1'
+008700930604     C                     GOTO FMTD2
+008800930604X   2C                     ELSE
+008900930604     C*
+009000930604     C* CM5 - RIPRISTINO
+009100930604     C   KE                EXSR RIPRI
+009200930604     C   KE                GOTO FMTD1
+009300930604     C*
+009400930604     C* CM6 - AGGIORNAMENTO/INSERIMENTO
+009500930604     C   KF                EXSR AGGIO
+009600930604     C   KF                GOTO FMTD1
+009700930604     C*
+009800930604     C* CM16 - ANNULLAMENTO
+009900930604     C   KQ                EXSR ANNUL
+010000930604     C   KQ                GOTO FMTD1
+010100930604     C*
+010200930604     C* ENTER - RIMANE NELLA SECONDA VIDEATA
+010300930604IF  3C           *INKE     IFEQ '0'
+010400930604     C           *INKF     ANDEQ'0'
+010500930604     C           *INKQ     ANDEQ'0'
+010600930604     C                     GOTO FMTD2
+010700930604E   3C                     ENDIF
+010800930604E   2C                     ENDIF
+010900930604E   1C                     ENDIF
+011000930604     C*
+011100930604     C           FINE      TAG
+011200930604     C                     SETON                     LR
+011300930604     C*---------------------------------------------------------------*
+011400930604     C*                    CTLD1                                      *
+011500930604     C* ROUTINE DI CONTROLLO DATI PRIMO FORMATO VIDEO                 *
+011600930604     C*---------------------------------------------------------------*
+011700930604     C           CTLD1     BEGSR
+011800930604     C*
+011900930604     C                     SETOF                       9007
+012000930611     C                     SETOF                     160506
+012100930604     C                     MOVEL*BLANKS   VI2OPE
+012200930604     C*
+012300990804     C* RICERCA IN TABELLA TIPO PESI PER '?'
+012400930604IF  1C           VIDKEY    IFEQ '?'
+012500930604     C*
+012600990804     C                     MOVEL'7Y'      COD
+012700930604     C                     MOVEL*BLANKS   KEY
+012800930604     C                     MOVEL*BLANKS   DES
+012900930604     C                     CALL 'X§TABER'
+013000930604     C                     PARM           CODUT
+013100930604     C                     PARM           COD
+013200930604     C                     PARM           KEY
+013300930604     C                     PARM           DES    40
+013400930604     C*
+013500990804     C* TIPO PESO SELEZIONATO
+013600930604IF  2C           KEY       IFNE *BLANKS
+013700930604     C                     MOVELKEY       VIDKEY
+013800930604E   2C                     ENDIF
+013900930604     C*
+014000990804     C* SIA PER PESO SELEZIONATO CHE NON RIEMETTO IL FORMATO
+014100930604     C                     SETON                     90
+014200930604     C                     GOTO ENDC1
+014300930604E   1C                     ENDIF
+014400930604     C*
+014500990804     C* CONTROLLO ESISTENZA TIPO PESO
+014600930604IF  1C           VIDKEY    IFNE *BLANKS
+014700930604     C*
+014800990804     C                     MOVEL'7Y'      COD
+014900930604     C                     MOVEL*BLANKS   KEY
+015000930604     C                     MOVELVIDKEY    KEY
+015100930604     C           KTAB      CHAINTABEL00F             30
+015200930604     C*
+015300990804     C* TIPO PESO ESISTENTE: RIEMPO II FORMATO CON I DATI IN TABELLA
+015400930604IF  2C           *IN30     IFEQ '0'
+015500990804     C                     MOVELTBLUNI    DS7Y
+015600930604     C                     EXSR RIEMP
+015700930604     C*
+015800930604     C* TABELLA ANNULLATA: ABILITO CM5-RIPRISTINO E PROTEGGO I CAMPI
+015900930604IF  3C           TBLFLG    IFNE *BLANKS
+016000930604     C                     SETON                     0507
+016100930607     C                     SETOF                     0616
+016200930604     C                     MOVELCOM,1     VI2OPE
+016300930604X   3C                     ELSE
+016400930604     C*
+016500930604     C* NON ANNULLATA: ABILITO CM6-AGGIORNAMENTO E CM16-ANNULLAMENTO
+016600930604     C                     SETON                     0616
+016700930607     C                     SETOF                     0507
+016800930604     C                     MOVELCOM,2     VI2OPE
+016900930604E   3C                     ENDIF
+017000930604     C*
+017100930604     C* TESTO INESISTENTE: CAMPI PULITI E CM6-AGGIORNAMENTO ABILITATO
+017200930604X   2C                     ELSE
+017300930604     C                     MOVELCOM,3     VI2OPE
+017400930604     C                     SETON                     06
+017500930604     C                     EXSR VALOR
+017600930604E   2C                     ENDIF
+017700930604     C*
+017800990804     C* TIPO PESO NON INSERITO: ERRORE
+017900930604X   1C                     ELSE
+018000930604     C                     SETON                     0190
+018100930604     C                     GOTO ENDC1
+018200930604E   1C                     ENDIF
+018300930604     C*
+018400930604     C           ENDC1     TAG
+018500930604     C                     ENDSR
+018600930604     C*---------------------------------------------------------------*
+018700930604     C*                    RIEMP                                      *
+018800930604     C* ROUTINE DI RIEMPIMENTO II FORMATO SE RECORD ESISTENTE         *
+018900930604     C*---------------------------------------------------------------*
+019000930604     C           RIEMP     BEGSR
+019100930604     C*
+019200930604     C                     MOVELVIDKEY    VI2KEY
+019300990804     C                     MOVEL§7YDES    VI2DES
+019400990804     C                     MOVEL§7YVRP    VI2VRP
+019500990804     C                     MOVEL§7YVRA    VI2VRA
+019600990804     C                     MOVEL§7YPAF    VI2PAF
+019700990804     C                     MOVEL§7YPSF    VI2PSF
+019800990804     C                     MOVEL§7YAPF    VI2APF
+019900990804     C                     MOVEL§7YASF    VI2ASF
+020000990804     C                     MOVEL§7YTPF    VI2TPF
+020100990804     C                     MOVEL§7YTAF    VI2TAF
+020200990804     C                     MOVEL§7YTSF    VI2TSF
+020300990804     C                     MOVEL§7YAFA    VI2AFA
+020400990804     C                     MOVEL§7YAAA    VI2AAA
+020500990804     C                     MOVEL§7YAFN    VI2AFN
+020600990804     C                     MOVEL§7YAAN    VI2AAN
+020700990804     C                     MOVEL§7YSOZ    VI2SOZ
+020800990804     C                     MOVEL§7YSOT    VI2SOT
+020900990804     C* SE E' PESO CML ACCENDO INDICATORE
+021000951211     C           VIDKEY    IFEQ 'Z'
+021100951211     C           VIDKEY    OREQ 'T'
+021200951211     C                     SETON                     20
+021300951211     C                     ELSE
+021400951211     C                     SETOF                     20
+021500951211     C                     ENDIF
+021600930604     C*
+021700930604     C                     ENDSR
+021800930604     C*---------------------------------------------------------------*
+021900930604     C*                    VALOR                                      *
+022000930604     C* ROUTINE DI RIEMPIMENTO II FORMATO SE RECORD INESISTENTE       *
+022100930604     C*---------------------------------------------------------------*
+022200930604     C           VALOR     BEGSR
+022300930604     C*
+022400951211     C                     SETOF                     20
+022500930604     C                     MOVELVIDKEY    VI2KEY
+022600930604     C                     MOVEL*BLANKS   VI2DES
+022700930604     C                     MOVEL*BLANKS   VI2VRP
+022800930604     C                     MOVEL*BLANKS   VI2VRA
+022900930604     C                     MOVEL*BLANKS   VI2PAF
+023000930604     C                     MOVEL*BLANKS   VI2PSF
+023100930604     C                     MOVEL*BLANKS   VI2APF
+023200930604     C                     MOVEL*BLANKS   VI2ASF
+023300930604     C                     MOVEL*BLANKS   VI2TPF
+023400930604     C                     MOVEL*BLANKS   VI2TAF
+023500930604     C                     MOVEL*BLANKS   VI2TSF
+023600930604     C                     MOVEL*BLANKS   VI2AFA
+023700930604     C                     MOVEL*BLANKS   VI2AAA
+023800930604     C                     MOVEL*BLANKS   VI2AFN
+023900930604     C                     MOVEL*BLANKS   VI2AAN
+024000951211     C                     MOVEL*BLANKS   VI2SOT
+024100951211     C                     MOVEL*BLANKS   VI2SOZ
+024200930604     C*
+024300930604     C                     ENDSR
+024400930604     C*---------------------------------------------------------------*
+024500930604     C*                    CTLD2                                      *
+024600930604     C* ROUTINE DI CONTROLLO DATI SECONDO FORMATO VIDEO               *
+024700930604     C*---------------------------------------------------------------*
+024800930604     C           CTLD2     BEGSR
+024900930604     C*
+025000930604     C                     SETOF                     90
+025100930604     C*
+025200930604     C* DESCRIZIONE OBBLIGATORIA
+025300930604IF  1C           VI2DES    IFEQ *BLANKS
+025400930604     C                     SETON                     0290
+025500930604     C                     GOTO ENDC2
+025600930604E   1C                     ENDIF
+025700930609     C*
+025800930604     C           ENDC2     TAG
+025900930604     C                     ENDSR
+026000930604     C*---------------------------------------------------------------*
+026100930604     C*                    RIPRI                                      *
+026200930604     C* ROUTINE DI RIPRISTINO RECORD TABELLA                          *
+026300930604     C*---------------------------------------------------------------*
+026400930604     C           RIPRI     BEGSR
+026500930604     C*
+026600930623     C                     MOVEL*BLANKS   TBLFTR
+026700930623     C                     Z-ADD*ZEROS    TBLDTR
+026800930623     C*
+026900930604     C                     MOVEL*BLANKS   TBLFLG
+027000930604     C                     UPDATTABEL
+027100930604     C*
+027200930604     C                     ENDSR
+027300930604     C*---------------------------------------------------------------*
+027400930604     C*                    ANNUL                                      *
+027500930604     C* ROUTINE DI ANNULLAMENTO RECORD TABELLA                        *
+027600930604     C*---------------------------------------------------------------*
+027700930604     C           ANNUL     BEGSR
+027800930604     C*
+027900930623     C                     MOVEL*BLANKS   TBLFTR
+028000930623     C                     Z-ADD*ZEROS    TBLDTR
+028100930623     C*
+028200930604     C                     MOVEL'*'       TBLFLG
+028300930604     C                     UPDATTABEL
+028400930604     C*
+028500930604     C                     ENDSR
+028600930604     C*---------------------------------------------------------------*
+028700930604     C*                    AGGIO                                      *
+028800930604     C* ROUTINE DI AGGIORNAMENTO RECORD TABELLA                       *
+028900930604     C*---------------------------------------------------------------*
+029000930604     C           AGGIO     BEGSR
+029100930604     C*
+029200990804     C                     CLEARDS7Y
+029300990804     C                     MOVELVI2DES    §7YDES
+029400990804     C                     MOVELVI2VRP    §7YVRP
+029500990804     C                     MOVELVI2VRA    §7YVRA
+029600990804     C                     MOVELVI2PAF    §7YPAF
+029700990804     C                     MOVELVI2PSF    §7YPSF
+029800990804     C                     MOVELVI2APF    §7YAPF
+029900990804     C                     MOVELVI2ASF    §7YASF
+030000990804     C                     MOVELVI2TPF    §7YTPF
+030100990804     C                     MOVELVI2TAF    §7YTAF
+030200990804     C                     MOVELVI2TSF    §7YTSF
+030300990804     C                     MOVELVI2AFA    §7YAFA
+030400990804     C                     MOVELVI2AAA    §7YAAA
+030500990804     C                     MOVELVI2AFN    §7YAFN
+030600990804     C                     MOVELVI2AAN    §7YAAN
+030700990804     C                     MOVELVI2SOT    §7YSOT
+030800990804     C                     MOVELVI2SOZ    §7YSOZ
+030900930604     C*
+031000990804     C                     MOVELDS7Y      TBLUNI
+031100930623     C*
+031200930623     C                     MOVEL*BLANKS   TBLFTR
+031300930623     C                     Z-ADD*ZEROS    TBLDTR
+031400930604     C*
+031500930604     C* V A R I A Z I O N E
+031600930604IF  1C           *IN30     IFEQ '0'
+031700930604     C                     UPDATTABEL
+031800930604X   1C                     ELSE
+031900930604     C*
+032000930604     C* I N S E R I M E N T O
+032100930604     C                     Z-ADD1         TBLKUT
+032200990804     C                     MOVEL'7Y'      TBLCOD
+032300930604     C                     MOVELVI2KEY    TBLKEY
+032400930604     C                     MOVEL*BLANKS   TBLFLG
+032500930604     C                     MOVEL'1'       TBLFTT
+032600930604     C                     MOVEL*BLANKS   TBLFLT
+032700930604     C                     WRITETABEL
+032800930604E   1C                     ENDIF
+032900930604     C*
+033000930604     C                     ENDSR
+033100930603     C*---------------------------------------------------------------*
+033200930603     C*                    DEFVAR                                     *
+033300930603     C* ROUTINE DI DEFINIZIONE VARIABILI, KLIST E PLIST               *
+033400930603     C*---------------------------------------------------------------*
+033500930603     C           DEFVAR    BEGSR
+033600930603     C*
+033700930603     C           *ENTRY    PLIST
+033800930603     C                     PARM           KPJBA
+033900930603     C*
+034000930604     C                     Z-ADD1         CODUT
+034100930603     C                     CALL 'X§PARUT'
+034200930603     C                     PARM           UT§DSE
+034300930603     C                     MOVELRAGUT     RSUT   20
+034400930603     C*
+034500930604     C* LETTURA TABEL00F
+034600930604     C           KTAB      KLIST
+034700930604     C                     KFLD           CODUT   10
+034800930604     C                     KFLD           COD     2
+034900930604     C                     KFLD           KEY     8
+035000930604     C*
+035100930603     C                     ENDSR
+035200930604     O*---------------------------------------------------------------*
+035300930604     O* DESCRIZIONI OPERAZIONI SECONDO FORMATO VIDEO                  *
+035400930604     O*---------------------------------------------------------------*
+035500930604**
+035600930604ANNULLATO
+035700930604VARIAZIONE
+035800930604IMMISSIONE

@@ -1,0 +1,46 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200130410/*?******************************************************************/
+000300140220/*?      ELABORA IFTSTA dal TIVGD e TRAscrive per DWNLOAD           */
+000400140220/*?      l'EDI REPORT  x invio tramite server FTP clienti           */
+000500130410/*?******************************************************************/
+000600090225
+000700140220             PGM        PARM(&PARMPPT &PARMESITO)
+000800090225
+000900140220             DCL        VAR(&PARMPPT) TYPE(*CHAR) LEN(50)
+001000140220             DCL        VAR(&PARMESITO) TYPE(*CHAR) LEN(1)
+001100140220
+001200130502             DCL        VAR(&NOME) TYPE(*CHAR) LEN(10)
+001300130520             RTVNETA    SYSNAME(&NOME)
+001400130520
+001500130502
+001600140220             CRTDUPOBJ  OBJ(TRTCT95W) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+001700140220                          TOLIB(QTEMP)
+001800140220             MONMSG     MSGID(CPF0000)
+001900140220
+002000140220/* Workfile  sempre puntato  in QTEMP                          */
+002100140220             OVRDBF     FILE(TRTCT95W) TOFILE(QTEMP/TRTCT95W)
+002200140220             CLRPFM     FILE(QTEMP/TRTCT95W)
+002300140220
+002400140220
+002500140220 /* primo programma legge il TIVGD con il nostro IFTSTA e lo  */
+002600140220 /* e lo riporta sul file di WORK TRTCT95W per trasformarlo   */
+002700140220 /* nel formato richiesto da HAGER / CEVA Logistics           */
+002800140220             CALL       PGM(TRTCT95R0) PARM(&PARMPPT &PARMESITO)
+002900140220             MONMSG     MSGID(CPF0000) EXEC(DO)
+003000140220             CHGVAR     VAR(&PARMESITO) VALUE('2')
+003100140220             GOTO       CMDLBL(NO_TRAD)
+003200140220             ENDDO
+003300140220
+003400140220 /* Trasforma il messaggio x HAGER / CEVA Logistics           */
+003500140221             CALL       PGM(TRTCT95R1) PARM(&PARMPPT &PARMESITO)
+003600090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+003700140220             CHGVAR     VAR(&PARMESITO) VALUE('2')
+003800090213             ROLLBACK
+003900090213             ENDDO
+004000140220
+004100140220NO_TRAD:
+004200140220
+004300140220             DLTOVR     FILE(*ALL)
+004400130520
+004500090216
+004600090212             ENDPGM

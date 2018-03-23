@@ -1,0 +1,56 @@
+000100000224/*******************************************************************/
+000200000224/* PULIZIA ARCHIVI PER EDI E/O ESTERO                              */
+000300000224/*******************************************************************/
+000400000224             PGM
+000500000224
+000600970423             DCL        VAR(&NRRRDC) TYPE(*DEC) LEN(10 0)
+000700970423             DCL        VAR(&NRRRDE) TYPE(*DEC) LEN(10 0)
+000800000224             DCL        VAR(&NRRDP2) TYPE(*DEC) LEN(10 0)
+000900000302             DCL        VAR(&NRRDP3) TYPE(*DEC) LEN(10 0)
+001000000224
+001100000224/* EDI EUROEXPRESS  */
+001200000224             CHKOBJ     OBJ(EDRDE00F) OBJTYPE(*FILE)
+001300970423             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOPULEDRDE))
+001400000224
+001500970423/* Se esiste controllo che non sia vuoto                           */
+001600970423             RTVMBRD    FILE(*LIBL/EDRDE00F) MBR(*FIRST) +
+001700970423                          NBRCURRCD(&NRRRDE)
+001800000224
+001900970423/* Se non  è vuoto lancio programma di pulizia                     */
+002000970423             IF         COND(&NRRRDE *GT 0) THEN(CALL PGM(TRTC68R))
+002100970423
+002200000224 NOPULEDRDE:
+002300000224
+002400000224/* DPD */
+002500000224             CHKOBJ     OBJ(FIDP200F) OBJTYPE(*FILE)
+002600000224             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOPULFIDP2))
+002700000224/* Se esiste controllo che non sia vuoto                           */
+002800000224             RTVMBRD    FILE(*LIBL/FIDP200F) MBR(*FIRST) +
+002900000224                          NBRCURRCD(&NRRDP2)
+003000000224/* Se non  è vuoto lancio programma di pulizia                     */
+003100000224             IF         COND(&NRRDP2 *GT 0) THEN(CALL PGM(FIEU35R))
+003200000224
+003300000224NOPULFIDP2:
+003400000224
+003500000302             CHKOBJ     OBJ(FIDP300F) OBJTYPE(*FILE)
+003600000302             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOPULFIDP3))
+003700000302/* Se esiste controllo che non sia vuoto                           */
+003800000302             RTVMBRD    FILE(*LIBL/FIDP300F) MBR(*FIRST) +
+003900000302                          NBRCURRCD(&NRRDP3)
+004000000302/* Se non  è vuoto lancio programma di pulizia                     */
+004100000302             IF         COND(&NRRDP3 *GT 0) THEN(CALL PGM(FIEU36R))
+004200000302
+004300000302NOPULFIDP3:
+004400000302
+004401070103/* ?  NUOVO FILE DPD                                              */
+004402070103             CHKOBJ     OBJ(TIDP300F) OBJTYPE(*FILE)
+004403070103             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(NOPULFIDP4))
+004404070103/* Se esiste controllo che non sia vuoto                           */
+004405070103             RTVMBRD    FILE(*LIBL/TIDP300F) MBR(*FIRST) +
+004406070103                          NBRCURRCD(&NRRDP3)
+004407070103/* Se non  è vuoto lancio programma di pulizia                     */
+004408070103             IF         COND(&NRRDP3 *GT 0) THEN(CALL PGM(FIEU11R))
+004409070103
+004410070103NOPULFIDP4:
+004411070103
+004500000224             ENDPGM

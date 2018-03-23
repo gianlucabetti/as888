@@ -1,0 +1,162 @@
+000100961016     H*------------------------------------------------------------------------*
+000200961016     H* RICERCA ANOMALIA 90-OK IDA DEL TERMINAL DI ARRIVO              NO      *
+000300961016     H*------------------------------------------------------------------------*
+000400961016     H              J
+000500961016     F*------------------------------------------------------------------------*
+000600990513     FFNANM04LIF  E           K        DISK
+000700961016     FAZCLN01LIF  E           K        DISK
+000800961016     FTABEL00FIF  E           K        DISK
+000900961016     E*
+001000961016     E                    MAT        31  1               FESTIV.MATTINO
+001100961016     I*
+001200961016     IKPJBA     E DS
+001300961016     IDSLV56    E DSFNLV56DS
+001400961016     IDS1Y      E DS
+001500961016     IUT§DSE    E DSUT§DSE0F
+001600961016     IWLBDA8      DS
+001700961016     I                                        1   80G08DAT
+001800961016     I                                        9  160G08INV
+001900961016     I                                       17  17 G08ERR
+002000961016     I                                       18  220G08TGI
+002100961016     IWGIDAT      DS
+002200961016     I                                        1   80GI8DAT
+002300961016     I                                        9  160GI8INV
+002400961016     I                                       17  210GI8TGI
+002500961016     I            DS
+002600961016     I                                        1  31 CLNMAT
+002700961016     I                                        1  31 MAT
+002800961016     C****************************************************************
+002900961016     C*  RIEPILOGO INDICATORI
+003000961016     C***************************************************************
+003100961016     C* 31    - COMODO
+003200961016     C***************************************************************
+003300961016     C*
+003400961022     C           *ENTRY    PLIST
+003500961022     C                     PARM           KPJBA
+003600961022     C*
+003700961022     C                     MOVELKPJBU     DSLV56
+003800961022     C*
+003900961022     C                     MOVE D56DAO    WDAO
+004000961022     C*
+004100961022     C* SE NON PASSATA IMPOSTO DATA IN GIORNI DAL 01/01/01
+004200961022     C           D56TGI    IFEQ *ZEROS
+004300961022     C                     CLEARWLBDA8
+004400961022     C                     MOVE D56DAO    G08INV
+004500961022     C                     MOVE '3'       G08ERR
+004600961022     C                     CALL 'XSRDA8'
+004700961022     C                     PARM           WLBDA8
+004800961022     C                     Z-ADDG08TGI    WTGI
+004900961022     C                     ELSE
+005000961022     C                     Z-ADDD56TGI    WTGI
+005100961022     C                     END
+005200961016     C* PULISCO CAMPI DI OUTPUT
+005300961016     C                     CLEARD56ERR
+005400961016     C*
+005500961016     C           D56TLA    IFNE 'C'
+005600961016     C*
+005700961021     C                     MOVE *ZEROS    II      30
+005800961021     C*
+005900961016     C           INIZIO    TAG
+006000961016     C*
+006100961016     C                     CLEARW001A
+006200961016     C*
+006300990513     C           KANM04    SETLLFNANM04L
+006400990513     C           KANM04    READEFNANM04L                 31
+006500961016     C           *IN31     DOWEQ*OFF
+006600961016     C           W001A     ANDEQ*BLANKS
+006700961016     C           ANMFLE    IFEQ D56FE0
+006800961016     C           ANMNFV    ANDEQ*ZEROS
+006900961016     C                     MOVE '1'       W001A   1
+007000961016     C                     ELSE
+007100990513     C           KANM04    READEFNANM04L                 31
+007200961016     C                     END
+007300961016     C                     ENDDO
+007400961016     C*
+007500961016     C           *IN31     IFEQ *ON
+007600961016     C* NON TROVATO OK IDA: VERIFICO SE IL GIORNO PRECEDENTE E' FESTIVO
+007700961016     C                     EXSR CTRFES
+007800961016     C           WFES      IFEQ 'F'
+007900961016     C* . . . . . . .     E' FESTIVO --> CERCO L'OK IDA CON QUESTA DATA
+008000961016     C                     MOVE WDELP     WDAO
+008100961016     C                     GOTO INIZIO
+008200961016     C                     ELSE
+008300961016     C* NON E' FESTIVO -> NON TROVATO OK IDA
+008400961016     C                     MOVE 'N'       D56ERR
+008500961016     C                     ENDIF
+008600961016     C                     ENDIF
+008700961016     C                     END
+008800961016     C                     MOVELDSLV56    KPJBU
+008900961016     C           D56TLA    IFEQ ' '
+009000961016     C                     RETRN
+009100961016     C                     ELSE
+009200961016     C                     SETON                     LR
+009300961016     C                     END
+009400961016      * CONTROLLO SE GIORNO FESTIVO ----------------------------------*
+009500961016     C           CTRFES    BEGSR
+009600961016     C                     MOVE *BLANKS   WFES    1
+009700961016     C                     CLEARWDELP
+009800961016     C                     ADD  1         II
+009900961016     C* DETERMINO GIORNO PRECEDENTE
+010000961016     C                     CLEARWGIDAT
+010100961016     C           WTGI      SUB  II        GI8TGI
+010200961016     C                     CALL 'XSRGI8'
+010300961016     C                     PARM           WGIDAT
+010400961016     C                     Z-ADDGI8INV    WDELP
+010500961016     C* VERIFICO SE FESTIVO LEGGENDO CALENDARIO BARTOLINI
+010600961016     C                     MOVELGI8INV    KANN
+010700961016     C                     MOVE GI8INV    W0040   40
+010800961016     C                     MOVELW0040     KMES
+010900961016     C                     MOVE W0040     GG      20
+011000961016     C                     CLEARKTFP
+011100961016     C                     MOVE D56FE0    KTFA
+011200961016     C           KCLN      CHAINAZCLN01L             31
+011300961016    1C           *IN31     IFEQ *OFF
+011400961016     C           MAT,GG    ANDNE*BLANKS
+011500961016     C                     MOVEL'1Y'      COD
+011600961016     C                     MOVELMAT,GG    KEY       P
+011700961016     C           KTAB      CHAINTABEL                31
+011800961016    2C           *IN31     IFEQ *OFF
+011900961016     C                     MOVELTBLUNI    DS1Y
+012000961016    3C           §1YFEI    IFEQ 'S'
+012100961016     C                     MOVEL'F'       WFES
+012200961016    3C                     END
+012300961016    2C                     END
+012400961016    1C                     END
+012500961016     C*
+012600961016     C                     ENDSR
+012700961016     C**************** OPERAZIONI INIZIALI ****************************
+012800961016     C           *INZSR    BEGSR
+012900961016     C*
+013000961016     C                     Z-ADD1         CODUT
+013100961016     C                     CALL 'X§PARUT'
+013200961016     C                     PARM           UT§DSE
+013300961022     C*
+013400961022     C                     Z-ADD90        WCAA
+013500961016     C*
+013600961016     C           *LIKE     DEFN ANMDAO    WDAO
+013700961016     C           *LIKE     DEFN ANMCAA    WCAA
+013800961016     C           *LIKE     DEFN D56TGI    WTGI
+013900961016     C           *LIKE     DEFN GI8INV    WDELP
+014000961016     C           *LIKE     DEFN CLNTFP    KTFP
+014100961016     C           *LIKE     DEFN CLNTFA    KTFA
+014200961016     C           *LIKE     DEFN CLNANN    KANN
+014300961016     C           *LIKE     DEFN CLNMES    KMES
+014400961016     C           *LIKE     DEFN TBLCOD    COD
+014500961016     C           *LIKE     DEFN TBLKEY    KEY
+014600961016     C*
+014700961016     C           KANM04    KLIST
+014800961016     C                     KFLD           WCAA
+014900961016     C                     KFLD           WDAO
+015000961016     C*
+015100961016     C           KCLN      KLIST
+015200961016     C                     KFLD           KTFP
+015300961016     C                     KFLD           KTFA
+015400961016     C                     KFLD           KANN
+015500961016     C                     KFLD           KMES
+015600961016     C*
+015700961016     C           KTAB      KLIST
+015800961016     C                     KFLD           CODUT
+015900961016     C                     KFLD           COD
+016000961016     C                     KFLD           KEY
+016100961016     C*
+016200961016     C                     ENDSR

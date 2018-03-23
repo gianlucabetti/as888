@@ -1,0 +1,70 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600010202             PGM        PARM(&CCM &MBR &OPZ)
+000700990908
+000800010202             DCL        VAR(&CCM) TYPE(*CHAR) LEN(8)
+000900010202             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001000010202             DCL        VAR(&OPZ) TYPE(*CHAR) LEN(1)
+001100990921
+001200000710
+001300990908
+001400010202             IF         COND(&OPZ = '1') THEN(DO)
+001500990913/* Aggiungo il membro al file di arrivo -----------------------------*/
+001600021113             CHKOBJ     OBJ(FIVADWWR) OBJTYPE(*FILE) MBR(&MBR)
+001700001013             MONMSG     MSGID(CPF9815) EXEC(DO)
+001800021113             ADDPFM     FILE(FIVADWWR) MBR(&MBR) TEXT(&CCM)
+001900001013             MONMSG     MSGID(CPF0000) EXEC(DO)
+002000001013             DLYJOB     DLY(300)
+002100021113             ADDPFM     FILE(FIVADWWR) MBR(&MBR) TEXT(&CCM)
+002200001013             ENDDO
+002300150429             ENDDO
+002400150429
+002500150429             CHKOBJ     OBJ(FIVATWWR) OBJTYPE(*FILE) MBR(&MBR)
+002600150429             MONMSG     MSGID(CPF9815) EXEC(DO)
+002700150429             ADDPFM     FILE(FIVATWWR) MBR(&MBR) TEXT(&CCM)
+002800150429             MONMSG     MSGID(CPF0000) EXEC(DO)
+002900150429             DLYJOB     DLY(300)
+003000150429             ADDPFM     FILE(FIVATWWR) MBR(&MBR) TEXT(&CCM)
+003100150429             ENDDO
+003200001013             ENDDO
+003300001013
+003400010202/* Alloco il membro nel file ----------------------------------------*/
+003500001214/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+003600021113             ALCOBJ     OBJ((FIVADWWR *FILE *EXCL &MBR))
+003700150429             ALCOBJ     OBJ((FIVATWWR *FILE *EXCL &MBR))
+003800990910
+003900001214/* Punto al membro e sostituisco a 1 il "Force-RCcord-RATIO" --------*/
+004000021113             OVRDBF     FILE(FIVADWWR) MBR(&MBR) FRCRATIO(1) +
+004100001214                          OVRSCOPE(*JOB)
+004200150429             OVRDBF     FILE(FIVATWWR) MBR(&MBR) FRCRATIO(1) +
+004300150429                          OVRSCOPE(*JOB)
+004400010202             ENDDO
+004500990915
+004600010202
+004700010202
+004800010202
+004900010202             IF         COND(&OPZ = '2') THEN(DO)
+005000990910/* Disalloco i membri -----------------------------------------------*/
+005100021113             DLCOBJ     OBJ((FIVADWWR *FILE *EXCL &MBR))
+005200021113             CLRPFM     FILE(FIVADWWR) MBR(&MBR)
+005300060407             RMVM       FILE(FIVADWWR) MBR(&MBR)
+005400010202             MONMSG     MSGID(CPF0000)
+005500990910
+005600150429             DLCOBJ     OBJ((FIVATWWR *FILE *EXCL &MBR))
+005700150429             CLRPFM     FILE(FIVATWWR) MBR(&MBR)
+005800150429             RMVM       FILE(FIVATWWR) MBR(&MBR)
+005900150429             MONMSG     MSGID(CPF0000)
+006000150429
+006100990910/* Cancello le override ---------------------------------------------*/
+006200021113             DLTOVR     FILE(FIVADWWR) LVL(*JOB)
+006300000724             MONMSG     MSGID(CPF0000)
+006400150429             DLTOVR     FILE(FIVATWWR) LVL(*JOB)
+006500150429             MONMSG     MSGID(CPF0000)
+006600010202             ENDDO
+006700990908
+006800010202
+006900010202
+007000990907             ENDPGM

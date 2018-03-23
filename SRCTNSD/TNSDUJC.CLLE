@@ -1,0 +1,29 @@
+000100070604             pgm        parm(&NrF)
+000200070604
+000300070604             dcl        var(&NrF)            type(*char)   len(1)
+000400070604             dcl        var(&File)           type(*char)   len(10) +
+000500070605                        value('WFAIM00F  ')
+000600070605             if         cond(&NrF = '2')     then(+
+000700070605               chgvar     var(&File)           value('WFAIM20F  ') )
+000800070604
+000900070604    /* Allocazione del file WFAIM00F per verificare se allocato -----*/
+001000070604             alcobj     obj((*libl/&File     *file *excl)) wait(1)
+001100070604             monmsg     msgid(CPF0000)       exec(goto cmdlbl(Fine_))
+001200070604
+001300070604    /* Pulizia del file WFAIM20F ------------------------------------*/
+001400070604             if         cond(&NrF = '2')     then(do)
+001500070604               clrpfm     file(*libl/&File)
+001600070604               enddo
+001700070604    /* Riorganizzazione del file WFAIM00F ---------------------------*/
+001800070604             else       cmd(do)
+001900070605               rgzpfm     file(*libl/&File)  mbr(*first) +
+002000070604                          rbdaccpth(*yes)
+002100070604               monmsg     msgid(CPF0000)
+002200070604               enddo
+002300070604
+002400070604    /* Disallocazione del file WFAIM00F -----------------------------*/
+002500070605             dlcobj     obj((*libl/&File     *file *excl))
+002600070524             monmsg     msgid(CPF0000)
+002700070523
+002800070523    Fine_:
+002900070523             endpgm

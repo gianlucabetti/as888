@@ -1,0 +1,193 @@
+000100050228/*-------------------------------------------------------------------*/
+000200050405/*?Pulizia Trasmissioni/Posta/Spool/Azioni                          ?*/
+000300050228/*-------------------------------------------------------------------*/
+000400050228/* Se presente l'area dati in QGPL/MIMIXBACK                         */
+000500050228/*   significa che è l'AS/400 di backup e quindi non attiva          */
+000600050228/*   lavori di aggiornamento: GAICMZ, GAIDTAQ, INTERCEP, etc.        */
+000700050228/*-------------------------------------------------------------------*/
+000800050228
+000900161130             pgm        parm(&Lista &CancIS)
+001000050228
+001100161130    /*?Parametri ricevuti:                                          ?*/
+001200161130    /*?- &LISTA                                                     ?*/
+001300050708    /*?(richiesto solo da TNSY16R?- Pulizia Stampe da file AZCSP00F)?*/
+001400050708    /*?valori ammessi: '1' = richiesta solo lista spool eliminabili ?*/
+001500050708    /*?                '2' = richiesta solo cancellazione spool     ?*/
+001600050708    /*?                '3' = richieste lista e cancellazione spool  ?*/
+001700050708             dcl        var(&LISTA)    type(*char) len(1)
+001800161130    /*?- &CANCIS                                                    ?*/
+001900161130    /*?(richiesto solo da TNSY16R?- Pulizia Stampe da file AZCSP00F)?*/
+002000161130    /*?valori ammessi: ' ' = richiesta cancellazione incondizionata ?*/
+002100161130    /*?                      (com'è stata fin'ora)                  ?*/
+002200161130    /*?                'S' = richiesta cancellazione "differenziata"?*/
+002300161130    /*?                      infrasettimanale: dal lunedì al venerdì?*/
+002400161130    /*?                      vengono cancellati solo gli spool con  ?*/
+002500161130    /*?                      max 5 giorni limite per la cancellaz.  ?*/
+002600161130    /*?                      (in AZCSP00F); il sabato e la domenica ?*/
+002700161130    /*?                      vengono cancellati tutti gli spool.    ?*/
+002800161130             dcl        var(&CancIS)   type(*char) len(1)
+002900050708
+003000050708    /*?Definizione variabili?*/
+003100050301             dcl        var(&MXBK)     type(*char) len(1)   +
+003200050719                          value('0')   /* blank = NO BACKUP */
+003300050301             dcl        var(&SYSNAME)  type(*char) len(8)
+003400050406             dcl        var(&GAITRAOB) type(*char) len(1)  +
+003500050406                          value('1')
+003600050406             dcl        var(&GAICMZ)   type(*char) len(1)  +
+003700050406                          value('1')
+003800050406             dcl        var(&GAITRAAZ) type(*char) len(1)  +
+003900050406                          value('1')
+004000050301
+004100050405    /*?Parametri per girare una data?*/
+004200050301             dcl        var(&OGGI)     type(*char) len(6)
+004300050301             dcl        var(&AA)       type(*char) len(2)
+004400050301             dcl        var(&MM)       type(*char) len(2)
+004500050301             dcl        var(&GG)       type(*char) len(2)
+004600050405    /*?Parametri per pgm. XSRDA8?*/
+004700050301             dcl        var(&G02DAT)   type(*dec)  len(8 0) +
+004800050301                          value(0)
+004900050301             dcl        var(&G02INV)   type(*dec)  len(8 0) +
+005000050301                          value(0)
+005100050301             dcl        var(&G02ERR)   type(*char) len(1)   +
+005200050301                          value(' ')
+005300050301             dcl        var(&G02TGI)   type(*dec)  len(5 0) +
+005400050301                          value(0)
+005500050301             dcl        var(&G02PAR)   type(*char) len(22)
+005600050405    /*?Parametri per pgm. XSRGI8?*/
+005700050301             dcl        var(&GIODAT)   type(*dec)  len(8 0) +
+005800050301                          value(0)
+005900050301             dcl        var(&GIOINV)   type(*dec)  len(8 0) +
+006000050301                          value(0)
+006100050301             dcl        var(&GIOTGI)   type(*dec)  len(5 0) +
+006200050301                          value(0)
+006300050301             dcl        var(&GIOPAR)   type(*char) len(21)
+006400050405    /*?Date ricalcolate?*/
+006500050301             dcl        var(&COMO8)    type(*char) len(8)   +
+006600050301                          value('00000000')  /* data alfa a 8 */
+006700050301             dcl        var(&ZDP3)     type(*char) len(7)   +
+006800050301                          value('0000000')   /* data - 3 */
+006900050301             dcl        var(&ZDP7)     type(*char) len(7)   +
+007000050301                          value('0000000')   /* data - 7 */
+007100050405    /*?Altri parametri per lancio CMZ316C?*/
+007200050301             dcl        var(&ZDEL)     type(*char) len(1)   +
+007300050228                          value('1')
+007400050301             dcl        var(&ZSAV)     type(*char) len(1)   +
+007500050228                          value(' ')
+007600050301             dcl        var(&ZTAP)     type(*char) len(10)  +
+007700050228                          value('          ')
+007800121219
+007900121219    /*?Modifica priorità del lavoro?*/
+008000121219             chgjob     runpty(50)
+008100050228
+008200050228    /*?Reperimento nome sistema?*/
+008300050228             rtvneta    sysname(&SYSNAME)
+008400050301
+008500050301    /*?Reperimento data odierna?*/
+008600050301             rtvsysval  sysval(QDAY)   rtnvar(&GG)
+008700050301             rtvsysval  sysval(QMONTH) rtnvar(&MM)
+008800050301             rtvsysval  sysval(QYEAR)  rtnvar(&AA)
+008900050301             chgvar     var(%sst(&OGGI 1 2)) value(&GG)
+009000050301             chgvar     var(%sst(&OGGI 3 2)) value(&MM)
+009100050301             chgvar     var(%sst(&OGGI 5 2)) value(&AA)
+009200050228
+009300050406    /*?Sistemazione lista di librerie?*/
+009400050406             addlible   lib(GAITRAOBJ) position(*after QTEMP)
+009500050406             monmsg     msgid(CPF0000) exec(chgvar var(&GAITRAOB) +
+009600050406                                       value('0'))
+009700050406             addlible   lib(GAICMZ)    position(*after QTEMP)
+009800050406             monmsg     msgid(CPF0000) exec(chgvar var(&GAICMZ)   +
+009900050406                                       value('0'))
+010000070827             if         cond(&SYSNAME  =  'AS888   ')  then(do)
+010100070827               addlible   lib(GAITRAAZP) position(*after QTEMP)
+010200070827               monmsg     msgid(CPF0000) exec(chgvar var(&GAITRAAZ) +
+010300070827                                         value('0'))
+010400070827               enddo
+010500070827             else       cmd(do)
+010600070827               addlible   lib(GAITRAAZM) position(*after QTEMP)
+010700070827               monmsg     msgid(CPF0000) exec(chgvar var(&GAITRAAZ) +
+010800070827                                         value('0'))
+010900070827               enddo
+011000070807
+011100070807    /*?Se richiesta SOLO lista degli spool eliminabili:?             */
+011200070807    /*?  salta la pulizia archivi in AS/400 NON di BackUp?-----------*/
+011300070807             if         cond(&Lista *eq '1') then(goto cmdlbl(MxBack))
+011400050908
+011500050908    /*?Controllo se esiste area dati backup?*/
+011600050908             call       pgm(TNSY14C)   parm(&MXBK)
+011700050228
+011800070717    /*?Pulizia archivi in AS/400 NON di BackUp?----------------------*/
+011900050228
+012000050228    /* Se AS/400 di BackUp NON pulisce archivi */
+012100050719             if         cond(&MXBK *eq '1')  then(goto cmdlbl(MxBack))
+012200050301
+012300050301    /* Calcola totale giorni della data odierna */
+012400050301             chgvar     var(&G02DAT)   value(00000000)
+012500050301             chgvar     var(&G02DAT)   value(&OGGI)
+012600050301             chgvar     var(%sst(&G02PAR  1 8))   value(&G02DAT)
+012700050301             chgvar     var(%sst(&G02PAR  9 8))   value(&G02INV)
+012800050301             chgvar     var(%sst(&G02PAR 17 1))   value(&G02ERR)
+012900050301             chgvar     var(%sst(&G02PAR 18 5))   value(&G02TGI)
+013000050301             call       pgm(XSRDA8)    parm(&G02PAR)
+013100050301             chgvar     var(&G02TGI)   value(%sst(&G02PAR 18 5))
+013200050301    /* Sottrae 3 gg. e ricalcola la data corrispondente */
+013300050301             chgvar     var(&GIOTGI)         value(&G02TGI - 3)
+013400050301             chgvar     var(%sst(&GIOPAR  1 8))   value(&GIODAT)
+013500050301             chgvar     var(%sst(&GIOPAR  9 8))   value(&GIOINV)
+013600050301             chgvar     var(%sst(&GIOPAR 17 5))   value(&GIOTGI)
+013700050301             call       pgm(XSRGI8)    parm(&GIOPAR)
+013800050301             chgvar     var(&GIOINV)   value(%sst(&GIOPAR 9 8))
+013900050301             chgvar     var(&COMO8)    value(&GIOINV)
+014000050301             chgvar     var(&ZDP3)     +
+014100050301                        value('0' *cat %sst(&COMO8 3 6))
+014200050301    /* Sottrae 7 gg. e ricalcola la data corrispondente */
+014300050301             chgvar     var(&GIOTGI)   value(&G02TGI - 7)
+014400050301             chgvar     var(%sst(&GIOPAR  1 8))   value(&GIODAT)
+014500050301             chgvar     var(%sst(&GIOPAR  9 8))   value(&GIOINV)
+014600050301             chgvar     var(%sst(&GIOPAR 17 5))   value(&GIOTGI)
+014700050301             call       pgm(XSRGI8)    parm(&GIOPAR)
+014800050301             chgvar     var(&GIOINV)   value(%sst(&GIOPAR 9 8))
+014900050301             chgvar     var(&COMO8)    value(&GIOINV)
+015000050301             chgvar     var(&ZDP7)     +
+015100050301                        value('0' *cat %sst(&COMO8 3 6))
+015200050228
+015300050406    /*?Richiama pulizia archivi trasmessi?*/
+015400050301    /* - in SEDE : 3 gg.*/
+015500050708             call       pgm(CMZ316R)   parm(&ZDP3 &ZDEL &ZSAV &ZTAP)
+015600050406    /*?Richiama pulizia archivi posta?*/
+015700050301    /* - 1ª data: pulizia normale */
+015800050301    /* - 2ª data: pulizia forzata */
+015900050301             call       pgm(CMZM31R)   parm(&ZDP3 &ZDP7)
+016000050228
+016100050228    MxBack:
+016200050301    /*?Pulizia Stampe (dal file AZCSP00F)?---------------------------*/
+016300161130             call       pgm(TNSY16R)   parm(&Lista &CancIS)
+016400050228
+016500050301    Azn:
+016600050301    /*?Sistemazione Azioni Modulo Base interrotte e non attive?------*/
+016700070827             if         cond(&Lista    *ne '1')   then(do)
+016800050301             call       pgm(BAK061R)
+016900070807             enddo
+017000050406
+017100050406    /*?Sistemazione lista di librerie?-------------------------------*/
+017200050406             if         cond(&GAITRAOB *eq '1')   then(do)
+017300050406               rmvlible   lib(GAITRAOBJ)
+017400050406               monmsg     msgid(CPF0000)
+017500070717             enddo
+017600050406             if         cond(&GAICMZ   *eq '1')   then(do)
+017700050406               rmvlible   lib(GAICMZ)
+017800050406               monmsg     msgid(CPF0000)
+017900070717             enddo
+018000070827             select
+018100070827             when       cond(&GAITRAAZ *eq '1'    *and  +
+018200070827                             &SYSNAME  *eq 'AS888   ')  then(do)
+018300070717               rmvlible   lib(GAITRAAZP)
+018400070717               monmsg     msgid(CPF0000)
+018500070717               enddo
+018600070827             when       cond(&GAITRAAZ *eq '1')   then(do)
+018700070827               rmvlible   lib(GAITRAAZM)
+018800070827               monmsg     msgid(CPF0000)
+018900070827               enddo
+019000070717             endselect
+019100050228
+019200050228    /*?Fine?---------------------------------------------------------*/
+019300050228             endpgm

@@ -1,0 +1,3 @@
+000100080722     D Proj_Esercizio...
+000200080722     D                 PR                  EXTPGM('X10ESER')
+000300080722     D  x10EseDs                           LIKEDS(x10EseDs)

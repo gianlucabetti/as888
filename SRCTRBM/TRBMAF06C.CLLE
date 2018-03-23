@@ -1,0 +1,67 @@
+000100150618/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600160119
+000700160119
+000800160119             PGM        PARM(&PARAMS)
+000900160119
+001000160119
+001100160119             DCL        VAR(&PARAMS)     TYPE(*CHAR) LEN(10240)
+001200160119
+001300160119             DCL        VAR(&IFSNAM)     TYPE(*CHAR) LEN(10)
+001400160119             DCL        VAR(&FILNAM)     TYPE(*CHAR) LEN(10)
+001500160119             DCL        VAR(&JOBNAM)     TYPE(*CHAR) LEN(10)
+001600160119             DCL        VAR(&USRNAM)     TYPE(*CHAR) LEN(10)
+001700160119             DCL        VAR(&JOBNUM)     TYPE(*CHAR) LEN(6)
+001800160119             DCL        VAR(&NUMFIL)     TYPE(*CHAR) LEN(6)
+001900160119             DCL        VAR(&ROOT)       TYPE(*CHAR) LEN(100)
+002000160119             DCL        VAR(&SUBFLDR)    TYPE(*CHAR) LEN(50)
+002100160119             DCL        VAR(&TRBMFCDS)   TYPE(*CHAR) LEN(197)
+002200160119             DCL        VAR(&FILEOUT)    TYPE(*CHAR) LEN(255)
+002300160119             DCL        VAR(&DATAORA)    TYPE(*CHAR) LEN(15)
+002400160119             DCL        VAR(&FLGSUBFLDR) TYPE(*CHAR) LEN(1)
+002500160120             DCL        VAR(&FLGREPLACE) TYPE(*CHAR) LEN(1)
+002600160119             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1)
+002700160119
+002800060721
+002900160119
+003000160119/* Ri-strutturo i singoli parametri della chiamata "tunnelata" */
+003100160119             CHGVAR     VAR(&IFSNAM)     VALUE(%SST(&PARAMS  001 010))
+003200160119             CHGVAR     VAR(&FILNAM)     VALUE(%SST(&PARAMS  011 010))
+003300160119             CHGVAR     VAR(&JOBNAM)     VALUE(%SST(&PARAMS  021 010))
+003400160119             CHGVAR     VAR(&USRNAM)     VALUE(%SST(&PARAMS  031 010))
+003500160119             CHGVAR     VAR(&JOBNUM)     VALUE(%SST(&PARAMS  041 006))
+003600160119             CHGVAR     VAR(&NUMFIL)     VALUE(%SST(&PARAMS  047 006))
+003700160119             CHGVAR     VAR(&ROOT)       VALUE(%SST(&PARAMS  053 100))
+003800160119             CHGVAR     VAR(&SUBFLDR)    VALUE(%SST(&PARAMS  153 050))
+003900160119             CHGVAR     VAR(&TRBMFCDS)   VALUE(%SST(&PARAMS  203 197))
+004000160119             CHGVAR     VAR(&FILEOUT)    VALUE(%SST(&PARAMS  400 255))
+004100160119             CHGVAR     VAR(&DATAORA)    VALUE(%SST(&PARAMS  655 015))
+004200160119             CHGVAR     VAR(&FLGSUBFLDR) VALUE(%SST(&PARAMS  670 001))
+004300160120             CHGVAR     VAR(&FLGREPLACE) VALUE(%SST(&PARAMS  671 001))
+004400160119             CHGVAR     VAR(&ESITO)      VALUE('0')
+004500060721
+004600160119
+004700160119/* Effettuo chiama vera e propria al driver di procedura */
+004800160119             CALL       PGM(TRBMAF07C) +
+004900160119                        PARM(&IFSNAM &FILNAM &JOBNAM &USRNAM &JOBNUM +
+005000160120                          &NUMFIL &ROOT &SUBFLDR &TRBMFCDS &FILEOUT +
+005100160120                          &DATAORA &FLGSUBFLDR &FLGREPLACE &ESITO)
+005200160119             MONMSG     MSGID(CPF0000) EXEC(DO)
+005300160119             CHGVAR     VAR(&ESITO) VALUE('2')
+005400160119             ENDDO
+005500160119
+005600160119
+005700160119/* De-strutturo i singoli parametri della chiamata "tunnelata" */
+005800160119             CHGVAR     VAR(&PARAMS) VALUE(&IFSNAM *CAT &FILNAM *CAT +
+005900160119                            &JOBNAM *CAT &USRNAM *CAT &JOBNUM *CAT +
+006000160119                            &NUMFIL *CAT &ROOT *CAT &SUBFLDR *CAT +
+006100160119                            &TRBMFCDS *CAT &FILEOUT *CAT &DATAORA *CAT +
+006200160120                            &FLGSUBFLDR *CAT &FLGREPLACE *CAT &ESITO)
+006300071031
+006400070607
+006500030402 FINE:
+006600030402
+006700990907             ENDPGM

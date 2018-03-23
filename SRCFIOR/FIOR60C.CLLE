@@ -1,0 +1,34 @@
+000100160609/*PARMS DFTACTGRP(*NO) ACTGRP('FIOR60')         */
+000200020322             PGM        PARM(&KPJBA)
+000300000000
+000400020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000500020118
+000600020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+000700020408/* procedura/programma fosse finita in maniera anomala occorre */
+000800020408/* parare il colpo riducendo il male al male minore ossia      */
+000900020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+001000020408/* metà piuttosto che confermarle. E ripartendo da una         */
+001100020408/* situazione pulita.                                          */
+001200070927             STRCMTCTL  LCKLVL(*CHG)
+001300070720/* commit già attivo */
+001400020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+001500020409             ENDCMTCTL
+001600020409             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001700070927             STRCMTCTL  LCKLVL(*CHG)
+001800020409             ENDDO
+001900070517
+002000070517             OVRDBF     FILE(FIDST00F) SHARE(*YES)
+002100020116
+002200070316/* richiamo programma                              */
+002300070720             CALL       PGM(FIOR60R) PARM(&KPJBA)
+002400020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500020417             ROLLBACK
+002600020417             ENDDO
+002700070316
+002800020408 /* se per qualsiasi motivo il programma si è interrotto in modo */
+002900020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+003000020408 /* in modo pulito senza lasciare transazioni a metà.            */
+003100020322             ENDCMTCTL
+003200020116
+003300051108
+003400000000             ENDPGM

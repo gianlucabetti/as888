@@ -1,0 +1,70 @@
+000100000000/*-------------------------------------------------------------------*/
+000200011205/*  TRMZ17C                                                          */
+000300000000/*-------------------------------------------------------------------*/
+000400000000             PGM        PARM(&KPJBA)
+000500890914             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600011207             DCL        VAR(&SCE) TYPE(*CHAR) LEN(2)
+000700141201             DCL        VAR(&Sto) TYPE(*CHAR) LEN(1)
+000800011206             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000900020607
+001000011207             CHGVAR     VAR(&SCE) VALUE(%SST(&KPJBA 255 2))
+001100141201             CHGVAR     VAR(&sto) VALUE(%SST(&KPJBA 293 1))
+001200020607
+001300021104             RTVOBJD    OBJ(MZIMP00F) OBJTYPE(*FILE) RTNLIB(&LIB)
+001400021104
+001500021104/*  mi creo un file di lavoro wrkimp0f uguale al file mzimp00f +
+001600021104    mi serve per spalmare i consumi giornalmente               */
+001700021104
+001800020709             CRTDUPOBJ  OBJ(MZIMP*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001900020709                          TOLIB(QTEMP) NEWOBJ(*SAME)
+002000020709             RNMOBJ     OBJ(QTEMP/MZIMP00F) OBJTYPE(*FILE) +
+002100020709                          NEWOBJ(WRKIMP0F)
+002200020709             RNMOBJ     OBJ(QTEMP/MZIMP01L) OBJTYPE(*FILE) +
+002300020709                          NEWOBJ(WRKIMP1L)
+002400021104             DLTF       FILE(QTEMP/MZIMP*)
+002500021104/*  mi creo il file di mzimp00f in qtemp perchè mi devo ricalcolare +
+002600021104tutti i consumi del carburante manuale (£1) fino al 31/12/02   */
+002700021104
+002800021104             CRTDUPOBJ  OBJ(MZIMP*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+002900021104                          TOLIB(QTEMP) NEWOBJ(*SAME)
+003000021104             CPYF       FROMFILE(&LIB/MZIMP00F) +
+003100021104                          TOFILE(QTEMP/MZIMP00F) MBROPT(*ADD) +
+003200021104                          INCREL((*IF IMPINT *EQ '£1') (*OR IMPINT +
+003300021104                          *EQ 'CB'))
+003400141128/* mi creo un file di lavoro wrkame0f uguale al file mzame00f +
+003500141128   mi serve per memorizzarmi l'anagrafico e lo storico insieme */
+003600141128
+003700141203             CRTDUPOBJ  OBJ(wrkame*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+003800141201                          TOLIB(QTEMP) NEWOBJ(*SAME)
+003900141203
+004000141201             CPYF       FROMFILE(&LIB/MZAME00F) +
+004100141201                          TOFILE(QTEMP/WRKAME0F) MBROPT(*ADD)
+004200141201
+004300021104
+004400141128/* inserisce nel wrkfile gli automezzi venduti dallo storico */
+004500141128
+004600141201             IF         COND(&Sto *EQ 'S') THEN(DO)
+004700141128             CALL       PGM(TRMZ17R4) PARM(&KPJBA)
+004800141201             ENDDO
+004900141128
+005000021104/* RICALCOLA I CONSUMI MANUALI FINO AL 31/12/2002 */
+005100021104
+005200021104             CALL       PGM(TRMZ17R3) PARM(&KPJBA)
+005300021104
+005400021104/* SPALMA I KM E I CONSUMI GIORNALMENTE */
+005500021104
+005600021104             CALL       PGM(TRMZ17R1) PARM(&KPJBA)
+005700020705
+005800021104
+005900021104/* se scelta statistica per autista o per targa */
+006000020607             IF         COND(&SCE *NE '  ') THEN(DO)
+006100020607             CALL       PGM(TRMZ17R2) PARM(&KPJBA)
+006200020607             ENDDO
+006300021104
+006400020709             OVRDBF     FILE(MZIMP01L) TOFILE(WRKIMP1L) OVRSCOPE(*JOB)
+006500020709
+006600011205             CALL       PGM(TRMZ17RSQL) PARM(&KPJBA)
+006700020607
+006800011206             RCLRSC     LVL(*CALLER)
+006900021106             DLTOVR     FILE(*ALL) LVL(*JOB)
+007000000000             ENDPGM

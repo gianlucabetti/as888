@@ -1,0 +1,10 @@
+000100090306       // - Stampa singola LdV
+000200090306     d xChkChar        pr                  extpgm('XCHKCHAR')
+000300090306     d   p_TxtInOut                        like(TxtInOut  )
+000400090306     d   p_ElencoChar                      like(ElencoChar)
+000500090306     d   p_TipoElenco                      like(TipoElenco)
+000600090306     d   p_CharSost                        like(CharSost  )
+000700090306     d   p_UpperCase                       like(UpperCase )
+000800090306     d   p_ChkNull                         like(ChkNull   )
+000900090306     d   p_CharNull                        like(CharNull  )
+001000090306     d   p_Esito                           like(Esito     )

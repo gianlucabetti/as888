@@ -1,0 +1,336 @@
+000100000000     H DECEDIT('0,') DATEDIT(*DMY.)
+000200960412     H* FNLR33R *----------------------------------------------------*
+000300960412     H*        - CHIUSURA ANOMALIA                                   *
+000400000000     H*--------------------------------------------------------------*
+000500990511     FFNANM00F  UF   E             DISK
+000600990511     FFNANM02L  IF   E           K DISK
+000700990511     F                                     RENAME(FNANM000:FNANM02)
+000800990511     F                                     INFDS(FNANM2)
+000900990511     FFNANM04L  UF   E             DISK
+001000990511     F                                     RENAME(FNANM000:FNANM04)
+001100960412     FTABEL00F  IF   E           K DISK
+001200960412     D DSLR33        E DS                  EXTNAME(FNLR33DS)
+001300960412     D UT§DSE        E DS                  EXTNAME(UT§DSE0F)
+001400990511     D DSANM         E DS                  EXTNAME(FNANM00F)
+001500961025     D CNCR80        E DS
+001600960412     D DS7C          E DS
+001700961025     D* DS PER TRUL06R - CARICAMENTO £X
+001800040119     D*DSUL06    E DSTRUL06DS
+001900040119     D*                                        1  900LIN
+002000990511     D FNANM2          DS
+002100970603     D  ANMNR2               397    400B 0
+002200971128     D WLBDAT          DS                  INZ
+002300971128     D  G02DAT                 1      8  0
+002400971128     D  G02INV                 9     16  0
+002500971128     D  G02ERR                17     17
+002600971128     D  G02TGI                18     22  0
+002700921124     I*---------------------------------------------------------------*
+002800921124     I*   RIEPILOGO INDICATORI
+002900921124     I*---------------------------------------------------------------*
+003000960412     I* 30    - COMODO
+003100960412     I* 31    - COMODO
+003200040116     I* 36    -
+003300921124     I*---------------------------------------------------------------*
+003400900622     C     *ENTRY        PLIST
+003500960412     C                   PARM                    DSLR33
+003600960412     C*
+003700960412    1C     D33TLA        IFNE      'C'
+003800960412     C*
+003900990511     C     D33NRR        CHAIN     FNANM00F                           30
+004000960412    2C     *IN30         IFEQ      *OFF
+004100960719     C*
+004200960719     C* A cambio causale leggo tabella 7C
+004300960719    3C     ANMCAA        IFNE      SAVCAA
+004400960719     C                   MOVE      ANMCAA        SAVCAA
+004500960719     C                   MOVEL     '7C'          KCOD
+004600960719     C                   MOVEL(P)  ANMCAA        KKEY
+004700960719     C     KTAB          CHAIN     TABEL00F                           31
+004800960719     C  N31              MOVEL     TBLUNI        DS7C
+004900960719     C   31              CLEAR                   DS7C
+005000960719    3C                   END
+005100961106     C*
+005200961106     C* Se per questa causale non è ammessa la chiusura con data < dao
+005300001110     C* (§7CCHS <> 'S') e data chiusura < dao --> NON FACCIO NIENTE
+005400961106     C     §7CCHS        IFNE      'S'
+005500990511     C     D33DCH        ANDLT     ANMDAO
+005600990511     C                   UNLOCK    FNANM00F
+005700961106     C                   GOTO      FINE
+005800961106     C                   END
+005900001110     C* Se anomalia non chiudibile da categoria spunta IMI e fase chius
+006000001110     C* ura ="I"(da spunta Imi) ----------------> NON FACCIO NIENTE
+006100001110     C     §7CCCG        IFNE      'S'
+006200001110     C     D33FSC        ANDEQ     'I'
+006300001110     C                   UNLOCK    FNANM00F
+006400001110     C                   GOTO      FINE
+006500001110     C                   END
+006600961106     C*
+006700960510     C**
+006800961118     C***** TRATTAMENTO ANOMALIE DISCORDANZE EXPORT (ANMAIE = 'X')
+006900960510     C**
+007000961118     C** CANCELLO SEMPRE L'ANOMALIA
+007100961118     C                   SELECT
+007200961118   2AC     ANMAIE        WHENEQ    'X'
+007300990511     C                   DELETE    FNANM000
+007400961118     C**
+007500961118     C***** TRATTAMENTO ANOMALIE NON RICEVUTE (anmaie <> 'R')
+007600961118     C**
+007700961118   2AC     ANMAIE        WHENNE    'R'
+007800960510     C* ANOMALIA AUTOCHIUSA:
+007900960510     C* Se interna non faccio niente, se esterna e flag modifica ester-
+008000960514     C* ne autochiuse = 'S' --> deleto se non trasmessa
+008100970217     C* Deleto anche se trattasi di anomalia 300-ritiri non effettuati
+008200970217     C* non trasmessa
+008300960416   3AC     §7CCHA        IFEQ      'S'
+008400960510     C     ANMAIE        IFNE      'I'
+008500960510     C     D33MAC        ANDEQ     'S'
+008600960510     C     ANMFT1        ANDEQ     *BLANKS
+008700960416     C     ANMFT2        ANDEQ     *BLANKS
+008800970217     C     ANMCAA        OREQ      300
+008900970217     C     ANMFT1        ANDEQ     *BLANKS
+009000970217     C     ANMFT2        ANDEQ     *BLANKS
+009100990511     C                   DELETE    FNANM000
+009200960416     C                   ELSE
+009300990511     C                   UNLOCK    FNANM00F
+009400960416     C                   END
+009500960416  X3AC                   ELSE
+009600960510     C* ANOMALIA NON AUTOCHIUSA:
+009700960412     C* Elaboro solo se e' aperta
+009800960412    3C     ANMDCH        IFEQ      0
+009900960412     C* o e' chiusa con pratica IDD
+010000960412     C     ANMDCH        ORGT      0
+010100960412     C     ANMCCH        ANDEQ     'PR'
+010200980216     C     ANMDCH        ORGT      0
+010300980216     C     ANMCCH        ANDEQ     'AN'
+010400960412     C**
+010500960510     C* ANOMALIA ESTERNA
+010600960412    4C     ANMAIE        IFEQ      'E'
+010700990324     C* Se causale consegna anomala=5 (IDD3) --> non faccio niente
+010800990324     C     D33CCA        IFEQ      '5'
+010900990511     C                   UNLOCK    FNANM00F
+011000990324     C                   GOTO      FINE
+011100990324     C                   END
+011200990324     C*
+011300970603     C* Eseguo controlli particolari per l'anomalia 5-collo partito
+011400970603     C* non arrivato
+011500970603     C                   EXSR      ANM005
+011600960412     C*
+011700960514     C* Se già trasmessa o chiusura manuale, chiudo e ritrasmetto
+011800970603     C* chiudo e ritrasmetto anche se wcan5='N' (per anom. 5 a liv.0)
+011900960412    5C     ANMFT1        IFNE      *BLANKS
+012000960412     C     ANMFT2        ORNE      *BLANKS
+012100960412     C     ANMLID        ORGT      §7CLID
+012200960514     C     D33FSC        OREQ      'M'
+012300970603     C     WCAN5         OREQ      'N'
+012400050308     C* 8/3/05-SPECIFICA DA AGGIUNGEREPER CHI FA L'IDD IL GIORNO
+012500050308     C*        DOPO,ALTRIMENTI L'ANOMALIA SI CANCELLA PRIMA DI FARE IDD
+012600050308     C     ANMDAO        ORNE      D33DCH
+012700990412     C*
+012800990412     C* LA DATA LA IMPOSTO SOLO SE LA CAUSALE CHIUSURA <> DA 'PR'
+012900990412     C     ANMCCH        IFNE      'PR'
+013000990511     C                   Z-ADD     D33DCH        ANMDCH
+013100990412     C                   ENDIF
+013200990412     C*
+013300960412     C                   MOVEL     D33FSC        ANMFSC
+013400960412     C                   MOVEL     D33CCH        ANMCCH
+013500960419     C     D33FTR        IFEQ      *BLANKS
+013600960412     C                   MOVEL     *BLANKS       ANMFT1
+013700960412     C                   MOVEL     *BLANKS       ANMFT2
+013800041125     C                   ELSE
+013900041125     C* SE ANNULLAMENTO, E NON DEVO FLAGGARE, FLAGGO IL RECORD
+014000041125     C* SU AS UNICO NON DEVO PIÙ RITRASMETTERLO
+014100041125     C     D33CCH        IFEQ      'AN'
+014200041125     C                   MOVEL     DATEU         ANMDTR
+014300041125     C                   MOVEL     'T'           ANMFT1
+014400041125     C     ANMFL2        IFGT      0
+014500041125     C                   MOVEL     'T'           ANMFT2
+014600960419     C                   END
+014700041125     C                   END
+014800041125     C                   END
+014900041125     C*
+015000990511     C                   UPDATE    FNANM000
+015100960412     C*
+015200960412   X5C                   ELSE
+015300960412     C* Se non trasmessa deleto
+015400990511     C                   DELETE    FNANM000
+015500960412    5C                   END
+015600960510     C* ANOMALIA INTERNA
+015700960412   X4C                   ELSE
+015800961025     C                   MOVE      'S'           WDEL              1
+015900961122     C*
+016000990511    5C     ANMDAO        IFEQ      D33DCH
+016100960514     C     D33FSC        ANDNE     'M'
+016200961025     C     WDEL          ANDEQ     'S'
+016300040603     C**         ANMCAA    ANDNE200
+016400000811     C********** ANMCAA    ANDNE145 *****************
+016500000811     C********** ANMCAA    ANDNE146 *****************
+016600990511     C                   DELETE    FNANM000
+016700960415   X5C                   ELSE
+016800990511     C                   Z-ADD     D33DCH        ANMDCH
+016900960412     C                   MOVEL     D33FSC        ANMFSC
+017000960412     C                   MOVEL     D33CCH        ANMCCH
+017100961025     C* Anche se di regola le anomalie interne non vengono mai trasmes-
+017200961025     C* se, fanno eccezione le anomalie con §7CUEA='E' se anmfle e
+017300961028     c* anmlna sono su due As diversi --> quindi sflaggo
+017400961025     C     WDEL          IFEQ      'N'
+017500961028     C     D33FTR        ANDEQ     *BLANKS
+017600970306     C     ANMCAA        IFEQ      145
+017700970306     C     ANMCAA        OREQ      146
+017800961025     C                   MOVEL     *BLANKS       ANMFT1
+017900970306     C                   ELSE
+018000970306     C                   MOVEL     *BLANKS       ANMFT1
+018100961025     C                   MOVEL     *BLANKS       ANMFT2
+018200961025     C                   END
+018300970306     C                   END
+018400961122     C**
+018500000811     C* LE ANOMALIE 145 E 146 DEVONO ESSERE FLAGGATE CON 'T'
+018600000811     C* PER EVITARNE LA TRASMISSIONE
+018700961122     C     WDEL          IFEQ      'S'
+018800961122     C     ANMCAA        IFEQ      145
+018900961122     C     ANMCAA        OREQ      146
+019000961122     C                   MOVEL     'T'           ANMFT1
+019100961122     C                   ENDIF
+019200961122     C                   ENDIF
+019300961122     C*
+019400990511     C                   UPDATE    FNANM000
+019500960415    5C                   END
+019600960412    4C                   END
+019700960429   X3C                   ELSE
+019800990511     C                   UNLOCK    FNANM00F
+019900960412    3C                   END
+020000960416   3AC                   END
+020100040121  X2AC***                  OTHER
+020200960510     C**
+020300960510     C* TRATTAMENTO ANOMALIE RICEVUTE
+020400960510     C**
+020500960715     C* Chiudo solo se non è un'autochiusa
+020600040121    3C***        §7CCHA    IFEQ 'N'
+020700040121     C***        ANMCCH    IFNE 'PR'
+020800040121     C***                  Z-ADDD33DCH    ANMDCH
+020900040121     C***                  ENDIF
+021000040121     C***                  MOVE D33FSC    ANMFSC
+021100040121     C***                  MOVE D33CCH    ANMCCH
+021200040121    4C***        D33FTR    IFEQ *BLANKS
+021300040121     C***                  MOVEL*BLANKS   ANMFT1
+021400040121     C***                  MOVEL*BLANKS   ANMFT2
+021500040121    4C***                  END
+021600040121     C***                  UPDATFNANM000
+021700040121   X3C***                  ELSE
+021800040121     C***                  UNLCKFNANM00F
+021900040121    3C***                  END
+022000961118   2AC                   ENDSL
+022100960412    2C                   END
+022200960412    1C                   END
+022300960424     C*
+022400960424     C     FINE          TAG
+022500911015     C*
+022600960412    1C     D33TLA        IFEQ      ' '
+022700960412     C                   RETURN
+022800971128     C*
+022900960412   X1C                   ELSE
+023000971128     C*
+023100040116     C***                  MOVEL'C'       D55TLA
+023200040116     C***                  CALL 'FNLV55R'
+023300040116     C***                  PARM           DSLV55
+023400971128     C*
+023500000000     C                   SETON                                        LR
+023600960412    1C                   END
+023700970603     C**************************************************************************
+023800970603     C* VERIFICHE PARTICOLARI PER ANOMALIA 5
+023900970603     C**************************************************************************
+024000970603     C     ANM005        BEGSR
+024100970603     C                   CLEAR                   WCAN5
+024200970603     C* SE ANOMALIA 5 A LIVELLO 0 VERIFICO SE CE N'è UN'ALTRA
+024300970603    1C     ANMCAA        IFEQ      5
+024400970603     C     ANMLID        ANDEQ     0
+024500990511     C* Salvo record di fnanm00f per non sporcare i campi nel cercare
+024600970603     C* l'esistenza di un'altra anomalia 5
+024700970603     C                   MOVEL     DSANM         DSANMX
+024800990511     C     KANM2         SETLL     FNANM02L
+024900990511     C     KANM2         READE     FNANM02L                               30
+025000970603    2C     *IN30         DOWEQ     *OFF
+025100970603     C     ANMNR2        ANDEQ     D33NRR
+025200970603     C* Scarto record = a quello che sto elaborando e do per scontato
+025300970603     C* che posso avere per lo stesso segnacollo al massimo 2 anomalie
+025400970603     C* 005
+025500990511     C     KANM2         READE     FNANM02L                               30
+025600970603    2C                   ENDDO
+025700970603     C* 30 OFF --> ESISTE UN'ALTRA ANOMALIA 5 PER IL SEGNACOLLO
+025800970603    2C     *IN30         IFEQ      *OFF
+025900970603     C     ANMLID        ANDGT     0
+026000990511     C     ANMNR2        CHAIN     FNANM04L                           30
+026100970603     C                   CLEAR                   WAGG5
+026200970603    3C                   SELECT
+026300970603     C     ANMFL1        WHENEQ    *ZEROS
+026400970603     C                   MOVE      '1'           WAGG5             1
+026500970603     C     D33FTR        IFEQ      *BLANKS
+026600970603     C                   CLEAR                   ANMFT1
+026700970603     C                   END
+026800970603    4C     ANMLNP        IFGT      0
+026900970603     C                   MOVEL     ANMLNP        ANMFL1
+027000970603   X4C                   ELSE
+027100970603     C                   MOVEL     ANMFLS        ANMFL1
+027200970603    4C                   ENDIF
+027300970603     C     ANMFL2        WHENEQ    *ZEROS
+027400970603     C                   MOVE      '1'           WAGG5             1
+027500970603     C     D33FTR        IFEQ      *BLANKS
+027600970603     C                   CLEAR                   ANMFT2
+027700970603     C                   END
+027800970603    4C     ANMLNP        IFGT      0
+027900970603     C                   MOVEL     ANMLNP        ANMFL2
+028000970603   X4C                   ELSE
+028100970603     C                   MOVEL     ANMFLS        ANMFL2
+028200970603    4C                   ENDIF
+028300970603    3C                   ENDSL
+028400970603     C* SE HO IMPOSTATO FL1 O FL2 AGGIORNO LA SECONDA ANOMALIA
+028500970603     C* (LASCIO INVECE WCAN5 = BLANKS PER PERMETTERE LA CANCELLAZIONE
+028600970603     C* DELLA PRIMA ANOMALIA)
+028700970603    3C     WAGG5         IFEQ      '1'
+028800990511     C                   UPDATE    FNANM04
+028900970603   X3C                   ELSE
+029000970603     C* ALTRIMENTI RILASCIO IL RECORD E IMPOSTO WCAN5='N' PER IMPEDIRE
+029100970603     C* LA CANCELLAZIONE DELLA PRIMA ANOMALIA NONOSTANTE SIA A LIV.0
+029200970603     C* (LO FACCIO PER POTER TRASMETTERE LA CHIUSURA ALLA PARTENZA)
+029300990511     C                   UNLOCK    FNANM04L
+029400970603     C                   MOVE      'N'           WCAN5             1
+029500970603    3C                   END
+029600970603    2C                   END
+029700970603     C                   MOVEL     DSANMX        DSANM
+029800970603    1C                   END
+029900970603     C                   ENDSR
+030000960412     C****************  OPERAZIONI INIZIALI   *************************
+030100960412     C     *INZSR        BEGSR
+030200960412     C*
+030300960412     C                   Z-ADD     1             CODUT
+030400960412     C                   CALL      'X§PARUT'
+030500960412     C                   PARM                    UT§DSE
+030600961025     C                   MOVEL     REC80         CNCR80
+030700960412     C*
+030800960412     C     *LIKE         DEFINE    ANMCAA        SAVCAA
+030900960412     C     *LIKE         DEFINE    TBLCOD        KCOD
+031000960412     C     *LIKE         DEFINE    TBLKEY        KKEY
+031100970603     C     *LIKE         DEFINE    DSANM         DSANMX
+031200960412     C*
+031300960412     C                   CLEAR                   SAVCAA
+031400960412     C*
+031500960412     C     KTAB          KLIST
+031600960412     C                   KFLD                    CODUT
+031700960412     C                   KFLD                    KCOD
+031800960412     C                   KFLD                    KKEY
+031900970603     C     KANM2         KLIST
+032000970603     C                   KFLD                    ANMFLS
+032100970603     C                   KFLD                    ANMLNA
+032200970603     C                   KFLD                    ANMNRS
+032300970603     C                   KFLD                    ANMSCN
+032400970603     C                   KFLD                    ANMCAA
+032500040116     C*
+032600971128     C*
+032700971128     C* DETERMINO DATA DEL GIORNO
+032800971128     C                   TIME                    W0140            14 0
+032900971128     C                   MOVE      W0140         WDTGIO            8 0
+033000971128     C                   Z-ADD     WDTGIO        G02DAT
+033100971128     C                   MOVEL     *BLANK        G02ERR
+033200971128     C                   CALL      'XSRDA8'
+033300971128     C                   PARM                    WLBDAT
+033400971128     C                   MOVEL     G02INV        DATEU             8 0
+033500960412     C*
+033600960412     C                   ENDSR

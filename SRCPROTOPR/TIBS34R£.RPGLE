@@ -1,0 +1,3 @@
+000100080411     D*Reperisce_dati_utente...
+000200080328     D TIBS34R         pr                  extpgm('TIBS34R')
+000300080328     D  TIBS34DS                           likeds(tibs34ds)

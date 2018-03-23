@@ -1,0 +1,188 @@
+000100930811     H              J
+000200930811     H* TRTRA5R *----------------------------------------------------*
+000300930812     H*---------*                                                    *
+000400930811     H*  RICEZIONE DATI STATISTICA X UFF. GIACENZE                   *
+000500930811     H*--------------------------------------------------------------*
+000600931213     F* - I N D I C A T O R I                                        *
+000700931213     F*--------------------------------------------------------------*
+000800931213     F* 01 - READ SU FLFG76                                          *
+000900931213     F* 20 - CHAIN SU CNRIC01L                                       *
+001000931213     F*--------------------------------------------------------------*
+001100010921     FFLFG765RUF  E                    DISK                           UC
+001200010921     FFLFG765FO   E                    DISK
+001300010921     F            FLFG76                            KRENAMEFLFG765
+001400930811     FCMRIC01LUF  E           K        DISK
+001500930811     E                    CMD1    1   1 55
+001600930811     E                    CMD2    1   1 55
+001700930811     E                    CMD3    1   1 55
+001800930811     E                    CMD5    1   1 55
+001900930811     E                    TCU        50  6               TAB FLAG CNT
+002000930811     E                    KCU        50  4 0             TAB CAPO CONTO
+002100930811     E                    DTU        12  6 0             DATE PARAM
+002200930811     E                    NU        999  3 0             TOT C/A X FIL
+002300950609     IFNLG47    E DSFNLG47DS
+002400931126     IKPJBA     E DS
+002500900604     I                                       92 101 LIBSYS
+002600930811     I                                      483 492 LEGFIL
+002700930811     I                                      493 502 MBRFIL
+002800930811     IUTEDSE    E DSUTEDSE0F
+002900930811     I                                      398 697 TCU
+003000930811     I                                    P 698 847 KCU
+003100930811     I                                    P 848 8950DTU
+003200930812     I*-------------
+003300930812     I* DS PER ROUTINE 'XSRDAT'
+003400930812     I*-------------
+003500930812     IWLBDAT      DS
+003600930812     I                                        1   60G02DAT
+003700930812     I                                        7  120G02INV
+003800930812     I                                       13  13 G02ERR
+003900930812     I                                       14  180G02TGI
+004000930811     I/SPACE 3
+004100930811     C*---------------------------------------------------------------*
+004200930811     C*---------------------------------------------------------------*
+004300930811     C* APERTURA MEMBRO DA TRASCODIFICARE
+004400930811     C*
+004500930811     C                     EXSR CAEXA
+004600930811     C*---------------------------------------------------------------*
+004700930811     C* LETTURA
+004800930811     C*
+004900930811     C           SU        TAG
+005000930811     C                     READ FLFG76                   01
+005100931126     C   01                GOTO FINE
+005200950609     C*  TESTO SE HO GIA' CHIAMATO IL PGM FNLG47R
+005300950609     C           D47PRD    IFEQ 0
+005400950609     C                     MOVE FG7AAS    D47PAA
+005500950609     C           FG7AAS    IFGT 60
+005600950609     C                     ADD  1900      D47PAA
+005700950609     C                     ELSE
+005800950609     C                     ADD  2000      D47PAA
+005900950609     C                     END
+006000950609     C                     MOVE FG7PER    D47PRD
+006100950609     C                     MOVELFNLG47    KPJBU
+006200950609     C                     CALL 'FNLG47R'
+006300931126     C                     PARM           KPJBA
+006400931126     C                     END
+006500930812     C                     Z-ADDDATEU     FG7DTR
+006600930811     C                     MOVEL'R'       FG7FTR
+006700010921     C                     WRITEFLFG765
+006800930811     C                     ADD  1         NUREC   70
+006900930811     C                     DELETFLFG76
+007000930811     C                     GOTO SU
+007100930811     C           FINE      TAG
+007200930811     C*
+007300930811     C* CHIUSURA E RIORGANIZZAZIONE MEMBRO TRASCODIFICATO
+007400930811     C*
+007500930811     C                     EXSR CAEXB
+007600930811     C*
+007700930811     C* AGGIORNA ARCHIVIO DI LOG
+007800930811     C*
+007900930811     C           LEGFIL    CHAINCMRIC01L             20
+008000930811     C  N20                DO
+008100930811     C                     Z-ADDNUREC     RICNR1
+008200930811     C                     MOVE '1'       RICFL2            AGG.TO
+008300930811     C                     UPDATCMRIC000
+008400930811     C                     MOVELRICPRR    LEGFIL
+008500930811     C                     END
+008600930811     C           STOP      TAG
+008700930811     C                     SETON                     LR
+008800930811     C/SPACE
+008900930811     C**---------------------------------------------------------
+009000930811     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI FLGIC00R      -
+009100930811     C**---------------------------------------------------------
+009200930811     C           CAEXA     BEGSR
+009300930811     C                     MOVE ')'       VAR11  11
+009400930811     C                     MOVELMBRFIL    VAR11
+009500930811     C                     MOVE '))'      VAR12  12
+009600930811     C                     MOVELMBRFIL    VAR12
+009700930811     C                     Z-ADD55        LUNG   155
+009800930811     C*
+009900930811     C                     SETOF                     20
+010000930811     C                     MOVE VAR11     CMD1
+010100930811     C                     MOVEL*BLANKS   COMMAN
+010200930811     C                     MOVEACMD1,1    COMMAN 80
+010300930811     C                     CALL 'QCMDEXC'              20
+010400930811     C                     PARM           COMMAN
+010500930811     C                     PARM           LUNG
+010600930811     C   20                GOTO STOP
+010700930811     C** CONTROLLO SE ESISTE IL MEMBRO
+010800930811     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+010900930811     C                     SETOF                     20
+011000930811     C                     MOVE VAR12     CMD2
+011100930811     C                     MOVEL*BLANKS   COMMAN
+011200930811     C                     MOVEACMD2,1    COMMAN
+011300930811     C                     CALL 'QCMDEXC'              20
+011400930811     C                     PARM           COMMAN
+011500930811     C                     PARM           LUNG
+011600930811     C   20                GOTO STOP
+011700900604     C** ALLOCO MEMBRO
+011800900604     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+011900900604     C                     SETOF                     20
+012000900604     C                     MOVE VAR11     CMD3
+012100900604     C                     MOVEL*BLANKS   COMMAN
+012200900604     C                     MOVEACMD3,1    COMMAN
+012300900604     C                     CALL 'QCMDEXC'              20
+012400900604     C                     PARM           COMMAN
+012500900604     C                     PARM           LUNG
+012600900604     C   20                GOTO STOP
+012700900604     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+012800900604     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+012900010921     C                     OPEN FLFG765R
+013000930811     C                     ENDSR
+013100930811     C/SPACE 005
+013200930811     C**---------------------------------------------------------
+013300010921     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI FLFG765R      -
+013400930811     C**---------------------------------------------------------
+013500930811     C           CAEXB     BEGSR
+013600930811     C                     MOVE ')'       VAR11  11
+013700930811     C                     MOVELMBRFIL    VAR11
+013800930811     C                     MOVE '))'      VAR12  12
+013900930811     C                     MOVELMBRFIL    VAR12
+014000930811     C                     Z-ADD55        LUNG   155
+014100930811     C*
+014200010921     C                     CLOSEFLFG765R
+014300930811     C*
+014400931116     C                     DO
+014500930811     C                     MOVE VAR12     CMD5
+014600930811     C                     MOVEL*BLANKS   COMMAN
+014700930811     C                     MOVEACMD5,1    COMMAN
+014800930811     C                     CALL 'QCMDEXC'
+014900930811     C                     PARM           COMMAN
+015000930811     C                     PARM           LUNG
+015100930811     C                     END
+015200930811     C** DISALLOCA IL MEMBRO AGG.TO
+015300930811     C                     ENDSR
+015400930812     C*-----------
+015500930812     C* ROUTINE INIZIALE
+015600930812     C*-----------
+015700930812     C           *INZSR    BEGSR
+015800930812     C           *ENTRY    PLIST
+015900930812     C                     PARM           KPJBA
+016000930812     C* SE IL MEMBRO DA TRASCODIFICARE NON E' STATO PASSATO
+016100930812     C* ASSUMO IL PRIMO MEMBRO DEL FILE
+016200930812     C           MBRFIL    IFEQ *BLANK
+016300930812     C                     MOVEL'*FIRST'  MBRFIL
+016400930812     C                     END
+016500930812     C                     Z-ADD1         CODUT
+016600930812     C                     CALL 'XPARUT'
+016700930812     C                     PARM           UTEDSE
+016800930812     C           CODUT     CABEQ-1        STOP
+016900930812     C                     MOVELRAGUT     RSUT   20
+017000930812     C* GIRO LA DATA DEL GIORNO
+017100930812     C                     Z-ADDUDATE     G02DAT
+017200930812     C                     MOVEL*BLANKS   G02ERR
+017300930812     C                     CALL 'XSRDAT'
+017400930812     C                     PARM           WLBDAT
+017500930812     C                     Z-ADDG02INV    DATEU   60
+017600930812     C*
+017700950609     C                     CLEARFNLG47
+017800931126     C*
+017900930812     C                     ENDSR
+018000930812     C*========================================================================*
+018100930811**         CMD1
+018200010921CHKOBJ OBJ(FLFG765R) OBJTYPE(*FILE)     MBR(M234567890)
+018300930811**         CMD2
+018400010921ALCOBJ OBJ((FLFG765R *FILE *EXCL           M234567890))
+018500930811**         CMD3
+018600010921OVRDBF FILE(FLFG765R)                   MBR(M234567890)
+018700930811**         CMD5
+018800010921DLCOBJ OBJ((FLFG765R *FILE *EXCL           M234567890))

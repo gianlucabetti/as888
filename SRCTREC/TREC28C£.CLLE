@@ -1,0 +1,97 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200000000/* FATTURAZIONE INFRAGRUPPO MCUBI - LANCIO                                    */
+000300000000/*----------------------------------------------------------------------------*/
+000400161125             PGM        PARM(&KPJBA)
+000500000000
+000600000000/* DICHIARAZIONE VARIABILI */
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000800161215             DCL        VAR(&tip) TYPE(*CHAR) LEN(1)
+000900161215             DCL        VAR(&SIM) TYPE(*CHAR) LEN(1)
+001000161220             DCL        VAR(&MESE) TYPE(*char) LEN(2)
+001100161220             DCL        VAR(&ANNO) TYPE(*char)  LEN(4)
+001200161220             DCL        VAR(&SOC) TYPE(*char)  LEN(3)
+001300161215             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10) +
+001400161215                          VALUE('UTEINFRA')
+001500161215             DCL        VAR(&SPLFILED)   TYPE(*CHAR) LEN(10) +
+001600161215                                       VALUE('TREC28DP')
+001700161215             DCL        VAR(&SPLFILER)   TYPE(*CHAR) LEN(10) +
+001800161219                                       VALUE('TREC28RP')
+001900161215             DCL        VAR(&USRDTAD)  TYPE(*CHAR) LEN(10)
+002000161215             DCL        VAR(&USRDTAR)  TYPE(*CHAR) LEN(10)
+002100161215             DCL        VAR(&STATO)     TYPE(*CHAR) LEN(3) +
+002200161215                                       VALUE('RDY')
+002300161215             DCL        VAR(&LIBOUT)    TYPE(*CHAR) LEN(10) +
+002400161215                                       VALUE('LIBASP4')
+002500000000             DCL        VAR(&FILOUT)    TYPE(*CHAR) LEN(10)
+002600161215             DCL        VAR(&FILOUTn)    TYPE(*CHAR) LEN(10)
+002700161215             DCL        VAR(&LIBOUTQ)   TYPE(*CHAR) LEN(10) +
+002800161215                                       VALUE('GAITRAOBJ')
+002900161215             DCL        VAR(&NAMOUTQ)   TYPE(*CHAR) LEN(10) +
+003000161215                                       VALUE('ALLINFRA  ')
+003100161125             DCL        VAR(&job)   TYPE(*CHAR) LEN(10)
+003200161125             DCL        VAR(&usr)   TYPE(*CHAR) LEN(10)
+003300161125             DCL        VAR(&nbr) TYPE(*CHAR) LEN(6)
+003400161215             DCL        VAR(&APLKEY) TYPE(*CHAR) LEN(15)
+003500161215             DCL        VAR(&subfldr) TYPE(*CHAR) LEN(50)
+003600000000
+003700161215/* VALORIZZAZIONI VARIABILI */
+003800100105             CHGVAR     VAR(&ANNO) VALUE(%SUBSTRING(&KPJBA 247 4))
+003900161220             CHGVAR     VAR(&MESE) VALUE(%SUBSTRING(&KPJBA 251 2))
+004000990420             CHGVAR     VAR(&SIM) VALUE(%SUBSTRING(&KPJBA 253 1))
+004100161215             CHGVAR     VAR(&tip) VALUE(%SUBSTRING(&KPJBA 254 1))
+004200161220             CHGVAR     VAR(&SOC) VALUE(%SUBSTRING(&KPJBA 255 3))
+004300161215             CHGVAR     VAR(&USRDTAD) VALUE('ALLFIMD' *CAT &TIP)
+004400161215             CHGVAR     VAR(&USRDTAR) VALUE('ALLFIMR' *CAT &TIP)
+004500161220             CHGVAR     VAR(&FILOUT) VALUE('ALLFIM' *CAT &MESE)
+004600161215             CHGVAR     VAR(&FILOUTN) VALUE('ALLFI' *CAT &TIP *CAT +
+004700161220                          &MESE)
+004800161215             chgvar     VAR(&APLKEY) +
+004900161215                          VALUE('TREC28C' *cat &TIP)
+005000161220             IF         COND(&TIP *EQ 'T') THEN(DO)
+005100161220             CHGVAR     VAR(&SUBFLDR) VALUE('ALLT' *CAT +
+005200161220                                 &SOC *cat &ANNO *cat &MESE)
+005300161220             ENDDO
+005400161220             IF         COND(&TIP *NE 'T') THEN(DO)
+005500161220             CHGVAR     VAR(&SUBFLDR) VALUE('ALD' *CAT &TIP +
+005600161220                            *cat &SOC *cat &ANNO *cat &MESE)
+005700161220             ENDDO
+005800990408/*-----------*/
+005900000000/* DETTAGLIO */
+006000000000/*-----------*/
+006100161215             OVRPRTF    FILE(TREC28DP) OUTQ(UTEINFRA) SAVE(*YES) +
+006200161215                          USRDTA(&USRDTAD)
+006300000000/*-----------*/
+006400000000/* RIEPILOGO */
+006500000000/*-----------*/
+006600161215             OVRPRTF    FILE(TREC28RP) OUTQ(UTEINFRA) SAVE(*YES) +
+006700161215                          USRDTA(&USRDTAR)
+006800161215
+006900000000/* LANCIA IL PROGRAMMA */
+007000161125             CALL       PGM(TREC28R) PARM(&KPJBA)
+007100990420             DLTOVR     FILE(*ALL)
+007200990420             RCLRSC     LVL(*CALLER)
+007300161125
+007400000000/* LE PROSSIME AZIONI LI ESEGUE SOLO SE NON E' LANCIATO IN SIMULAZIONE */
+007500000000             IF         COND(&SIM *NE 'S') THEN(DO)
+007600161125
+007700000000/* CANCELLA FILES PER OTTICO */
+007800161215             DLTF       FILE(&LIBOUT/&FILOUT)
+007900000000             MONMSG     MSGID(CPF0000)
+008000161201
+008100161125/* reperisco i dati del job */
+008200161125             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+008300000229
+008400000000/* CONVERTE SPOOL PER OTTICO E LI SPOSTA NELLA CODA "ALLINFRA" */
+008500000000/*-----------*/
+008600000000/* DETTAGLIO */
+008700000000/*-----------*/
+008800161215             CALL       PGM(TREC30C1) PARM(&FILOUTn &SPLFILEd +
+008900161125                          &job &usr &nbr &coda &APLKEY &SUBFLDR)
+009000000000/*-----------*/
+009100000000/* RIEPILOGO */
+009200000000/*-----------*/
+009300161215             CALL       PGM(TREC30C1) PARM(&FILOUTn &SPLFILEr +
+009400161125                          &job &usr &nbr &coda &APLKEY &SUBFLDR)
+009500000000             ENDDO
+009600000000
+009700000000             ENDPGM

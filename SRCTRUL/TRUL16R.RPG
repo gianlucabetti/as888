@@ -1,0 +1,204 @@
+000100921021     H              J
+000200951030     H* TRUL16R  *----------------------------------------------------*
+000300951030     H*----------*                                                    *
+000400000807     H*  RICERCA ALFABETICA ANAGRAFICA TRAZION./PADR. X CONTABILIZZ.  *
+000500951030     H*---------------------------------------------------------------*
+000600951027     FTRUL16D CF  E                    WORKSTN
+000700951030     F                                              KINFDS CA02DS
+000800951030     F                                        NRR   KSFILE UL16S01
+000900951027     FTNTLZ02LIF  E           K        DISK
+001000940919     E*
+001100951027     E* DEFINIZIONE SCHIERE
+001200951030     E                    RSC        35  1               RAGIONE SOCIALE
+001300951027     E                    MSG     1   5 79               MESSAGGI ERRORE
+001400000808     E                    TIT     1   2 39               TITOLO
+001500951030     I*
+001600951030     I* PARAMETRI PASSATI DAI PGM CHIAMANTI
+001700951030     IPARAM       DS
+001800000807     I* TIPOLOGIA T_=TRAZION. P_=PADRONC.
+001900000807     I* NON PUO' ESSERE BLANK
+002000000807     I                                        1   2 PARTIP
+002100000807     I* RAGIONE SOCIALE
+002200000807     I* SE BLANK = DALL'INIZIO
+002300000807     I                                        3  37 PARRSC
+002400000807     I* S.I. TRAZIONISTA/PADRONCINO
+002500000807     I* SE BLANK = TUTTI I S.I.
+002600000807     I                                       38  40 PARCSF
+002700000807     I* CODICE TRAZIONISTA/PADRONCINO
+002800000807     I                                       41  470PARPDR
+002900951030     I* PARFLG = "3" --> RESTITUISCE AL PGM CHIAMANTE IL MESSAGGIO CHE
+003000000807     I*   NON ESISTONO RECORDS PER LA CHIAVE ALFABETICA RICHIESTA
+003100000807     I                                       48  48 PARFLG
+003200951027     I*
+003300951030     IKPJBA     E DS
+003400951030     IUT§DSE    E DSUT§DSE0F
+003500951030     ICA02DS      DS
+003600951030     I                                    B 378 3790PRIMA
+003700951030     I/SPACE 3
+003800951027     C*****************************************************************
+003900951027     C* RIEPILOGO INDICATORI
+004000951027     C*****************************************************************
+004100951027     C* 15    - IMMESSA RAGIONE SOCIALE
+004200951027     C* 21    - PULIZIA SFL
+004300951030     C* 25    - ROLLUP
+004400951027     C* 28    - INDICATORE DI EMISSIONE MESSAGGIO DI ERRORE
+004500951027     C* 29    - READC SU SFL
+004600951027     C* 30    - LETTURA TNTLZ
+004700951027     C*****************************************************************
+004800921021     C           *ENTRY    PLIST
+004900951030     C                     PARM           KPJBA
+005000951030     C                     MOVELKPJBU     PARAM
+005100951030     C                     Z-ADD1         CODUT
+005200951030     C                     CALL 'X§PARUT'
+005300951030     C                     PARM           UT§DSE
+005400951030     C                     MOVELRAGUT     VCCRSU
+005500940919     C*
+005600000807     C           KTNTLZ    KLIST
+005700000807     C                     KFLD           PARTIP
+005800000807     C                     KFLD           PARRSC
+005900000808     C* TITOLO
+006000000808     C           PARTIP    IFEQ 'T '
+006100000808     C                     MOVE TIT,1     VSCTIT
+006200000808     C                     ELSE
+006300000808     C                     MOVE TIT,2     VSCTIT
+006400000808     C                     ENDIF
+006500940218     C*---------------------------------------------------------------*
+006600951027     C* PULIZIA SUBFILE
+006700951027     C                     SETON                     21
+006800951027     C                     WRITEUL16C01
+006900951027     C                     SETOF                     21
+007000951027     C*
+007100951027     C* SE IMMESSA CHIAVE ALFABETICA PARZIALE CERCO L'ULTIMA LETTERA:
+007200951027     C*   "K" CONTERRA' LA PRIMA POSIZIONE BIANCA
+007300951030    1C           PARRSC    IFNE *BLANKS
+007400951027     C                     SETON                     15
+007500951030     C                     MOVEAPARRSC    RSC
+007600951030     C                     Z-ADD35        K       20
+007700951027     C*
+007800951027    2C           RSC,K     DOWEQ' '
+007900951027     C                     SUB  1         K
+008000951027    2C                     ENDDO
+008100951027     C                     ADD  1         K
+008200951027     C*
+008300951027     C* POSIZIONAMENTO LETTURA
+008400000807     C           KTNTLZ    SETLLTNTLZ02L
+008500951030     C*
+008600951030   X1C                     ELSE
+008700951030     C* NON E' RICHIESTA CHIAVE ALFABETICA: MI POSIZIONO A INIZIO FILE
+008800000807     C           PARTIP    SETLLTNTLZ02L
+008900951027    1C                     ENDIF
+009000951027     C*
+009100951027     C* CARICAMENTO SUBFILE
+009200951027     C                     Z-ADD0         NRR     40
+009300951027     C                     Z-ADD1         REC
+009400951027     C                     EXSR RIES01
+009500951027     C*
+009600951030     C* NRR = 0  --->  NON E' STATO TROVATO NIENTE DA CARICARE
+009700951027    1C           NRR       IFEQ 0
+009800951030     C                     MOVE '3'       PARFLG
+009900951027     C                     GOTO FINE
+010000951027    1C                     ENDIF
+010100951027     C*
+010200951027     C* EMISSIONE SUBFILE
+010300951027     C                     WRITEUL16Z02
+010400951030     C           FOR01     TAG
+010500951027     C                     EXFMTUL16C01
+010600951027     C*
+010700951027     C* PULIZIA CAMPO MESSAGGIO E RELATIVO INDICATORE (*IN28)
+010800951027     C                     CLEARVCCMSG
+010900951027     C                     SETOF                     28
+011000951027     C*
+011100951027     C* CMD12 - FINE LAVORO
+011200951030    1C           *INKL     IFEQ *ON
+011300951030     C                     CLEARPARPDR
+011400951027     C                     GOTO FINE
+011500951030    1C                     ENDIF
+011600951027     C*
+011700951027     C* 25 ON - PREMUTO ROLLUP
+011800951030    1C           *IN25     IFEQ *ON
+011900951027     C      30             MOVELMSG,2     VCCMSG
+012000951027     C      30             SETON                     28
+012100951030     C     N30             EXSR RIES01
+012200951027     C                     Z-ADDNRR       REC
+012300951030     C                     GOTO FOR01
+012400951030    1C                     ENDIF
+012500951027     C*
+012600951027     C* CONTROLLO SE EFFETTUATA UNA SCELTA
+012700951027     C                     Z-ADDPRIMA     REC
+012800951027     C                     READCUL16S01                  29
+012900951030    1C           *IN29     IFEQ *ON
+013000951027     C                     MOVELMSG,1     VCCMSG
+013100951027     C                     SETON                     28
+013200951030     C                     GOTO FOR01
+013300951030    1C                     ENDIF
+013400921021     C*
+013500951030     C* RIEMPO CAMPI PARAM
+013600951030     C                     MOVELVSCPDR    PARPDR
+013700951030     C                     MOVELVSCRSC    PARRSC
+013800000808     C                     MOVELVSCCSF    PARCSF
+013900951030     C*
+014000940919     C           FINE      TAG
+014100951030     C                     MOVELPARAM     KPJBU
+014200940218     C                     SETON                     LR
+014300940919     C*
+014400951027     C*--- CARICAMENTO SUBFILE ---------------------------------------*
+014500951027     C           RIES01    BEGSR
+014600951027     C                     Z-ADD1         B       20
+014700951030     C                     SETOF                     30
+014800951030     C*
+014900951030    1C           B         DOWLE18
+015000951030     C           *IN30     ANDEQ*OFF
+015100000807     C           PARTIP    READETNTLZ02L                 30
+015200000807     C* ESCLUDO S.I.
+015300000807     C                     SETOF                     39
+015400000807     C           PARCSF    IFNE *BLANKS
+015500000807     C           PARCSF    ANDNETLZCSF
+015600000807     C                     SETON                         39
+015700000807     C                     ENDIF
+015800951030     C* ESCLUDO RECORD ANNULLATI
+015900000807    2C  N39N30   TLZATB    IFEQ ' '
+016000951030     C*
+016100951027     C* SE IMMESSA RAGIONE SOCIALE PREPARO CAMPO DI CONFRONTO
+016200951030    3C           *IN15     IFEQ *ON
+016300951030     C                     MOVEATLZRSC    RSC
+016400951027     C                     Z-ADDK         Z       20
+016500951027     C*
+016600951030    4C           Z         DOWLE35
+016700951030     C                     MOVE ' '       RSC,Z
+016800951027     C                     ADD  1         Z
+016900951030    4C                     ENDDO
+017000951027     C*
+017100951030     C                     MOVEARSC       COMRSC 35
+017200951027     C* CONTROLLO CORRISPONDENZA
+017300951030    4C           COMRSC    IFGT PARRSC
+017400000807     C                     SETON                     30
+017500951030    4C                     ENDIF
+017600951030    3C                     ENDIF
+017700951027     C*
+017800000807     C* MUOVO I CAMPI NEL SUBFILE
+017900951030    3C           *IN30     IFEQ *OFF
+018000951030     C                     CLEARVSCSCE
+018100951030     C                     MOVELTLZPDR    VSCPDR
+018200951030     C                     MOVELTLZRSC    VSCRSC
+018300000808     C                     MOVELTLZCSF    VSCCSF
+018400951031     C                     MOVELTLZLOC    VSCLOC
+018500951031     C                     MOVELTLZCAE    VSCCAE
+018600951031     C                     MOVELTLZPRO    VSCPRO
+018700951030     C*
+018800951027     C                     ADD  1         NRR
+018900951027     C                     ADD  1         B
+019000951030     C                     WRITEUL16S01
+019100951030    3C                     ENDIF
+019200951030     C*
+019300951030    2C                     ENDIF
+019400951030    1C                     ENDDO
+019500951027     C*
+019600951027     C                     ENDSR
+019700951027     C*
+019800951027     C*---------------------------------------------------------------*
+019900951027**  MSG
+020000951030Scelta non effettuata                                                          1
+020100951030Fine Scorrimento                                                               2
+020200000808**  TIT
+020300000808TIPO:T    ***  RICERCA TRAZIONISTI  ***
+020400000808TIPO:P    ***   RICERCA FORNITORI   ***

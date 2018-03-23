@@ -1,0 +1,117 @@
+000100930714     F********************************************************************BRP20
+000200930714     F*                                                                  *BRP20
+000300930714     F*  BCH10   -  LANCIO AZIONE BATCH                                  *BRP20
+000400930714     F*                                                                  *BRP20
+000500930714     F*  CREATO DA  VANCIO  NEL  LUGLIO 1993
+000600930714     F********************************************************************BRP20
+000700930714     F*                                                                  *BRP20
+000800930714     FKFAZN11LIF  E           K        DISK
+000900940304     FKPPRF01LIF  E           K        DISK
+001000930714     F*
+001100960719     E* SUDDIVISIONE CAMPO KOBUT DI KFAZN
+001200960719     E                    SOB        20 25  D
+001300930714     I*--------------------------------------------------------------*
+001400930714     I* DS ESTERNE
+001500930714     I*-------------
+001600930714     IKPJBA     E DS
+001700930715     I              KCANC                           CANCEL
+001800930715     I              KGRAZ                           GRPAZN
+001900930715     I* immagine FKAZN10F
+002000960719     IKFAZN     E DSKFAZN10F
+002100960719     I              KOBUT                           SOB
+002200940303     I* appoggio x KPJBA
+002300940303     ISAVKPJ      DS                            512
+002400930714     C/EJECT
+002500930714     C*----------------------------------------------------*
+002600930714     C*-  FLUSSO PRINCIPALE                               -*
+002700930714     C*----------------------------------------------------*
+002800940303     C* salvo la kpjba
+002900940303     C                     MOVELKPJBA     SAVKPJ
+003000930714     C*
+003100930714     C           KCOAZ     CHAINKFAZN11L             21
+0032009307150    C           *IN21     IFEQ *OFF
+003300960722     C                     MOVEAKOBUT     SOB
+003400940406     C* imposto cod.azione in esecuzione con il cod.azione da eseguire
+003500940406     C                     MOVELKCOAZ     KCDAZ
+003600930715     C*
+003700930715     C* se la coda batch del job non è stata modificata da BCH09
+003800951124     C* utilizzo quella FORZATA
+0039009602011    C           KQIEB     IFNE *BLANK
+0040009602011    C                     MOVE KQIEB     KQEBI
+004100960201     C                     ENDIF
+0042009307151    C           KQIEB     IFEQ *BLANK
+004300930715     C           KQEBI     OREQ *BLANK
+004400951124     C           *NAMVAR   DEFN           BAK002 10
+004500951124     C                     IN   BAK002                 21
+004600951124     C        N21          MOVELBAK002    KQEBI
+0047009307151-   C                     ENDIF
+004800951124     C* se la coda batch del job non è stata modificata da BCH09
+004900951124     C* utilizzo quella dell' azione
+0050009511241    C           KQEBI     IFEQ *BLANK
+005100951124     C                     MOVELKCODA     KQEBI
+0052009511241-   C                     ENDIF
+005300940304     C* se la coda batch del job non è valorizzata
+005400940304     C* utilizzo quella del profilo
+0055009403041    C           KQEBI     IFEQ *BLANK
+005600940304     C           KNMUS     CHAINKPPRF01L             21
+005700940304     C                     MOVELPRFJBQ    KQEBI
+0058009403041-   C                     ENDIF
+005900930715     C* se lo stato del job non è stato modificato da BCH09
+006000930715     C* utilizzo quello del profilo
+0061009307151    C           KSTJO     IFEQ *BLANK
+006200930715     C                     MOVELKHOLD     KSTEB
+0063009307151-   C                     ENDIF
+006400991012     C           KCOJB     IFEQ '  '
+006500930714     C                     MOVELKJDES     KCOJB
+006600991012     C                     ENDIF
+006700960130     C           KCOJB     IFEQ '  '
+006800960130     C                     MOVEL'P5'      KCOJB
+006900960130     C                     ENDIF
+007000940303     C* Imposta KPJBA
+007100951114     C                     MOVE KNMUS     SAVMUS 10
+007200951114     C                     MOVE KNMTD     SAVMTD 10
+007300930714     C                     CALL 'BAK021R'
+007400940303     C                     PARM           KPJBA
+007500951114     C                     MOVE SAVMUS    KNMUS
+007600951114     C                     MOVE SAVMTD    KNMTD
+007700940303     C* Richiamo pgm x La gestione del File di Log KPLOG00F
+007800940303     C                     CALL 'BAK035R'
+007900940303     C                     PARM           KPJBA
+008000940303     C                     PARM           KFAZN
+008100930715     C*
+008200930715     C* Esegue sostituzioni File e SBMJOB
+008300930714     C                     CALL 'BAK030C'
+008400930714     C                     PARM           KPJBA
+008500930715     C                     PARM           KFAZN
+008600930715     C*
+0087009307150-   C                     ENDIF
+008800940303     C* ripristino la kpjba
+008900940303     C                     MOVELSAVKPJ    KPJBA
+009000930714     C                     SETON                     LR
+009100930714     C*
+009200930714     C****************************************************************
+009300930714     C* DESCRIZIONE  - QUESTA SBR DEFINISCE I CAMPI UTILIZZATI
+009400930714     C*                NEL PROGRAMMA   (NON VA MAI RICHIAMATA)
+009500930714     C****************************************************************
+009600930714     C           DEFCAM    BEGSR
+009700930714     C*>>>>>RICEVIMENTO PARAMETRI
+009800930714     C           *ENTRY    PLIST
+009900930714     C                     PARM           KPJBA
+010000930714     C*<<<<<
+010100930714     C*>>>>>KLIST
+010200930714     C*
+010300930714     C*<<<<<
+010400930714     C*>>>>>PLIST
+010500930714     C*
+010600930714     C*<<<<<
+010700930714     C*>>>>>DATA - AREA
+010800930714     C*
+010900930714     C*<<<<<
+011000930714     C*>>>>>CAMPI RIFERITI AL D.B.
+011100930714     C*<<<<<
+011200930714     C*>>>>>CAMPI  N O N  RIFERITI AL D.B.
+011300930714     C*
+011400930714     C*CAMPI DI CONTROLLO
+011500930714     C*ALTRI CAMPI
+011600930714     C*<<<<<
+011700930714     C                     ENDSR

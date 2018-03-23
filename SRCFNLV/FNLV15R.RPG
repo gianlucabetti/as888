@@ -1,0 +1,415 @@
+000100921021     H              J
+000200951107     H* FNLV15R  *----------------------------------------------------*
+000300951030     H*----------*                                                    *
+000400951107     H*       GESTIONE DESCRIZIONE CAUSALE RITARDO/ANTICIPO           **
+000500951030     H*---------------------------------------------------------------*
+000600951107     FFNLV15D CF  E                    WORKSTN
+000700951107     F                                        NRR   KSFILE LV15S01
+000800951107     FFNFV401LUF  E           K        DISK                      A
+000900951107     FTABEL00FIF  E           K        DISK
+001000960126     FAZORG01LIF  E           K        DISK
+001100940919     E*
+001200951027     E* DEFINIZIONE SCHIERE
+001300951107     E                    TES     1   2 37               TESTATA PGM
+001400951108     E                    MSG     1   1 79               MESSAGGI ERRORE
+001500951030     I*
+001600960125     I* DS PER FNLV15R - DS DI PASSAGGIO PARAMETRI PER PGM CHIAMANTI
+001700960125     IDSLV15    E DSFNLV15DS
+001800951027     I*
+001900951109     I            DS
+002000960125     I                                        1   40AA
+002100960125     I                                        5   60MM
+002200960125     I                                        7   80GG
+002300951109     I                                        1   80WDATA
+002400951107     IDS3B      E DS
+002500960222     IDSTV      E DS
+002600951030     IKPJBA     E DS
+002700960126     ICNCR80    E DS
+002800951030     IUT§DSE    E DSUT§DSE0F
+002900951030     I/SPACE 3
+003000951027     C*****************************************************************
+003100951027     C* RIEPILOGO INDICATORI
+003200951027     C*****************************************************************
+003300951108     C* 05    - ON  SI TRATTA DI IMMISSIONE: NON ABILITO "F16-ANNULLA"
+003400951109     C* 10    - E' STATA INSERITA ALMENO UNA RIGA
+003500951109     C* 12    - ON  SONO IN PARTENZA
+003600951107     C* 15    - INTERROGAZIONE: PROTEGGO CAMPI DEL VIDEO
+003700951027     C* 21    - PULIZIA SFL
+003800951030     C* 25    - ROLLUP
+003900951027     C* 28    - INDICATORE DI EMISSIONE MESSAGGIO DI ERRORE
+004000951107     C* 30    - DI COMODO
+004100951027     C*****************************************************************
+004200960125     C           *ENTRY    PLIST
+004300960125     C                     PARM           KPJBA
+004400960125     C                     MOVELKPJBU     DSLV15
+004500960125     C*
+004600960125     C*---------------------------------------------------------------*
+004700960125     C* TIPO LANCIO: D15TLA = "C" -           CHIUDO CON LR
+004800960125     C*              D15TLA = "L" - ELABORO E CHIUDO CON LR
+004900960125     C*              D15TLA = " " - ELABORO E CHIUDO IN  RETRN
+005000960125    0C           D15TLA    IFNE 'C'
+005100960126     C                     SETOF                     051012
+005200960126     C                     SETOF                     1525
+005300960126     C                     CLEARD15FLG
+005400960125     C*
+005500960125     C* VADO SULLA TABELLA "3B" PER VEDERE SE E' UN TIPO RECORD DA
+005600960125     C*   TRASMETTERE
+005700960125     C                     MOVEL'3B'      COD
+005800960125     C                     MOVELD15TRC    KEY       P
+005900960125     C           KTAB      CHAINTABEL                30
+006000960125    1C           *IN30     IFEQ *OFF
+006100960125     C                     MOVELTBLUNI    DS3B
+006200960125   X1C                     ELSE
+006300960125     C                     CLEARDS3B
+006400960125    1C                     ENDIF
+006500960125     C*
+006600960222     C* VADO SULLA TABELLA "TV" PER VEDERE SE E' UN TIPO TRAINO DA
+006700960222     C*   TRASMETTERE IN SEDE
+006800960222     C                     MOVEL'TV'      COD
+006900960222     C                     MOVELD15TTR    KEY       P
+007000960222     C           KTAB      CHAINTABEL                30
+007100960222    1C           *IN30     IFEQ *OFF
+007200960222     C           TBLFLG    ANDEQ' '
+007300960222     C                     MOVELTBLUNI    DSTV
+007400960222   X1C                     ELSE
+007500960222     C                     MOVEL'S'       §TVUTC
+007600960222    1C                     ENDIF
+007700960222     C*
+007800960125     C* VADO SULLA TABELLA "TC" PER REPERIRE LA DECODIFICA DELLA CAUSALE
+007900960125     C                     MOVEL'TC'      COD
+008000960125     C                     MOVELD15RTC    KEY       P
+008100960125     C           KTAB      CHAINTABEL                30
+008200960125    1C           *IN30     IFEQ *OFF
+008300960125     C                     MOVELTBLUNI    VCDRTC
+008400960125   X1C                     ELSE
+008500960125     C                     CLEARVCDRTC
+008600960125    1C                     ENDIF
+008700960125     C*
+008800960125     C* RIEMPO ALCUNI CAMPI DEL VIDEO
+008900960125     C                     MOVELD15RTC    VCCRTC
+009000960222     C                     MOVELD15LNP    VCCLNP
+009100960125     C                     MOVELD15NFV    VCCNFV
+009200960125     C                     MOVELD15TRN    VCCTRN
+009300960126     C                     MOVELD15LAI    VCCLAI
+009400960126     C* DECODIFICA LINEA DI INVIO FOGLIO
+009500960126     C           D15LAI    CHAINAZORG01L             30
+009600960126     C        N30          MOVELORGDES    VCDLAI
+009700960126     C         30          CLEARVCDLAI
+009800960125     C* GIRO DATA FOGLIO VIAGGIO
+009900960125     C                     Z-ADDD15DFV    WDATA
+010000960125     C                     Z-ADDMM        GGMM    40
+010100960125     C                     MOVELGG        GGMM
+010200960125     C                     Z-ADDAA        VCCDFV
+010300960125     C                     MOVELGGMM      VCCDFV
+010400960125     C*
+010500960125     C* EMETTO L'INTESTAZIONE DEL PGM A SECONDA DEL TIPO RECORD PASSATO
+010600960125    1C           D15TRC    IFEQ 'R'                        *DESCR.RIT/ANT
+010700960125     C* CONTROLLO SE IL PGM E' RICHIAMATO COME "MANUTENZIONE" OPPURE
+010800960125     C*   COME "INTERROGAZIONE"
+010900960125    2C           D15TUP    IFEQ 'I'
+011000960125     C                     SETON                     15
+011100960125     C                     MOVE TES,2     VCCTES
+011200960125     C*
+011300960125   X2C                     ELSE
+011400960125     C                     MOVE TES,1     VCCTES
+011500960125    2C                     ENDIF
+011600960125    1C                     ENDIF
+011700960125     C*
+011800960125     C* CONTROLLO SE SONO IN PARTENZA (12 ON) O IN ARRIVO
+011900960125    1C           D15EPA    IFEQ 'P'
+012000960125     C                     SETON                     12
+012100960125    1C                     ENDIF
+012200960125     C*
+012300951027     C* CARICAMENTO SUBFILE
+012400951027     C                     EXSR RIES01
+012500951107     C*
+012600951108     C* SOLO IN INTERROGAZIONE: SE NON CARICO NIENTE ESCO DAL PGM
+012700951108    1C      15   NRR       IFEQ 0
+012800951107     C                     GOTO FINE
+012900951108    1C                     ENDIF
+013000951027     C*
+013100951027     C* EMISSIONE SUBFILE
+013200951107     C           FOR02     TAG
+013300951107     C                     Z-ADD1         REC
+013400951107     C                     WRITELV15Z02
+013500951030     C           FOR01     TAG
+013600951107     C                     EXFMTLV15C01
+013700951108     C*
+013800951108     C* PULIZIA CAMPO MESSAGGIO E RELATIVO INDICATORE (*IN28)
+013900951108     C                     CLEARVCCMSG
+014000951108     C                     SETOF                     28
+014100951027     C*
+014200951027     C* CMD12 - FINE LAVORO
+014300951107     C   KL                GOTO FINE
+014400951107     C*
+014500951107     C* CMD16 - ANNULLAMENTO TOTALE RIGHE
+014600951108    1C           *INKQ     IFEQ *ON
+014700951107     C                     EXSR ANNRIG
+014800951107     C                     GOTO FINE
+014900951108    1C                     ENDIF
+015000951027     C*
+015100951027     C* 25 ON - PREMUTO ROLLUP
+015200951107    1C     N15   *IN25     IFEQ *ON
+015300951107     C                     EXSR SCRIVI
+015400951030     C                     GOTO FOR01
+015500951030    1C                     ENDIF
+015600951027     C*
+015700951107     C** CMD6  - REGISTRA ED ESCE
+015800951108    1C   KFN15             DO
+015900951108     C                     EXSR REGIS
+016000951108     C*
+016100951108     C* SE NON C'E' NULLA DA AGGIORNARE AVVISO
+016200951108    2C           *IN10     IFEQ *OFF
+016300951108     C                     MOVELMSG,1     VCCMSG
+016400951108     C                     SETON                     28
+016500951108     C                     GOTO FOR02
+016600951108    2C                     ENDIF
+016700951108    1C                     ENDDO
+016800921021     C*
+016900951109     C* SOLO IN INTERROGAZIONE DIGITANDO ENTER SI AVANZA
+017000951109     C  NKFN15             GOTO FOR02
+017100960125    0C                     ENDIF
+017200951109     C*
+017300940919     C           FINE      TAG
+017400960126     C* SE SONO STATE INSERITE/VARIATE/ANNULLATE DELLE RIGHE PASSO UN
+017500960126     C*   FLAG AL PGM CHIAMANTE PER LA TRASMISSIONE A SEDE E FILIALE
+017600960126     C           *IN10     IFEQ *ON
+017700960126     C           *INKQ     OREQ *ON
+017800960126     C                     MOVEL'A'       D15FLG
+017900960126     C                     ENDIF
+018000960126     C                     MOVELDSLV15    KPJBU
+018100960126     C*
+018200960125     C* CHIUSURA PGM
+018300960126    0C           D15TLA    IFEQ ' '
+018400960125     C                     RETRN
+018500960125   X0C                     ELSE
+018600940218     C                     SETON                     LR
+018700960125    0C                     ENDIF
+018800940919     C*
+018900951027     C*--- CARICAMENTO SUBFILE ---------------------------------------*
+019000951027     C           RIES01    BEGSR
+019100951107     C                     Z-ADD0         NRR     40
+019200951107     C                     Z-ADD0         SAVNRR  40
+019300951107     C*
+019400951107     C* PULIZIA SUBFILE
+019500951107     C                     SETON                     21
+019600951107     C                     WRITELV15C01
+019700951107     C                     SETOF                     21
+019800951107     C*
+019900951107     C* CARICAMENTO SUBFILE
+020000951107     C           KFV4      SETLLFNFV401L
+020100951107     C           KFV4      READEFNFV401L                 30
+020200951107     C*
+020300951107    1C           *IN30     DOWEQ*OFF
+020400960126     C* ESCLUDO RECORD ANNULLATI
+020500960126    2C           FV4ATB    IFEQ ' '
+020600951107     C                     MOVELFV4NOT    VSCNOT
+020700951030     C*
+020800951027     C                     ADD  1         NRR
+020900951107     C                     WRITELV15S01
+021000960126    2C                     ENDIF
+021100951107     C*
+021200951107     C           KFV4      READEFNFV401L                 30
+021300951030    1C                     ENDDO
+021400951027     C*
+021500951107     C                     Z-ADDNRR       SAVNRR
+021600951107     C*
+021700951107     C* NRR > 0  ---> RIEMPIO LE RESTANTI RIGHE DELLA PAGINA CON DEI
+021800951107     C*               RECORD VUOTI
+021900951107    1C     N15   NRR       IFGT 0
+022000951107     C           NRR       DIV  15        DIVIS   30
+022100951107     C                     MVR            RESTO   30
+022200951107    2C           RESTO     IFGT 0
+022300951107     C                     EXSR SCRIVI
+022400951107    2C                     ENDIF
+022500951107     C*
+022600951107   X1C                     ELSE
+022700951107     C* NRR = 0  ---> SI TRATTA DI IMMISSIONE: EMETTO SUBFILE VUOTO
+022800951107     C                     SETON                     05
+022900951107     C                     EXSR SCRIVI
+023000951107    1C                     ENDIF
+023100951107     C*
+023200951027     C                     ENDSR
+023300951027     C*
+023400951107     C*--- SR AGGIUNTA RIGHE -----------------------------------------*
+023500951107     C           SCRIVI    BEGSR
+023600951107     C                     Z-ADD0         B       30
+023700951107     C*
+023800951107    1C           RESTO     IFNE 0
+023900951107     C                     Z-ADDRESTO     B
+024000951107     C                     Z-ADD0         RESTO
+024100951107    1C                     ENDIF
+024200951107     C*
+024300951107     C* CAMPI DEL SUBFILE
+024400951107     C                     Z-ADDSAVNRR    NRR
+024500951107     C*
+024600951107    1C           B         DOWLT15
+024700951107     C                     CLEARVSCNOT
+024800951107     C*
+024900951107     C                     ADD  1         NRR
+025000951107     C                     ADD  1         B
+025100951107     C                     WRITELV15S01
+025200951107    1C                     ENDDO
+025300951107     C*
+025400951107     C                     Z-ADDNRR       SAVNRR
+025500951107     C                     Z-ADDNRR       REC
+025600951107     C                     ENDSR
+025700951107     C*
+025800951107     C*--- ANNULLAMENTO TOTALE RIGHE ---------------------------------*
+025900951107     C           ANNRIG    BEGSR
+026000960126     C                     CLEARW1VOL
+026100960126     C* SE NON DEVE ESSERE FATTA NESSUNA TRASMISSIONE DELETO I RECORD
+026200960126    1C           §3BTRF    IFNE 'S'
+026300960126     C           §3BTRS    ANDNE'S'
+026400960126     C                     MOVEL'1'       W1VOL
+026500960126    1C                     ENDIF
+026600960126     C*
+026700960126     C* DELETO TUTTE LE RIGHE PRESENTI TRANNE UNA CHE LA ANNULLO
+026800960126     C*  VIRTUALMENTE PERCHE' DOVRA' ESSERE TRASMESSA IN SEDE E FILIALE
+026900951107     C           KFV4      SETLLFNFV401L
+027000951107     C           KFV4      READEFNFV401L                 30
+027100951107    1C           *IN30     DOWEQ*OFF
+027200960126     C*
+027300960126    2C           W1VOL     IFEQ ' '
+027400960126     C                     MOVEL'A'       FV4ATB
+027500960222     C* IMPOSTO FLAG E DATA TRASMISSIONE
+027600960222     C                     EXSR TRASMI
+027700960126     C*
+027800960126     C                     UPDATFNFV4000
+027900960126     C                     MOVEL'1'       W1VOL   1
+028000960126     C*
+028100960126   X2C                     ELSE
+028200951108     C                     DELETFNFV4000
+028300960126    2C                     ENDIF
+028400951107     C*
+028500951107     C           KFV4      READEFNFV401L                 30
+028600951107    1C                     ENDDO
+028700960126     C*
+028800951107     C                     ENDSR
+028900951107     C*
+029000951107     C*--- AGGIORNO CAMPI DEL SFL ------------------------------------*
+029100951107     C           REGIS     BEGSR
+029200951108     C                     SETOF                     10
+029300960126     C                     CLEARW1VOL
+029400951107     C*
+029500951107     C* CAMPI DEL SUBFILE
+029600951107     C                     Z-ADD1         NRR
+029700951107     C           NRR       CHAINLV15S01              30
+029800951107     C*
+029900951107    1C           *IN30     DOWEQ*OFF
+030000951107    2C           VSCNOT    IFNE *BLANKS
+030100951108     C                     SETON                     10
+030200960126     C*
+030300960126     C* PER CORRETTEZZA CANCELLO I RECORD PER POI RISCRIVERLI SEGUENDO
+030400960126     C*   L'ORDINE DELLE RIGHE IMMESSE
+030500960126    3C           W1VOL     IFEQ ' '
+030600960126     C           KFV4      SETLLFNFV401L
+030700960126     C           KFV4      READEFNFV401L                 30
+030800960126    4C           *IN30     DOWEQ*OFF
+030900960126     C                     DELETFNFV4000
+031000960126     C*
+031100960126     C           KFV4      READEFNFV401L                 30
+031200960126    4C                     ENDDO
+031300960126     C                     MOVEL'1'       W1VOL
+031400960126    3C                     ENDIF
+031500960126     C*
+031600960126     C* SCRITTURA DEI RECORDS
+031700951107     C                     CLEARFNFV4000
+031800951107     C*
+031900960125     C                     MOVELD15LNP    FV4LNP
+032000960125     C                     MOVELD15NFV    FV4NFV
+032100960125     C                     MOVELD15LAI    FV4LAI
+032200960125     C                     MOVELD15EPA    FV4EPA
+032300960125     C                     MOVELD15TRC    FV4TRC
+032400951107     C                     MOVELVSCNOT    FV4NOT
+032500960222     C*
+032600960222     C* IMPOSTO FLAG E DATA TRASMISSIONE
+032700960222     C                     EXSR TRASMI
+032800951107     C*
+032900951107     C                     WRITEFNFV4000
+033000951107    2C                     ENDIF
+033100951107     C*
+033200951107     C                     ADD  1         NRR
+033300951107     C           NRR       CHAINLV15S01              30
+033400951107    1C                     ENDDO
+033500951107     C*
+033600951107     C                     ENDSR
+033700951107     C*
+033800960222     C*--- IMPOSTO FLAG E DATA TRASMISSIONE --------------------------*
+033900960222     C           TRASMI    BEGSR
+034000960305     C*
+034100960305     C* SE SI TRATTA DI F.VIAGGIO ILLUMINATO NON LO TRASMETTO
+034200960305    0C           D15ATR    IFNE ' '
+034300960305     C                     MOVEL'N'       FV4FT1
+034400960305     C                     MOVEL*ALL'9'   FV4DT1
+034500960305     C                     MOVEL'N'       FV4FT2
+034600960305     C                     MOVEL*ALL'9'   FV4DT2
+034700960305     C*
+034800960305   X0C                     ELSE
+034900960222     C*
+035000960222     C* TRASMISSIONE A   F I L I A L E
+035100960222    1C           §3BTRF    IFEQ 'S'
+035200960222     C                     CLEARFV4FT1
+035300960222     C                     CLEARFV4DT1
+035400960222   X1C                     ELSE
+035500960222     C                     MOVEL'N'       FV4FT1
+035600960222     C                     MOVEL*ALL'9'   FV4DT1
+035700960222    1C                     ENDIF
+035800960222     C*
+035900960222     C* TRASMISSIONE A   S E D E
+036000960222    1C           §3BTRS    IFEQ 'S'
+036100960222     C* CONTROLLO SE TIPO TRAINO DA TRASMETTERE IN SEDE
+036200960222    2C           D15TRN    IFEQ 0
+036300960222     C           D15TTR    OREQ ' '
+036400960222     C           §TVUTC    OREQ 'S'
+036500960222     C                     CLEARFV4FT2
+036600960222     C                     CLEARFV4DT2
+036700960222   X2C                     ELSE
+036800960222     C                     MOVEL'N'       FV4FT2
+036900960222     C                     MOVEL*ALL'9'   FV4DT2
+037000960222    2C                     ENDIF
+037100960222     C*
+037200960222   X1C                     ELSE
+037300960222     C                     MOVEL'N'       FV4FT2
+037400960222     C                     MOVEL*ALL'9'   FV4DT2
+037500960222    1C                     ENDIF
+037600960305     C*
+037700960305    0C                     ENDIF
+037800960222     C*
+037900960222     C                     ENDSR
+038000960222     C*
+038100951107     C*--- SR INIZIALE -----------------------------------------------*
+038200951107     C           *INZSR    BEGSR
+038300951107     C*
+038400951107     C****  KLIST  ****
+038500951107     C* ACCESSO TABEL00F
+038600951107     C           KTAB      KLIST
+038700951107     C                     KFLD           CODUT
+038800951107     C                     KFLD           COD
+038900951107     C                     KFLD           KEY
+039000951107     C* ACCESSO FNFV401L
+039100951107     C           KFV4      KLIST
+039200960125     C                     KFLD           D15LNP                       FOGLIO
+039300960125     C                     KFLD           D15NFV
+039400960125     C                     KFLD           D15EPA
+039500960125     C                     KFLD           D15LAI                       NE
+039600960125     C                     KFLD           D15TRC
+039700951107     C*
+039800951107     C****  DEFINIZIONE CAMPI  ****
+039900951107     C           *LIKE     DEFN TBLCOD    COD
+040000951107     C           *LIKE     DEFN TBLKEY    KEY
+040100951107     C*
+040200951107     C                     Z-ADD1         CODUT
+040300951107     C                     CALL 'X§PARUT'
+040400951107     C                     PARM           UT§DSE
+040500960126     C                     MOVELREC80     CNCR80
+040600951107     C                     MOVELRAGUT     VCCRSU
+040700951107     C*
+040800951107     C                     ENDSR
+040900951107     C*
+041000951107     C*---------------------------------------------------------------*
+041100951107**
+041200951107 ***  GESTIONE  RITARDO/ANTICIPO  ***
+041300951107 ***  INTERROG. RITARDO/ANTICIPO  ***
+041400951108**  MSG
+041500951108Premere F6 solo se presenti righe da aggiornare                                1

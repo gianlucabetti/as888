@@ -1,0 +1,28 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000301081219             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000302090108             CHGVAR     VAR(&DSP) VALUE(%SST(&KPJBA 20 10))
+000400020118
+000500081219             STRCMTCTL  LCKLVL(*CHG)
+000501081219             MONMSG     MSGID(CPF8351) EXEC(DO)
+000502081219             ROLLBACK
+000503081219             ENDCMTCTL
+000504081219             STRCMTCTL  LCKLVL(*CHG)
+000505081219             ENDDO
+000600020116
+000700090109/* richiamo programma di conferma tariffe aut      */
+000800090109             CALL       PGM(FICN17R) PARM(&KPJBA)
+000801081219             MONMSG     MSGID(CPF0000) EXEC(DO)
+000802081219             ROLLBACK
+000803090109             SNDBRKMSG  MSG('ERRORE La conferma delle tariffe è +
+000804081219                          terminata in modo anomalo. +
+000805081219                          Segnalare il +
+000806081219                          problema alla persona responsabile della +
+000807081219                          manutenzione del programma.') TOMSGQ(&DSP)
+000808081219             RCLRSC     LVL(*CALLER)
+000809081219             ENDDO
+000900020116
+001000020322             ENDCMTCTL
+001100020116
+001200000000             ENDPGM

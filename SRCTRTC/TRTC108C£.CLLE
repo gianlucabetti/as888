@@ -1,0 +1,148 @@
+000100050127/********************************************************************/
+000200060522/*  RICEVE ED ELABORA ARCHIVI E.D.I.                                */
+000300050127/*                                                                  */
+000400050127/* LEGGE i SNDIFTSTA e i SNDIFCSUM per trasmetterli con trad.INTESA */
+000500050127/*  TRAMITE I PARAMETRI PASSATI NELLA KPJBU si può sapere che       */
+000600050127/*  tipo di File "SUM" o "STA" deve essere elaborato.               */
+000700050127/********************************************************************/
+000800050127             PGM        PARM(&KPJBA)
+000900050127
+001000050127/* DICHIARAZIONE PARAMETRI IN INPUT                            */
+001100050127             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001200050127             DCL        VAR(&SAVKPJBA) TYPE(*CHAR) LEN(502)
+001300050127
+001400050901             DCL        VAR(&SIF) TYPE(*CHAR) LEN(1)
+001500050825             DCL        VAR(&ACTMSG) TYPE(*CHAR) LEN(1) VALUE(' ')
+001600050127             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE(' ')
+001700050127             DCL        VAR(&ERR35) TYPE(*CHAR) LEN(35) VALUE(' ')
+001800050127             DCL        VAR(&TPFILE) TYPE(*CHAR) LEN(10) VALUE(' ')
+001900050127             DCL        VAR(&CDFILE) TYPE(*CHAR) LEN(3) VALUE(' ')
+002000050127             DCL        VAR(&NRFILE) TYPE(*CHAR) LEN(7) VALUE(' ')
+002100050127             DCL        VAR(&LNPFIL) TYPE(*CHAR) LEN(3) VALUE(' ')
+002200050127             DCL        VAR(&HUBFIL) TYPE(*CHAR) LEN(3) VALUE(' ')
+002300050831             DCL        VAR(&EDFILE) TYPE(*CHAR) LEN(10) VALUE(' ')
+002400050901             DCL        VAR(&MBRFIL) TYPE(*CHAR) LEN(10) VALUE(' ')
+002500050127
+002600050131             DCL        VAR(&NAMSYS) TYPE(*CHAR) LEN(10) VALUE('          ')
+002700050131             DCL        VAR(&VAVANTI) TYPE(*CHAR) LEN(2)
+002800050302             DCL        VAR(&GIORNO) TYPE(*CHAR) LEN(4)
+002900050302             DCL        VAR(&HOUR) TYPE(*CHAR) LEN(2) VALUE('00')
+003000050302             DCL        VAR(&ORA) TYPE(*DEC) LEN(2 0)
+003100050831
+003200050831             RTVNETA    SYSNAME(&NAMSYS)
+003300050302
+003400050302/* ?------------------------------------------------------------------ */
+003500050302/* ?prende ora di sistema e giorno della settimana                     */
+003600050302/* ?------------------------------------------------------------------ */
+003700050302             RTVSYSVAL  SYSVAL(QHOUR) RTNVAR(&HOUR)
+003800050302             CHGVAR     VAR(&ORA) VALUE(&HOUR)
+003900050302             RTVSYSVAL  SYSVAL(QDAYOFWEEK) RTNVAR(&GIORNO)
+004000050210
+004100050210/* ?------------------------------------------------------------------ */
+004200050302             CHGJOB     LOGCLPGM(*YES)
+004300050210/* ?x qualsiasi errore in trasmissione durante l'esecuzione            */
+004400050302/* ?in certi momenti: di notte e nei festivi                           */
+004500050302/* ?Fra le 20:00  e le 07:00  oppure di Sabato e Domenica              */
+004600050302/* ? - Attiva Risposta Automatica                                      */
+004700050302             IF         COND((&ORA *GT 19) *OR (&ORA *LT 08) *OR +
+004800050302                          (&GIORNO *EQ *SUN) *OR (&GIORNO *EQ +
+004900050302                          *SAT)) THEN(DO)
+005000050302             CHGJOB     INQMSGRPY(*DFT)
+005100050302             ENDDO
+005200050210/* ?------------------------------------------------------------------ */
+005300050825/* Salva la KPJBA e imposta i campi di passaggio parametri ricevuti    */
+005400050825/* ?------------------------------------------------------------------ */
+005500050127             CHGVAR     VAR(&SAVKPJBA) VALUE(&KPJBA)
+005600050901             CHGVAR     VAR(&SIF) VALUE(%SST(&KPJBA 98 1))
+005700050127             CHGVAR     VAR(&TPFILE) VALUE(%SST(&KPJBA 473 10))
+005800050127             CHGVAR     VAR(&CDFILE) VALUE(%SST(&KPJBA 483 3))
+005900050131             CHGVAR     VAR(&NRFILE) VALUE(%SST(&KPJBA 486 7))
+006000050127             CHGVAR     VAR(&LNPFIL) VALUE(%SST(&KPJBA 494 3))
+006100050127             CHGVAR     VAR(&HUBFIL) VALUE(%SST(&KPJBA 500 3))
+006200050831
+006300050127/* Riferimenti x msg di errore                                       */
+006400050131             CHGVAR     VAR(&ERR35) VALUE('P.O.' *CAT &LNPFIL *BCAT +
+006500050131                          ' Nr.' *CAT &NRFILE *BCAT ' Msg.' *CAT +
+006600050127                          &CDFILE)
+006700050127
+006800050825/* ------------------------------------------------------------------- */
+006900050825/* ?Prende lo User a cui inviare msg di avviso e se stampare errori    */
+007000050901/* ?poi reimposta la KPJBA come prima                                  */
+007100050825/* ------------------------------------------------------------------- */
+007200050825             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+007300050825             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+007400050825             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+007500050825             CHGVAR     VAR(&ACTMSG) VALUE(%SST(&KPJBA 247 1))
+007600050825             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+007700050831
+007800050831/*?   IMPOSTA IL NOME DEL FILE dal TIPO FILE                                 */
+007900050831             CHGVAR     VAR(&EDFILE) VALUE('WFSND00W')
+008000050831
+008100050131/*?   ATTIVA         C O M M I T            =================================*/
+008200050131             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+008300050906             MONMSG     MSGID(CPF8351)
+008400050127
+008500050127/*-----------------------------------------------------------------------*/
+008600050127/* X assurdo cancella da QTEMP il file che andrà a creare                */
+008700050127/*-----------------------------------------------------------------------*/
+008800050831             DLTF       FILE(QTEMP/&EDFILE)
+008900050127             MONMSG     MSGID(CPF0000)
+009000050127/*-----------------------------------------------------------------------*/
+009100050127/* Crea in Qtemp il file per la trascodifica dei dati in formato FLAT    */
+009200050127/*-----------------------------------------------------------------------*/
+009300050901             CRTDUPOBJ  OBJ(&EDFILE) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+009400050901                          TOLIB(QTEMP)
+009500050831
+009600050127/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+009700050127/*  Con i primi 2 byte a *blank della KPJBU                   */
+009800050127/*  Elabora i records "OK" da trasformare in "RX"             */
+009900050127/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+010000050831             OVRDBF     FILE(&EDFILE) TOFILE(QTEMP/&EDFILE)
+010100050127             CHGVAR     VAR(%SST(&KPJBA 247 2)) VALUE('  ')
+010200050831             CALL       PGM(TRTC108R) PARM(&KPJBA)
+010300050127             CHGVAR     VAR(&VAVANTI) VALUE(%SST(&KPJBA 247 2))
+010400050127/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+010500050210/* ?Se tutto OK senza errori procede                          */
+010600050127/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+010700050127             IF         COND(&VAVANTI *EQ 'OK') THEN(DO)
+010800050831
+010900050831/* PASSA ANCHE IL SISTEMA INFORMATIVO PER AMBIENTE DI TEST O IN BUONA  */
+011000050901             CALL       PGM(TRTC108R1) PARM(&SIF &NRFILE &MBRFIL)
+011100050831             MONMSG     MSGID(CPF0000) EXEC(DO)
+011200050831/* ?x qualsiasi errore in trasmissione da traduttore                   */
+011300050831             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+011400050831             CHGVAR     VAR(%SST(&KPJBA 247 2)) VALUE('EF')
+011500050831             CALL       PGM(TRTC108R) PARM(&KPJBA)
+011600050831  /* Invio Msg Errore */
+011700050831             IF         COND(&ACTMSG *EQ 'S') THEN(CALL +
+011800050901                          PGM(TRTC100MSG) PARM(&ERR35 &USRMSG '04' +
+011900050831                          &TPFILE))
+012000050901             goto       fine
+012100050831             ENDDO
+012200050831
+012300050901/* ?OCCORRE IL CPYF                                                */
+012400060522             CPYF       FROMFILE(QTEMP/WFSND00W) TOFILE(TISNDEDI) +
+012500050901                          TOMBR(&MBRFIL) MBROPT(*REPLACE) +
+012600050901                          CRTFILE(*YES) FMTOPT(*NOCHK)
+012700050210             MONMSG     MSGID(CPF0000) EXEC(DO)
+012800050210/* ?x qualsiasi errore in trasmissione da traduttore                   */
+012900050210             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+013000050210             CHGVAR     VAR(%SST(&KPJBA 247 2)) VALUE('EF')
+013100050831             CALL       PGM(TRTC108R) PARM(&KPJBA)
+013200050210  /* Invio Msg Errore */
+013300050825             IF         COND(&ACTMSG *EQ 'S') THEN(CALL +
+013400050901                          PGM(TRTC100MSG) PARM(&ERR35 &USRMSG '04' +
+013500050210                          &TPFILE))
+013600050901             goto       fine
+013700050210             ENDDO
+013800050831
+013900050831/* ENDDO DI OK             */
+014000050127             ENDDO
+014100050831
+014200050131/* ESEGUE IL COMMIT                          */
+014300050831/*?   Chiude         C O M M I T            =================================*/
+014400050901fine:
+014500050131             COMMIT
+014600050131             ENDCMTCTL
+014700050127
+014800050127             ENDPGM

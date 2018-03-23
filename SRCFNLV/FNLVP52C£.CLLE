@@ -1,0 +1,43 @@
+000100011119             PGM        PARM(&KPJBA)
+000200011119
+000300011119             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700150629             DCL        VAR(&SQL) TYPE(*CHAR) LEN(5000)
+001700011119
+001701150629             CHGVAR     VAR(&SQL) VALUE('SELECT SOGPARTIVA, +
+001702150629                          sognatgiur FROM ansog00f join anfrn00f on +
+001703150629                          sogsogg = frnsogg WHERE sogpartiva in +
+001704150629                          (select sogpartiva from ansog00f where +
+001705150629                          sognatgiur =''11'' and SOGDTFIVL = +
+001706150629                          ''0001-01-01'') and SOGDTFIVL +
+001707150629                          =''0001-01-01'' GROUP BY SOGPARTIVA, +
+001708150629                          sognatgiur')
+001709150629             RUNSQL     SQL(&SQL) OUTPUT(*OUTFILE) +
+001710150629                          OUTFILE(QTEMP/SOGGETTI)
+001711150629
+001712150629             CHGVAR     VAR(&SQL) VALUE('select sogpartiva , +
+001713150629                          count(*) from soggetti group by +
+001714150629                          sogpartiva having count(*) > 1 ')
+001721150629             RUNSQL     SQL(&SQL) OUTPUT(*OUTFILE) +
+001722150629                          OUTFILE(QTEMP/SOGGETTI1)
+001723150629
+001724150629             CHGVAR     VAR(&SQL) VALUE('select c.sogpartiva,  +
+001725150629                          c.sogdes, +
+001726150629                          c.sognatgiur, c.sogsogg from soggetti1 b +
+001727150629                          join ansog00f c on b.sogpartiva = +
+001729150629                          c.sogpartiva WHERE  c.SOGDTFIVL +
+001731150629                          =''0001-01-01'' ')
+001734150629             RUNSQL     SQL(&SQL) OUTPUT(*OUTFILE) +
+001735150629                          OUTFILE(QTEMP/SOGGETTI2)
+001736150629
+001737150629             CHGVAR     VAR(&SQL) VALUE('select c.sogpartiva , +
+001738150629                          c.sognatgiur , frnsocieta, frnksc, +
+001739150629                          c.sogdes from soggetti2 c join     +
+001741150629                          anfrn00f on c.sogsogg = frnsogg WHERE   +
+001742150629                          FRNDTFIRPF = ''0001-01-01'' order by +
+001743150629                          c.sogpartiva, frnsocieta, c.sognatgiur ')
+001745150629             RUNSQL     SQL(&SQL) OUTPUT(*)
+015400011119
+015401150629             DLTF       FILE(QTEMP/soggetti)
+015402150629             DLTF       FILE(QTEMP/soggetti1)
+015403150629             DLTF       FILE(QTEMP/soggetti2)
+015500011119 ENDPGM:     ENDPGM

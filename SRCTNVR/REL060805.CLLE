@@ -1,0 +1,47 @@
+000100060111/*********************************************************************/
+000200060111             pgm
+000300060803
+000400060803             CHGPRTF    FILE(FNLV22P) MAXRCDS(700000)
+000500060803             MONMSG     MSGID(CPF0000)
+000600060804/* Modifica descrizione campi in FNDCT00F ___________________________*/
+000700060804             EDTFFD     FILE(UNITRAGRU/FNDCT00F) FIELD(DCTPOR) +
+000800060804                          COLHDG1('P.O.') +
+000900060804                          COLHDG2('AUTODICHIARAZIONE') COLHDG3('') +
+001000060804                          TEXT('P.O. AUTODICHIARAZIONE')
+001100060804             MONMSG     MSGID(CPF0000)
+001200060804
+001300060804/* _____ copio i dati nel file EDPWKSE _ TITPT00F _______________________________*/
+001400060804             CPYF       FROMFILE(UNITRAGRU/TITPT00F) +
+001500060804                          TOFILE(EDPWKSE/TITPT00F) MBROPT(*REPLACE) +
+001600060804                          FMTOPT(*MAP *DROP)
+001700060804/* _____ copio i dati nel file EDPWKSE _ TIOPT00F _______________________________*/
+001800060804             CPYF       FROMFILE(FILTRAGRU/TIOPT00F) +
+001900060804                          TOFILE(EDPWKSE/TIOPT00F) MBROPT(*REPLACE) +
+002000060804                          FMTOPT(*MAP *DROP)
+002100060804/* _____ Sposto il file TITPT       in edpgasav _________________________________*/
+002200060804             MOVOBJ     OBJ(UNITRAGRU/TITPT00F) OBJTYPE(*FILE) +
+002300060804                          TOLIB(EDPGASAV)
+002400060804             MOVOBJ     OBJ(UNITRAGRU/TITPT01L) OBJTYPE(*FILE) +
+002500060804                          TOLIB(EDPGASAV)
+002600060804/* _____ Sposto il file TIOPT       in edpgasav _________________________________*/
+002700060804             MOVOBJ     OBJ(FILTRAGRU/TIOPT00F) OBJTYPE(*FILE) +
+002800060804                          TOLIB(EDPGASAV)
+002900060804             MOVOBJ     OBJ(FILTRAGRU/TIOPT01L) OBJTYPE(*FILE) +
+003000060804                          TOLIB(EDPGASAV)
+003100060804/* _____ Sposto il file TITPT       in UNITRAGRU ________________________________*/
+003200060804             MOVOBJ     OBJ(EDPWKSE/TITPT00F) OBJTYPE(*FILE) +
+003300060804                          TOLIB(UNITRAGRU)
+003400060804             MOVOBJ     OBJ(EDPWKSE/TITPT01L) OBJTYPE(*FILE) +
+003500060804                          TOLIB(UNITRAGRU)
+003600060804/* _____ Sposto il file TIOPT       in FILTRAGRU ________________________________*/
+003700060804             MOVOBJ     OBJ(EDPWKSE/TIOPT00F) OBJTYPE(*FILE) +
+003800060804                          TOLIB(FILTRAGRU)
+003900060804             MOVOBJ     OBJ(EDPWKSE/TIOPT01L) OBJTYPE(*FILE) +
+004000060804                          TOLIB(FILTRAGRU)
+004100060803
+004200060111/* _____ Sposta i programmi dalla EDPWKSE alla OBJ __________________*/
+004300060111             call       pgm(GAITRAOBJ/TNSYMVC) +
+004400060111                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+004500060111             monmsg     msgid(CPF0000)
+004600060209
+004700060111             endpgm

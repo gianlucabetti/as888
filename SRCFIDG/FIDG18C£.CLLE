@@ -1,0 +1,42 @@
+000100950524             PGM        PARM(&KPJBA)
+000200950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000300030722             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000400030722             RTVJOBA    JOB(&DSP)
+000500950524
+000600070206        /* Apro in Share file per stampa anomalie */
+000700070206             OVRPRTF    FILE(FIDG18P) SHARE(*YES)
+000800070508
+000900070508        /*   Eseguo CALL a funzione pulisce arbfbc e arbcmc    */
+001000070508        /*   x le bolle bloccate con A e DCR valorizzata       */
+001100070508             CALL       PGM(FIDG36R) PARM(&KPJBA)
+001200070508             MONMSG     MSGID(CPF0000)
+001300950524
+001400030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001500030722/* procedura/programma fosse finita in maniera anomala occorre */
+001600030722/* parare il colpo riducendo il male al male minore ossia      */
+001700030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+001800030722/* metà piuttosto che confermarle. E ripartendo da una         */
+001900030722/* situazione pulita.                                          */
+002000070928             STRCMTCTL  LCKLVL(*CHG)
+002100030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+002200070306             rollback
+002300030722             ENDCMTCTL
+002600070928             STRCMTCTL  LCKLVL(*CHG)
+002700030722             ENDDO
+002800030708
+002900070206        /*   Eseguo CALL a pgm preparazione distinta autom.    */
+003000070206             CALL       PGM(FIDG18R) PARM(&KPJBA)
+003100030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+003200030708             ROLLBACK
+003300070206             SNDBRKMSG  MSG('ERRORE La preparazione distinta +
+003400070206                          di consegna automatica è +
+003500070206                          terminata in modo anomalo. +
+003600030722                          Segnalare il +
+003700030722                          problema alla persona responsabile della +
+003800030722                          manutenzione del programma.') TOMSGQ(&DSP)
+003900030728             RCLRSC     LVL(*CALLER)
+004000030708             ENDDO
+004100030722
+004200030722             ENDCMTCTL
+004300950911
+004400950524             ENDPGM

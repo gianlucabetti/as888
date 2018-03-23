@@ -1,0 +1,104 @@
+000100070213             PGM        PARM(&LIBDATI &fil)
+000200070213             DCL        VAR(&LIBDATI) TYPE(*CHAR) LEN(10)
+000300070213             DCL        VAR(&fil) TYPE(*CHAR) LEN(3)
+000400070213             DCL        VAR(&INIZIOPF5) TYPE(*CHAR) LEN(5)
+000500040921             DCL        VAR(&POPF) TYPE(*CHAR) LEN(3)
+000600070213             DCL        VAR(&fisico) TYPE(*CHAR) LEN(1)
+000700070213             DCL        VAR(&savfil) TYPE(*CHAR) LEN(3) value('   ')
+000800070213             DCL        VAR(&filelaser) TYPE(*CHAR) LEN(10) +
+000900070213                        value('FIBARzzzL ')
+001000070213             DCL        VAR(&fileVDL) TYPE(*CHAR) LEN(10) +
+001100070213                        value('FIBARzzzV ')
+001200070213             DCL        VAR(&filePDA) TYPE(*CHAR) LEN(10) +
+001300070213                        value('FIBARzzzP ')
+001400070214             DCL        VAR(&fileCML) TYPE(*CHAR) LEN(10) +
+001500070214                        value('FIBARzzzC ')
+001600040920             DCLF       FILE(QSYS/QAFDBASI)
+001700040920
+001800930625
+001900070213             DSPFD      FILE(&LIBDATI/FNBA*) TYPE(*BASATR) +
+002000070213                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+002100070213                          OUTFILE(QTEMP/§FPH)
+002200040920
+002300911230
+002400040920             OVRDBF     FILE(QAFDBASI) TOFILE(QTEMP/§FPH)
+002500001115
+002600000000READ:
+002700911230             RCVF
+002800911230             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+002900040921
+003000040921             CHGVAR     VAR(&INIZIOPF5) VALUE(%sst(&atfile 1 5))
+003100040921             CHGVAR     VAR(&POPF) VALUE(%sst(&atfile 6 3))
+003200070213             CHGVAR     VAR(&FISICO) VALUE(%sst(&atfile 8 1))
+003300070213
+003400070213/* Se passato il p.o. deve corrispondere           */
+003500070213             IF         COND(&FIL *NE '   ' *AND &FIL *NE &POPF) +
+003600070213                          THEN(GOTO CMDLBL(READ))
+003700070213
+003800070213/* Escludo fnba100f e fnbar20f                     */
+003900070213             IF         COND(&FISICO *EQ 'F') THEN(GOTO CMDLBL(READ))
+004000070213
+004100070213/* se non sono i files che mi interessano rileggo      */
+004200070213             IF         COND(&INIZIOPF5 *NE 'FNBA1' *AND &INIZIOPF5 +
+004300070213                          *NE 'FNBAR') THEN(GOTO CMDLBL(READ))
+004400070213
+004500070213/* A cambio filiale creo il nuovo per PDA           */
+004600070213             IF         COND(&POPF *NE &SAVFIL) THEN(DO)
+004700070213
+004800070213             CHGVAR     VAR(%SST(&FILEPDA 6 3)) VALUE(&popf)
+004900070213             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(&LIBDATI) +
+005000070213                          OBJTYPE(*FILE) TOLIB(&LIBDATI) +
+005100070213                          NEWOBJ(&FILEPDA)
+005200070213             MONMSG     MSGID(CPF0000)
+005300070213             enddo
+005400070213
+005500070213             chgvar     var(&savfil) value(&popf)
+005600070213
+005700040921
+005800070213/* pistole LASER                                  */
+005900070213             IF         COND(&INIZIOPF5 = 'FNBA1' ) +
+006000070213                         THEN(DO)
+006100070213                         chgvar (%sst(&filelaser 6 3)) value(&popf)
+006200070213             CHGVAR     VAR(%SST(&FILELASER 10 1)) +
+006300070213                          VALUE(%SST(&ATFILE 9 1))
+006400070213
+006500070213             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(&LIBDATI) +
+006600070213                          OBJTYPE(*FILE) TOLIB(&LIBDATI) +
+006700070213                          NEWOBJ(&FILELASER)
+006800070213             MONMSG     MSGID(CPF0000)
+006900040921
+007000040921             ENDDO
+007100070213
+007200070214/* VDL  - CML                                     */
+007300070213             IF         COND(&INIZIOPF5 = 'FNBAR' ) +
+007400070213                         THEN(DO)
+007500070213                         chgvar (%sst(&fileVDL   6 3)) value(&popf)
+007600070214                         chgvar (%sst(&fileCML   6 3)) value(&popf)
+007700070213             CHGVAR     VAR(%SST(&FILEVDL   10 1)) +
+007800070213                          VALUE(%SST(&ATFILE 9 1))
+007900070214             CHGVAR     VAR(%SST(&FILECML   10 1)) +
+008000070214                          VALUE(%SST(&ATFILE 9 1))
+008100070213
+008200070214             IF         COND(%SST(&ATFILE 9 1) *EQ 'M') THEN(DO)
+008300070214             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(&LIBDATI) +
+008400070214                          OBJTYPE(*FILE) TOLIB(&LIBDATI) +
+008500070214                          NEWOBJ(&FILECML)
+008600070214             MONMSG     MSGID(CPF0000)
+008700070214             enddo
+008800070214
+008900070214
+009000070214             ELSE       CMD(DO)
+009100070213             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(&LIBDATI) +
+009200070213                          OBJTYPE(*FILE) TOLIB(&LIBDATI) +
+009300070213                          NEWOBJ(&FILEVDL)
+009400070213             MONMSG     MSGID(CPF0000)
+009500070214             enddo
+009600070213
+009700070213             ENDDO
+009800040921
+009900040414
+010000040414             GOTO READ
+010100001115
+010200930701 ENDF:
+010300040921
+010400040921             ENDPGM

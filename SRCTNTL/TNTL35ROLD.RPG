@@ -1,0 +1,538 @@
+000100940912     H              J
+000200951113     H* TNTL35R  *----------------------------------------------------*
+000300951110     H*----------*                                                    *
+000400951110     H* CALCOLO DATA TEORICA PARTENZA/ARRIVO F.VIAGGIO E CONTROLLO    **
+000500951110     H* ESISTENZA DI ANTICIPO/RITARDO NELLA PARTENZA/ARRIVO F.VIAGGIO *
+000600951110     H*---------------------------------------------------------------*
+000700951110     FTNTLO01LIF  E           K        DISK
+000800960202     FTNTLR03LIF  E           K        DISK
+000900960826     FTNTLR01LIF  E           K        DISK
+001000960826     F            TNTLR000                          KRENAMETNTLR1
+001100951110     FTABEL00FIF  E           K        DISK
+001200960117     FAZCLN01LIF  E           K        DISK
+001300951110     E*
+001400951110     E* DEFINIZIONE SCHIERE
+001500951110     E                    GFV    20  20  1               GG PARTENZA
+001600951110     E                    MSG     1   1 78               MESSAGGI ERRORE
+001700960117     E                    POM        31  1               FESTIV.POMER.
+001800960117     E                    S1Y        10  1               SIMBOLI CALEND
+001900960118     E                    FET        10  1               FESTIVO TRAINI
+002000951110     I*
+002100951110     IWLBDAT      DS
+002200951110     I                                        1   80G02DAT
+002300951110     I                                        9  160G02INV
+002400951110     I                                       17  17 G02ERR
+002500951110     I                                       18  220G02TGI
+002600951110     IWGIDAT      DS
+002700951110     I                                        1   80GI8DAT
+002800951110     I                                        9  160GI8INV
+002900951110     I                                       17  210GI8TGI
+003000951110     IWXDTOR      DS
+003100951110     I                                        1   80WXDT1
+003200951110     I                                        9  120WXHM1
+003300951110     I                                       13  200WXDT2
+003400951110     I                                       21  240WXHM2
+003500951110     I                                       25  25 WXFLG
+003600951110     I                                       26  300WXMIN
+003700951110     I*
+003800951110     I            DS
+003900951110     I                                        1   80DATA1
+004000951110     I                                        9  120ORA1
+004100951110     I                                        1  120COMDO1
+004200951110     I            DS
+004300951110     I                                        1   80DATA2
+004400951110     I                                        9  120ORA2
+004500951110     I                                        1  120COMDO2
+004600951113     I            DS
+004700951113     I                                        1   80COMDRE
+004800951113     I                                        9  120COMHRE
+004900951113     I                                        1  120COMDHR
+005000960117     I            DS
+005100960117     I                                        1  31 CLNPOM
+005200960117     I                                        1  31 POM
+005300951110     I*
+005400951113     I* DS PER TNTL35R - DS DI PASSAGGIO PARAMETRI PER PGM CHIAMANTI
+005500951113     IDSTL35    E DSTNTL35DS
+005600951113     I*
+005700951110     IDS3I      E DS
+005800951113     IDS7A2     E DS
+005900960117     IDS1Y      E DS
+006000960826     IDS1X      E DS
+006100951110     IKPJBA     E DS
+006200951110     I/SPACE 3
+006300951110     C*****************************************************************
+006400951110     C* RIEPILOGO INDICATORI
+006500951110     C*****************************************************************
+006600960122     C* 30/32 - DI COMODO
+006700951110     C*****************************************************************
+006800951110     C           *ENTRY    PLIST
+006900951110     C                     PARM           KPJBA
+007000951113     C                     MOVELKPJBU     DSTL35
+007100960216     C                     CLEARD35MIN
+007200951113     C*
+007300951110     C*---------------------------------------------------------------*
+007400951113     C* TIPO LANCIO: D35TLA = "C" -           CHIUDO CON LR
+007500951113     C*              D35TLA = "L" - ELABORO E CHIUDO CON LR
+007600951113     C*              D35TLA = " " - ELABORO E CHIUDO IN  RETRN
+007700951113    0C           D35TLA    IFNE 'C'
+007800951113     C*
+007900951110     C******
+008000951110     C** CALCOLO LA DATA TEORICA PARTENZA/ARRIVO DEL FOGLIO VIAGGIO
+008100951110     C******
+008200951113    1C           D35TUP    IFEQ 'D'
+008300951113     C           D35TUP    OREQ 'E'
+008400951110     C*
+008500960122     C* SE IL NUMERO FERMATA PASSATO E' VUOTO OCCORRE CHAINARE IL
+008600960122     C*   FILE DELLE FERMATE PER REPERIRLO
+008700960122   2AC           D35NFM    IFEQ 0
+008800960202     C           KTLR      CHAINTNTLR03L             32
+008900960202     C           *IN32     DOWEQ*OFF
+009000960202     C*
+009100960202     C           D35EPA    IFEQ 'P'
+009200960202     C           TLRCAR    ANDEQ'S'
+009300960202     C*
+009400960202     C           D35EPA    OREQ 'A'
+009500960202     C           TLRSCA    ANDEQ'S'
+009600960122     C                     MOVELTLRNFM    WNFM
+009700960202     C                     SETON                     32
+009800960202     C*
+009900960202     C                     ELSE
+010000960202     C           KTLR      READETNTLR03L                 32
+010100960122     C                     ENDIF
+010200960202     C                     ENDDO
+010300960122     C*
+010400960122  X2AC                     ELSE
+010500960122     C                     MOVELD35NFM    WNFM
+010600960122   2AC                     ENDIF
+010700960122     C*
+010800960122     C* PROSEGUO SOLO SE  NUMERO FERMATA > 0
+010900960122   2AC           WNFM      IFGT 0
+011000960122     C*
+011100951107     C* REPERISCO IL GIORNO DELLA SETTIMANA RELATIVO ALLA DATA TRAINO
+011200960219     C* GIRO LA DATA
+011300960219     C                     CLEARWLBDAT
+011400960219     C                     MOVE D35DTN    G02INV
+011500960219     C                     MOVE '3'       G02ERR
+011600960219     C                     CALL 'XSRDA8'
+011700960219     C                     PARM           WLBDAT
+011800960219     C                     MOVE G02DAT    W0020   20
+011900960219     C                     MOVELG02DAT    GGMMAA
+012000951110     C                     MOVE W0020     GGMMAA
+012100951110     C*
+012200951107     C                     CALL 'XGIOSE1'
+012300951110     C                     PARM           GGMMAA  6
+012400951110     C                     PARM           GIOSET  1
+012500951107     C*
+012600951110     C* CHAINO FILE ORARI PER CALCOLARE DATA TEORICA PARTENZA/ARRIVO
+012700951106     C*   RISPETTO ALLA DATA TRAINO
+012800951110     C           KTLO      CHAINTNTLO01L             30
+012900951110     C*
+013000960122     C* SE NON TROVATO O ANNULLATO, PROVO CON IL GIORNO DELLA
+013100960122     C*   SETTIMANA = *BLANKS
+013200960122    2C           *IN30     IFEQ *ON
+013300960122     C           TLOATB    ORNE ' '
+013400960117     C                     MOVEL' '       GIOSET
+013500960117     C           KTLO      CHAINTNTLO01L             30
+013600960122    2C                     ENDIF
+013700951110     C*
+013800951110     C* SE NON TROVATO, PASSO AL PGM CHIAMANTE UN MESSAGGIO DI ERRORE
+013900951110    2C           *IN30     IFEQ *ON
+014000960122     C           TLOATB    ORNE ' '
+014100951113     C                     MOVEL'E'       D35ERR
+014200951113     C                     MOVELMSG,1     D35MSG
+014300951110     C                     GOTO FINE
+014400951110    2C                     ENDIF
+014500951110     C*
+014600951110     C* 30 OFF - TROVATO RECORD
+014700951110    2C           *IN30     IFEQ *OFF
+014800951113     C*
+014900951113    3C           D35EPA    IFEQ 'P'
+015000951113     C                     MOVELTLOGGP    WGGPA
+015100951113   X3C                     ELSE
+015200951113     C                     MOVELTLOGGA    WGGPA
+015300951113    3C                     ENDIF
+015400951106     C*
+015500951102     C* GIORNO=A: LA DATA PARTENZA TEORICA CORRISPONDE ALLA DATA TRAINO
+015600951113    3C           WGGPA     IFEQ 'A'
+015700951113     C                     Z-ADDD35DTN    D35DTE
+015800951110   X3C                     ELSE
+015900960118     C* GIORNO<>A: AGGIUNGO ALLA DATA TRAINO IL GIORNO DI PARTENZA
+016000951103     C                     CLEARWLBDAT
+016100951113     C                     MOVE D35DTN    G02INV
+016200951103     C                     MOVE '3'       G02ERR
+016300951103     C                     CALL 'XSRDA8'
+016400951103     C                     PARM           WLBDAT
+016500951103     C*
+016600951103     C                     Z-ADD1         C       30
+016700951113     C           WGGPA     LOKUPGFV,C                    31
+016800951103     C           G02TGI    ADD  C         GI8TGI
+016900951103     C                     CALL 'XSRGI8'
+017000951103     C                     PARM           WGIDAT
+017100951113     C                     Z-ADDGI8INV    D35DTE
+017200960118     C* GIORNO>B: VERIFICO PRESENZA DI FESTIVI CON BLOCCO TRAFFICO
+017300960118     C*           FRA DATA TRAINO E DATA TEORICA CALCOLATA: IN TAL CASO
+017400960118     C*           SLITTO DATA
+017500960117     C           WGGPA     IFGT 'B'
+017600960117     C                     EXSR CALDAT
+017700960117     C                     END
+017800951110    3C                     ENDIF
+017900951113     C*
+018000951113    3C           D35EPA    IFEQ 'P'
+018100951113     C                     MOVELTLOHHP    D35HTE
+018200951113   X3C                     ELSE
+018300951113     C                     MOVELTLOHHA    D35HTE
+018400951113    3C                     ENDIF
+018500960826     C* SE CALCOLATA DATA ARRIVO FESTIVA VERIFICO SE SLITTARE DATA
+018600960826     C* IN BASE ALLA SOGLIA
+018700960826    3C           D35EPA    IFEQ 'A'
+018800960826     C                     MOVELD35DTE    KANN
+018900960826     C                     MOVE D35DTE    W0040   40
+019000960826     C                     MOVELW0040     KMES
+019100960826     C                     MOVE W0040     GG      20
+019200960826     C                     EXSR CTRFES
+019300960826    4C           WFES      IFNE *BLANKS
+019400960826     C* Se fil.di arrivo=0 la prendo chainando file delle fermate
+019500960826    5C           D35FIL    IFEQ *ZEROS
+019600960826     C           KTLR1     CHAINTNTLR01L             32
+019700960826     C  N32                MOVE TLRFIL    W0030   30
+019800960826     C   32                CLEARW0030
+019900960826   X5C                     ELSE
+020000960826     C                     MOVE D35FIL    W0030   30
+020100960826    5C                     END
+020200960826     C* Reperisco ora di soglia e se necessario ricalcolo data teorica
+020300960826     C                     EXSR REPSOG
+020400960826    4C                     ENDIF
+020500960826    3C                     ENDIF
+020600960826     C*
+020700951110    2C                     ENDIF
+020800951110     C*
+020900960122   2AC                     ENDIF
+021000951110    1C                     ENDIF
+021100951110     C*
+021200951110     C******
+021300951110     C** CONTROLLO SE ESISTE ANTICIPO/RITARDO NELLA PARTENZA/ARRIVO
+021400951110     C**   DEL FOGLIO VIAGGIO
+021500951110     C******
+021600951113    1C           D35TUP    IFEQ 'C'
+021700951113     C           D35TUP    OREQ 'E'
+021800960220     C                     CLEARD35FLG
+021900960220     C                     CLEARD35MIN
+022000960220     C*
+022100960220     C* SE SONO UGUALI SICURAMENTE NON C'E' RITARDO /ANTICIPO
+022200960220   1AC           D35DRE    IFNE D35DTE
+022300960220     C           D35HRE    ORNE D35HTE
+022400951110     C*
+022500951110     C* SOTTRAGGO I MINUTI DI TOLLERANZA ALLA DATA TEORICA
+022600951103     C                     CLEARWXDTOR
+022700951113     C                     MOVELD35DTE    WXDT1
+022800951113     C                     MOVELD35HTE    WXHM1
+022900951103     C                     MOVEL'-'       WXFLG
+023000951113    2C           D35EPA    IFEQ 'P'
+023100951103     C                     Z-ADD§3IMNA    WXMIN
+023200951110   X2C                     ELSE
+023300951110     C                     Z-ADD§7AMNA    WXMIN
+023400951110    2C                     ENDIF
+023500951110     C*
+023600951103     C                     CALL 'XDTORA'
+023700951103     C                     PARM           WXDTOR
+023800951103     C                     MOVELWXDT2     DATA1
+023900951103     C                     MOVE WXHM2     ORA1
+024000951103     C*
+024100951110     C* AGGIUNGO I MINUTI DI TOLLERANZA ALLA DATA TEORICA
+024200951103     C                     CLEARWXDTOR
+024300951113     C                     MOVELD35DTE    WXDT1
+024400951113     C                     MOVELD35HTE    WXHM1
+024500951103     C                     MOVEL'+'       WXFLG
+024600951113    2C           D35EPA    IFEQ 'P'
+024700951103     C                     Z-ADD§3IMNR    WXMIN
+024800951110   X2C                     ELSE
+024900951110     C                     Z-ADD§7AMNR    WXMIN
+025000951110    2C                     ENDIF
+025100951110     C*
+025200951103     C                     CALL 'XDTORA'
+025300951103     C                     PARM           WXDTOR
+025400951103     C                     MOVELWXDT2     DATA2
+025500951103     C                     MOVE WXHM2     ORA2
+025600951103     C*
+025700951106     C* CONTROLLO SE DATA/ORA PARTENZA EFFETTIVA E' COMPRESA NEL RANGE
+025800951106     C*   DI TEMPO ALL'INTERNO DEL QUALE NON SUSSISTE RITARDO/ANTICIPO
+025900951113     C                     MOVELD35DRE    COMDRE
+026000951113     C                     MOVELD35HRE    COMHRE
+026100951113     C*
+026200960125     C* A N T I C I P O
+026300951113    2C           COMDHR    IFLT COMDO1
+026400960125     C                     MOVEL'A'       D35FLG
+026500960125   X2C                     ELSE
+026600960125     C* R I T A R D O
+026700960216    3C           COMDHR    IFGT COMDO2
+026800951113     C                     MOVEL'R'       D35FLG
+026900960216    3C                     ENDIF
+027000951110    2C                     ENDIF
+027100960216     C* SE E' PRESENTE DICO QUANTI MINUTI SONO
+027200960216     C                     CLEARWXDTOR
+027300960216     C                     MOVELD35DTE    WXDT1
+027400960216     C                     MOVELD35HTE    WXHM1
+027500960216     C                     MOVELD35DRE    WXDT2
+027600960216     C                     MOVELD35HRE    WXHM2
+027700960216     C                     MOVEL'D'       WXFLG
+027800960216     C                     CALL 'XDTORA'
+027900960216     C                     PARM           WXDTOR
+028000960216     C                     MOVELWXMIN     D35MIN
+028100951103     C*
+028200960220   1AC                     ENDIF
+028300960220    1C                     ENDIF
+028400951113    0C                     ENDIF
+028500951110     C*
+028600951110     C           FINE      TAG
+028700951113     C                     MOVELDSTL35    KPJBU
+028800951113     C*
+028900951113     C* CHIUSURA PGM
+029000951113    0C           D35TLA    IFEQ ' '
+029100951113     C                     RETRN
+029200951113   X0C                     ELSE
+029300951113     C                     SETON                     LR
+029400951113    0C                     ENDIF
+029500960118     C*
+029600960117     C*****************  CALCOLO DATA TEORICA  ************************
+029700960117     C           CALDAT    BEGSR
+029800960117     C* QUESTA ROUTINE VIENE RICHIAMATA SE GIORNO TEORICO>'B':
+029900960117     C* SE GIORNO TEORICO = 'X' OCCORRE DETERMINARE LA DATA TENENDO
+030000960117     C* CONTO DI EVENTUALI GIORNI FESTIVI CON BLOCCO TRAFFICO FRA LA
+030100960117     C* DATA TRAINO E 'X' E IN TAL CASO SLITTARE LA DATA TEORICA DI
+030200960117     C* TANTI GIORNI QUANTI SONO I FESTIVI CALCOLATI
+030300960117     C                     MOVE D35DTE    WDTAA            DATA A
+030400960117     C                     MOVE *ZEROS    WDAT
+030500960117     C                     MOVE *ZEROS    Y       20
+030600960117     C                     Z-ADD1         X       20
+030700960117     C* CALCOLO DATA TRAINO+1
+030800960117     C                     CLEARWGIDAT
+030900960117     C           G02TGI    ADD  1         GI8TGI
+031000960117     C                     CALL 'XSRGI8'
+031100960117     C                     PARM           WGIDAT
+031200960117     C                     MOVE GI8INV    WDAT
+031300960117     C*
+031400960117     C           CICLO     TAG
+031500960117     C*
+031600960117    1C           WDAT      DOWLTWDTAA
+031700960117     C* VERIFICO SE DATA FESTIVA
+031800960117     C                     MOVELWDAT      KANN
+031900960117     C                     MOVE WDAT      W0040   40
+032000960117     C                     MOVELW0040     KMES
+032100960117     C                     MOVE W0040     GG      20
+032200960117     C                     EXSR CTRFES
+032300960117    2C           WFES      IFEQ 'B'
+032400960117     C                     ADD  1         Y                fest. blocco
+032500960117    2C                     END
+032600960117     C* CALCOLO DATA TRAINO+X
+032700960117     C                     ADD  1         X
+032800960117     C                     CLEARWGIDAT
+032900960117     C           G02TGI    ADD  X         GI8TGI
+033000960117     C                     MOVE GI8TGI    COMTGI
+033100960117     C                     CALL 'XSRGI8'
+033200960117     C                     PARM           WGIDAT
+033300960117     C                     MOVE GI8INV    WDAT
+033400960117    1C                     ENDDO
+033500960117     C* TROVATI GIORNI FESTIVI CON BLOCCO TRAFFICO FRA LE DUE DATE:
+033600960117    1C           Y         IFGT 0
+033700960118     C* se anche data teorica festiva slitto di un giorno in più
+033800960118     C                     MOVELD35DTE    KANN
+033900960118     C                     MOVE D35DTE    W0040   40
+034000960118     C                     MOVELW0040     KMES
+034100960118     C                     MOVE W0040     GG      20
+034200960118     C                     EXSR CTRFES
+034300960118    2C           WFES      IFEQ 'B'
+034400960118     C                     ADD  1         Y
+034500960118     C                     END
+034600960117     C* CALCOLO DATA FVT NUOVA AGGIUNGENDO IL NUMERO DI FESTIVI
+034700960117     C                     CLEARWGIDAT
+034800960117     C           COMTGI    ADD  Y         GI8TGI
+034900960117     C                     CALL 'XSRGI8'
+035000960117     C                     PARM           WGIDAT
+035100960117     C*          RIPETO IL CONTROLLO PRECEDENTE CON
+035200960117     C*          DATA DAL = DATA FVT VECCHIO E DATA AL = DATA FVT NUOVO
+035300960117     C*          (IL CONTROLLO NON OCCORRE RIPETERLO SE HO SLITTATO DI
+035400960117     C*          UN SOLO GIORNO)
+035500960117    2C           Y         IFEQ 1
+035600960117     C                     MOVE GI8INV    D35DTE
+035700960117   X2C                     ELSE
+035800960117     C                     MOVE GI8INV    WDTAA
+035900960117     C*
+036000960117     C                     MOVE *ZEROS    Y       20
+036100960117     C                     ADD  1         X       20
+036200960117     C                     CLEARWGIDAT
+036300960117     C           G02TGI    ADD  X         GI8TGI
+036400960117     C                     CALL 'XSRGI8'
+036500960117     C                     PARM           WGIDAT
+036600960117     C                     MOVE GI8INV    WDAT
+036700960117     C                     GOTO CICLO
+036800960117    2C                     END
+036900960117   X1C                     ELSE
+037000960117     C* NON TROVATI GIORNI FESTIVI CON BLOCCO TRAFFICO FRA LE DUE DATE
+037100960117     C                     MOVE WDTAA     D35DTE
+037200960117    1C                     END
+037300960117     C                     ENDSR
+037400960117     C*************  CONTROLLO SE GIORNO FESTIVO  *********************
+037500960117     C           CTRFES    BEGSR
+037600960117     C                     CLEARWFES
+037700960117     C           KCLN      CHAINAZCLN01L             30
+037800960117    1C           *IN30     IFEQ *OFF
+037900960117     C                     Z-ADD1         C
+038000960117     C           POM,GG    LOKUPS1Y,C                    30
+038100960117     C   30                MOVE FET,C     WFES    1
+038200960117    1C                     END
+038300960117     C                     ENDSR
+038400960826     C*********  REPERIMENTO ORA DI SOGLIA PER ARRIVO TRAZIONI  *******
+038500960826     C           REPSOG    BEGSR
+038600960826     C                     MOVEL'1X'      COD
+038700960826     C                     MOVELW0030     W006A   6
+038800960826     C                     MOVE 'OSA'     W006A
+038900960826     C                     MOVELW006A     KEY       P
+039000960826     C                     MOVE *ZEROS    II      10
+039100960826    1C           II        DOWLE1
+039200960826     C           KTAB      CHAINTABEL                32
+039300960826    2C           *IN32     IFEQ *OFF
+039400960826     C           TBLFLG    ANDEQ*BLANKS
+039500960826     C* Trovata soglia:ricalcolo data teor.(se ora teorica>ora soglia)
+039600960826     C*                ed esco dal ciclo
+039700960826     C                     Z-ADD9         II
+039800960826     C                     MOVELTBLUNI    DS1X
+039900960826    3C           D35HTE    IFGT §1XHHO
+040000960826     C                     CLEARWLBDAT
+040100960826     C                     MOVE D35DTE    G02INV
+040200960826     C                     MOVE '3'       G02ERR
+040300960826     C                     CALL 'XSRDA8'
+040400960826     C                     PARM           WLBDAT
+040500960826     C                     MOVE *ZEROS    X
+040600960826     C* Incremento di 1 giorno la data teorica finchè la data risultant
+040700960826     C* non è festiva
+040800960826    4C           WFES      DOUEQ*BLANKS
+040900960826     C                     ADD  1         X
+041000960826     C                     CLEARWGIDAT
+041100960826     C           G02TGI    ADD  X         GI8TGI
+041200960826     C                     CALL 'XSRGI8'
+041300960826     C                     PARM           WGIDAT
+041400960826     C* Verifico se data festiva
+041500960826     C                     MOVELGI8INV    KANN
+041600960826     C                     MOVE GI8INV    W0040
+041700960826     C                     MOVELW0040     KMES
+041800960826     C                     MOVE W0040     GG
+041900960826     C                     EXSR CTRFES
+042000960826     C           WFES      IFEQ *BLANKS
+042100960826     C                     Z-ADDGI8INV    D35DTE
+042200960826     C                     ENDIF
+042300960826    4C                     ENDDO
+042400960826    3C                     ENDIF
+042500960826   X2C                     ELSE
+042600960826     C* Non trovata soglia della fil. di arrivo: cerco soglia generica
+042700960826     C                     ADD  1         II
+042800960826     C                     MOVEL'   '     KEY
+042900960826    2C                     ENDIF
+043000960826    1C                     ENDDO
+043100960826     C                     ENDSR
+043200960117     C*
+043300951110     C*--- SR INIZIALE -----------------------------------------------*
+043400951110     C           *INZSR    BEGSR
+043500951110     C*
+043600951110     C****  KLIST  ****
+043700951110     C* ACCESSO TABEL00F
+043800951110     C           KTAB      KLIST
+043900951110     C                     KFLD           CODUT
+044000951110     C                     KFLD           COD
+044100951110     C                     KFLD           KEY
+044200960118     C           KTAB0     KLIST
+044300960118     C                     KFLD           CODUT
+044400960118     C                     KFLD           COD
+044500951110     C* ACCESSO TNTLO01L
+044600951113     C           KTLO      KLIST
+044700951113     C                     KFLD           D35TRN                       FOGLIO
+044800951113     C                     KFLD           D35DDE
+044900960122     C                     KFLD           WNFM
+045000951110     C                     KFLD           GIOSET                       NE
+045100960826     C* ACCESSO TNTLR03L
+045200960122     C           KTLR      KLIST
+045300960122     C                     KFLD           D35TRN                       FOGLIO
+045400960202     C                     KFLD           D35DDE                       FOGLIO
+045500960122     C                     KFLD           D35TFM
+045600960122     C                     KFLD           D35FIL
+045700960826     C* ACCESSO TNTLR01L
+045800960826     C           KTLR1     KLIST
+045900960826     C                     KFLD           D35TRN                       FOGLIO
+046000960826     C                     KFLD           D35DDE                       FOGLIO
+046100960826     C                     KFLD           D35NFM                       FOGLIO
+046200960117     C* ACCESSO A CALENDARIO BARTOLINI
+046300960117     C           KCLN      KLIST
+046400960117     C                     KFLD           KTFP
+046500960117     C                     KFLD           KTFA
+046600960117     C                     KFLD           KANN
+046700960117     C                     KFLD           KMES
+046800951110     C*
+046900951110     C****  DEFINIZIONE CAMPI  ****
+047000951110     C           *LIKE     DEFN TBLKUT    CODUT
+047100951110     C           *LIKE     DEFN TBLCOD    COD
+047200951110     C           *LIKE     DEFN TBLKEY    KEY
+047300951113     C           *LIKE     DEFN TLOGGP    WGGPA
+047400960122     C           *LIKE     DEFN TLONFM    WNFM
+047500960117     C           *LIKE     DEFN CLNANN    KANN
+047600960117     C           *LIKE     DEFN CLNMES    KMES
+047700960117     C           *LIKE     DEFN CLNTFP    KTFP
+047800960117     C           *LIKE     DEFN CLNTFA    KTFA
+047900960117     C           *LIKE     DEFN GI8TGI    COMTGI
+048000960117     C           *LIKE     DEFN D35DTN    WDTAA
+048100960117     C           *LIKE     DEFN D35DTN    WDAT
+048200951110     C*
+048300960201    1C           D35TLA    IFNE 'C'
+048400951110     C****  IMPOSTO CAMPI FISSI  ****
+048500951110     C                     Z-ADD1         CODUT
+048600960117     C                     Z-ADD68        KTFP
+048700960117     C                     CLEARKTFA
+048800951110     C*
+048900951110     C* SE SONO IN "P-PARTENZA" I MINUTI DI TOLLERANZA LI REPERISCO
+049000951110     C*   DALLA TABELLA "3I"
+049100951110     C                     MOVEL'3I'      COD
+049200951110     C                     MOVEL'1'       KEY       P
+049300951110     C           KTAB      CHAINTABEL                30
+049400960123    1C           *IN30     IFEQ *OFF
+049500951110     C                     MOVELTBLUNI    DS3I
+049600960123   X1C                     ELSE
+049700951110     C                     Z-ADD30        §3IMNA
+049800951110     C                     Z-ADD30        §3IMNR
+049900960123    1C                     ENDIF
+050000951110     C*
+050100951110     C* SE SONO IN "A-ARRIVO" I MINUTI DI TOLLERANZA LI REPERISCO
+050200951110     C*   DALLA TABELLA "7A"
+050300951110     C                     MOVEL'7A'      COD
+050400951110     C                     MOVEL'2'       KEY       P
+050500951110     C           KTAB      CHAINTABEL                30
+050600960123    1C           *IN30     IFEQ *OFF
+050700951110     C                     MOVELTBLUNI    DS7A2
+050800960123   X1C                     ELSE
+050900951110     C                     Z-ADD30        §7AMNA
+051000951110     C                     Z-ADD30        §7AMNR
+051100960123    1C                     ENDIF
+051200960123     C*
+051300960117     C* CARICAMENTO TABELLA 1Y - SIMBOLI CALENDARIO BARTOLINI
+051400960117     C* (CARICAMENTO DEI SIMBOLI FESTIVI PER PROCDEURA TRAINI)
+051500960117     C                     MOVE *ZEROS    C
+051600960117     C                     MOVEL'1Y'      COD
+051700960118     C           KTAB0     SETLLTABEL00F
+051800960118     C           KTAB0     READETABEL00F                 30
+051900960117     C           *IN30     DOWEQ*OFF
+052000960117     C           TBLFLG    IFEQ *BLANKS
+052100960117     C                     MOVELTBLUNI    DS1Y
+052200960117     C           §1YFET    IFNE *BLANKS
+052300960117     C                     ADD  1         C
+052400960118     C                     MOVELTBLKEY    S1Y,C
+052500960117     C                     MOVE §1YFET    FET,C
+052600960117     C                     END
+052700960117     C                     END
+052800960118     C           KTAB0     READETABEL00F                 30
+052900960117     C                     ENDDO
+053000960201    1C                     END
+053100960117     C*
+053200951110     C                     ENDSR
+053300951110     C*
+053400951110     C*---------------------------------------------------------------*
+053500951110**  GFV
+053600951110BCDEFGHILMNOPQRSTUVZ
+053700951110**  MSG
+053800951113Non e' stato trovato nessun orario                                            1

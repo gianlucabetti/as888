@@ -1,0 +1,188 @@
+000100130114/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600080526             PGM        PARM(&TIVLR &ESITO &LIT &FIR &FID &MBRFIT &TOTRCD)
+000700990908
+000800990920             DCLF       FILE(TIVLR00F)
+000900991110             DCL        VAR(&TIVLR) TYPE(*CHAR) LEN(304)
+001000990908             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001100021118             DCL        VAR(&ESITOSTOR) TYPE(*CHAR) LEN(1)
+001200990920             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001300990915             DCL        VAR(&USRDTA) TYPE(*CHAR) LEN(10)
+001400001214             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+001500000724             DCL        VAR(&LIT) TYPE(*CHAR) LEN(10)
+001600000724             DCL        VAR(&FIR) TYPE(*CHAR) LEN(10)
+001700021118             DCL        VAR(&FID) TYPE(*CHAR) LEN(10)
+001800080421             DCL        VAR(&LLIST) TYPE(*CHAR) LEN(2750)
+001900080421             DCL        VAR(&CMD) TYPE(*CHAR) LEN(3000)
+002000080421             DCL        VAR(&NN) TYPE(*DEC) LEN(15 5) VALUE(3000)
+002100021118             DCL        VAR(&MBRDATA) TYPE(*CHAR) LEN(13)
+002200051013             DCL        VAR(&MBRFIT) TYPE(*CHAR) LEN(1)
+002300080526             DCL        VAR(&TOTRCD) TYPE(*DEC) LEN(7 0) VALUE(0)
+002400990921
+002500990921             CHGVAR     VAR(&VLRKSC) VALUE(%SST(&TIVLR 1 8))
+002600991110             CHGVAR     VAR(&VLRFIS) VALUE(%SST(&TIVLR 130 10))
+002700991110             CHGVAR     VAR(&VLRHDL) VALUE(%SST(&TIVLR 140 10))
+002800991110             CHGVAR     VAR(&VLRPGT) VALUE(%SST(&TIVLR 150 10))
+002900991110             CHGVAR     VAR(&VLRFOU) VALUE(%SST(&TIVLR 210 10))
+003000000710
+003100010726
+003200010726/* Come primissima cosa salvo la lista librerie iniziale della JOBD -*/
+003300010726             RTVJOBA    USRLIBL(&LLIST)
+003400010726             MONMSG     MSGID(CPF0000)
+003500990920
+003600990920/* Compongo il nome del membro --------------------------------------*/
+003700990920             CHGVAR     VAR(&MBR) VALUE(&VLRHDL)
+003800990920             CHGVAR     VAR(%SST(&MBR 1 1)) VALUE('M')
+003900990908
+004000051013/* Se richiesto aggiungo il membro al file di arrivo -----------------------------*/
+004100051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+004200001013             CHKOBJ     OBJ(&VLRFOU) OBJTYPE(*FILE) MBR(&MBR)
+004300070820             MONMSG     MSGID(CPF5815 CPF9815) EXEC(DO)
+004400000717             ADDPFM     FILE(&VLRFOU) MBR(&MBR) TEXT(&VLRKSC)
+004500001013             MONMSG     MSGID(CPF0000) EXEC(DO)
+004600001013             DLYJOB     DLY(300)
+004700001013             ADDPFM     FILE(&VLRFOU) MBR(&MBR) TEXT(&VLRKSC)
+004800001013             ENDDO
+004900001013             ENDDO
+005000051013             ENDDO
+005100001013
+005200990910/* Alloco il membro nei due file ------------------------------------*/
+005300001214/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+005400051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+005500000717             ALCOBJ     OBJ((&VLRFOU *FILE *EXCL &MBR))
+005600140404/* Se errore gestisco 1 attesa + 1 ritentativo ----------------------*/
+005700140404             MONMSG     MSGID(CPF0000) EXEC(DO)
+005800140404             DLYJOB     DLY(120)
+005900140404             ALCOBJ     OBJ((&VLRFOU *FILE *EXCL &MBR))
+006000140404             ENDDO
+006100051013             ENDDO
+006200140404
+006300021119             ALCOBJ     OBJ((&FID *FILE *EXCL &MBR))
+006400140404/* Se errore gestisco 1 attesa + 1 ritentativo ----------------------*/
+006500140404             MONMSG     MSGID(CPF0000) EXEC(DO)
+006600140404             DLYJOB     DLY(120)
+006700140404             ALCOBJ     OBJ((&FID *FILE *EXCL &MBR))
+006800140404             ENDDO
+006900170607
+007000990910
+007100170607/* Punto al membro --------------------------------------------------*/
+007200021119             OVRDBF     FILE(&FID) MBR(&MBR) OVRSCOPE(*JOB)
+007300051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+007400170817             OVRDBF     FILE(&VLRFOU) MBR(&MBR) FRCRATIO(1) +
+007500170505                          OVRSCOPE(*JOB) SHARE(*YES)
+007600051013             ENDDO
+007700990915
+007800990910/* Chiamo il traduttore ---------------------------------------------*/
+007900990916             CHGVAR     VAR(&ESITO) VALUE(' ')
+008000010618             CALL       PGM(&VLRPGT) PARM(&TIVLR &ESITO &LIT &FIR)
+008100990908             MONMSG     MSGID(CPF0000) EXEC(DO)
+008200010618             IF         COND(&ESITO *EQ ' ') THEN(DO)
+008300010618             CHGVAR     VAR(&ESITO) VALUE('5')
+008400010618             ENDDO
+008500990908             ENDDO
+008600010328
+008700010726/* In uscita di ogni traduttore - */
+008800010726/* per sicurezza re-imposto la corretta LIBL (quella della JOBD TIS700C) -*/
+008900020506             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &LLIST +
+009000020506                          *CAT ')')
+009100020506             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+009200020506             MONMSG     MSGID(CPF0000)
+009300010328
+009400010207
+009500010525/* Verifico esito ed eseguo eventuali operazioni di "sfleggatura" membro input (TIVIN) -----*/
+009600010529             IF         COND(&ESITO *EQ ' ') THEN(DO)
+009700010525             CALL       PGM(TIS710R)
+009800010525             ENDDO
+009900010529             IF         COND(&ESITO *EQ '9') THEN(DO)
+010000010529             CHGVAR     VAR(&ESITO) VALUE(' ')
+010100010529             ENDDO
+010200021105
+010300021105/* Registro nel log l'esito della traduzione ------------------------*/
+010400021105             IF         COND(&ESITO = '0') THEN(DO)
+010500021105             SNDPGMMSG  MSG('INFO: la traduzione del file' *BCAT +
+010600021119                          &FID *TCAT '(' *TCAT &MBR *TCAT ')' +
+010700021105                          *BCAT 'in' *BCAT &VLRFOU *BCAT 'è stata +
+010800021105                          eseguita con successo.')
+010900021105             ENDDO
+011000021105             IF         COND(&ESITO > '0') THEN(DO)
+011100021105             SNDPGMMSG  MSG('ERRORE: durante la traduzione del file' +
+011200021119                          *BCAT &FID *TCAT '(' *TCAT &MBR *TCAT +
+011300021105                          ')' *BCAT 'in' *BCAT &VLRFOU *BCAT 'si +
+011400021105                          sono verificati degli errori.')
+011500021105             ENDDO
+011600021118
+011700021204 /* Se esito ok (o cmq è avvenuta correttamente una traduzione) */
+011800021204             IF         COND(&ESITO='0' *OR &ESITO='1' *OR &ESITO='3' *OR &ESITO='6') THEN(DO)
+011900021118 /* Inizializzo il flag che mi indica: */
+012000021118 /* 0 = da NON storicizzare            */
+012100021118 /* 1 = storicizzazione OK             */
+012200021118 /* 2 = storicizzazione NON OK         */
+012300021118             CHGVAR     VAR(&ESITOSTOR) VALUE('0')
+012400021118 /* Se il file di INPUT ed il file STORICO sono differenti => procedo con la storicizzazione */
+012500021118             IF         COND(&VLRFIS *NE &FID) THEN(DO)
+012600021118 /* Reperisco la data di creazione del membro da storicizzare */
+012700021118             RTVMBRD    FILE(&FID) MBR(&MBR) CRTDATE(&MBRDATA)
+012800021118 /* Chiamo il programma di stroricizzazione */
+012900080526             CALL       PGM(TIS712R) PARM(&TIVLR &ESITOSTOR &MBR &MBRDATA &TOTRCD)
+013000021118             ENDDO
+013100021118             ENDDO
+013200010525
+013300010525/* Cancello le override sui file trattati ---------------------------*/
+013400051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+013500010530             DLTOVR     FILE(&VLRFOU) LVL(*JOB)
+013600010530             MONMSG     MSGID(CPF0000)
+013700051013             ENDDO
+013800021119             DLTOVR     FILE(&FID) LVL(*JOB)
+013900010530             MONMSG     MSGID(CPF0000)
+014000170823
+014100170823/* Elimino override ad alcuni file di work -------------------------*/
+014200170901             DLTOVR     FILE(FIVABVPC)  LVL(*JOB)
+014300170823             MONMSG     MSGID(CPF0000)
+014400170901             DLTOVR     FILE(EDIVABVPC) LVL(*JOB)
+014500170823             MONMSG     MSGID(CPF0000)
+014600170901             DLTOVR     FILE(FIVATVPC)  LVL(*JOB)
+014700170823             MONMSG     MSGID(CPF0000)
+014800170901             DLTOVR     FILE(EDIVATVPC) LVL(*JOB)
+014900170823             MONMSG     MSGID(CPF0000)
+015000010525
+015100010525/* Disalloco i membri -----------------------------------------------*/
+015200051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+015300010525             DLCOBJ     OBJ((&VLRFOU *FILE *EXCL &MBR))
+015400051013             ENDDO
+015500021119             DLCOBJ     OBJ((&FID *FILE *EXCL &MBR))
+015600010529
+015700010529/* Elimino il membro del file (di output) tradotto/inviato ----------*/
+015800051013             IF         COND(&MBRFIT *NE 'N') THEN(DO)
+015900010529             RMVM       FILE(&VLRFOU) MBR(&MBR)
+016000070820             MONMSG     MSGID(CPF5815 CPF7310 CPF9815) EXEC(DO)
+016100070820             CHKOBJ     OBJ(&VLRFOU) OBJTYPE(*FILE) MBR(&MBR)
+016200070820             MONMSG     MSGID(CPF5815 CPF9815)
+016300070820             ENDDO
+016400051013             ENDDO
+016500021118
+016600021118/* Se occore elimino il membro del file (di input) tradotto/inviato -*/
+016700021118             IF         COND(&ESITOSTOR = '1') THEN(DO)
+016800021118             RMVM       FILE(&FID) MBR(&MBR)
+016900070820             MONMSG     MSGID(CPF5815 CPF7310 CPF9815) EXEC(DO)
+017000070820             CHKOBJ     OBJ(&FID) OBJTYPE(*FILE) MBR(&MBR)
+017100070820             MONMSG     MSGID(CPF5815 CPF9815)
+017200070820             ENDDO
+017300021118             ENDDO
+017400021118
+017500021118/* Se errore in storicizzazione -------------------------------------*/
+017600021118             IF         COND(&ESITOSTOR = '2') THEN(DO)
+017700021118             CHGVAR     VAR(&ESITO) VALUE('7')
+017800021118             ENDDO
+017900010615
+018000010615/* Se in errore verifico esistenza traduttore -----------------------*/
+018100010615             IF         COND(&ESITO > '0') THEN(DO)
+018200010615             CHKOBJ     OBJ(&VLRPGT) OBJTYPE(*PGM)
+018300010615             MONMSG     MSGID(CPF0000) EXEC(DO)
+018400010615             CHGVAR     VAR(&ESITO) VALUE('4')
+018500010615             ENDDO
+018600010615             ENDDO
+018700990908
+018800990907             ENDPGM

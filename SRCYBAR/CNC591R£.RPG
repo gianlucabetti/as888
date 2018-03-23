@@ -1,0 +1,402 @@
+000100890727     F*------------------------------------------------------------*
+000200000000     F*                                                            *
+000300000000     F*  PGM  AB010R  MANUTENZIONE ANAGRAFICA BANCHE ESTERE        *
+000400000000     F*                                                            *
+000500890727     F*------------------------------------------------------------*
+000600890727     FCNC591D CF  E                    WORKSTN
+000700000000     F                                        Y     KSFILE S1
+000800000000     F                                        $     KSFILE S2
+000900000000     FCNABI01LUF  E           K        DISK                      A
+000901000321     FTABEL00FIF  E           K        DISK
+001000890727     F*
+001100000000     E                    ER      1   5 60               ERRORI
+001200900301     E                    AGZ        60  1               DESCRIZ. AGE
+001300900301     E                    LOC        40  1               DESCRIZ. LOC
+001400890727     E*
+001500000000     IKPJBA     E DS
+001600000000     I*
+001700890727     C*----------------------------------------------------*
+001800890727     C*  CHIAVI UTILIZZATE A PROGRAMMA                     *
+001900890727     C*----------------------------------------------------*
+002000890727     C*
+002100890727     C           KEY       KLIST
+002200890727     C                     KFLD           ABIV
+002300890727     C                     KFLD           CABV
+002400890727     C*
+002401000321     C*-----CHIAVE FILE     TABEL00F
+002402000321     C           KTAB      KLIST
+002403000321     C                     KFLD           PARKUT  10
+002404000321     C                     KFLD           TIPTAB  2
+002405000321     C                     KFLD           KEYTAB  8
+002406000321     C                     Z-ADD1         PARKUT
+002500890727     C*----------------------------------------------------*
+002600890727     C*
+002700000000     C           *ENTRY    PLIST
+002800000000     C                     PARM           KPJBA
+002900000000     C*
+003000890727     C                     MOVELKNMUS     VKNMUS
+003100890727     C*
+003200890727     C*----------------------------------------------------*
+003300890727     C*
+003400890727     C*   EMISSIONE PRIMO FORMATO
+003500000000     C*
+003600000000     C                     MOVE *BLANKS   ABIV
+003700000000     C                     MOVE *BLANKS   CABV
+003800000000     C                     MOVE *BLANKS   DESV1
+003900000000     C                     MOVE *BLANKS   DESV2
+004000000000     C*
+004100000000     C           PRIMO     TAG
+004200000000     C*
+004300000000     C                     EXFMTF1
+004400000000     C                     SETOF                     909192
+004500900108     C                     SETOF                     1195
+004600000000     C*
+004700000320     C   KC                GOTO FINE
+004800000000     C*
+004900000000     C           ABIV      IFEQ *ZEROS
+005000000000     C           CABV      ANDEQ*ZEROS
+005100000000     C                     EXSR CARIC1
+005200000000     C   90                GOTO PRIMO
+005300000000     C*
+005400900108     C           ROLL      TAG
+005500900108     C*
+005600000000     C                     Z-ADD0         CHOIC1
+005700890727     C                     WRITEV99
+005800000000     C                     EXFMTSC1
+005900000000     C*
+006000900108     C           *IN95     IFEQ '1'
+006100900108     C                     EXSR CARIC1
+006200900108     C                     GOTO ROLL
+006300900108     C                     END
+006400900108     C*
+006500000000     C           CHOIC1    IFEQ *ZEROS
+006600000000     C                     MOVE *BLANKS   ABIV
+006700000000     C                     MOVE *BLANKS   CABV
+006800000000     C                     MOVE *BLANKS   DESV1
+006900000000     C                     MOVE *BLANKS   DESV2
+007000000000     C                     GOTO PRIMO
+007100000000     C                     ELSE
+007200000000     C                     Z-ADDCHOIC1    Y
+007300000000     C           Y         CHAINS1                   44
+007400000000     C  N44                MOVE ABIABI    ABIV
+007500000000     C  N44                MOVELDESCR1    DESV1
+007600000000     C  N44                SETON                     11
+007700000000     C                     MOVE *BLANKS   CABV
+007800000000     C                     MOVE *BLANKS   DESV2
+007900000000     C                     GOTO PRIMO
+008000000000     C                     END
+008100000000     C                     END
+008200000000     C*
+008300000000     C           ABIV      IFNE *ZEROS
+008400000000     C           CABV      ANDEQ*ZEROS
+008500000000     C                     EXSR CARIC2
+008600000000     C   90                GOTO PRIMO
+008700000000     C*
+008800900108     C           ROLL2     TAG
+008900900108     C*
+009000000000     C                     Z-ADD0         CHOIC2
+009100890727     C                     WRITEV99
+009200890727     C                     EXFMTSC2
+009300000000     C*
+009400900108     C           *IN95     IFEQ '1'
+009500900108     C                     EXSR CARIC2
+009600900108     C                     GOTO ROLL2
+009700900108     C                     END
+009800900108     C*
+009900000000     C           CHOIC2    IFEQ *ZEROS
+010000000000     C                     MOVE *BLANKS   CABV
+010100000000     C                     MOVE *BLANKS   DESV2
+010200000000     C                     ELSE
+010300000000     C                     Z-ADDCHOIC2    $
+010400000000     C           $         CHAINS2                   44
+010500000000     C  N44                MOVE ABICAB    CABV
+010600000000     C  N44                MOVELDESCR2    DESV2
+010700000000     C                     END
+010800000000     C                     SETON                     11
+010900000000     C                     GOTO PRIMO
+011000000000     C                     END
+011700000000     C*
+011800890727     C*      EMISSIONE SECONDO FORMATO
+011900000000     C*
+012000000000     C                     SETOF                     222388
+012100000000     C                     EXSR CONTRO
+012200000000     C*
+012300000000     C           SEC       TAG
+012400000000     C*
+012500000000     C                     EXFMTF2
+012600000000     C                     SETOF                     99
+012700000000     C*
+012800000320     C   12                MOVE *BLANKS   DESV1
+012900000320     C   12                MOVE *BLANKS   DESV2
+013000000320     C   12                GOTO PRIMO
+013100000321     C* SE ABI>=9000 LO STATO DEVE ESSERE INDICATO,ALTRIMENTI A BLANK
+013102000320     C           ABIV      IFGE 90000
+013103000320     C           VSTATO    IFEQ *BLANK
+013105000320     C                     SETON                     9991
+013106000320     C                     MOVELER,2      ORRORE
+013107000320     C                     GOTO SEC
+013108000320     C                     END
+013109000320     C                     ELSE
+013111000321     C           VSTATO    IFNE *BLANK
+013112000320     C                     SETON                     9991
+013113000320     C                     MOVELER,4      ORRORE
+013114000320     C                     GOTO SEC
+013115000320     C                     END
+013116000320     C                     END
+013117000321      * CONTROLLO LO STATO
+013118000321     C                     MOVEL'15'      TIPTAB
+013119000321     C                     MOVEL*BLANKS   KEYTAB
+013120000321     C                     MOVELVSTATO    KEYTAB
+013121000321     C           KTAB      CHAINTABEL00F             92
+013122000321     C   92                SETON                     99
+013123000321     C   92                MOVELER,5      ORRORE
+013124000321     C   92                GOTO SEC
+013125000320     C*
+013200900601     C   05
+013300000321     COR 16                DO
+013400000000     C           KEY       CHAINCNABI01L             99
+013500000000     C   99                MOVELER,3      ORRORE
+013600000000     C   99                GOTO SEC
+013700000321     C   16                MOVE '*'       ABIANN
+013800900601     C   05                MOVE ' '       ABIANN
+013900900601     C                     MOVE ' '       ABIFTR
+014000900601     C                     MOVE *ZEROS    ABIDTR
+014100900601     C                     EXCPT§ANN
+014200000000     C                     MOVE *BLANKS   DESV1
+014300000000     C                     MOVE *BLANKS   DESV2
+014400000000     C                     GOTO PRIMO
+014500000000     C                     END
+014600000000     C*
+014700000000     C                     SETOF                     33
+014800000000     C           KEY       CHAINCNABI01L             33
+014900000000     C*
+015000000000     C                     MOVELABVIST    ABIIST
+015100000000     C                     MOVELABVAGE    ABIAGE
+015200000000     C                     MOVELABVIND    ABIND
+015300000000     C                     MOVELABVLOC    ABILOC
+015301000320      * ABICOM = I PRIMI 36 CTR SONO IL COMUNE E GLI ULTIMI 4 CTR SONO LO STATO
+015400000000     C                     MOVELABVCOM    ABICOM
+015401000320     C                     MOVE VSTATO    ABICOM
+015500000000     C                     MOVE ABVCAP    ABICAP
+015600000000     C                     MOVE ABVPRO    ABIPRO
+015700900228     C                     MOVE ' '       ABIFTR
+015800900228     C                     MOVE *ZEROS    ABIDTR
+015900000000     C        N33          UPDATCNABI000
+016000000000     C         33          MOVE ABIV      ABIABI
+016100000000     C         33          MOVE CABV      ABICAB
+016200000000     C         33          WRITECNABI000
+016300000000     C                     MOVE *BLANKS   DESV1
+016400000000     C                     MOVE *BLANKS   DESV2
+016500000000     C                     GOTO PRIMO
+016600000000     C*
+016700890727     C*----------------------------------------------------*
+016800890727     C*
+016900000000     C           FINE      TAG
+017000000000     C                     SETON                     LR
+017100000000     C*
+017200890727     C*----------------------------------------------------*
+017300890727     C*
+017400890727     C/EJECT
+017500890727     C*
+017600890727     C*----------------------------------------------------*
+017700890727     C*-   CARIC1 =   CARICA SUB-FILE                     -*
+017800890727     C*----------------------------------------------------*
+017900890727     C*
+018000000000     C           CARIC1    BEGSR
+018100000000     C*
+018200900108     C  N95                DO
+018300000000     C                     SETON                     55
+018400000000     C                     WRITESC1
+018500000000     C                     Z-ADD0         Y       30
+018600000000     C                     Z-ADD0         ABISAV  50
+018700000000     C                     SETOF                     55
+018800000000     C           *LOVAL    SETLLCNABI01L
+018900900108     C                     END
+019000000000     C*
+019100900108     C                     Z-ADD0         CONTA
+019200900108     C*
+019300900108     C           CONTA     DOUEQ14
+019400000000     C                     READ CNABI01L                 10
+019500000000     C   10                GOTO FUORI
+019600000000     C*
+019700900108     C           Y         CABEQ999       FUORI
+019800900108     C*
+019900000000     C           ABIABI    IFNE ABISAV
+020000000320     C******     ABIABI    OREQ 11111
+020100000000     C                     MOVELABIIST    DESCR1
+020200000000     C                     ADD  1         Y
+020300900108     C                     ADD  1         CONTA   30
+020400000000     C                     WRITES1
+020500000000     C                     END
+020600000000     C                     MOVE ABIABI    ABISAV
+020700000000     C                     END
+020800000000     C           FUORI     TAG
+020900000000     C*
+021000900108     C                     MOVE Y         RCDNBR
+021100900108     C*
+021200000000     C           Y         IFEQ 0
+021300000000     C                     MOVE *BLANKS   CABV
+021400000000     C                     MOVE *BLANKS   CABV
+021500000000     C                     MOVE *BLANKS   DESV1
+021600000000     C                     MOVE *BLANKS   DESV2
+021700000000     C                     SETON                     90
+021800000000     C                     MOVELER,1      ERRORE
+021900000000     C                     END
+022000000000     C*
+022100000000     C                     ENDSR
+022200890727     C*
+022300890727     C*----------------------------------------------------*
+022400890727     C*
+022500890727     C/EJECT
+022600890727     C*
+022700890727     C*----------------------------------------------------*
+022800890727     C*-   CARIC2 =   CARICA SUB-FILE                     -*
+022900890727     C*----------------------------------------------------*
+023000890727     C*
+023100000000     C           CARIC2    BEGSR
+023200000000     C*
+023300900108     C  N95                DO
+023400000000     C                     SETON                     66
+023500000000     C                     WRITESC2
+023600000000     C                     Z-ADD0         $       30
+023700000000     C                     SETOF                     66
+023800000000     C           ABIV      SETLLCNABI01L
+023900900108     C                     END
+024000000000     C*
+024100900108     C                     DO   14
+024200000000     C           ABIV      READECNABI01L                 10
+024300000000     C   10                GOTO OUT
+024400000000     C*
+024500000000     C                     MOVELABIIST    DESV1
+024600000000     C                     MOVELABIIST    DSSC2
+024700900301     C*                    MOVELABIAGE    DESCR2
+024800900301     C                     EXSR CREBNA
+024900000000     C                     ADD  1         $
+025000000000     C                     WRITES2
+025100000000     C           $         CABEQ999       OUT
+025200000000     C                     END
+025300000000     C           OUT       TAG
+025400000000     C*
+025500900108     C                     MOVE $         RCDNB1
+025600900108     C*
+025700000000     C           $         IFEQ 0
+025800000000     C                     MOVE *BLANKS   DESV1
+025900000000     C                     MOVE *BLANKS   DESV2
+026000000000     C                     SETON                     90
+026100000000     C                     MOVELER,1      ERRORE
+026200000000     C                     END
+026300000000     C*
+026400000000     C                     ENDSR
+026500890727     C*
+026600890727     C*----------------------------------------------------*
+026700890727     C*
+026800890727     C/EJECT
+026900890727     C*
+027000890727     C*----------------------------------------------------*
+027100890727     C*-   CONTRO =   CONTROLLO                           -*
+027200890727     C*----------------------------------------------------*
+027300890727     C*
+027400000000     C           CONTRO    BEGSR
+027500000000     C*
+027600000000     C           KEY       CHAINCNABI01L             22
+027700000000     C           *IN22     IFEQ '0'
+027800000000     C                     SETON                     88
+027900900601     C           ABIANN    COMP '*'                      85
+028000000000     C                     MOVELABIIST    ABVIST
+028100000000     C                     MOVELABIAGE    ABVAGE
+028200000000     C                     MOVELABIND     ABVIND
+028300000000     C                     MOVELABILOC    ABVLOC
+028301000320      * ABICOM = I PRIMI 36 CTR SONO IL COMUNE E GLI ULTIMI 4 CTR SONO LO STATO
+028400000000     C                     MOVELABICOM    ABVCOM
+028401000320     C                     MOVE ABICOM    VSTATO
+028500000000     C                     MOVE ABICAP    ABVCAP
+028600000000     C                     MOVE ABIPRO    ABVPRO
+028700000000     C                     ELSE
+028800000000     C                     MOVE *BLANKS   ABVIST
+028900000000     C                     MOVE *BLANKS   ABVAGE
+029000000000     C                     MOVE *BLANKS   ABVIND
+029100000000     C                     MOVE *BLANKS   ABVLOC
+029200000000     C                     MOVE *BLANKS   ABVCOM
+029201000320     C                     MOVE *BLANKS   VSTATO
+029300000000     C                     MOVE *ZEROS    ABVCAP
+029400000000     C                     MOVE *BLANKS   ABVPRO
+029500000000     C           ABIV      CHAINCNABI01L             23
+029600000000     C     N23             MOVELABIIST    ABVIST
+029700000000     C     N23             SETON                     88
+029800000000     C                     END
+029900960513     C*
+030000960513     C*  SE CODICE ABI = 11111  (BANCA ESTERA)
+030100960513     C*  LASCIO MODIFICARE DESCRIZIONE ISTITUTO
+030200000320     C** 88      ABIV      IFEQ 11111
+030300000320     C**                   SETOF                     88
+030400000320     C**                   END
+030500960513     C*
+030600000000     C                     ENDSR
+030700890727     C*
+030800900301     C*-****************************************************
+030900900301     C*- SE ABI E CAB TROVATI, CO METTO LA DESCRIZIONE IN BANCA APP.
+031000900301     C*-****************************************************
+031100900301     C           CREBNA    BEGSR
+031200900301     C* PER L'AGENZIA PRENDO ANCHE LA LOCALITA' O IL COMUNE
+031300900301     C           ABIAGE    IFEQ *BLANKS
+031400900301     C*
+031500900301     C           ABILOC    IFEQ *BLANKS
+031600900301     C           ABICOM    IFEQ *BLANKS
+031700900301     C                     MOVEL*BLANKS   DESCR2
+031800900301     C                     ELSE
+031900900301     C                     MOVELABICOM    DESCR2
+032000900301     C                     END
+032100900301     C                     ELSE
+032200900301     C                     MOVELABILOC    DESCR2
+032300900301     C                     END
+032400900301     C*
+032500900301     C                     ELSE
+032600900301     C                     MOVEAABIAGE    AGZ
+032700900301     C* INDIVIDUO IL PRIMO BLANKS DELLA DESCRIZIONE AGENZIA
+032800900301     C                     Z-ADD40        P       20
+032900900301     C           AGZ,P     DOWEQ' '
+033000900301     C                     SUB  1         P
+033100900301     C                     END
+033200900301     C                     ADD  2         P
+033300900301     C* SE POSSO SCRIVERE ALMENO UN CARATTERE, RIEMPO LA DESCRIZ. AGENZ
+033400900301     C*    CON LA LOCALITA PER LO SPAZIO RESTANTE
+033500900301     C           P         IFLE 60
+033600900301     C* SE LOCALITA O COMUNE IL BOANCO, NON SCRIVO PIUà NIENTE
+033700900301     C           ABILOC    IFEQ *BLANKS
+033800900301     C           ABICOM    IFEQ *BLANKS
+033900900301     C                     GOTO SOTTO
+034000900301     C                     ELSE
+034100900301     C                     MOVEAABICOM    LOC
+034200900301     C                     END
+034300900301     C                     ELSE
+034400900301     C                     MOVEAABILOC    LOC
+034500900301     C                     END
+034600900301     C* RIEMPO AGE COL PARTE DO LOC
+034700900301     C                     Z-ADD1         Q       20
+034800900301     C           P         ADD  39        R       30
+034900900314     C*
+035000900314     C           R         IFGT 60
+035100900314     C                     Z-ADD60        R
+035200900314     C                     END
+035300900301     C           P         DOWLER
+035400900301     C                     MOVE LOC,Q     AGZ,P
+035500900301     C                     ADD  1         P
+035600900301     C                     ADD  1         Q
+035700900301     C                     END
+035800900301     C*
+035900900301     C           SOTTO     TAG
+036000900301     C                     MOVEAAGZ       DESCR2
+036100900301     C                     END
+036200900301     C                     END
+036300900301     C*
+036400900301     C                     ENDSR
+036500900601     OCNABI000E                §ANN
+036600900601     O                         ABIANN
+036700900601     O                         ABIFTR
+036800900601     O                         ABIDTR
+036900000000**
+037000000000Nessuna Agenzia legata al Codice ABI indicato !
+037100000320Codice A.B.I. riservato a BANCHE ESTERE:imettere stato estero
+037200000000Codice ABI/CAB non presente in Anagrafica !
+037300000321Lo stato deve essere BLANK se ABI Italia
+037400000321Stato errato

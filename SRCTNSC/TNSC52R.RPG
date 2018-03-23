@@ -1,0 +1,227 @@
+000100960910     H              J
+000200960910?     *--------------------------------------------------------------*
+000300960910      * TNSC52R                                                      *
+000400960910      *       *-----------------------------------------*            *
+000500960910      *        STAMPA CONTRASSEGNI X STATO ELABORAZIONE              *
+000600960910      *       *-----------------------------------------*            *
+000700960910      *                                                              *
+000800960910?     *--------------------------------------------------------------*
+000900960910?     *--------------------------------------------------------------*
+001000960910      * KC -FINE LAVORO                                              *
+001100960910      * KF -CONFERMA                                                 *
+001200960910?     *--------------------------------------------------------------*
+001300960910     FTNSC52D CF  E                    WORKSTN
+001400960910?     *--------------------------------------------------------------*
+001500960910?     *  SCHIERE                                                     *
+001600960910?     *--------------------------------------------------------------*
+001700010109     E                    SCE         7  1               Scelta
+001800960910     E                    ERR     1   4 70               Errori
+001900960910?     *--------------------------------------------------------------*
+002000960910?     *  DS                                                          *
+002100960910?     *--------------------------------------------------------------*
+002200960910     IKPJBA     E DS
+002300960910      *
+002400960910     ITNSC52    E DSTNSC52DS
+002500960910      *
+002600960910     IUT§DSE    E DSUT§DSE0F
+002700960910     ICNCR80    E DS
+002800960910     I            DS
+002900960910     I                                        1   1 V1CSC1
+003000960910     I                                        2   2 V1CSC2
+003100960910     I                                        3   3 V1CSC3
+003200960910     I                                        4   4 V1CSC4
+003300960910     I                                        5   5 V1CSC5
+003400960910     I                                        6   6 V1CSC6
+003500010109     I                                        7   7 V1CSC7
+003600010109     I                                        1   7 SCE
+003700960910     IWLBDA8      DS
+003800960910     I                                        1   80G02DAT
+003900960910     I                                        9  160G02INV
+004000960910     I                                       17  17 G02ERR
+004100960910     I                                       18  220G02TGI
+004200960910     I           SDS
+004300960910     I                                        1  10 NOMPGM
+004400960910      *---------------------------------------------------------------*
+004500960910      *   C I C L O      P R I N C I P A L E                          *
+004600960910      *---------------------------------------------------------------*
+004700960910     C*  Inizializzazione prima videata
+004800960910     C                     EXSR INZ01
+004900960910     C*
+005000960910     C*  Loop
+005100960910     C           WFINE     DOUEQ'S'
+005200960910     C           WTPVID    CASEQ'1'       GESD01
+005300960910     C                     END
+005400960910     C                     END
+005500960910     C*
+005600960910     C           FINE      TAG
+005700960910     C                     SETON                     LR
+005800960910      *---------------------------------------------------------------*
+005900960910      *  INZ01: Inizializzazione prima videata
+006000960910      *---------------------------------------------------------------*
+006100960910     C           INZ01     BEGSR
+006200960910     C*
+006300960910     C                     SETOF                     404142
+006400960910     C                     SETOF                     4328
+006500960910     C                     MOVEL*BLANKS   $MSG
+006600960910     C                     MOVELNOMPGM    V1CPGM
+006700960910     C                     Z-ADD0         V1CDDS
+006800960910     C                     Z-ADD0         V1CADS
+006900960910     C                     Z-ADD0         V1CLN1
+007000960910     C                     Z-ADD0         V1CLN2
+007100960910     C                     MOVEL*BLANKS   V1CSC1
+007200960910     C                     MOVEL*BLANKS   V1CSC2
+007300960910     C                     MOVEL*BLANKS   V1CSC3
+007400960910     C                     MOVEL*BLANKS   V1CSC4
+007500960910     C                     MOVEL*BLANKS   V1CSC5
+007600960910     C                     MOVEL*BLANKS   V1CSC6
+007700010109     C                     MOVEL*BLANKS   V1CSC7
+007800960910     C                     MOVEL'P'       V1CORD
+007900960910     C                     MOVEL'NO'      V1CPAG
+008000960910     C                     MOVEL'NO'      V1CDET
+008100960910     C*
+008200960910     C                     ENDSR
+008300960910      *---------------------------------------------------------------*
+008400960910      *  GESD01: Gestione prima videata
+008500960910      *---------------------------------------------------------------*
+008600960910     C           GESD01    BEGSR
+008700960910     C*
+008800960910     C                     EXFMTSC52D01
+008900960910     C                     SETOF                     404142
+009000960910     C                     SETOF                     4328
+009100960910     C                     MOVEL*BLANKS   $MSG
+009200960910     C*  Fine Lavoro
+009300960910     C           *INKC     IFEQ '1'
+009400960910     C                     MOVEL'S'       WFINE   1
+009500960910     C                     GOTO FINVD1
+009600960910     C                     END
+009700960910     C*  Pe.Batch
+009800960910     C           *INKV     IFEQ '1'
+009900960910     C                     CALL 'BCH09'
+010000960910     C                     PARM           KPJBA
+010100960910     C                     END
+010200960910     C*  Eseguo controlli
+010300960910     C                     EXSR CTR01
+010400960910     C   28                GOTO FINVD1
+010500960910     C*  Conferma
+010600960910     C           *INKF     IFEQ '1'
+010700960910     C                     EXSR SBMP53
+010800960910     C                     EXSR INZ01
+010900960910     C                     END
+011000960910     C*
+011100960910     C           FINVD1    ENDSR
+011200960910      *---------------------------------------------------------------*
+011300960910      *  CTR01: Controlli prima videata
+011400960910      *---------------------------------------------------------------*
+011500960910     C           CTR01     BEGSR
+011600960910     C*
+011700960910     C*  Verifico che sia stata richiesta almeno una stampa
+011800960910     C           V1CSC1    IFEQ *BLANKS
+011900960910     C           V1CSC2    ANDEQ*BLANKS
+012000960910     C           V1CSC3    ANDEQ*BLANKS
+012100960910     C           V1CSC4    ANDEQ*BLANKS
+012200960910     C           V1CSC5    ANDEQ*BLANKS
+012300960910     C           V1CSC6    ANDEQ*BLANKS
+012400010109     C           V1CSC7    ANDEQ*BLANKS
+012500960910     C                     SETON                     28
+012600960910     C                     MOVELERR,1     $MSG
+012700960910     C                     GOTO FINCT1
+012800960910     C                     END
+012900960910     C*  Dalla data spedizione ....
+013000960910     C           V1CDDS    IFNE 0
+013100960910     C                     Z-ADDV1CDDS    G02DAT
+013200960910     C                     Z-ADD0         G02INV
+013300960910     C                     MOVEL*BLANKS   G02ERR
+013400960910     C                     CALL 'XSRDA8'
+013500960910     C                     PARM           WLBDA8
+013600960910     C           G02ERR    IFEQ '1'
+013700960910     C                     SETON                     2840
+013800960910     C                     MOVELERR,2     $MSG
+013900960910     C                     GOTO FINCT1
+014000960910     C                     END
+014100960910     C                     Z-ADDG02DAT    V1CDDS
+014200960910     C                     Z-ADDG02INV    D52DDS
+014300960910     C                     END
+014400960910     C*  Alla data spedizione ....
+014500960910     C           V1CADS    IFNE 0
+014600960910     C                     Z-ADDV1CADS    G02DAT
+014700960910     C                     Z-ADD0         G02INV
+014800960910     C                     MOVEL*BLANKS   G02ERR
+014900960910     C                     CALL 'XSRDA8'
+015000960910     C                     PARM           WLBDA8
+015100960910     C           G02ERR    IFEQ '1'
+015200960910     C                     SETON                     2841
+015300960910     C                     MOVELERR,2     $MSG
+015400960910     C                     GOTO FINCT1
+015500960910     C                     END
+015600960910     C                     Z-ADDG02DAT    V1CADS
+015700960910     C                     Z-ADDG02INV    D52ADS
+015800960910     C                     END
+015900960910     C*  Dalla --> Alla data spedizione ....
+016000960910     C           D52ADS    IFLT D52DDS
+016100960910     C                     SETON                     284041
+016200960910     C                     MOVELERR,3     $MSG
+016300960910     C                     GOTO FINCT1
+016400960910     C                     END
+016500960910     C*  Dalla --> Alla linea di partenza/arrivo ...
+016600960910     C           V1CLN2    IFLT V1CLN1
+016700960910     C                     SETON                     284243
+016800960910     C                     MOVELERR,4     $MSG
+016900960910     C                     GOTO FINCT1
+017000960910     C                     END
+017100960910     C*
+017200960910     C           FINCT1    ENDSR
+017300960910      *---------------------------------------------------------------*
+017400960910      *  SBMP53: Sottometto stampa
+017500960910      *---------------------------------------------------------------*
+017600960910     C           SBMP53    BEGSR
+017700960910     C*
+017800960910     C*  Imposto DS per esecuzione stampa
+017900010109     C                     DO   7         X       30
+018000960910     C           SCE,X     IFEQ '1'
+018100960910     C                     Z-ADDV1CLN1    D52LN1
+018200960910     C           V1CLN2    IFNE *ZEROS
+018300960910     C                     Z-ADDV1CLN2    D52LN2
+018400960910     C                     ELSE
+018500960910     C                     Z-ADD999       D52LN2
+018600960910     C                     END
+018700960916     C           V1CADS    IFEQ *ZEROS
+018800960910     C                     Z-ADD99999999  D52ADS
+018900960910     C                     END
+019000960910     C                     MOVELV1CORD    D52ORD
+019100960910     C                     MOVELV1CPAG    D52PAG
+019200960910     C                     MOVELV1CDET    D52DET
+019300960910     C                     MOVE X         D52SCE
+019400960910     C                     MOVELTNSC52    KPJBU
+019500960910     C                     MOVE 'SC53'    KCOAZ
+019600960910     C                     CALL 'BCH10'
+019700960910     C                     PARM           KPJBA
+019800960910     C                     END
+019900960910     C                     END
+020000960910     C*  Ripulisco DS
+020100960910     C                     CLEARTNSC52
+020200960910     C*
+020300960910     C                     ENDSR
+020400960910      *---------------------------------------------------------------*
+020500960910      *  *INZSR: Operazioni iniziali
+020600960910      *---------------------------------------------------------------*
+020700960910     C           *INZSR    BEGSR
+020800960910     C*
+020900960910     C           *ENTRY    PLIST
+021000960910     C                     PARM           KPJBA
+021100960910     C* Richiamo XPARUT
+021200960910     C                     Z-ADD1         CODUT
+021300960910     C                     CALL 'X§PARUT'
+021400960910     C                     PARM           UT§DSE
+021500960910     C           CODUT     CABEQ-1        FINE
+021600960910     C                     MOVELRAGUT     RSUT
+021700960910     C*  Pulisco DS
+021800960910     C                     CLEARTNSC52
+021900960910     C                     MOVEL'1'       WTPVID  1
+022000960910     C                     MOVEL'N'       WFINE   1
+022100960910     C*
+022200960910     C                     ENDSR
+022300960910**
+022400960910Selezionare almeno un tipo di stampa                                  01
+022500960910Data spedizione errata                                                02
+022600960910Limiti incompatibili: data spedizione iniziale maggiore finale        03
+022700961119Limiti incompatibili: codice punto operativo iniziale maggiore finale 04

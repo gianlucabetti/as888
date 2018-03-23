@@ -1,0 +1,174 @@
+000100991027/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600030402             PGM        PARM(&FILNAM &JOBNAM &USRNAM &JOBNUM &NUMFIL +
+000700091211                          &TRBMFCDS &FAXIN &PRTTYP &SUBFLDR &FAXOUT)
+000800060721
+000900990908
+001000001006             DCL        VAR(&FILNAM)    TYPE(*CHAR) LEN(10)
+001100001006             DCL        VAR(&JOBNAM)    TYPE(*CHAR) LEN(10)
+001200001006             DCL        VAR(&USRNAM)    TYPE(*CHAR) LEN(10)
+001300001006             DCL        VAR(&JOBNUM)    TYPE(*CHAR) LEN(6)
+001400001006             DCL        VAR(&NUMFIL)    TYPE(*CHAR) LEN(6)
+001500070607             DCL        VAR(&FAXIN)     TYPE(*CHAR) LEN(10)
+001600060705             DCL        VAR(&PRTTYP)    TYPE(*CHAR) LEN(10)
+001700070607             DCL        VAR(&SUBFLDR)   TYPE(*CHAR) LEN(50)
+001800071031             DCL        VAR(&FAXOUT)    TYPE(*CHAR) LEN(10)
+001900030404
+002000091211             DCL        VAR(&TRBMFCDS)  TYPE(*CHAR) LEN(197)
+002100030404             DCL        VAR(&DFCERR)    TYPE(*CHAR) LEN(1)
+002200030404             DCL        VAR(&DFCMSG)    TYPE(*CHAR) LEN(80)
+002300991021
+002400081021             DCL        VAR(&FILETMP)   TYPE(*CHAR) LEN(256)
+002500081021             DCL        VAR(&FILEEND)   TYPE(*CHAR) LEN(256)
+002600070607             DCL        VAR(&ESITO)     TYPE(*CHAR) LEN(1)
+002700060721
+002800060721
+002900060721             /*  ------------------------------------------  */
+003000060721             /*          Gestione spool no AFPDS             */
+003100060721             /*  ------------------------------------------  */
+003200060721
+003300060721
+003400060706/* Se spool NN di tipo AFPDS creo il file di test *FCFC nell IFS AS/400 */
+003500060706             IF         COND(&PRTTYP *NE '*AFPDS') THEN(DO)
+003600030404/* Conversione spool in file piatto in formato *FCFC "normalizzato" -*/
+003700081030             DLTF       FILE(QTEMP/TRBMUWWF)
+003800040907             MONMSG     MSGID(CPF0000)
+003900081030             CRTDUPOBJ  OBJ(TRBMUWWF) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004000040907                          TOLIB(QTEMP)
+004100091211             CALL       PGM(TRBMFCC) PARM(&TRBMFCDS)
+004200070607             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300070607             CHGVAR     VAR(&ESITO) VALUE('2')
+004400070607             ENDDO
+004500091211             CHGVAR     VAR(&DFCERR)  VALUE(%SST(&TRBMFCDS 67  1))
+004600091211             CHGVAR     VAR(&DFCMSG)  VALUE(%SST(&TRBMFCDS 68 80))
+004700070607             IF         COND(&DFCERR = '1') THEN(DO)
+004800070607             CHGVAR     VAR(&ESITO) VALUE('2')
+004900070607             ENDDO
+005000030401
+005100990914
+005200030401/* Se errore registro nel log l'esito della conversione ------------*/
+005300030402             IF         COND(&ESITO = '2') THEN(DO)
+005400040930             SNDPGMMSG  MSG('ERRORE durante la conversione dello +
+005500070607                          spool in OUTQ' *BCAT &FAXIN *BCAT ': ' +
+005600040930                          *BCAT &FILNAM *BCAT &JOBNAM *BCAT &USRNAM +
+005700100127                          *BCAT &JOBNUM *BCAT &NUMFIL)  +
+005800100127                          TOUSR(*REQUESTER)
+005900030401             MONMSG     MSGID(CPF0000)
+006000030404             GOTO       CMDLBL(FINE)
+006100990914             ENDDO
+006200991025
+006300030401
+006400030401/* Creazione in QTEMP source-file x copia file *FCFC nell' IFS ------*/
+006500081030             DLTF       FILE(QTEMP/TRBMUW2F)
+006600030401             MONMSG     MSGID(CPF0000)
+006700081030             CRTSRCPF   FILE(QTEMP/TRBMUW2F) RCDLEN(256) +
+006800081030                          MBR(TRBMUW2F) TEXT('File appoggio x cvt. +
+006900030401                          spool in formato txt *FCFC')
+007000030401             MONMSG     MSGID(CPF0000) EXEC(DO)
+007100030402             CHGVAR     VAR(&ESITO) VALUE('2')
+007200030401             ENDDO
+007300030401
+007400030401
+007500030401/* Copia da flat file data base contenente spool convertito *FCFC su wrk-file x passaggio a IFS */
+007600030404             IF         COND(&ESITO *NE '2') THEN(DO)
+007700081030             CPYF       FROMFILE(QTEMP/TRBMUWWF) +
+007800081030                          TOFILE(QTEMP/TRBMUW2F) MBROPT(*REPLACE) +
+007900030401                          FMTOPT(*CVTSRC)
+008000030401             MONMSG     MSGID(CPF0000) EXEC(DO)
+008100030402             CHGVAR     VAR(&ESITO) VALUE('2')
+008200030401             ENDDO
+008300030404             ENDDO
+008400030401
+008500030401
+008600030401/* Copia wrk-source file nell' IFS AS/400 -----------*/
+008700030404             IF         COND(&ESITO *NE '2') THEN(DO)
+008800070719             CHGVAR     VAR(&FILETMP) VALUE('/OTTICO/FAX/' *TCAT +
+008900070608                          &SUBFLDR *TCAT &FILNAM *TCAT &JOBNAM +
+009000070608                          *TCAT &USRNAM *TCAT &JOBNUM *TCAT &NUMFIL +
+009100070608                          *TCAT '.TMP')
+009200070608             CHGVAR     VAR(&FILEEND) VALUE(&FILNAM *TCAT &JOBNAM +
+009300070608                          *TCAT &USRNAM *TCAT &JOBNUM *TCAT &NUMFIL +
+009400070608                          *TCAT '.SPL')
+009500090520             CPYTOSTMF  FROMMBR('/QSYS.LIB/QTEMP.LIB/TRBMUW2F.FILE/+
+009600081030                        TRBMUW2F.MBR') +
+009700070608                        TOSTMF(&FILETMP) STMFOPT(*REPLACE) STMFCODPAG(*PCASCII)
+009800030401             MONMSG     MSGID(CPF0000) EXEC(DO)
+009900030402             CHGVAR     VAR(&ESITO) VALUE('2')
+010000030401             ENDDO
+010100030404             ENDDO
+010200030401
+010300030401
+010400030401/* Se errore registro nel log l'esito della conversione ------------*/
+010500030402             IF         COND(&ESITO = '2') THEN(DO)
+010600040930             SNDPGMMSG  MSG('ERRORE durante la copia nell''IFS dello +
+010700070607                          spool in OUTQ' *BCAT &FAXIN *BCAT ': ' +
+010800040930                          *BCAT &FILNAM *BCAT &JOBNAM *BCAT &USRNAM +
+010900100127                          *BCAT &JOBNUM *BCAT &NUMFIL) +
+011000100127                          TOUSR(*REQUESTER)
+011100030401             MONMSG     MSGID(CPF0000)
+011200030404             GOTO       CMDLBL(FINE)
+011300030401             ENDDO
+011400070608
+011500070608
+011600070608/* Rinomina file IFS al termine della creazione -----*/
+011700070608             IF         COND(&ESITO *NE '2') THEN(DO)
+011800081024             RNM        OBJ(&FILETMP) NEWOBJ(&FILEEND)
+011900081024             MONMSG     MSGID(CPF0000) EXEC(DO)
+012000081024             DLYJOB     DLY(2)
+012100081024             RNM        OBJ(&FILETMP) NEWOBJ(&FILEEND)
+012200081024             MONMSG     MSGID(CPF0000) EXEC(DO)
+012300081024             DLYJOB     DLY(2)
+012400081024             RNM        OBJ(&FILETMP) NEWOBJ(&FILEEND)
+012500081024             MONMSG     MSGID(CPF0000) EXEC(DO)
+012600081024             DLYJOB     DLY(2)
+012700081024             RNM        OBJ(&FILETMP) NEWOBJ(&FILEEND)
+012800081024   /*        MONMSG     MSGID(CPF0000) EXEC(DO)               */
+012900081024   /*        CHGVAR     VAR(&ESITO) VALUE('2')                */
+013000081024   /*        ENDDO                                            */
+013100081021             ENDDO
+013200081021             ENDDO
+013300081021             ENDDO
+013400070608             ENDDO
+013500070608
+013600070608
+013700070608/* Se errore registro nel log l'esito della conversione ------------*/
+013800070608             IF         COND(&ESITO = '2') THEN(DO)
+013900070608             SNDPGMMSG  MSG('ERRORE durante la rinomina nell''IFS dello +
+014000070608                          spool in OUTQ' *BCAT &FAXIN *BCAT ': ' +
+014100070608                          *BCAT &FILNAM *BCAT &JOBNAM *BCAT &USRNAM +
+014200100127                          *BCAT &JOBNUM *BCAT &NUMFIL) +
+014300100127                          TOUSR(*REQUESTER)
+014400071031             MONMSG     MSGID(CPF0000) EXEC(DO)
+014500070608             GOTO       CMDLBL(FINE)
+014600070608             ENDDO
+014700071031             ENDDO
+014800071031
+014900071031
+015000071031/* Sposto lo spool dalla coda d "IN" alla coda d "OUT" -----*/
+015100071031             IF         COND(&ESITO *NE '2') THEN(DO)
+015200071031             CHGSPLFA   FILE(&FILNAM) JOB(&JOBNUM/&USRNAM/&JOBNAM) +
+015300071031                          SPLNBR(&NUMFIL) OUTQ(*LIBL/&FAXOUT)
+015400071031             MONMSG     MSGID(CPF0000) EXEC(DO)
+015500071031             CHGVAR     VAR(&ESITO) VALUE('2')
+015600071031             ENDDO
+015700071031             ENDDO
+015800071031
+015900071031
+016000071031/* Se errore registro nel log l'esito della conversione ------------*/
+016100071031             IF         COND(&ESITO = '2') THEN(DO)
+016200071031             SNDPGMMSG  MSG('ERRORE durante lo spostamento di outq +
+016300100127                          da: ' *CAT &FAXIN *CAT ' a ' *CAT &FAXOUT) +
+016400100127                          TOUSR(*REQUESTER)
+016500071031             MONMSG     MSGID(CPF0000) EXEC(DO)
+016600071031             GOTO       CMDLBL(FINE)
+016700071031             ENDDO
+016800071031             ENDDO
+016900071031
+017000071031             ENDDO
+017100070607
+017200030402 FINE:
+017300030402
+017400990907             ENDPGM

@@ -1,0 +1,30 @@
+000100060111/*********************************************************************/
+000200060111             pgm
+000300080909
+000400080909/* _____ Chiudo il sottosistema  _______*/
+000500080909             ENDSBS     SBS(WIFIBARRIT) OPTION(*IMMED)
+000600060209
+000700080808/* _____ Sposto file da unitragru a EPDMB   _______*/
+000800080808             MOVOBJ     OBJ(UNITRAGRU/FIPRO00F) OBJTYPE(*FILE) +
+000900080808                          TOLIB(EDPMB)
+001000080808             MOVOBJ     OBJ(UNITRAGRU/FIPRO01L) OBJTYPE(*FILE) +
+001100080808                          TOLIB(EDPMB)
+001200080808
+001300080808/* _____ Creo il nuovo file _______*/
+001400080808             CRTDUPOBJ  OBJ(FIPRO*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+001500080808                          TOLIB(UNITRAGRU)
+001600080725
+001700080808/* _____ Copio i dati del vecchio file sul nuovo file _____*/
+001800080808             CPYF       FROMFILE(EDPMB/FIPRO00F) +
+001900080808                          TOFILE(UNITRAGRU/FIPRO00F) MBROPT(*ADD) +
+002000080808                          FMTOPT(*MAP *DROP)
+002100080808
+002200080725/* _____ Sposta i programmi dalla EDPWKSE alla OBJ __________________*/
+002300080725             call       pgm(GAITRAOBJ/TNSYMVC) +
+002400080725                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+002500080725             monmsg     msgid(CPF0000)
+002600080909
+002700080909/* _____ Riattivo il sottosistema  _______*/
+002800080909             STRSBS     SBSD(WIFIBARRIT)
+002900060125
+003000060111             endpgm

@@ -1,0 +1,423 @@
+000100951019     H*---------------------------------------------------------------*
+000200951019     H* PGM. XDTORA : ROUTINE DA UTILIZZARE SE SI VUOLE:              *
+000300951019     H*                - AGGIUNGERE O SOTTRARRE "X" MINUTI AD UNA     *
+000400951019     H*                  DATA/ORA                                     *
+000500951019     H*                - EFFETTUARE LA DIFFERENZA FRA DUE DATA/ORA    *
+000600951019     H*                  ESPRIMENDO IL RISULTATO IN MINUTI            *
+000700951019     H*---------------------------------------------------------------*
+000800951030     H*****
+000900951027     H* SE SI VUOLE AGGIUNGERE O SOTTRARRE "X" MINUTI AD UNA DATA/ORA
+001000951030     H*****
+001100951027     H* PARAMETRI IN INPUT  :
+001200951030     H*  WXDT1/WXHM1 -  DATA/ORA DA CUI PARTIRE PER AGGIUNGERE O
+001300951030     H*                 SOTTRARRE I MINUTI
+001400951030     H*        WXFLG -  "+" ---> PER AGGIUNGERE "X" MINUTI ALLA
+001500951030     H*                          DATA/ORA PASSATA
+001600951030     H*                 "-" ---> PER SOTTRARRE  "X" MINUTI ALLA
+001700951030     H*                          DATA/ORA PASSATA
+001800951030     H*        WXMIN -  MINUTI DA AGGIUNGERE O SOTTRARRE
+001900951027     H* PARAMETRI IN OUTPUT :
+002000951030     H*  WXDT2/WXHM2 -  CONTIENE LA DATA/ORA CALCOLATA
+002100951027     H*
+002200951030     H*****
+002300951027     H* SE SI VUOLE EFFETTUARE LA DIFFERENZA FRA DUE DATA/ORA
+002400951027     H*   ESPRIMENDO IL RISULTATO IN MINUTI
+002500951030     H*****
+002600951027     H* PARAMETRI IN INPUT  :
+002700951030     H*  WXDT1/WXHM1 -  DATA/ORA DA CUI SOTTRARRE LA DATA/ORA CONTENUTA
+002800951030     H*                 NEI CAMPI WXDT2/WXHM2
+002900951030     H*  WXDT2/WXHM2 -  DATA/ORA DA SOTTRARRE ALLA DATA/ORA CONTENUTA
+003000951030     H*                 NEI CAMPI WXDT1/WXHM1
+003100951030     H*        WXFLG -  "D" ---> PER EFFETTUARE LA DIFFERENZA FRA
+003200951030     H*                          LE DATA/ORA PASSATE
+003300951027     H* PARAMETRI IN OUTPUT :
+003400951030     H*        WXFLG -  "+" ---> LA DATA/ORA CONTENUTA NEI CAMPI
+003500951030     H*                          WXDT1/WXHM1 E' MAGGIORE DELLA DATA/ORA
+003600951030     H*                          CONTENUTA NEI CAMPI WXDT2/WXHM2
+003700951030     H*                 "-" ---> LA DATA/ORA CONTENUTA NEI CAMPI
+003800951030     H*                          WXDT1/WXHM1 E' MINORE DELLA DATA/ORA
+003900951030     H*                          CONTENUTA NEI CAMPI WXDT2/WXHM2
+004000951030     H*                          QUINDI IL RISULTATO SARA' CONSIDERATO
+004100951030     H*                          COME ANTICIPO
+004200951030     H*        WXMIN -  CONTIENE LA DIFFERENZA CALCOLATA ESPRESSA IN
+004300951030     H*                 MINUTI
+004400951030     H*
+004500951030     H*****
+004600951030     H*  N O T E
+004700951030     H*****
+004800951030     H*  N.B. : IL PGM VIENE PILOTATO DAL CONTENUTO DEL CAMPO WXFLG
+004900951030     H*
+005000951030     H*  WXDT1 E WXDT2 DEVONO CONTENERE LA DATA ESPRESSA IN AAAA/MM/GG
+005100951030     H*                LA DATA PUO' ESSERE PASSATA ANCHE A 6 CARATTERI
+005200951030     H*  WXHM1 E WXHM2 DEVONO CONTENERE L'ORA ESPRESSA IN HH:MM
+005300951030     H*
+005400951030     E*---------------------------------------------------------------*
+005500000000     E                    MES    12  12  2 0             GIORNI DEL MESE
+005600951030     E*---------------------------------------------------------------*
+005700951019     I* WXDTOR - PARAMETRI DI I/O DEL PROGRAMMA
+005800951019     IWXDTOR      DS
+005900951019     I                                        1   80WXDT1
+006000951019     I                                        9  120WXHM1
+006100951019     I                                       13  200WXDT2
+006200951019     I                                       21  240WXHM2
+006300951019     I                                       25  25 WXFLG
+006400951019     I                                       26  300WXMIN
+006500951020     I*
+006600951020     I* WLBDAT - PARAMETRI PER IL PGM -XSRDA8-
+006700951020     IWLBDAT      DS
+006800951020     I                                        1   80G08DAT
+006900951020     I                                        9  160G08INV
+007000951020     I                                       17  17 G08ERR
+007100951020     I                                       18  220G08TGI
+007200951020     I*
+007300951020     I* $AMG1  - DATA NEL FORMATO AAAA/MM/GG
+007400951020     I            DS
+007500951020     I                                        1   80$AMG1
+007600951020     I                                        1   40$ANNO1
+007700951020     I                                        5   60$MESE1
+007800951020     I                                        7   80$GIOR1
+007900951020     I* $AMG2  - DATA NEL FORMATO AAAA/MM/GG
+008000000000     I            DS
+008100951020     I                                        1   80$AMG2
+008200000000     I                                        1   40$ANNO2
+008300000000     I                                        5   60$MESE2
+008400000000     I                                        7   80$GIOR2
+008500951020     I* $HHMM1 - ORA  NEL FORMATO HH:MM
+008600951019     I            DS
+008700951020     I                                        1   40$HHMM1
+008800951020     I                                        1   20$ORA1
+008900951020     I                                        3   40$MIN1
+009000951020     I* $HHMM2 - ORA  NEL FORMATO HH:MM
+009100951020     I            DS
+009200951020     I                                        1   40$HHMM2
+009300951020     I                                        1   20$ORA2
+009400951020     I                                        3   40$MIN2
+009500951019     I* $COMOD - CAMPI DI COMODO PER CONTROLLI SULLA DATA
+009600000000     I            DS
+009700000000     I                                        1   80$COMOD
+009800000000     I                                        1   20$COMO1
+009900000000     I                                        3   40$COMO2
+010000000000     I                                        5   60$COMO3
+010100000000     I                                        7   80$COMO4
+010200951019     I*
+010300951020     C*---------------------------------------------------------------*
+010400000000     C           *ENTRY    PLIST
+010500951019     C                     PARM           WXDTOR
+010600951020     C*
+010700951027     C* PULIZIA CAMPI DI COMODO
+010800951020     C                     CLEARRIS1
+010900951020     C                     CLEARRIS2
+011000951020     C                     CLEARRIS3
+011100951020     C                     CLEARQUOZ
+011200951020     C                     CLEARREST
+011300951020     C                     CLEARORA1
+011400951020     C                     CLEARORA2
+011500951020     C*
+011600951027     C* VERIFICO SE LE DATE SONO STATE PASSATE CON UNA LUNGHEZZA DI 6
+011700951027     C*   CARATTERI: SE E' COSI' LE TRASFORMO IN 8 CARATTERI
+011800951020    1C           WXDT1     IFGT 0
+011900951020     C                     MOVELWXDT1     $COMOD
+012000951020     C                     EXSR CTRDAT
+012100951027     C* $AMG2 > 0  --->  LA DATA ERA STATA PASSATA A 6 CARATTERI
+012200951020    2C           $AMG2     IFGT 0
+012300951020     C                     Z-ADD$AMG2     WXDT1
+012400951020    2C                     ENDIF
+012500951020    1C                     ENDIF
+012600951020     C*
+012700951020    1C           WXDT2     IFGT 0
+012800951020     C                     MOVELWXDT2     $COMOD
+012900951020     C                     EXSR CTRDAT
+013000951027     C* $AMG2 > 0  --->  LA DATA ERA STATA PASSATA A 6 CARATTERI
+013100951020    2C           $AMG2     IFGT 0
+013200951020     C                     Z-ADD$AMG2     WXDT2
+013300951020    2C                     ENDIF
+013400951020    1C                     ENDIF
+013500951027     C*
+013600951027     C*****
+013700951027     C** IL PGM VIENE PILOTATO DAL CONTENUTO DEL CAMPO WXFLG
+013800951027     C*****
+013900951027     C*
+014000951027     C* WXFLG = "+" ---> AGGIUNGO  "X" MINUTI AD UNA DATA/ORA
+014100951027     C* WXFLG = "-" ---> SOTTRAGGO "X" MINUTI AD UNA DATA/ORA
+014200951027    1C           WXFLG     IFEQ '+'
+014300951027     C           WXFLG     OREQ '-'
+014400951019     C*
+014500951027     C* SE RICHIESTA ADDIZIONE O SOTTRAZIONE, ESEGUO IL CALCOLO SOLO SE
+014600951027     C*   IL CAMPO WXDT1 E' PIENO
+014700951019    2C           WXDT1     IFGT 0
+014800951020     C                     MOVELWXDT1     $AMG1
+014900951020     C                     MOVELWXHM1     $HHMM1
+015000951019     C*
+015100951027     C* WXFLG = "+" ---> AGGIUNGO  I MINUTI PASSATI NEI PARAMETRI
+015200951027    3C           WXFLG     IFEQ '+'
+015300951020     C                     EXSR WAGG
+015400951027   X3C                     ELSE
+015500951027     C* WXFLG = "-" ---> SOTTRAGGO I MINUTI PASSATI NEI PARAMETRI
+015600951020     C                     EXSR WSOT
+015700951027    3C                     ENDIF
+015800951019    2C                     ENDIF
+015900951019     C*
+016000951027     C***
+016100951020   X1C                     ELSE
+016200951027     C***
+016300951027     C* WXFLG = "D" ---> EFFETTUO LA DIFFERENZA FRA DUE DATA/ORA
+016400951027     C*                  ESPRIMENDO IL RISULTATO IN MINUTI
+016500951020     C*
+016600951020     C* DATA1 = DATA2
+016700951020    2C           WXDT1     IFEQ WXDT2
+016800951020     C*
+016900951020    3C           WXHM1     IFEQ WXHM2
+017000951020     C                     CLEARWXMIN
+017100951020   X3C                     ELSE
+017200951020     C*
+017300951020     C* CALCOLO DIFFERENZA FRA I DUE ORARI
+017400951020     C                     EXSR DIFORA
+017500951020     C                     Z-ADDRIS2      WXMIN
+017600951213     C*
+017700951213    4C           WXHM1     IFGT WXHM2
+017800951213     C                     MOVEL'+'       WXFLG
+017900951213   X4C                     ELSE
+018000951213     C                     MOVEL'-'       WXFLG
+018100951213    4C                     ENDIF
+018200951020    3C                     ENDIF
+018300951020     C*
+018400951020   X2C                     ELSE
+018500951020     C* DATA1 > DATA2    OPPURE     DATA1 < DATA2
+018600951020    3C           WXDT1     IFGT WXDT2
+018700951020     C                     MOVELWXDT1     $AMG1
+018800951020     C                     MOVELWXDT2     $AMG2
+018900951213     C                     MOVEL'+'       WXFLG
+019000951020   X3C                     ELSE
+019100951020     C                     MOVELWXDT2     $AMG1
+019200951020     C                     MOVELWXDT1     $AMG2
+019300951213     C                     MOVEL'-'       WXFLG
+019400951020    3C                     ENDIF
+019500951020     C*
+019600951020     C* CALCOLO NUMERO ASSOLUTO GIORNI DELLA DATA1
+019700951020     C                     MOVE $AMG1     G08INV
+019800951020     C                     MOVEL'3'       G08ERR
+019900951020     C                     CALL 'XSRDA8'
+020000951020     C                     PARM           WLBDAT
+020100951020     C                     MOVELG08TGI    RIS1
+020200951020     C* CALCOLO NUMERO ASSOLUTO GIORNI DELLA DATA2
+020300951020     C                     MOVE $AMG2     G08INV
+020400951020     C                     MOVEL'3'       G08ERR
+020500951020     C                     CALL 'XSRDA8'
+020600951020     C                     PARM           WLBDAT
+020700951020     C                     MOVELG08TGI    RIS2    50
+020800951020     C*
+020900951020     C           RIS1      SUB  RIS2      RIS3    50
+021000951020     C* TRASFOMAZIONE DEI GIORNI IN ORE
+021100951020     C           RIS3      MULT 24        RIS3
+021200951020     C* TRASFORMAZIONE DELLE ORE IN MINUTI
+021300951020     C           RIS3      MULT 60        RIS3
+021400951020     C*
+021500951020     C* CALCOLO DIFFERENZA FRA I DUE ORARI
+021600951020     C                     EXSR DIFORA
+021700951020     C*
+021800951020    3C           WXHM1     IFNE WXHM2
+021900951020     C                     MOVELWXHM1     ORA1    20
+022000951020     C                     MOVELWXHM2     ORA2    20
+022100951020     C*
+022200951020    4C           WXDT1     IFGT WXDT2
+022300951020    5C           ORA1      IFGT ORA2
+022400951020     C           RIS3      ADD  RIS2      WXMIN
+022500951020   X5C                     ELSE
+022600951020     C           RIS3      SUB  RIS2      WXMIN
+022700951020    5C                     ENDIF
+022800951020   X4C                     ELSE
+022900951020    5C           ORA1      IFGT ORA2
+023000951020     C           RIS3      SUB  RIS2      WXMIN
+023100951020   X5C                     ELSE
+023200951020     C           RIS3      ADD  RIS2      WXMIN
+023300951020    5C                     ENDIF
+023400951020    4C                     ENDIF
+023500960301     C*
+023600960301   X3C                     ELSE
+023700960301     C                     Z-ADDRIS3      WXMIN
+023800951020    3C                     ENDIF
+023900951020     C*
+024000951020    2C                     ENDIF
+024100951020     C*
+024200951020    1C                     ENDIF
+024300000000     C*
+024400000000     C                     SETON                     LR
+024500951020     C*
+024600951020     C*--- CONTROLLO SE DATA A 6 O 8 CARATTERI -----------------------*
+024700951020     C           CTRDAT    BEGSR
+024800951020     C                     Z-ADD*ZERO     $AMG2
+024900000000     C*
+025000951027     C* VERIFICO SE LA DATA E' DI 6 CARATTERI O 8 CARATTERI
+025100951020    1C           $COMO1    IFEQ *ZERO                      PRIMI DUE CARATTERI
+025200000000     C           $COMO2    ANDNE*ZERO                      3° E 4° CARATTERE
+025300000000     C           $COMO3    ANDNE*ZERO                      5° E 6° CARATTERE
+025400000000     C           $COMO4    ANDNE*ZERO                      7° E 8° CARATTERE
+025500000000     C                     Z-ADD$COMO4    $GIOR2
+025600000000     C                     Z-ADD$COMO3    $MESE2
+025700000000     C                     Z-ADD$COMO2    $ANNO2
+025800951020    2C           $COMO2    IFGT 60                         TEST INDICATIVO
+025900000000     C           $COMO2    ADD  1900      $ANNO2
+026000951020   X2C                     ELSE
+026100000000     C           $COMO2    ADD  2000      $ANNO2
+026200951020    2C                     ENDIF
+026300951020    1C                     ENDIF
+026400000000     C*
+026500000000     C                     ENDSR
+026600951020     C*
+026700951020     C*--- AGGIUNGO  I MINUTI PASSATI --------------------------------*
+026800951020     C           WAGG      BEGSR
+026900951020     C           $MIN1     ADD  WXMIN     RIS1    50
+027000951020     C*
+027100951020    1C           RIS1      IFLT 60
+027200951030     C* CONTROLLO SE CAMBIA IL GIORNO/MESE/ANNO
+027300951030     C                     EXSR CTRCAM
+027400951030     C*
+027500951020   X1C                     ELSE
+027600951030     C*
+027700951020    2C           RIS1      DOWGE60
+027800951020     C           RIS1      SUB  60        RIS1
+027900951020     C                     ADD  1         $ORA1
+028000951030     C* CONTROLLO SE CAMBIA IL GIORNO/MESE/ANNO
+028100951030     C                     EXSR CTRCAM
+028200951027    2C                     ENDDO
+028300951030     C*
+028400951030    1C                     ENDIF
+028500951030     C*
+028600951020     C                     MOVEL$AMG1     WXDT2
+028700951020     C                     MOVE RIS1      $MIN1
+028800951020     C                     MOVEL$HHMM1    WXHM2
+028900951020     C*
+029000951020     C                     ENDSR
+029100951020     C*
+029200951030     C*--- CONTROLLO SE CAMBIA IL GIORNO/MESE/ANNO -------------------*
+029300951030     C           CTRCAM    BEGSR
+029400951030     C*
+029500951030     C* SE E' PASSATA LA MEZZANOTTE CAMBIO IL GIORNO
+029600951030    1C           $ORA1     IFEQ 24
+029700951030     C           RIS1      ANDGT0
+029800951030     C*
+029900951030     C* IMPOSTO LA PRIMA ORA DEL GIORNO SUCESSIVO
+030000951030     C                     Z-ADD0         $ORA1
+030100951030     C                     ADD  1         $GIOR1
+030200951030     C*
+030300951030     C* CONTROLLO SE ANNO BISESTILE
+030400951030    2C           $MESE1    IFEQ 2                          *FEBBRAIO
+030500951030     C           $ANNO1    DIV  4         QUOZ    20
+030600951030     C                     MVR            REST    20
+030700951030    3C           REST      IFEQ 0
+030800951030     C                     Z-ADD29        MES,2
+030900951030   X3C                     ELSE
+031000951030     C                     Z-ADD28        MES,2
+031100951030    3C                     ENDIF
+031200951030    2C                     ENDIF
+031300951030     C*
+031400951030     C* SE NECESSARIO IMPOSTO IL PRIMO GIORNO DEL MESE SUCESSIVO
+031500951030     C                     MOVEL$MESE1    MM1     20
+031600951030    2C           $GIOR1    IFEQ MES,MM1
+031700951030     C                     Z-ADD1         $GIOR1
+031800951030     C                     ADD  1         $MESE1
+031900951030     C*
+032000951030     C* SE NECESSARIO IMPOSTO IL PRIMO MESE DELL'ANNO SUCESSIVO
+032100951030    3C           $MESE1    IFGT 12
+032200951030     C                     Z-ADD1         $MESE1
+032300951030     C                     ADD  1         $ANNO1
+032400951030    3C                     ENDIF
+032500951030    2C                     ENDIF
+032600951030    1C                     ENDIF
+032700951030     C*
+032800951030     C                     ENDSR
+032900951030     C*
+033000951020     C*--- SOTTRAGGO I MINUTI PASSATI --------------------------------*
+033100951020     C           WSOT      BEGSR
+033200951030     C*
+033300951020    3C           WXMIN     IFLE $MIN1
+033400951020     C           $MIN1     SUB  WXMIN     RIS1
+033500951020     C*
+033600951020   X3C                     ELSE
+033700951020     C           WXMIN     SUB  $MIN1     RIS1
+033800960227     C                     EXSR CAMGIO
+033900951020     C*
+034000951020    4C           RIS1      DOWGT60
+034100951020     C           RIS1      SUB  60        RIS1
+034200951020     C                     SUB  1         $ORA1
+034300960227     C* CONTROLLO SE CAMBIA IL GIORNO
+034400960227     C                     EXSR CAMGIO
+034500951020    4C                     ENDDO
+034600951020     C*
+034700951020     C           60        SUB  RIS1      RIS1
+034800951020     C                     SUB  1         $ORA1
+034900951020    3C                     ENDIF
+035000951020     C*
+035100951020     C                     MOVEL$AMG1     WXDT2
+035200951020     C                     MOVE RIS1      $MIN1
+035300951020     C                     MOVEL$HHMM1    WXHM2
+035400951020     C*
+035500951020     C                     ENDSR
+035600951020     C*
+035700960227     C*--- CONTROLLO IL CAMBIO DEL GIORNO ----------------------------*
+035800960227     C           CAMGIO    BEGSR
+035900960227     C*
+036000960227     C* IMPOSTO ULTIMA ORA (24:00) DEL GIORNO PRECEDENTE
+036100960227    5C           $ORA1     IFEQ 0
+036200960227     C                     Z-ADD24        $ORA1
+036300960227     C                     SUB  1         $GIOR1
+036400960227     C*
+036500960227     C* IMPOSTO ULTIMO GIORNO DEL MESE PRECEDENTE
+036600960227    6C           $GIOR1    IFEQ 0
+036700960227     C                     SUB  1         $MESE1
+036800960227     C*
+036900960227     C* CONTROLLO ANNO BISESTILE
+037000960227    7C           $MESE1    IFEQ 2                          *FEBBRAIO
+037100960227     C           $ANNO1    DIV  4         QUOZ
+037200960227     C                     MVR            REST
+037300960227    8C           REST      IFEQ 0
+037400960227     C                     Z-ADD29        MES,2
+037500960227   X8C                     ELSE
+037600960227     C                     Z-ADD28        MES,2
+037700960227    8C                     ENDIF
+037800960227    7C                     ENDIF
+037900960227     C*
+038000960227    7C           $MESE1    IFEQ 0
+038100960227     C                     Z-ADD12        $MESE1
+038200960227     C                     SUB  1         $ANNO1
+038300960227    7C                     ENDIF
+038400970102     C*
+038500970102     C                     MOVEL$MESE1    MM1
+038600970102     C                     Z-ADDMES,MM1   $GIOR1
+038700970102     C*
+038800960227    6C                     ENDIF
+038900960227    5C                     ENDIF
+039000960227     C                     ENDSR
+039100960227     C*
+039200951020     C*--- CALCOLO DIFFERENZA ORARI ----------------------------------*
+039300951020     C           DIFORA    BEGSR
+039400951020     C*
+039500951020     C* PER COMODITA' IMPOSTO SEMPRE L'ORA PIU' GRANDE NEL CAMPO $HHMM1
+039600951020     C*   E L'ORA PIU' PICCOLA NEL CAMPO $HHMM2
+039700951020    1C           WXHM1     IFGT WXHM2
+039800951020     C                     MOVELWXHM1     $HHMM1
+039900951020     C                     MOVELWXHM2     $HHMM2
+040000951020   X1C                     ELSE
+040100951020     C                     MOVELWXHM2     $HHMM1
+040200951020     C                     MOVELWXHM1     $HHMM2
+040300951020    1C                     ENDIF
+040400951020     C*
+040500951020     C* CALCOLO LA DIFFERENZA FRA I DUE ORARI
+040600951020     C           60        SUB  $MIN2     RIS1
+040700951020     C           RIS1      ADD  $MIN1     RIS1
+040800951020    1C           RIS1      IFGE 60
+040900951020     C           $ORA1     SUB  $ORA2     RIS2             *HH
+041000951020     C           RIS1      SUB  60        RIS1             *MM
+041100951020   X1C                     ELSE
+041200951020     C           $ORA1     SUB  $ORA2     RIS2             *HH
+041300951020     C                     SUB  1         RIS2             *HH
+041400951020    1C                     ENDIF
+041500951020     C*
+041600951020     C* TRASFORMO IN MINUTI
+041700951020     C           RIS2      MULT 60        RIS2
+041800951020     C           RIS2      ADD  RIS1      RIS2
+041900951020     C                     ENDSR
+042000951020     C*
+042100951020     C*---------------------------------------------------------------*
+042200000000**
+042300000000312831303130313130313031

@@ -1,0 +1,68 @@
+000100000000  /*---------------------------------------------------------------*/
+000200960404  /*     Richiamo pgm x gestione E.D.I.                            */
+000300000000  /*---------------------------------------------------------------*/
+000400920401             PGM
+000500930531             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+000600920603             DCL        VAR(&USER)    TYPE(*CHAR)  LEN(10)
+000700920603             DCL        VAR(&UTE)    TYPE(*CHAR)  LEN(3)
+000800921119             DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(10)
+000900950905             DCL VAR(&USRL) TYPE(*CHAR) LEN(275)
+001000950905             DCL VAR(&CMD)  TYPE(*CHAR) LEN(300)
+001100950905             DCL VAR(&NN)   TYPE(*DEC) LEN(15 5) VALUE(300)
+001200960404
+001300960404             DCLF       FILE(TRTC72D)
+001400930531
+001500930531             RTVNETA    SYSNAME(&SYSNAME)
+001600950905             QSYS/RTVJOBA USER(&USER) OUTQ(&OUTQ) USRLIBL(&USRL)
+001700930531
+001800921123
+001900921123             ADDLIBLE   LIB(GAITRAOBJ)
+002000921123             MONMSG     MSGID(CPF0000)
+002100960404
+002200010227/* PER CONTROLLARE LA VERSIONE DI EDI400 INSTALLATA */
+002300010227
+002400010227             ADDLIBLE   LIB(EDI4022)
+002500010227             MONMSG     MSGID(CPF0000)
+002600921123
+002700921126             IF         COND(%SST(&OUTQ 1 1) *EQ '*') THEN(CHGVAR +
+002800921126                          VAR(&OUTQ) VALUE('PRT01     '))
+002900920603             CHGVAR     VAR(%SUBSTRING(&UTE 1 3)) +
+003000920603                          VALUE(%SUBSTRING(&USER 1 3))
+003100920603
+003200000000 /*------- EMISSIONE FORMATO -----------------------*/
+003300000000 EMISS:
+003400960404             CHGVAR     VAR(&DES1) VALUE('E.D.I. STATION/400      +
+003500960404                                                           ')
+003600021017             CHGVAR     VAR(&DES2) VALUE('Collegamento con Intesa x +
+003700021017                          ricezione SUM/STA EDI        ')
+003800021017             CHGVAR     VAR(&DES3) VALUE('non disponibile         +
+003900021017                                                       ')
+004000021017             CHGVAR     VAR(&DES4) VALUE('non disponibile        +
+004100021017                                                                  ')
+004200021017             CHGVAR     VAR(&SCELTA) VALUE(1)
+004300900103
+004400960404             SNDRCVF    RCDFMT(TC72D01)
+004500890915             IF         COND(&IN12) THEN(GOTO CMDLBL(FINE))
+004600900103
+004700010227/* OCCORRE GESTIRE LE 2 VERSIONI DI EDI400 DI SEDE O DI FILIALE       */
+004800010227             IF         COND(&SCELTA = 1) THEN(DO)
+004900021009/* FILIALE                                                            */
+005000010227             CHKOBJ     OBJ(EDI4022) OBJTYPE(*LIB)
+005100021002             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FINE))
+005200021009/* SEDE                                                               */
+005300010227             CHKOBJ     OBJ(EDI4021) OBJTYPE(*LIB)
+005400010227             MONMSG     MSGID(CPF9801) EXEC(STREDI4022)
+005500010227             ENDDO
+005600021017
+005700021017/* Ricezione da INTESA in sede */
+005800021017             IF         COND(&SCELTA = 2) THEN(CALL PGM(TRTC77C1))
+005900021017
+006000020730             IF         COND(&SCELTA = 3) THEN(GOTO CMDLBL(FINE))
+006100020730             IF         COND(&SCELTA = 4) THEN(GOTO CMDLBL(FINE))
+006200930531
+006300000000             GOTO       CMDLBL(EMISS)
+006400950905 FINE:
+006500950905             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &USRL +
+006600950905                          *CAT ')')
+006700950905             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+006800950905             ENDPGM

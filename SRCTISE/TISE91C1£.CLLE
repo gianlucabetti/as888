@@ -1,0 +1,122 @@
+000100000000/*------------------------------------------------------------------------------------------------*/
+000200000000/* STATISTICHE DELTA - LANCIO                                                                     */
+000300000000/*------------------------------------------------------------------------------------------------*/
+000400020116/* CHIAMATO: TISE90R - RICHIESTA PARAMETRI STATISTICHE DELTA                                      */
+000500020116/* LANCIA  : TISE92R - CREAZIONE FILE DI LAVORO                                                   */
+000600020116/*           TISE93R - STATISTICHE DELTA COMMERCIALE                                              */
+000700020116/*           TISE94R - STATISTICA DELTA FILIALE                                                   */
+000800020116/*           TISE91R - CREAZIONE FILE DELTA PER COMMERCIALE X PC                                  */
+000900070418/*          ?   - 18/04/2007 aggiunti 2 WFiles WADELPCF/E come i WFDELPCF/E   ? con campi in +    */
+001000070605/*          ?   - 31/05/2007 aggiunto WFDFPV0F da generare con il WFDEL00F    ? a fine procedura  */
+001100070605/*            statistica DELTA viene lanciato lo stesso programma TISE92R generante il WFDEL00F   */
+001200070605/*            per generare il nuovo file WFDFPV0F non toccando più il WFDEL00F .                  */
+001300070605/*            Il WFDFPV0F formalmente è uguale al WFDEL00F però con in più il Peso ed il  Volume  */
+001400070605/*            CML. La creazione del nuovo file che serve per la statistica delta Fasce PesiVolumi */
+001500070605/*            è a livello di cliente e NON di unificante.                                         */
+001600000000/*------------------------------------------------------------------------------------------------*/
+001700020116 TISE91C:    PGM        PARM(&KPJBA)
+001800000000
+001900000000/* DICHIARAZIONI VARIABILI ---------------------------------------------------------------------- */
+002000000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+002100000000             DCL        VAR(&DCK)   TYPE(*CHAR) LEN(1)
+002200000000             DCL        VAR(&DCC)   TYPE(*CHAR) LEN(1)
+002300000000             DCL        VAR(&DCF)   TYPE(*CHAR) LEN(1)
+002400000000             DCL        VAR(&DFF)   TYPE(*CHAR) LEN(1)
+002500000000             DCL        VAR(&STA)   TYPE(*CHAR) LEN(1)
+002600000825             DCL        VAR(&CRE)   TYPE(*CHAR) LEN(1)
+002700030311             DCL        VAR(&FPC)   TYPE(*CHAR) LEN(1)
+002800050224             DCL        VAR(&IOE)   TYPE(*CHAR) LEN(1)
+002900000000
+003000000000/* VALORIZZAZIONE VARIABILI --------------------------------------------------------------------- */
+003100000000             CHGVAR     VAR(&DCK) VALUE(%SUBSTRING(&KPJBA 259 1))
+003200000000             CHGVAR     VAR(&DCC) VALUE(%SUBSTRING(&KPJBA 260 1))
+003300000000             CHGVAR     VAR(&DCF) VALUE(%SUBSTRING(&KPJBA 261 1))
+003400000000             CHGVAR     VAR(&DFF) VALUE(%SUBSTRING(&KPJBA 269 1))
+003500000000             CHGVAR     VAR(&STA) VALUE(%SUBSTRING(&KPJBA 278 1))
+003600050224             CHGVAR     VAR(&IOE) VALUE(%SUBSTRING(&KPJBA 281 1))
+003700000825             CHGVAR     VAR(&CRE) VALUE(%SUBSTRING(&KPJBA 308 1))
+003800030311             CHGVAR     VAR(&FPC) VALUE(%SUBSTRING(&KPJBA 331 1))
+003900030311
+004000030311/* CANCELLA IL FILE DI WRK PC (WFDELPCF) -SE RICHIESTO- ----------------------------- */
+004100051107             IF         COND((&FPC *EQ 'S') *AND ((&IOE *EQ 'I') *OR +
+004200051107                          (&IOE *EQ ' '))) THEN(DO)
+004300030311             CLRPFM     FILE(WFDELPCF)
+004400070418             CLRPFM     FILE(WADELPCF)
+004500030311             ENDDO
+004600000000
+004700050224/* CANCELLA IL FILE DI WRK PC (WFDELPCE) -SE RICHIESTO- ----------------------------- */
+004800050224             IF         COND((&FPC *EQ 'S') *AND (&IOE *EQ 'E')) +
+004900050224                          THEN(DO)
+005000050224             CLRPFM     FILE(WFDELPCE)
+005100070418             CLRPFM     FILE(WADELPCE)
+005200050224             ENDDO
+005300050224
+005400000825/* CANCELLA E CREA IL FILE DI LAVORO E IL FILE SU PC -SE RICHIESTO- ----------------------------- */
+005500020827             IF         COND(&CRE *EQ 'S' ) THEN(DO)
+005600070605/*  Il parametro PARWADEL qui deve essere Blank x generare il WFDEL00F e NON il WFDFPV0F        ?*/
+005700070531             CHGVAR     VAR(%SST(&KPJBA 334 1)) VALUE(' ')
+005800020827             CLRPFM     FILE(WFDEL00F)
+005900020827             CALL       PGM(TISE92R) PARM(&KPJBA)
+006000020827             CLRPFM     FILE(SEPCC00F)
+006100020827             CALL       PGM(TISE91R) PARM(&KPJBA)
+006200020827             ENDDO
+006300000000
+006400000000/* ESEGUE LA STATISTICA DELTA DI FILIALE -SE RICHIESTO- ----------------------------------------- */
+006500000000             IF         COND(&DCK *EQ 'S' ) THEN(DO)
+006600050224             IF         COND(&IOE *EQ 'E')  THEN(DO)
+006700050224             OVRDBF     FILE(WFDELPCF) TOFILE(WFDELPCE)
+006800070418             OVRDBF     FILE(WADELPCF) TOFILE(WADELPCE)
+006900050224             enddo
+007000000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('K')
+007100020116             OVRPRTF    FILE(TISE94P) FORMTYPE(*STD)
+007200020116             CALL       PGM(TISE93R) PARM(&KPJBA)
+007300050224             IF         COND(&IOE *EQ 'E')  THEN(DO)
+007400050224             DLTOVR     FILE(WFDELPCF)
+007500070418             DLTOVR     FILE(WADELPCF)
+007600050224             enddo
+007700000000             ENDDO
+007800000000
+007900000000/* ESEGUE LA STATISTICA DELTA DI AREA -SE RICHIESTO- -------------------------------------------- */
+008000000000             IF         COND(&DCC *EQ 'S' ) THEN(DO)
+008100000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('C')
+008200020116             OVRPRTF    FILE(TISE94P) FORMTYPE(*STD)
+008300020116             CALL       PGM(TISE93R) PARM(&KPJBA)
+008400000000             ENDDO
+008500000000
+008600000000/* ESEGUE LA STATISTICA DELTA DI DIVISIONE -SE RICHIESTO- --------------------------------------- */
+008700000000             IF         COND(&DCF *EQ 'S' ) THEN(DO)
+008800000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('F')
+008900020116             OVRPRTF    FILE(TISE94P) FORMTYPE('2COPIE')
+009000020116             CALL       PGM(TISE93R) PARM(&KPJBA)
+009100000000             ENDDO
+009200000000
+009300000000/* ESEGUE LA STATISTICA DELTA COMMERCIALE -SE RICHIESTO- ---------------------------------------- */
+009400000000             IF         COND(&DFF *EQ 'S') THEN(DO)
+009500000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE(' ')
+009600020116             OVRPRTF    FILE(TISE94P) FORMTYPE('2COPIE')
+009700020116             CALL       PGM(TISE94R) PARM(&KPJBA)
+009800000000             ENDDO
+009900070531
+010000070531/*?  Cancella il nuovo WFILE WFDFPV0F e Genera i dati a livello di CLIENTE e NON Unificante   ?  */
+010100070605/*?  Con lo stesso flag usato per indicare la creazione del WFile di base x la statistica     ?  */
+010200070531
+010300070531             IF         COND(&CRE *EQ 'S' ) THEN(DO)
+010400070531             CLRPFM     FILE(WFDFPV0F)
+010500070531
+010600070531/*  Il parametro PARWADEL qui deve essere 'S' x generare il nuovo WFDFPV0F  ?                    */
+010700070531/*  CLIENTE deve essere "C" sempre   ?                                                           */
+010800070531
+010900070605/*?  Con questi parametri il WFDEL00F NON viene toccato mentre viene generato il WFDFPV0F     ?  */
+011000070605/*?  Che servirà per la statistica Delta FASCE PESI VOLUMI x i programmi TISE9AR.             ?  */
+011100070605/*?  Questo file è la base dati x l'estrazione del file finale WFFPV00F con il TISE9AR1.      ?  */
+011200070531             CHGVAR     VAR(%SST(&KPJBA 279 1)) VALUE('C')
+011300070531             CHGVAR     VAR(%SST(&KPJBA 334 1)) VALUE('S')
+011400070531             CALL       PGM(TISE92R) PARM(&KPJBA)
+011500070531             ENDDO
+011600000000
+011700080916/*?       Esegue la creazione del WADELPCT come Sommatoria dei 2 WADELPCF e WADELPCE.         ?  */
+011800080916             CALL       PGM(TISE91C1) PARM(&KPJBA)
+011900080916
+012000000000             RCLRSC     LVL(*CALLER)
+012100000000
+012200000000             ENDPGM

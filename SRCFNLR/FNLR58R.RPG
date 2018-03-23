@@ -1,0 +1,285 @@
+000100911024     H              J
+000200941201     H* FNLR58R *----------------------------------------------------*
+000300911024     H*-----------------*                                            *
+000400920619     H*     STAMPA LISTA BOLLE DI RESO                               *
+000500911024     H*--------------------------------------------------------------*
+000600941201     FFNARB29LIF  E           K        DISK
+000700060214     FFIAR401LIF  E           K        DISK
+000800991012     FFIAR601LIF  E           K        DISK
+000900991012     FFIAR701LIF  E           K        DISK
+001000941202     FTABEL00FIF  E           K        DISK                           UC
+001100920619      *
+001200920622     FQSYSPRT O   F     132     OF     PRINTER
+001300920622      *--------------------------------------------------------------*
+001400920622     E                    TCU        50  6               TAB FLAG CNT
+001500920622     E                    KCU        50  4 0             TAB CAPO CONTO
+001600920622     E                    DTU        12  6 0             DATE PARAM
+001700911104     E                    LIN        29  3 0D
+001800920619      *
+001900911024     IPARAM       DS
+002000920619     I                                        1  87 LIN
+002100920619     I                                       88  900VIDLNA
+002200941201     I                                       91  980DATE
+002300911024     IKPJBA     E DS
+002400911024     I                                       92 100 LIBSYS
+002500911024     I                                      453 502 MSGERR
+002600941201     IWLBDA8      DS
+002700941201     I                                        1   80G08DAT
+002800941201     I                                        9  160G08INV
+002900941201     I                                       17  17 G08ERR
+003000941201     I                                       18  220G08TGI
+003100911115      *
+003200920622     ICNCR80    E DS
+003300920622     IUT§DSE    E DSUT§DSE0F
+003400920622     I                                      398 697 TCU
+003500920622     I                                    P 698 847 KCU
+003600920622     I                                    P 848 8950DTU
+003700941202     IDS$2      E DS
+003800941201      *
+003900941201     I           SDS
+004000941201     I                                        1  10 §PGM
+004100920622     C*
+004200920619     C                     Z-ADDVIDLNA    ARBLNA
+004300920619     C                     Z-ADDDATE      ARBDAM
+004400920619     C                     Z-ADD1         I       20
+004500920622      *Se la schiera è già vuota gli muovo la linea di arrivo.
+004600920622     C           LIN,I     IFEQ *ZEROS
+004700920622     C                     Z-ADDVIDLNA    LIN,I
+004800920622     C                     END
+004900920622      *
+005000920622     C           LIN,I     DOUEQ*ZEROS
+005100920619      *
+005200920622     C           LIN,I     IFNE *ZEROS
+005300941201     C           KARB      CHAINFNARB29L             10
+005400920619      *
+005500920622     C  N10      ARBLNA    DOUNELIN,I
+005600920622     C           ARBDAM    ORNE DATE
+005700920619     C           *IN20     OREQ '1'
+005800920619      *
+005900920623     C           ARBFBR    IFEQ 'S'
+006000991012     C           LIN,I     ANDEQARBLNA
+006100920619     C           DATE      ANDEQARBDAM
+006200920619     C           *IN20     ANDEQ'0'
+006300920622      *
+006400920622     C   OF                EXCPTTESTAT
+006500920622      *
+006600920622     C                     MOVE ARBMGS    GG      20
+006700920622     C                     MOVELARBMGS    MM      20
+006800920624      *
+006900941202      *  CERCO IMPORTO  X SPESE DI GIACENZE
+007000941202     C                     MOVE *ZEROS    SPESE
+007100991012     C                     MOVEL'1'       KTRC
+007200991012     C           KAR6      CHAINFIAR601L             21
+007300941202     C           *IN21     IFEQ '0'                         *IN21 ->
+007400941202     C           AR6SV1    IFEQ §$2VRI
+007500941202     C                     ADD  AR6VA1    SPESE
+007600941202     C                     ENDIF
+007700941202     C           AR6SV2    IFEQ §$2VRI
+007800941202     C                     ADD  AR6VA2    SPESE
+007900941202     C                     ENDIF
+008000941202      * SE ENTRAMBE LE VARIE SONO IMPOSTATE MA NON SONO RELATIVE
+008100941202      * ALLE SPESE GIACENZA  CERCO IN FNAR7
+008200941202     C           AR6SV1    IFNE *BLANK
+008300941202     C           AR6SV2    ANDNE*BLANK
+008400941202     C           SPESE     ANDEQ0
+008500991012     C                     MOVEL§$2VRI    KSVN
+008600991012     C           KAR7      CHAINFIAR701L             21
+008700941202     C           *IN21     DOWEQ'0'
+008800941202     C                     Z-ADDAR7VAN    SPESE
+008900941202     C                     SETON                     21
+009000941202     C                     ENDDO
+009100941202     C                     ENDIF
+009200941202     C                     ENDIF                            <- *IN21
+009300920619      *
+009400941201     C                     MOVE ARBDDC    G08INV
+009500941201     C                     MOVE *ZEROS    G08DAT
+009600941201     C                     MOVEL3         G08ERR
+009700941201     C                     CALL 'XSRDA8'
+009800941201     C                     PARM           WLBDA8
+009900941201     C                     Z-ADDG08DAT    DATDIS
+010000920624      *
+010100941201     C                     MOVE ARBDCM    G08INV
+010200941201     C                     MOVE *ZEROS    G08DAT
+010300941201     C                     MOVEL3         G08ERR
+010400941201     C                     CALL 'XSRDA8'
+010500941201     C                     PARM           WLBDA8
+010600941201     C                     Z-ADDG08DAT    DATCON
+010700920624      *
+010800941202      * CERCO LE NOTE DI CONSEGNA
+010900941202     C                     MOVEL*BLANK    NOTE
+011000941202     C                     MOVEL'8'       AR4TRC
+011100060214     C           KAR4      CHAINFIAR401L             21
+011200941202     C        N21          MOVELAR4NOT    NOTE   19
+011300920702      *
+011400941202     C                     MOVELARBRSD    RSD    34
+011500941202      *
+011600920622     C                     EXCPTDETTAG
+011700920622      *
+011800920619     C                     END
+011900941201     C                     READ FNARB29L                 20
+012000920619     C                     END
+012100920619      *
+012200920619     C                     ADD  1         I
+012300920622     C                     Z-ADDLIN,I     ARBLNA
+012400920622      *
+012500920622     C                     END
+012600920622      *
+012700920622     C                     END
+012800920619      *
+012900920624     C                     EXCPTTRATTO
+013000920624      *
+013100920622     C           FINE      TAG
+013200920622     C                     SETON                     LR
+013300941202     C*---------------------------------------------------------------*
+013400941202     C           *INZSR    BEGSR
+013500941202     C           *ENTRY    PLIST
+013600941202     C                     PARM           KPJBA
+013700941202     C                     MOVELKPJBU     PARAM
+013800941202     C                     Z-ADD1         CODUT
+013900941202     C                     CALL 'X§PARUT'
+014000941202     C                     PARM           UT§DSE
+014100941202     C           CODUT     CABEQ-1        FINE
+014200941202     C                     MOVELREC80     CNCR80
+014300941202     C                     MOVELRAGUT     RSUT   20
+014400941202     C*
+014500941202     C*---------------------------------------------------------------*
+014600941202     C*
+014700941202     C           KTAB      KLIST
+014800941202     C                     KFLD           CODUT
+014900941202     C                     KFLD           TBLCOD
+015000941202     C                     KFLD           TBLKEY
+015100941202      *
+015200941202     C           KARB      KLIST
+015300941202     C                     KFLD           ARBLNA
+015400941202     C                     KFLD           ARBDAM
+015500941202     C*
+015600941202     C           KAR4      KLIST
+015700941202     C                     KFLD           ARBAAS
+015800941202     C                     KFLD           ARBLNP
+015900941202     C                     KFLD           ARBNRS
+016000941202     C                     KFLD           ARBNSP
+016100941202     C                     KFLD           AR4TRC
+016200941202     C*
+016300941202     C           KAR6      KLIST
+016400941202     C                     KFLD           ARBAAS
+016500941202     C                     KFLD           ARBLNP
+016600941202     C                     KFLD           ARBNRS
+016700941202     C                     KFLD           ARBNSP
+016800991012     C                     KFLD           KTRC
+016900941202     C*
+017000941202     C           KAR7      KLIST
+017100941202     C                     KFLD           ARBAAS
+017200941202     C                     KFLD           ARBLNP
+017300941202     C                     KFLD           ARBNRS
+017400941202     C                     KFLD           ARBNSP
+017500991012     C                     KFLD           KTRC
+017600991012     C                     KFLD           KSVN
+017700941202     C*
+017800941202     C           *LIKE     DEFN AR6VA1    SPESE
+017900941202     C           *LIKE     DEFN ARBDDC    DATDIS
+018000941202     C           *LIKE     DEFN ARBDCM    DATCON
+018100991012     C           *LIKE     DEFN AR6TRC    KTRC
+018200991012     C           *LIKE     DEFN AR7SVN    KSVN
+018300941202     C*---------------------------------------------------------------*
+018400941202     C                     TIME           WHHUDT 140
+018500941202     C                     MOVELWHHUDT    ORA     60
+018600941202     C                     MOVE WHHUDT    GMAUD8  80
+018700941202     C                     MOVE *ALL'-'   LINEA 132
+018800941202      *
+018900941202     C                     MOVE DATE      G08INV
+019000941202     C                     MOVE *ZEROS    G08DAT
+019100941202     C                     MOVEL3         G08ERR
+019200941202     C                     CALL 'XSRDA8'
+019300941202     C                     PARM           WLBDA8
+019400941202     C                     Z-ADDG08DAT    DATARI  80
+019500941202      *
+019600941202      * CARICO LA TABELLE CON LE SIGLE DELLE VARIE
+019700941202      *
+019800941202     C                     OPEN TABEL00F
+019900941202     C                     MOVEL'$2'      TBLCOD
+020000941202     C                     MOVE *BLANKS   TBLKEY
+020100941202     C                     MOVEL1         TBLKEY
+020200941202     C           KTAB      CHAINTABEL00F             21
+020300941202     C  N21                MOVELTBLUNI    DS$2
+020400941202     C                     CLOSETABEL00F
+020500941202      *
+020600941202     C                     EXCPTTESTAT
+020700941202     C                     ENDSR
+020800911024     C*
+020900920622      *-------------------------------------------------------------------------
+021000920622      *
+021100941202     OQSYSPRT E  1 2           TESTAT
+021200920622     O                         RSUT      21
+021300920622     O                         SIMFEL    25
+021400921015     O                                   51 '***   E L E N C O'
+021500920622     O                                   79 'B O L L E   di   R E S O'
+021600920622     O                                   93 '***     del'
+021700941202     O                         GMAUD8   115 '  /  /    '
+021800920622     O                                  127 'Pag.'
+021900920622     O                         PAGE  Z  131
+022000920622     O        E  1             TESTAT
+022100941202     O                         KNSIF     11
+022200941202     O                         KNMUS   +  1
+022300941202     O                                   60 'Arrivate il'
+022400941202     O                         DATARI    74 '  /  /    '
+022500941202     O                         ORA      115 '  :  :  '
+022600920622     O        E  1             TESTAT
+022700920702     O                         LINEA    132
+022800920622     O        E  1             TESTAT
+022900941202     O                                   13 '|  Spedizione'
+023000941202     O                                   23 '|   Data'
+023100941202     O                                   30 '|Lna'
+023200941202     O                                   38 '| Codice'
+023300941202     O                                   54 '|Ragione Sociale'
+023400941202     O                                   80 '| Spese'
+023500941202     O                                   89 '| Numero'
+023600941202     O                                   97 '|   Data'
+023700941202     O                                  108 '|   Data'
+023800941202     O                                  132 '|     N O T E       |'
+023900920622     O        E  1             TESTAT
+024000941202     O                                    1 '|'
+024100941202     O                                   16 '|'
+024200941202     O                                   26 'Spedizione'
+024300941202     O                                   27 '|'
+024400941202     O                                   39 '|Cliente|'
+024500941202     O                                   51 'Destinatario'
+024600941202     O                                   90 '|  Giac.|  Dist.|'
+024700941202     O                                   99 '| Distinta'
+024800941202     O                                  112 '| Consegna |'
+024900920702     O                                  132 '|'
+025000920622     O        E  1             TESTAT
+025100920702     O                         LINEA    132
+025200920622      *
+025300920622      *
+025400920622     O        E  1             DETTAG
+025500920622     O                                    1 '|'
+025600941202     O                         ARBLNP     4
+025700941202     O                         ARBNRS     7
+025800941202     O                         ARBNSPZ   15
+025900941202     O                                   16 '|'
+026000941202     O                         GG        18
+026100941202     O                                   19 '/'
+026200941202     O                         MM        21
+026300941202     O                                   22 '/'
+026400941202     O                         ARBAAS    26
+026500941202     O                                   27 '|'
+026600941202     O                         ARBLNA    30
+026700941202     O                                   31 '|'
+026800941202     O                         ARBKSC    38
+026900941202     O                                   39 '|'
+027000941202     O                         RSD       73
+027100941202     O                                   74 '|'
+027200991012     O                         SPESE     81 '        ,   '
+027300941202     O                                   82 '|'
+027400941202     O                         ARBNDCZ   89
+027500941202     O                                   90 '|'
+027600941202     O                         DATDIS   100 '  /  /    '
+027700941202     O                                  101 '|'
+027800941202     O                         DATCON   111 '  /  /    '
+027900941202     O                                  112 '|'
+028000941202     O                         NOTE     131
+028100920702     O                                  132 '|'
+028200920622      *
+028300920624     O        E  1             TRATTO
+028400920702     O                         LINEA    132
+028500941202     O                                   72 '** FINE STAMPA **'

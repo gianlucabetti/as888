@@ -1,0 +1,78 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400020523             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+000500040407             DCL        VAR(&NRAZ) TYPE(*CHAR) LEN(9)
+000600120604
+000700120604             CHGVAR     VAR(&NRAZ) VALUE(%SUBSTRING(&KPJBA 11 9))
+000800120604             CHGVAR     VAR(&MBR) VALUE('M' *CAT &NRAZ)
+000900030428
+001000030428/*-------------------------------------------------------------------------*/
+001100030428/* Pgm di controllo se attive trasmissioni in sede                         */
+001200030428/*  Se le trasmissioni fossero attive il pgm va a fine dopo msg a video    */
+001300120604/*-------------------------------------------------------------------------*/
+001400030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+001500030428                          VALUE('FICNB3R   ')
+001600030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 1)) VALUE(' ')
+001700030428             CALL       PGM(FICNB8R) PARM(&KPJBA)
+001800030428             IF         COND(%SUBSTRING(&KPJBA 257 1) = 'T') +
+001900030428                          THEN(GOTO CMDLBL(FINE))
+002000030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 11)) +
+002100030428                          VALUE('           ')
+002200030428/*-------------------------------------------------------------------------*/
+002300120604/*  DUPLICA in QTEMP il file di calcolo dei COSTI x il C/E                 */
+002400120604/*    monomembro.                                                          */
+002500120530/*-------------------------------------------------------------------------*/
+002600120604
+002700120604             CRTDUPOBJ  OBJ(FIFCEW*) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002800120604                          TOLIB(QTEMP)
+002900120604             MONMSG     MSGID(CPF0000) EXEC(CLRPFM +
+003000120604                          FILE(QTEMP/FIFCEW0F))
+003100120530
+003200120530/*-------------------------------------------------------------------------*/
+003300120530/*  Quindi Punta i Files in QTEMP                                          */
+003400120530/*-------------------------------------------------------------------------*/
+003500120604
+003600120604             OVRDBF     FILE(FIFCEW0F) TOFILE(QTEMP/FIFCEW0F)
+003700120604             OVRDBF     FILE(FIFCEW1L) TOFILE(QTEMP/FIFCEW1L)
+003800120604             OVRDBF     FILE(FIFCEW2L) TOFILE(QTEMP/FIFCEW2L)
+003900120604             OVRDBF     FILE(FIFCEW3L) TOFILE(QTEMP/FIFCEW3L)
+004000120530
+004100020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+004200020408/* procedura/programma fosse finita in maniera anomala occorre */
+004300020408/* parare il colpo riducendo il male al male minore ossia      */
+004400020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+004500020408/* metà piuttosto che confermarle. E ripartendo da una         */
+004600020408/* situazione pulita.                                          */
+004700120530
+004800020322             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004900020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+005000020409             ENDCMTCTL
+005100020409             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+005200020409             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+005300020409             ENDDO
+005400020521
+005500040310/* Pulizia file spia x spalmare le Tariffe a Prestazione     */
+005600040310             CALL       PGM(FICNB3R2)
+005700040310             MONMSG     MSGID(CPF0000)
+005800040310
+005900020322/* richiamo programma di stampa                    */
+006000020408             CALL       PGM(FICNB3R) PARM(&KPJBA)
+006100020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+006200020417             ROLLBACK
+006300020417             ENDDO
+006400020521
+006500020417 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006600020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006700020408 /* in modo pulito senza lasciare transazioni a metà.            */
+006800020322             ENDCMTCTL
+006900030505             MONMSG     MSGID(CPF8350)
+007000020521
+007100120604             DLTOVR     FILE(*ALL)
+007200120604             DLTF       FILE(QTEMP/FIFCEW1L)
+007300120604             DLTF       FILE(QTEMP/FIFCEW2L)
+007400120604             DLTF       FILE(QTEMP/FIFCEW3L)
+007500120604             DLTF       FILE(QTEMP/FIFCEW0F)
+007600120604
+007700030428fine:
+007800000000             ENDPGM

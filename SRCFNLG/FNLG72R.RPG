@@ -1,0 +1,187 @@
+000100900418     H              J
+000200940926     H* FNLG72R *----------------------------------------------------*
+000300900418     H*                                                              *
+000400920522     H*   - STAMPA ELENCO GIACENZE APERTE PER CLIENTE -   -FILTRO-   *
+000500900423     H*                                                              *
+000600900418     H*--------------------------------------------------------------*
+000700940926     FFNLG72D CF  E                    WORKSTN
+000800920522     FCNACO00FIF  E           K        DISK
+000900940926     H*--------------------------------------------------------------*
+001000900418     E                    TCU        50  6               PARAM FLG7/8,TIPC
+001100900418     E                    KCU        50  4 0             PARAM CAPI CONTO
+001200940926     E                    ERR     1   4 70               ERRORI
+001300940926     I*---------------------------------------------------------------*
+001400940926     IWLBDA8      DS
+001500940926     I                                        1   80G02DAT
+001600940926     I                                        9  160G02INV
+001700940926     I                                       17  17 G02ERR
+001800940926     I                                       18  220G02TGI
+001900940926     IFNLG73    E DSFNLG73DS
+002000900423     ITCUDS       DS
+002100940926     I                                        3   4 F34
+002200900423     I                                        5   6 F56
+002300900502     IUTEDSE    E DSUT§DSE0F
+002400900423     I                                      398 697 TCU
+002500900423     I                                    P 698 847 KCU
+002600900418     IKPJBA     E DS
+002700900423     C*---------------------------------------------------------------*
+002800940926     C                     Z-ADD0         V1CDA1
+002900940926     C                     Z-ADD0         V1CDA2
+003000940926     C                     MOVEL*BLANKS   V1CKSC
+003100940926     C                     MOVEL*BLANKS   V1DKSC
+003200920522     C*
+003300920522     C           *INKC     DOWEQ'0'
+003400940926     C                     EXSR GESD01
+003500920522     C                     END
+003600920522     C*
+003700920522     C                     SETON                     LR
+003800940926     C*-----------------------------------------------------*
+003900940926     C*  GESTIONE PRIMA VIDEATA
+004000940926     C*------------------------------------------------------*
+004100940926     C           GESD01    BEGSR
+004200940926     C*
+004300940926     C                     EXFMTLG72D01
+004400940926     C                     SETOF                     404142
+004500940926     C                     SETOF                     28
+004600940926     C* Fine lavoro
+004700940926     C           *INKC     IFEQ '1'
+004800940926     C                     GOTO FINVD1
+004900940926     C                     END
+005000940926     C* Controlli
+005100940926     C                     EXSR CTR01
+005200940926     C*  Se non ci sono errori sottometto la stampa
+005300940926     C  N28 KF             DO
+005400940926     C                     Z-ADD1         X       20
+005500940926     C                     MOVE V1CKSC    D73KSC
+005600940926     C                     MOVE KCI       D73KCC
+005700940926     C                     MOVE DATAD     D73DTD
+005800940926     C                     MOVE DATAA     D73DTA
+005900940926     C                     MOVELFNLG73    KPJBU
+006000940926     C                     MOVEL'LG73'    KCOAZ
+006100940926     C                     CALL 'BCH10'
+006200940926     C                     PARM           KPJBA
+006300940926     C                     MOVEL*BLANKS   V1CKSC
+006400940926     C                     MOVEL*BLANKS   V1DKSC
+006500940926     C                     END
+006600940926     C*
+006700940926     C           FINVD1    ENDSR
+006800940926     C*-----------------------------------------------------*
+006900940926     C*  Controlli prima videata
+007000940926     C*------------------------------------------------------*
+007100940926     C           CTR01     BEGSR
+007200940926     C* Controllo codice cliente
+007300940926     C           '?'       SCAN V1CKSC                   21
+007400940926     C   21                DO
+007500940926     C                     SETON                     99
+007600940926     C                     Z-ADDCODUT     CODUT§  10
+007700940926     C                     Z-ADDKCI       KCI§    40
+007800940926     C                     MOVEL*BLANKS   RICRAG 48
+007900940926     C                     MOVELV1DKSC    RICRAG
+008000940926     C                     Z-ADD0         RICKSC  70
+008100940926     C                     Z-ADD0         PARSTA  10
+008200940926     C                     CALL 'XALFA1'
+008300940926     C                     PARM           PARDUT
+008400940926     C                     PARM           CODUT§
+008500940926     C                     PARM           RICRAG
+008600940926     C                     PARM           KCI§
+008700940926     C                     PARM           RICKSC
+008800940926     C                     PARM           PARSTA
+008900961016     C                     PARM           PARFLR 90
+009000940926     C           PARSTA    IFNE -1
+009100940926     C                     MOVE RICKSC    V1CKSC
+009200940926     C                     MOVELRICRAG    V1DKSC
+009300940926     C                     ELSE
+009400940926     C                     MOVE *ZEROS    V1CKSC
+009500940926     C                     MOVE *BLANKS   V1DKSC
+009600940926     C                     END
+009700940926     C                     END
+009800940926     C*
+009900940926     C           V1CKSC    IFEQ *ZEROS
+010000940926     C           V1CKSC    OREQ *BLANKS
+010100940926     C                     SETON                     4028
+010200940926     C                     MOVELERR,4     $MSG
+010300940926     C                     GOTO FINCT1
+010400940926     C                     END
+010500940926     C*
+010600940926     C                     MOVE V1CKSC    CODCLI
+010700940926     C                     MOVEL*BLANKS   V1DKSC
+010800940926     C           KACO      CHAINCNACO000             40
+010900940926     C           *IN40     IFEQ '1'
+011000940926     C           ACOFLG    ORNE ' '
+011100940926     C                     SETON                     4028
+011200940926     C                     MOVELERR,1     $MSG
+011300940926     C                     GOTO FINCT1
+011400940926     C                     ELSE
+011500940926     C                     MOVELACORAG    V1DKSC
+011600940926     C                     END
+011700940926     C* Controllo data iniziale
+011800940926     C                     Z-ADDV1CDA1    G02DAT
+011900940926     C                     Z-ADD0         G02INV
+012000940926     C                     MOVEL*BLANKS   G02ERR
+012100940926     C                     CALL 'XSRDA8'
+012200940926     C                     PARM           WLBDA8
+012300940926     C           G02ERR    IFEQ '1'
+012400940926     C                     SETON                     4128
+012500940926     C                     MOVELERR,2     $MSG
+012600940926     C                     GOTO FINCT1
+012700940926     C                     ELSE
+012800940926     C                     Z-ADDG02INV    DATAD   80
+012900940926     C                     Z-ADDG02DAT    V1CDA1
+013000940926     C                     END
+013100940926     C* Controllo data finale
+013200940926     C                     Z-ADDV1CDA2    G02DAT
+013300940926     C                     Z-ADD0         G02INV
+013400940926     C                     MOVEL*BLANKS   G02ERR
+013500940926     C                     CALL 'XSRDA8'
+013600940926     C                     PARM           WLBDA8
+013700940926     C           G02ERR    IFEQ '1'
+013800940926     C                     SETON                     4228
+013900940926     C                     MOVELERR,2     $MSG
+014000940926     C                     GOTO FINCT1
+014100940926     C                     ELSE
+014200940926     C                     Z-ADDG02INV    DATAA   80
+014300940926     C                     Z-ADDG02DAT    V1CDA2
+014400940926     C                     END
+014500940926     C* Controllo limiti
+014600940926     C           DATAD     IFGT DATAA
+014700940926     C                     SETON                     284142
+014800940926     C                     MOVELERR,3     $MSG
+014900940926     C                     END
+015000940926     C*
+015100940926     C           FINCT1    ENDSR
+015200940926     C*-----------------------------------------------------*
+015300940926     C*  Operazioni iniziali
+015400940926     C*------------------------------------------------------*
+015500940926     C           *INZSR    BEGSR
+015600940926     C*
+015700940926     C           *ENTRY    PLIST
+015800940926     C                     PARM           KPJBA
+015900940926     C                     Z-ADD1         CODUT
+016000940926     C                     CALL 'X§PARUT'
+016100940926     C                     PARM           UTEDSE
+016200940926     C*          CODUT     CABEQ-1        FINE
+016300940926     C                     MOVELRAGUT     RSUT   20
+016400940926     C*--- RICERCA CAPOCONTI------------------------------------------*
+016500940926     C                     DO   50        X       20
+016600940926     C                     MOVE TCU,X     TCUDS
+016700940926     C           F56       IFEQ 'CG'
+016800940926     C           F34       ANDEQ'01'
+016900940926     C                     Z-ADDKCU,X     KCI     40
+017000940926     C                     END
+017100940926     C                     END
+017200940926     C*---------------------------------------------------------------*
+017300940926     C                     MOVELRAGUT     V1CRSU
+017400940926     C                     MOVELRAGUT     PARDUT 30
+017500940926     C                     CLEARFNLG73
+017600940926     C* CNACO
+017700940926     C           KACO      KLIST
+017800940926     C                     KFLD           CODUT
+017900940926     C                     KFLD           KCI
+018000940926     C                     KFLD           CODCLI  70
+018100940926     C*----------------------------------------------------*
+018200940926     C                     ENDSR
+018300940926**
+018400940926Codice Cliente errato
+018500940926Data errata
+018600940926Limiti incongruenti: data limite iniziale maggiore finale
+018700940926Immettere codice cliente

@@ -1,0 +1,113 @@
+000100940429     H            Y J
+000200950713     F*-----------------------------------------------------------*
+000300950713     F*  DATA BASE                                                *
+000400950713     F*-----------------------------------------------------------*
+000500000201     FTITAS30CIF  E           K        DISK
+000600940421     F*--------
+000700000201     FFNLBL01LIF  E           K        DISK
+000800950713     F*--------
+000900000201     FNDPAS04LIF  E           K        DISK
+001000000201     F*--------
+001100950713     FQSYSPRT O   F     132     OF     PRINTER
+001200940421     C*------------------------------------------------------*
+001300940421     C*  Ciclo Principale                                    *
+001400940421     C*------------------------------------------------------*
+001500000201     C* parto dalla lettura dei legami
+001600000201     C                     READ FNLBL01L                 31
+001700950713     C           *IN31     DOWEQ'0'
+001800000201     C* Aggacio TITAS
+001900000201     C           KTAS      CHAINTITAS30C             32
+002000000201     C           *IN32     IFEQ '0'
+002100000201     C* Considero bolle filgie da primi di novembre
+002200000201     C           TASAAS    IFEQ 1999
+002300000201     C           TASMGS    ANDGT1100
+002400000201     C           TASAAS    OREQ 2000
+002500000201     C* Verifico se bolla figlia è un assegnato non codificato
+002600000201     C                     MOVE TASKSC    APPOG   40
+002700950713     C           APPOG     IFEQ 9999
+002800000201     C           TASDFT    ANDNE0
+002900000201     C* Se è un assegnato verifico se la fattura è stata incassata
+003000950713     C                     Z-ADDTASLNP    NCTFLR
+003100950713     C                     END
+003200950713     C                     END
+003300950713     C                     END
+003400950720     C*
+003500950720     C                     END
+003600950713     C*
+003700950713     C   OF                EXCPTTESTA
+003800950713     C                     EXCPTSTAMPA
+003900950713     C           WAGGIO    IFEQ 'S'
+004000950713     C                     EXCPTAGGRSP
+004100950713     C                     END
+004200950713     C*
+004300950713     C                     ENDSR
+004400940429     C*------------------------------------------------------*
+004500940429     C*  Operazioni iniziali                                 *
+004600940429     C*------------------------------------------------------*
+004700950713     C           *INZSR    BEGSR
+004800940429     C*
+004900940429     C           *ENTRY    PLIST
+005000950713     C                     PARM           WAGGIO  1
+005100940505     C*------------------------------------------------------*
+005200950713     C           KTAS      KLIST
+005300950713     C                     KFLD           KKSC
+005400950713     C                     KFLD           KDFT
+005500950713     C                     KFLD           KNFT
+005600950712     C*
+005700950712     C           KTAB      KLIST
+005800950712     C                     KFLD           KKUT
+005900950712     C                     KFLD           KCOD
+006000940429     C*------------------------------------------------------*
+006100950713     C           *LIKE     DEFN TASKSC    KKSC
+006200950713     C           *LIKE     DEFN TASDFT    KDFT
+006300950713     C           *LIKE     DEFN TASNFT    KNFT
+006400950712     C           *LIKE     DEFN TBLKUT    KKUT
+006500950712     C           *LIKE     DEFN TBLCOD    KCOD
+006600950712     C*------------------------------------------------------*
+006700950713     C                     SETON                     OF
+006800950712     C*  Reperisco dati dalla tabella  TB
+006900950712     C                     OPEN TABEL00F
+007000950712     C                     MOVEL'TB'      KCOD
+007100950712     C                     Z-ADD1         KKUT
+007200950712     C                     Z-ADD0         XX      30
+007300950712     C           KTAB      CHAINTABEL00F             80
+007400950712     C           *IN80     DOWEQ'0'
+007500950712     C           XX        ANDLT50
+007600950712     C                     ADD  1         XX
+007700950712     C                     MOVELTBLUNI    DSTB
+007800950712     C                     MOVELTBLKEY    CTB,XX
+007900950712     C                     MOVEL§TBTPO    PTB,XX
+008000950712     C           KTAB      READETABEL00F                 80
+008100950712     C                     END
+008200950712     C                     CLOSETABEL00F
+008300950712     C*------------------------------------------------------*
+008400940429     C                     ENDSR
+008500940727     C*-----------------------------------------------------------*
+008600950713     OFTNCT000E                AGGRSP
+008700950713     O                         NCTFLR
+008800940503     O*-----------------------------------------------------*
+008900940503     O** STAMPA LETTERA FILIALE CLIENTE BOLLETTAZIONE
+009000950713     OQSYSPRT E   10           TESTA
+009100950713     O                                    7 'CLIENTE'
+009200950713     O                                   15 'CD.FAT.'
+009300950713     O                                   32 'DATA E NR.FATTURA'
+009400950713     O                                   36 'FIL'
+009500950713     O                                   53 'DATA E NR.REGIST.'
+009600950713     O                                   67 'IMPORTO N.ACC.'
+009700950713     O                                   73 'RESP.'
+009800950713     O                                   78 'TB.'
+009900950713     O                                   82 'LNP'
+010000950713     O        E 1              STAMPA
+010100950713     O                         NCTKSCZ    7
+010200950713     O                         NCTSCFZ   15
+010300950713     O                         NCTDRPY   24
+010400950713     O                         NCTNRPZ   32
+010500950713     O                         NCTFILZ   36
+010600950713     O                         NCTDRGY   45
+010700950713     O                         NCTNRGZ   53
+010800950713     O                         NCTTNR    55
+010900950713     O                         NCTIMR2   67
+011000950713     O                         NCTFLRZ   72
+011100950713     O                         PTB,XX    75
+011200950713     O                         CTB,XX    78
+011300950713     O                         TASLNPZ   82

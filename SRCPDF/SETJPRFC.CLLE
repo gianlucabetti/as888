@@ -1,0 +1,95 @@
+000100000000PGM (&JUSER)
+000200130227
+000300130227  COPYRIGHT  ('Giuseppe Costagliola 2013 - beppecosta@yahoo.it')
+000400000000
+000500000000  Dcl &JUSER      *Char   30
+000600000000
+000700000000  /* parametri API profilo */
+000800000000  Dcl &UserID      *Char  10
+000900000000  Dcl &Password    *Char  10
+001000000000  Dcl &PasswordL   *Char  4
+001100000000  Dcl &ApiError    *Char  100
+001200000000  Dcl &Handle      *Char  12
+001300000000  Dcl &HandleCM    *Char  12
+001400000000
+001500000000  Dcl &MsgId       *Char  7
+001600000000  Dcl &MsgDta      *Char  75
+001700000000
+001800000000  DCL &ERRORSW    *LGL
+001900000000  MONMSG CPF0000 EXEC(GOTO ERROR)
+002000000000
+002100000000  /*Get profile handle utente corrente */
+002200000000  ChgVar &ApiError x'000000500000000040404040404040'
+002300000000  ChgVar %sst(&ApiError 9 7) ' '
+002400000000  CALL QSYGETPH (*CURRENT ' ' &Handle &ApiError)
+002500000000  If (%sst(&ApiError 9 7) ^= ' ') Do
+002600000000    ChgVar &MsgId %sst(&ApiError 9 7)
+002700000000    ChgVar &MsgDta %sst(&ApiError 17 75)
+002800000000    SndPgmMsg MsgId(&MsgId) MsgF(QCPFMSG) MsgDta(&MsgDta) +
+002900000000              ToPgmQ(*SAME) MsgType(*ESCAPE)
+003000000000  EndDo
+003100000000
+003200000000  /*Get profile handle richiesto */
+003300000000  ChgVar &UserId    %sst(&JUSER 3 10)
+003400000000  ChgVar &Password  %sst(&JUSER 17 10)
+003500000000  ChgVar &PasswordL %sst(&JUSER 13 4)
+003600000000  ChgVar %sst(&ApiError 9 7) ' '
+003700000000  If (&Password = *NOPWD) +
+003800000000  CALL QSYGETPH (&UserId *NOPWD &HandleCM &ApiError)
+003900000000  Else +
+004000000000  CALL QSYGETPH (&UserId &Password &HandleCM &ApiError +
+004100000000                 &PasswordL x'00000000')
+004200000000  If (%sst(&ApiError 9 7) ^= ' ') Do
+004300000000    ChgVar &MsgId %sst(&ApiError 9 7)
+004400000000    ChgVar &MsgDta %sst(&ApiError 17 75)
+004500000000    SndPgmMsg MsgId(&MsgId) MsgF(QCPFMSG) MsgDta(&MsgDta) +
+004600000000              ToPgmQ(*SAME) MsgType(*ESCAPE)
+004700000000  EndDo
+004800000000
+004900000000  /*Set profile handle richiesto */
+005000000000  ChgVar %sst(&ApiError 9 7) ' '
+005100000000  CALL QWTSETP  (&HandleCM &ApiError)
+005200000000  If (%sst(&ApiError 9 7) ^= ' ') Do
+005300000000    ChgVar &MsgId %sst(&ApiError 9 7)
+005400000000    ChgVar &MsgDta %sst(&ApiError 17 75)
+005500000000    SndPgmMsg MsgId(&MsgId) MsgF(QCPFMSG) MsgDta(&MsgDta) +
+005600000000              ToPgmQ(*SAME) MsgType(*ESCAPE)
+005700000000  EndDo
+005800000000
+005900000000  /*Prompt comandi */
+006000000000  CALL QCMD
+006100000000
+006200000000  /*Ripristino profilo */
+006300000000  ChgVar %sst(&ApiError 9 7) ' '
+006400000000  CALL QWTSETP  (&Handle &ApiError)
+006500000000  If (%sst(&ApiError 9 7) ^= ' ') Do
+006600000000    ChgVar &MsgId %sst(&ApiError 9 7)
+006700000000    ChgVar &MsgDta %sst(&ApiError 17 75)
+006800000000    SndPgmMsg MsgId(&MsgId) MsgF(QCPFMSG) MsgDta(&MsgDta) +
+006900000000              ToPgmQ(*SAME) MsgType(*ESCAPE)
+007000000000  EndDo
+007100000000  CALL QSYRLSPH (&Handle &ApiError)
+007200000000  CALL QSYRLSPH (&HandleCM &ApiError)
+007300000000
+007400000000  Return
+007500000000
+007600000000/********************************************************************/
+007700000000/* Errors                                                           */
+007800000000/********************************************************************/
+007900000000
+008000000000ERROR:
+008100000000  IF &ERRORSW SNDPGMMSG MSGID(CPF9899) +
+008200000000     MSGF(QCPFMSG) MSGTYPE(*ESCAPE)    /* FUNCTION CHECK           */
+008300000000  /* Ripristino profilo */
+008400000000  chgvar %sst(&ApiError 9 7) ' '
+008500000000  CALL Qwtsetp  (&Handle &ApiError)
+008600000000  CALL  Qsyrlsph (&Handle &ApiError)
+008700000000  CALL  Qsyrlsph (&HandleCM &ApiError)
+008800000000    IF &ERRORSW SNDPGMMSG MSGID(CPF9899) +
+008900000000       MSGF(QCPFMSG) MSGTYPE(*ESCAPE)    /* FUNCTION CHECK           */
+009000000000    CHGVAR &ERRORSW '1'                  /* SET SWITCH TO ERROR      */
+009100000000    CALL QMHRSNEM ('    ' X'0000000F0000000040404040404040' +
+009200000000               X'000000015CD5D6D5C540404040405CD5D6D5C54040404040+
+009300000000                 000000095CD7C7D4C2C4E840404040404040404040404040' +
+009400000000               X'00000030' RSNM0100 * X'00000000')
+009500000000ENDPGM

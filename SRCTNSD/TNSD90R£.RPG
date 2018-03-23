@@ -1,0 +1,109 @@
+000100950222     H* TNSD90R *-----------------------------------------------------*
+000200930225     H*        - PULIZIA  STAMPA VARIAZIONI NON EFFETTUATE -          *
+000300930225     H*---------------------------------------------------------------*
+000400930225     H              J
+000500991123     FFIARBE1CUF  E           K        DISK
+000600000710     FAZORG01LIF  E           K        DISK
+000700930225     I*
+000800950222     IFNARBD00    11
+000900950222     IFNARBK00    12
+001000991123     IFIARBT00    13
+001100950222     IFNARBM00    15
+001200950222     IFNARBV00    16
+001300950222     IFNARBG00    17
+001400991123     IFNARBP00    14
+001500930225     I*
+001600930225     IKPJBA     E DS
+001700000710     IOG143     E DS
+001800930225     IUT§DSE    E DSUT§DSE0F
+001900930225     I*
+002000920113     IWLBDAT      DS
+002100950222     I                                        1   80G02DAT
+002200950222     I                                        9  160G02INV
+002300950222     I                                       17  17 G02ERR
+002400950222     I                                       18  220G02TGI
+002500920602     IWGIDAT      DS
+002600950222     I                                        1   80GIODAT
+002700950222     I                                        9  160GIOINV
+002800950222     I                                       17  210GIOTGI
+002900930225     C*---------------------------------------------------------------*
+003000930225     C* INDICATORI USATI                                              *
+003100930225     C*---------------------------------------------------------------*
+003200991123     C* 11/17 - CONDIZIONA OPERAZIONI SUI DIVERSI FORMATI DI FIARBE1C
+003300991123     C* 30    - LETTURA FIARBE1C PER FILIALE UGUALE A ZERO
+003400991123     C* 32    - LETTURA FIARBE1C PER FINE FILE
+003500000710     C* 39    - CHAIN AZORG PER VEDERE SE LNP = POSTE
+003600930225     C*---------------------------------------------------------------*
+003700920113     C           *ENTRY    PLIST
+003800920113     C                     PARM           KPJBA
+003900920219     C*
+004000920113     C                     Z-ADD1         CODUT
+004100920113     C                     CALL 'X§PARUT'
+004200920113     C                     PARM           UT§DSE
+004300920113     C                     MOVELRAGUT     RSUT   20
+004400920218     C*
+004500950222     C* DATA PULIZIA  = DATA GIORNO - 40
+004600950222     C                     TIME           W0140  140
+004700950222     C                     MOVE W0140     G02DAT
+004800950222     C                     MOVE *ZEROS    G02INV
+004900920602     C                     MOVEL*BLANK    G02ERR
+005000950222     C                     CALL 'XSRDA8'
+005100920602     C                     PARM           WLBDAT
+005200920602     C*
+005300931231     C           G02TGI    SUB  40        GIOTGI
+005400920602     C*
+005500950222     C                     CALL 'XSRGI8'
+005600920602     C                     PARM           WGIDAT
+005700950222     C                     MOVELGIOINV    DATPUL  80
+005800930225     C*
+005900920602     C                     Z-ADD0         VIDFEV  30
+006000920218     C*
+006100930225     C* A R R I V I
+006200930225     C*
+006300920218     C* INIZIO LETTURA SE NON C'E FIL ELABORATORE
+006400920218     C           *IN32     DOWEQ'0'
+006500920602     C                     SETOF                     111213
+006600920602     C                     SETOF                     141530
+006700950222     C                     SETOF                     1617
+006800920602     C*
+006900991123     C           VIDFEV    SETGTFIARBE1C
+007000991123     C                     READ FIARBE1C                 32
+007100920218     C*
+007200920218     C        N32          DO
+007300991123     C                     Z-ADDARBFEV    VIDFEV
+007400920123     C*
+007500920305     C*
+007600950222     C           *IN30     DOWEQ'0'
+007700991123     C                     Z-ADDARBDAT    COMDAT  80
+007800950222     C           COMDAT    IFGT DATPUL
+007900920218     C                     SETON                         30
+008000920602     C                     ELSE
+008100920602     C*
+008200000710     C* .. PULISCO SOLO SE MINORE DI ZERO
+008300950222     C           COMDAT    IFNE 0
+008400000710      * .. E SOLO LE LNP NON POSTE
+008500000710     C                     CLEAR§OGPT
+008600000710     C           ARBLNP    CHAINAZORG01L             39
+008700000710     C  N39                MOVELORGDE3    OG143
+008800000710     C           §OGPT     IFNE 'S'
+008900950222     C   11                DELETFNARBD00
+009000950222     C   12                DELETFNARBK00
+009100991123     C   13                DELETFIARBT00
+009200991123     C   14                DELETFNARBP00
+009300950222     C   15                DELETFNARBM00
+009400950222     C   16                DELETFNARBV00
+009500950222     C   17                DELETFNARBG00
+009600000710     C                     ENDIF
+009700000710     C                     ENDIF
+009800920113     C*
+009900920113     C                     SETOF                     111213
+010000920602     C                     SETOF                     1415
+010100950222     C                     SETOF                     1617
+010200920602     C*
+010300991123     C           VIDFEV    READEFIARBE1C                 30
+010400950222     C                     END
+010500950222     C                     ENDDO
+010600920218     C                     END
+010700920602     C                     END
+010800930225     C*
+010900930225     C                     SETON                     LR

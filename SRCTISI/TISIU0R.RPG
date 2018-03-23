@@ -1,0 +1,168 @@
+000100970627     H*------------------------------------------------------------------------*
+000200970515     H* CONTROLLO CAP/LOCALITA                                                 *
+000300970424     H*------------------------------------------------------------------------*
+000400970424     H              J
+000500970424     F*------------------------------------------------------------------------*
+000600970424     F* DATA BASE
+000700970424     F*------------------------------------------------------------------------*
+000800970515     FAZCPC01LIF  E           K        DISK
+000900970703     FAZCPL01LUF  E           K        DISK                      A
+001000930323     FTABEL00FIF  E           K        DISK
+001100970424     E*------------------------------------------------------------------------*
+001200970424     E* SCHIERE
+001300970424     E*------------------------------------------------------------------------*
+001400970424     I*------------------------------------------------------------------------*
+001500970424     I* INPUT
+001600970424     I*------------------------------------------------------------------------*
+001700970424     I*-------------------
+001800970516     I* DS NAZIONI
+001900970424     I*-------------------
+002000970516     IDS15      E DS
+002100970519     I*-------------------
+002200970519     I* DS PROVINCIA
+002300970519     I*-------------------
+002400970519     IDSPR      E DS
+002500970424     I*-------------------
+002600970424     I* DS PER MESSAGGI
+002700970424     I*-------------------
+002800970409     I            DS
+002900970409     I                                        1  78 DSMSG
+003000970409     I                                       75  78 DSERR
+003100970516     I*-------------------
+003200970516     I* DS SCOMPOSIZIONE DATA IN ANNO/MESE/GIONRO
+003300970516     I*-------------------
+003400970516     IDS§DAT      DS
+003500970516     I                                        1   20DSSEC
+003600970516     I                                        3   40DSANN
+003700970516     I                                        1   40DSAAS
+003800970516     I                                        5   60DSMES
+003900970516     I                                        7   80DSGIO
+004000970516     I                                        5   80DSMGS
+004100970516     I                                        3   80DSDAT6
+004200970516     I                                        1   80DSDAT8
+004300970516     IDS§TIM      DS
+004400970516     I                                        1   20DTORA
+004500970516     I                                        3   40DTMIN
+004600970516     I                                        5   60DTSCN
+004700970516     I                                        7   80DTGIO
+004800970516     I                                        9  100DTMES
+004900970516     I                                       11  120DTSEC
+005000970516     I                                       13  140DTANN
+005100970516     I                                        1   60DTORA6
+005200970516     I                                        1  140DTTIME
+005300970424     I*-------------------
+005400970424     I* ARCHITETTURA
+005500970424     I*-------------------
+005600970424     IKPJBA     E DS
+005700970424     C*------------------------------------------------------------------------*
+005800970424     C* MAIN LINE
+005900970424     C*------------------------------------------------------------------------*
+006000970516     C*
+006100970424     C* OPERAZIONI INIZIALI
+006200930304     C                     EXSR RUTINZ
+006300930602     C*
+006400970703     C* LOOP PER TUTTI I CAP
+006500970703     C                     MOVEL*OFF      *IN99
+006600970703     C                     Z-ADD2         CPCVER
+006700970703     C                     MOVEL*BLANKS   CPCNAR
+006800970703     C           KCPC      SETLLAZCPC01L             99
+006900970703     C           KCPC      READEAZCPC01L                 99
+007000970703DO  1C           *IN99     DOWEQ*OFF
+007100970704     C           1         SUBSTCPCCAP:3  WCITTA  1
+007200970703IF  2C           CPCATB    IFEQ *BLANKS                    *NON ANNULL.
+007300970704     C           WCITTA    ANDEQ'1'
+007400970703     C*
+007500970703     C* LEGGE DECODIFICA DELLA PROVINCIA
+007600970703     C                     Z-ADDCODUT     KTBUTE
+007700970703     C                     MOVEL'PR'      KTBCOD
+007800970703     C                     MOVEL*BLANKS   KTBKEY
+007900970703     C                     MOVELCPCPRV    KTBKEY
+008000970703     C           KEYTAB    CHAINTABEL00F             99
+008100970703IF  2C           *IN99     IFEQ '1'
+008200970703     C           TBLFLG    ORNE *BLANKS
+008300970703X   3C                     ELSE
+008400970704     C                     MOVELTBLUNI    DSPR
+008500970703     C*
+008600970704     C* CONTROLLO SE GIA' PRESENTE E SE NON TROVATA AGGIUNGO
+008700970703     C                     MOVEL*OFF      *IN99
+008800970703     C                     Z-ADD2         CPLVER
+008900970703     C                     MOVEL*BLANKS   CPLNAR
+009000970703     C                     MOVELCPCCAP    CPLCAP
+009100970703     C                     MOVEL§PRDES    CPLLOC
+009200970703     C           KCPL1     CHAINAZCPL01L             99
+009300970703IF  4C           *IN99     IFEQ *ON                        *NON TROVATO
+009400970703     C                     MOVEL'C'       CPLLIV
+009500970703     C                     MOVEL'N'       CPLDLV
+009600970703     C                     Z-ADD*ZEROS    CPLLNA
+009700970703     C                     Z-ADD*ZEROS    CPLZNC
+009800970703     C                     MOVEL*BLANKS   CPLISO
+009900970703     C                     Z-ADD*ZEROS    CPLZFD
+010000970703     C                     Z-ADD*ZEROS    CPLLKG
+010100970703     C                     Z-ADD*ZEROS    CPLLMC
+010200970703     C                     Z-ADD*ZEROS    CPLLOL
+010300970703     C                     Z-ADD*ZEROS    CPLZOL
+010400970703     C                     Z-ADD*ZEROS    CPLLKS
+010500970703     C                     Z-ADD*ZEROS    CPLLMS
+010600970703     C                     Z-ADD*ZEROS    CPLLOS
+010700970703     C                     Z-ADD*ZEROS    CPLZOS
+010800970703     C                     Z-ADD*ZEROS    CPLLK2
+010900970703     C                     Z-ADD*ZEROS    CPLLM2
+011000970703     C                     Z-ADD*ZEROS    CPLLO2
+011100970703     C                     Z-ADD*ZEROS    CPLZO2
+011200970703     C                     MOVEL*BLANKS   CPLCTS
+011300970703     C                     MOVEL*BLANKS   CPLCTE
+011400970703     C                     Z-ADD*ZEROS    CPLTTC
+011500970703     C                     MOVEL*BLANKS   CPLPII
+011600970703     C                     MOVEL*BLANKS   CPLPID
+011700970703     C                     MOVEL*BLANKS   CPLPIS
+011800970703     C                     MOVEL*BLANKS   CPLGDD
+011900980612     C                     MOVEL*BLANKS   CPLESV
+012000970703     C                     MOVEL'N'       CPLESS
+012100970703     C                     MOVEL*BLANKS   CPLATB           *ANNULLAMENTO
+012200970703     C                     MOVEL*BLANKS   CPLFTR           *FLAG TRASMISSIONE
+012300970703     C                     Z-ADD*ZEROS    CPLDTR           *DATA TRASMISSIONE
+012400970703     C                     MOVEL*BLANKS   CPLFI1
+012500970703     C                     MOVEL*BLANKS   CPLFI2
+012600970703     C                     WRITEAZCPL000
+012700970703E   4C                     ENDIF
+012800970703E   3C                     ENDIF
+012900970703E   2C                     ENDIF
+013000970703     C*
+013100970703     C           KCPC      READEAZCPC01L                 99
+013200970703E   1C                     ENDDO
+013300930323     C*
+013400930323     C                     SETON                     LR
+013500970516     C*------------------------------------------------------------------------*
+013600930414     C*   RUTINZ - ROUTINE INIZIALE
+013700970516     C*------------------------------------------------------------------------*
+013800930414     C           RUTINZ    BEGSR
+013900941227     C*
+014000970515     C* CHIAVE LETTURA AZCPC01L - COMPLETA
+014100970516     C           KCPC      KLIST
+014200970523     C                     KFLD           CPCVER
+014300970515     C                     KFLD           CPCNAR
+014400970516     C*
+014500970516     C* CHIAVE LETTURA AZCPL01L - COMPLETA
+014600970605     C           KCPL1     KLIST
+014700970523     C                     KFLD           CPLVER
+014800970516     C                     KFLD           CPLNAR
+014900970516     C                     KFLD           CPLCAP
+015000970516     C                     KFLD           CPLLOC
+015100930414     C*
+015200930414     C* CHIAVE LETTURA TABEL00F - COMPLETA
+015300930414     C           KEYTAB    KLIST
+015400930414     C                     KFLD           KTBUTE
+015500930414     C                     KFLD           KTBCOD
+015600930414     C                     KFLD           KTBKEY
+015700930414     C*
+015800930414     C* DEFINISCO CAMPI CHIAVE
+015900930414     C           *LIKE     DEFN TBLKUT    KTBUTE
+016000930414     C           *LIKE     DEFN TBLCOD    KTBCOD
+016100930414     C           *LIKE     DEFN TBLKEY    KTBKEY
+016200930414     C*
+016300930414     C* RECUPERO IL CODICE DELL'AZIENDA
+016400930414     C                     Z-ADD1         CODUT   10
+016500970519     C                     MOVEL'N'       $ERR    1
+016600930414     C*
+016700930414     C                     ENDSR
+016800970516     O*------------------------------------------------------------------------*

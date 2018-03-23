@@ -1,0 +1,535 @@
+000100900418     H              J
+000200911111     H*       - PREPARAZIONE ARCHIVI PER TRASMISSIONE           -    *
+000300930413     H*         DATI CONSEGNE   A  FILIALI + SEDE                    *
+000400911014     H*--------------------------------------------------------------*
+000500950302     FFNARB01LUF  E           K        DISK
+000600950302     FFNARB32LUF  E           K        DISK
+000700950302     F            FNARB000                          KRENAMEFNARB32
+000800941025     FFNLBL01LIF  E           K        DISK
+000900941025     FFNLBL02LIF  E           K        DISK
+001000941025     F            FNLBL000                          KRENAMEFNLBLMA
+001100941021     FFNARBC0TO   E                    DISK                           UC
+001200941021     F            FNARBC00                          KRENAMEFNARBCT
+001300941021     FFNARBC0RO   E                    DISK                           UC
+001400941021     F            FNARBC00                          KRENAMEFNARBCL
+001500941021     FFNARBC46O   E                    DISK                           UC
+001600941021     F            FNARBC00                          KRENAMEFNARBCS
+001700941026     FAZORG01LIF  E           K        DISK                           UC
+001800941026     FTABEL00FIF  E           K        DISK                           UC
+001900911014     E                    TCU        50  6               PARAM FLG7/8,TIPC
+002000911014     E                    KCU        50  4 0             PARAM CAPI CONTO
+002100911014     E                    DTU        12  6 0             DATE PARAM
+002200941025     E                    UNI        29  3               LINEE ARRIVI
+002300930421     E                    FIL       200  3 0             FILIALE
+002400930421     E                    FEL       200  3 0             FILIALE ELABORAT.
+002500950126     E* CODICI BOLLE DA NON INVIARE IN SEDE
+002600950126     E                    CDB        40  2               COD. BOLLE
+002700930421     E                    CMDC    1   5 45               QCAEXEC CHKOBJ
+002800930421     E                    CMDA    1   5 45               QCAEXEC ADDPFM
+002900930421     E                    CMDO    1   5 45               QCAEXEC OVRDBF
+003000911014     ITCUDS       DS
+003100911014     I                                        1   1 F1
+003200911014     I                                        3   3 F3
+003300911014     I                                        2   2 F2
+003400911014     I                                        4   4 F4
+003500911014     I                                        5   6 F56
+003600911014     IUTEDSE    E DSUT§DSE0F
+003700911014     I                                      398 697 TCU
+003800911014     I                                    P 698 847 KCU
+003900911014     I                                    P 848 8950DTU
+004000941025     IWLBDA8      DS
+004100941025     I                                        1   80G08DAT
+004200941025     I                                        9  160G08INV
+004300941025     I                                       17  17 G08ERR
+004400941025     I                                       18  220G08TGI
+004500930216     IDS7A      E DS
+004600950126     IDS3A      E DS
+004700911014     IDSCMZ     E DS
+004800911014     ICNCR80    E DS
+004900911112      *
+005000911112     I            DS
+005100911112     I                                        1   6 §SEI
+005200911112     I                                        1   3 §PRF
+005300911015     IPARAM5      DS
+005400911015     I                                        1  10 LEGFIL
+005500911015     I                                       11  14 MBRFIL
+005600911015     I                                       15  20 BLKFIL
+005700911014     C*---------------------------------------------------------------*
+005800930421     C                     EXSR ARBCSR
+005900950302      * RILEGGO X TRASMETTERE ALLA BOLLA ORIGINALE
+006000950302     C                     EXSR ARBORI
+006100930421      * I N V I O  FILIALI
+006200930421     C*
+006300911021     C                     EXSR INVIO
+006400930421     C* I N V I O  A SEDE
+006500930421     C*
+006600930415      * SE HO BOLLE CONSEGNATE TRASMETTO A SEDE
+006700941021     C                     CLOSEFNARBC46
+006800930415     C           NRSED     IFGT *ZEROS
+006900911111     C                     EXSR INVSED
+007000930415     C                     END
+007100930415      *
+007200911015     C                     SETON                     LR
+007300930421     C***--------------------------------------------***
+007400930421     C* PREPARAZIONE ARCHIVIO DATI CONSEGNA
+007500930421     C***--------------------------------------------***
+007600930421     C           ARBCSR    BEGSR
+007700930421     C                     SETOF                     10
+007800950302     C           *LOVAL    SETLLFNARB01L
+007900930421     C*
+008000930421     C* APRO FILE X LA SEDE
+008100930421     C                     EXSR CAEX46
+008200930421     C*
+008300930421     C           *IN10     DOUEQ'1'
+008400950302     C                     READ FNARB01L               1510
+008500950302     C  N15N10   ARBDCM    IFGE 19950206
+008600950303     C           ARBFT1    ANDEQ'T'
+008700941025      * GUARDO COSA DEVO TRASMETTERE ALLA PARTENZA SE CI SONO LEGAMI
+008800941025      * - LA BOLLA HA UNA FIGLIA CON LNA DIVERSA (DIROTT./RESO)
+008900941026     C                     MOVEL*BLANK    HAFIGL  1
+009000941026     C                     MOVEL*BLANK    HAMAMM  1
+009100941026     C                     MOVEL*BLANK    HAORIG  1
+009200941025     C                     MOVEL*BLANK    ARBFAG
+009300941025     C           KARB      CHAINFNLBL02L             22
+009400941025     C           *IN22     DOWEQ'0'
+009500941025     C           ARBLNA    IFNE LBLLAN
+009600941026     C                     MOVEL'S'       HAFIGL
+009700941025     C                     END
+009800941025     C           KARB      READEFNLBL02L                 22
+009900941025     C                     ENDDO
+010000941025      *
+010100941026      * - LA BOLLA HA UNA MAMMA + GUARDO LNA BOLLA ORIGINALE
+010200941025     C           KARB      CHAINFNLBL01L             22
+010300941025     C           *IN22     IFEQ '0'
+010400941026     C                     MOVEL'S'       HAMAMM
+010500950303     C*****      LBLLAO    IFNE LBLLAP
+010600950303      * SOLO  ORIGINALI DEL 1995
+010700950303     C           LBLAAO    IFEQ 1995
+010800950303     C           LBLLAO    ANDNELBLLAN
+010900941026     C                     MOVEL'S'       HAORIG
+011000950302     C                     ENDIF
+011100941025     C                     ENDIF
+011200950302     C           HAORIG    IFEQ 'S'
+011300950302     C           HAFIGL    ANDEQ' '
+011400950302     C                     MOVEL'O'       ARBFT1
+011500950302     C                     MOVE *ZEROS    ARBDT1
+011600950302     C                     EXCPTAGGB0
+011700950302     C                     ENDIF
+011800930524      *
+011900950302     C                     ENDIF                            DT.CONSE
+012000930421      *
+012100950301     C                     END
+012200930421     C                     ENDSR
+012300930421     C**-------------------------------------------------------------**
+012400941021     C** QCAEXEC SUL MBR DI FNARBC46 PER LA SEDE
+012500930421     C**-------------------------------------------------------------**
+012600930421     C           CAEX46    BEGSR
+012700930421     C** FILIALE PER APERTURA MEMBRO
+012800930421     C                     MOVE ')'       VAR     4
+012900930421     C                     MOVEL§FLE      VAR
+013000930421     C                     Z-ADD45        LUNG   155
+013100930421     C** CONTROLLO SE ESISTE IL MEMBRO
+013200930421     C                     SETOF                     60
+013300930421     C                     MOVE VAR       CMDC,3
+013400930421     C                     MOVEL*BLANKS   COMMAN
+013500930421     C                     MOVEACMDC,3    COMMAN 80
+013600930421     C                     CALL 'QCMDEXC'              60
+013700930421     C                     PARM           COMMAN
+013800930421     C                     PARM           LUNG
+013900930421     C** ESEGUE ADDPFM DEL MEMBRO NUOVO
+014000930421     C   60                DO
+014100930421     C                     MOVE VAR       CMDA,3
+014200930421     C                     MOVEL*BLANKS   COMMAN
+014300930421     C                     MOVEACMDA,3    COMMAN
+014400930421     C                     CALL 'QCMDEXC'
+014500930421     C                     PARM           COMMAN
+014600930421     C                     PARM           LUNG
+014700930421     C                     END
+014800930421     C*+ ESEGUE IN OGNI CASO OVRDBF DEL MEMBRO DESIDERATO
+014900930421     C                     MOVE VAR       CMDO,3
+015000930421     C                     MOVEL*BLANKS   COMMAN
+015100930421     C                     MOVEACMDO,3    COMMAN
+015200930421     C                     CALL 'QCMDEXC'
+015300930421     C                     PARM           COMMAN
+015400930421     C                     PARM           LUNG
+015500941021     C                     OPEN FNARBC46
+015600930421     C                     ENDSR
+015700930421     C**-------------------------------------------------------------**
+015800950301     C** QCAEXEC SUL MBR DI FNARBC0R
+015900930421     C**-------------------------------------------------------------**
+016000930421     C           CAEXC     BEGSR
+016100930421     C** FILIALE PER APERTURA MEMBRO
+016200930421     C                     MOVE ')'       VAR     4
+016300930421     C                     MOVELFEL,X     VAR
+016400930421     C                     Z-ADD45        LUNG   155
+016500930421      *
+016600941021     C** CONTROLLO SE ESISTE IL MEMBRO X FNARBC0T/R
+016700930421     C                     SETOF                     60
+016800930423     C     N20             MOVE VAR       CMDC,1
+016900930423     C      20             MOVE VAR       CMDC,2
+017000930421     C                     MOVEL*BLANKS   COMMAN
+017100930421     C     N20             MOVEACMDC,1    COMMAN 80
+017200930421     C      20             MOVEACMDC,2    COMMAN 80
+017300930421     C                     CALL 'QCMDEXC'              60
+017400930421     C                     PARM           COMMAN
+017500930421     C                     PARM           LUNG
+017600930421     C** ESEGUE ADDPFM DEL MEMBRO NUOVO
+017700930421     C   60                DO
+017800930423     C     N20             MOVE VAR       CMDA,1
+017900930423     C      20             MOVE VAR       CMDA,2
+018000930421     C                     MOVEL*BLANKS   COMMAN
+018100930421     C     N20             MOVEACMDA,1    COMMAN
+018200930421     C      20             MOVEACMDA,2    COMMAN
+018300930421     C                     CALL 'QCMDEXC'
+018400930421     C                     PARM           COMMAN
+018500930421     C                     PARM           LUNG
+018600930421     C                     END
+018700930421     C*+ ESEGUE IN OGNI CASO OVRDBF DEL MEMBRO DESIDERATO
+018800930423     C     N20             MOVE VAR       CMDO,1
+018900930423     C      20             MOVE VAR       CMDO,2
+019000930421     C                     MOVEL*BLANKS   COMMAN
+019100930421     C     N20             MOVEACMDO,1    COMMAN
+019200930421     C      20             MOVEACMDO,2    COMMAN
+019300930421     C                     CALL 'QCMDEXC'
+019400930421     C                     PARM           COMMAN
+019500930421     C                     PARM           LUNG
+019600930421      *
+019700941021     C     N20             OPEN FNARBC0T
+019800930423     C                     SETOF                     21
+019900930423     C      20             SETON                     21
+020000941021     C      20             OPEN FNARBC0R
+020100930421     C                     ENDSR
+020200950302     C***--------------------------------------------***
+020300950302     C* TRASMISS. SOLO DATA CONSEGNA ALLA BOLLA ORIGINALE
+020400950302     C***--------------------------------------------***
+020500950302     C           ARBORI    BEGSR
+020600950302     C                     Z-ADD0         SAVLNP
+020700950302     C                     SETOF                     105021
+020800950302     C           *LOVAL    SETLLFNARB32L
+020900950302     C*
+021000950302     C           *IN10     DOUEQ'1'
+021100950302     C                     READ FNARB32L               1510
+021200950302     C  N15N10   ARBFT1    IFEQ 'O'
+021300950302     C           KARB      CHAINFNLBL01L             22
+021400950302     C* CONTROLLO SE LA LNP ORIGINALE. = ME STESSO O UNA MIA 2° LIVELLO
+021500950302     C                     Z-ADD1         X
+021600950302     C           LBLLPO    LOKUPFIL,X                    19
+021700950302     C   19      FEL,X     COMP SIMFEL                   20
+021800950302     C   19                DO
+021900950302      *
+022000950302      * ----------------------------------------------------  ROTTURA LNP
+022100950302      * APERTURA MEMBRO A CAMBIO LNP E TRASMISSIONE QUELLO PRECEDENTE
+022200950302     C           LBLLPO    IFNE SAVLNP
+022300950302     C   50                DO
+022400950302     C      21             CLOSEFNARBC0R
+022500950302     C     N21             CLOSEFNARBC0T
+022600950302     C*
+022700950302     C                     END
+022800950302     C  N50                SETON                     50
+022900950302     C                     EXSR CAEXC
+023000950302     C                     Z-ADDLBLLPO    SAVLNP
+023100950302     C                     END
+023200950302      * ---------------------------------------------------- FINE ROTTURA
+023300950302      * TRASMETTO SE C'E' DATA CONSEGNA
+023400950302     C           ARBDCM    IFGE 19950206
+023500950302     C                     MOVE LBLLPO    ARBLNP
+023600950302     C                     MOVE LBLAAO    ARBAAS
+023700950302     C                     MOVE LBLNRO    ARBNRS
+023800950302     C                     MOVE LBLNSO    ARBNSP
+023900950302     C                     MOVEL' '       ARBFDS           SI DETT.SEGN.
+024000950302     C                     MOVEL'O'       ARBFAG           BOLLA ORIGINALE
+024100950302     C  N20                WRITEFNARBCT
+024200950302     C   20                WRITEFNARBCL
+024300950302      * TRASMETTO A SEDE
+024400950302     C                     ADD  1         NRSED   70
+024500950302     C                     WRITEFNARBCS                    SEDE
+024600950302     C*
+024700950302     C                     MOVEL'T'       ARBFT1
+024800950302     C                     MOVE AMGUDT    ARBDT1
+024900950302     C                     END
+025000950302     C                     EXCPTAGGOR
+025100950302     C                     END
+025200950302     C                     END
+025300950302     C                     END
+025400950302      *
+025500950302     C   50 21             CLOSEFNARBC0R
+025600950302     C   50N21             CLOSEFNARBC0T
+025700950302     C                     ENDSR
+025800911021     C**----------------------------------
+025900911021     C** LANCIO AZIONI DI TRASMISSIONE
+026000911021     C**----------------------------------
+026100911021     C           INVIO     BEGSR
+026200930510     C                     MOVEL'M'       VARMBR  4
+026300930421     C                     MOVE *ZEROS    X
+026400930421     C           *IN45     DOUEQ'1'
+026500930421     C                     ADD  1         X
+026600930421     C           FIL,X     COMP 0                        45
+026700930421     C  N45      FIL,X     IFEQ FEL,X
+026800930510     C                     MOVE FEL,X     VARMBR
+026900930415      *   TESTATA BOLLA
+027000930510     C                     EXSR TRUL51
+027100930421     C           SIMFEL    IFNE FEL,X
+027200941021     C                     MOVEL'FNARBC0T'FILE
+027300930510     C                     MOVELVARMBR    MBR
+027400930510     C                     CALL 'TRUL51C'
+027500930510     C                     PARM           LIBR
+027600930510     C                     PARM           FILE
+027700930510     C                     PARM           MBR
+027800930510     C                     PARM           NRR
+027900930510     C                     Z-ADDNRR       NRRC   100
+028000911104     C                     ELSE
+028100941021     C                     MOVEL'FNARBC0R'FILE
+028200930510     C                     MOVELVARMBR    MBR
+028300930510     C                     CALL 'TRUL51C'
+028400930510     C                     PARM           LIBR
+028500930510     C                     PARM           FILE
+028600930510     C                     PARM           MBR
+028700930510     C                     PARM           NRR
+028800930510     C                     Z-ADDNRR       NRRC   100
+028900911104     C                     END
+029000930415      *   ALTRA FILIALE   = TRASMISSIONE
+029100930421     C           SIMFEL    IFNE FEL,X
+029200930510     C                     MOVE FEL,X     §FIL    3
+029300930510     C           NRRC      IFGT 0
+029400911021     C                     EXSR X25
+029500930415     C                     END
+029600911111     C                     ELSE
+029700930415      *   STESSA FILIALE  = SOTTOMETTO AZIONE RICEZIONE
+029800930415     C                     END
+029900930415      *
+030000911021     C                     END
+030100911022     C                     END
+030200911021     C                     ENDSR
+030300930510      *----------------------------------------------------------------
+030400930510      * PULIZIA PARAMETRI X TRUL51C
+030500930510      *----------------------------------------------------------------
+030600930510     C           TRUL51    BEGSR
+030700950302     C                     MOVELLIBSYS    LIBR   10
+030800930510     C                     MOVEL*BLANK    FILE   10
+030900930510     C                     MOVEL*BLANK    MBR    10
+031000930510     C                     Z-ADD0         NRR    100
+031100930510     C                     ENDSR
+031200930415     C**---------------------------------------
+031300930415     C** SOTTOMETTE TRASMISSIONE  TESTATA BOLLA
+031400930415     C**---------------------------------------
+031500911014     C           X25       BEGSR
+031600930510     C                     MOVE §FIL      CMZDST            DEST.:FIL
+031700941021     C                     MOVEL'FNARBC0T'CMZFLD            DA: >>>
+031800911014     C                     MOVEL*BLANK    CMZMBD
+031900930510     C                     MOVELVARMBR    CMZMBD
+032000950302     C                     MOVELLIBSYS    CMZLBD
+032100941021     C                     MOVEL'FNARBC0R'CMZFLA            A: >>>
+032200911014     C                     MOVEL*BLANK    CMZMBA
+032300911015     C                     MOVEL'M   '    VAR
+032400911015     C                     MOVE SIMFEL    VAR
+032500911014     C                     MOVELVAR       CMZMBA
+032600911014     C                     MOVELLIBSYS    CMZLBA
+032700941025     C                     MOVE 'LR91'    CMZAZN            AZIONE
+032800911014     C                     MOVELLIBSYS    CMZSYF            SIST.INF.
+032900930423     C                     MOVE NRR       CMZNRR            N.REC.
+033000911104     C                     MOVE *BLANKS   CMZPRR            FILE PRE-REQ.
+033100930415     C                     EXSR XCMZ
+033200911014     C                     ENDSR
+033300911021     C*
+033400930415     C           XCMZ      BEGSR
+033500930415     C                     MOVE '0000'    CMZORI            ORA
+033600930415     C                     MOVE '0000000' CMZDTI            DATA
+033700930415     C                     MOVE 'T'       CMZURG            IN NOTTE
+033800930415     C                     MOVE 'A'       CMZADD            IN ADD
+033900930415     C                     MOVE 'S'       CMZCLR            CLEAR
+034000930415     C                     MOVE 'S'       CMZFTR            DA TRANS.
+034100930415     C                     MOVE *BLANK    CMZERR            1= ERR.
+034200930415     C                     CALL 'CMZ002R'
+034300930415     C                     PARM           CMZDST
+034400930415     C                     PARM           CMZFLD
+034500930415     C                     PARM           CMZMBD
+034600930415     C                     PARM           CMZLBD
+034700930415     C                     PARM           CMZFLA
+034800930415     C                     PARM           CMZMBA
+034900930415     C                     PARM           CMZLBA
+035000930415     C                     PARM           CMZORI
+035100930415     C                     PARM           CMZDTI
+035200930415     C                     PARM           CMZURG
+035300930415     C                     PARM           CMZADD
+035400930415     C                     PARM           CMZCLR
+035500930415     C                     PARM           CMZFTR
+035600930415     C                     PARM           CMZERR
+035700930415     C                     PARM           CMZAZN
+035800930415     C                     PARM           CMZSYF
+035900930415     C                     PARM           CMZNRR
+036000930415     C                     PARM           CMZPRR
+036100930415     C                     ENDSR
+036200930415     C**----------------------------------
+036300930415     C** LANCIO AZIONI DI TRASMISSIONE IN SEDE
+036400930415     C**----------------------------------
+036500930415     C           INVSED    BEGSR
+036600930510     C                     EXSR TRUL51
+036700941021     C                     MOVEL'FNARBC46'FILE
+036800930415     C                     MOVEL'M'       VAR2    4
+036900930415     C                     MOVE §FLE      VAR2
+037000930510     C                     MOVELVAR2      MBR
+037100930510     C                     CALL 'TRUL51C'
+037200930510     C                     PARM           LIBR
+037300930510     C                     PARM           FILE
+037400930510     C                     PARM           MBR
+037500930510     C                     PARM           NRR
+037600930415     C           NRR       IFGT 0
+037700930415     C                     EXSR X25SED
+037800930415     C                     END
+037900930415     C                     ENDSR
+038000911112     C**----------------------------------
+038100911112     C** SOTTOMETTE TRASMISSIONE X LA SEDE
+038200911112     C**----------------------------------
+038300911112     C           X25SED    BEGSR
+038400911112     C                     MOVEL'046'     CMZDST            DEST.:SEDE
+038500941021     C                     MOVEL'FNARBC46'CMZFLD            DA: >>>
+038600911112     C                     MOVE VAR2      VAR
+038700911112     C                     MOVEL*BLANK    CMZMBD
+038800911112     C                     MOVELVAR       CMZMBD
+038900911112     C                     MOVELLIBSYS    CMZLBD
+039000941021     C                     MOVEL'FNARBC0R'CMZFLA            A: >>>
+039100911112     C                     MOVEL*BLANK    CMZMBA
+039200911112     C                     MOVEL'M   '    VAR
+039300911112     C                     MOVE SIMFEL    VAR
+039400911112     C                     MOVELVAR       CMZMBA
+039500911112     C                     MOVELLIBSYS    CMZLBA
+039600911112     C                     MOVE '0000'    CMZORI            ORA
+039700911112     C                     MOVE '0000000' CMZDTI            DATA
+039800921026     C                     MOVE 'T'       CMZURG            IN NOTTE
+039900911112     C                     MOVE 'A'       CMZADD            IN ADD
+040000911112     C                     MOVE 'S'       CMZCLR            CLEAR
+040100911112     C                     MOVE 'S'       CMZFTR            DA TRANS.
+040200911112     C                     MOVE *BLANK    CMZERR            1= ERR.
+040300941025     C                     MOVE 'TR91'    CMZAZN            AZIONE
+040400911112     C                     MOVELLIBSYS    CMZSYF            SIST.INF.
+040500911112     C                     MOVE NRR       CMZNRR            N.REC.
+040600911112     C                     MOVE *BLANKS   CMZPRR            FILE PRE-REQ.
+040700911112     C                     CALL 'CMZ002R'
+040800911112     C                     PARM           CMZDST
+040900911112     C                     PARM           CMZFLD
+041000911112     C                     PARM           CMZMBD
+041100911112     C                     PARM           CMZLBD
+041200911112     C                     PARM           CMZFLA
+041300911112     C                     PARM           CMZMBA
+041400911112     C                     PARM           CMZLBA
+041500911112     C                     PARM           CMZORI
+041600911112     C                     PARM           CMZDTI
+041700911112     C                     PARM           CMZURG
+041800911112     C                     PARM           CMZADD
+041900911112     C                     PARM           CMZCLR
+042000911112     C                     PARM           CMZFTR
+042100911112     C                     PARM           CMZERR
+042200911112     C                     PARM           CMZAZN
+042300911112     C                     PARM           CMZSYF
+042400911112     C                     PARM           CMZNRR
+042500911112     C                     PARM           CMZPRR
+042600911112     C                     ENDSR
+042700941025     C*****************************************************************
+042800941025     C*     I N Z S R
+042900941025     C*****************************************************************
+043000941025     C           *INZSR    BEGSR
+043100941025     C                     Z-ADD1         CODUT
+043200941025     C                     CALL 'X§PARUT'
+043300941025     C                     PARM           UTEDSE
+043400941025     C                     MOVELREC80     CNCR80
+043500941025     C                     Z-ADD0         SAVLNP  30
+043600941025     C*
+043700950302     C                     MOVEL'GAITRA'  LIBSYS 10
+043800950302     C                     MOVE '201 '    LIBSYS
+043900941025     C           SIMFEL    COMP 0                        02
+044000950302     C  N02                MOVE SIMFEL    §FLE    30
+044100941025     C*§§
+044200941025     C                     TIME           WHHUDT 140
+044300941025     C                     MOVELWHHUDT    ORA     60
+044400941025     C                     MOVE WHHUDT    G08DAT
+044500941025     C                     MOVE *ZEROS    G08INV
+044600941025     C                     MOVEL*BLANK    G08ERR
+044700941025     C                     CALL 'XSRDA8'
+044800941025     C                     PARM           WLBDA8
+044900941025     C                     Z-ADDG08INV    AMGUDT  80
+045000941025     C                     Z-ADDG08DAT    GMAUDT  80
+045100941025     C*
+045200941025     C*PRELEVO ORARIO MASSIMO X TRASMISSIONE IN IMMEDIATO
+045300941026     C                     OPEN TABEL00F
+045400941025     C                     MOVEL'7A'      COD
+045500941025     C                     MOVEL*BLANKS   KEY
+045600941025     C                     MOVEL'1'       KEY
+045700941025     C           KTAB      CHAINTABEL                03
+045800941025     C                     MOVELTBLUNI    DS7A
+045900950126     C*CARICO I CODICI BOLLE DA NON INVIARE IN SEDE
+046000950126     C                     MOVEL'3A'      COD
+046100950126     C                     MOVEL*BLANK    KEY
+046200950126     C                     MOVE *ZEROS    §F      20
+046300950126     C           KTAB1     SETLLTABEL
+046400950126     C           *IN03     DOUEQ'1'
+046500950126     C           KTAB1     READETABEL                    03
+046600950126     C  N03      TBLFLG    IFEQ *BLANK                      ANNUL.
+046700950126     C                     MOVELTBLUNI    DS3A
+046800950126     C           §3ABSD    IFEQ 'N'                         NO TRASM.IN SEDE
+046900950126     C                     ADD  1         §F
+047000950126     C                     MOVELTBLKEY    CDB,§F
+047100950126     C                     ENDIF
+047200950126     C                     ENDIF
+047300950126     C                     ENDDO
+047400941026     C                     CLOSETABEL00F
+047500941026      *
+047600941025     C*MEMORIZZO PER OGNI FILIALE LA FILIALE ELABORATORE
+047700941026     C                     OPEN AZORG01L
+047800941025     C           *LOVAL    SETLLAZORG01L
+047900941025     C           *IN19     DOUEQ'1'
+048000941025     C                     READ AZORG01L                 19
+048100941025     C  N19      ORGFAG    IFEQ 'F'
+048200941025     C           ORGFAG    OREQ 'A'
+048300941025     C                     ADD  1         X       30
+048400941025     C                     MOVE ORGFIL    FIL,X
+048500941025     C                     MOVE ORGFEL    FEL,X
+048600941025     C                     END
+048700941025     C                     END
+048800941026     C                     CLOSEAZORG01L
+048900941025     C*
+049000941025     C           KARB      KLIST
+049100941025     C                     KFLD           ARBAAS
+049200941025     C                     KFLD           ARBLNP
+049300941025     C                     KFLD           ARBNRS
+049400941025     C                     KFLD           ARBNSP
+049500941025     C*
+049600941025     C           KTAB      KLIST
+049700941025     C                     KFLD           CODUT
+049800941025     C                     KFLD           COD
+049900941025     C                     KFLD           KEY
+050000941025     C*
+050100950126     C*
+050200950126     C           KTAB1     KLIST
+050300950126     C                     KFLD           CODUT
+050400950126     C                     KFLD           COD
+050500941025     C*
+050600941025     C* DEFINIZIONE CHIAVI
+050700941025     C*
+050800941025     C           *LIKE     DEFN TBLCOD    COD
+050900941025     C           *LIKE     DEFN TBLKEY    KEY
+051000941216     C           *LIKE     DEFN ARBNMI    KNMI
+051100941025     C                     ENDSR
+051200950302     OFNARB000E                AGGB0
+051300950302     O                         ARBFT1
+051400950302     O                         ARBDT1
+051500950302     OFNARB32 E                AGGOR
+051600950302     O                         ARBFT1
+051700950302     O                         ARBDT1
+051800911111**         CMDC
+051900941021CHKOBJ OBJ(FNARBC0T) OBJTYPE(*FILE) MBR(M000)
+052000941021CHKOBJ OBJ(FNARBC0R) OBJTYPE(*FILE) MBR(M000)
+052100941021CHKOBJ OBJ(FNARBC46) OBJTYPE(*FILE) MBR(M000)
+052200941021CHKOBJ OBJ(FNARTC0T) OBJTYPE(*FILE) MBR(M000)
+052300941021CHKOBJ OBJ(FNARTC0R) OBJTYPE(*FILE) MBR(M000)
+052400911111**         CMDA
+052500941021ADDPFM FILE(FNARBC0T)               MBR(M000)
+052600941021ADDPFM FILE(FNARBC0R)               MBR(M000)
+052700941021ADDPFM FILE(FNARBC46)               MBR(M000)
+052800941021ADDPFM FILE(FNARTC0T)               MBR(M000)
+052900941021ADDPFM FILE(FNARTC0R)               MBR(M000)
+053000911111**         CMDO
+053100941021OVRDBF FILE(FNARBC0T)               MBR(M000)
+053200941021OVRDBF FILE(FNARBC0R)               MBR(M000)
+053300941021OVRDBF FILE(FNARBC46)               MBR(M000)
+053400941021OVRDBF FILE(FNARTC0T)               MBR(M000)
+053500941021OVRDBF FILE(FNARTC0R)               MBR(M000)

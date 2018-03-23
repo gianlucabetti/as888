@@ -1,0 +1,61 @@
+000100050415/* ?------------------------------------------------------------------ */
+000200050415/* ? Controlla se il file EDBRV00F non è stato allocato da altri       */
+000300050415/* ?------------------------------------------------------------------ */
+000400050415             PGM        PARM(&KPJBA)
+000500050415
+000600050415             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700050415             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10)
+000800050415             DCL        VAR(&CONTA) TYPE(*DEC) LEN(1 0) VALUE(1)
+000802061024             DCL        VAR(&EDSEL) TYPE(*CHAR) LEN(1)
+000803061024             DCL        VAR(&VIDSN) TYPE(*CHAR) LEN(1)
+000804061024             DCL        VAR(&ALLOCATO) TYPE(*CHAR) LEN(1)
+000805061024
+000900050415/* ?- x MSG a KNMUS   ricava l'utente -------------------------------- */
+001000050415             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 1 10))
+001001061024
+001002061024/* ?- e parametri x EDI definitivo    -------------------------------- */
+001003061024             CHGVAR     VAR(&EDSEL) VALUE(%SST(&KPJBA 488 1))
+001004061024             CHGVAR     VAR(&VIDSN) VALUE(%SST(&KPJBA 498 1))
+001005061024
+001006061024/* ?------------------------------------------------------------------ */
+001007061024/* Solo se EDI e Se richiesta in Definitivo                            */
+001008061024/* ?------------------------------------------------------------------ */
+001009061024             IF         COND(&VIDSN *EQ 'S' *AND &EDSEL *EQ 'S') +
+001010061024                          THEN(DO)
+001100050415RIPROVA:
+001200050415/* ?------------------------------------------------------------------ */
+001300061024/* Controlla se il file è allocato altrimenti riprova                  */
+001400050415/* ?------------------------------------------------------------------ */
+001500050418             ALCOBJ     OBJ((EDBRV00F *FILE *EXCL)) WAIT(60)
+001600050415             MONMSG     MSGID(CPF1002 CPF1040 CPF1085) EXEC(DO)
+001700050415
+001800050415/* ?Riprova max.N volte ---------------------------------------------- */
+001900050415             IF         COND(&CONTA *LE 5) THEN(DO)
+002000050418             DLYJOB     DLY(180)
+002100050415             CHGVAR     VAR(&CONTA) VALUE(&CONTA + 1)
+002200050415             GOTO       CMDLBL(RIPROVA)
+002300050415             ENDDO
+002400050415
+002500050415             SNDPGMMSG  MSG('(<<  ATTENZIONE: Un altro Utente sta +
+002600050415                          utilizzando la procedura di Quadratura +
+002700050415                          Entrata x Import / Trasmissioni date +
+002800050415                          Arrivo.                  Rieseguire La +
+002900050415                          procedura di Quadratura Entrata x Import +
+003000050415                          poichè non è stato possibile effettuare +
+003100050415                          l''elaborazione !! >>)') TOUSR(&USRMSG)
+003200050415             GOTO       CMDLBL(FINE)
+003300050415             ENDDO
+003400050415
+003401061024             CHGVAR     VAR(&ALLOCATO) VALUE('S')
+003402061024             ENDDO
+003403061024
+003404061024/* ?Pgm Batch di confronto-------------------------------------------- */
+003500050415             CALL       PGM(FNLSA7R) PARM(&KPJBA)
+003501061024
+003502061024/* ?Solo se x EDI ed in Definitivo ----      disalloca   ------------- */
+003503061024             IF         COND(&ALLOCATO *EQ 'S') THEN(DO)
+003600050415             DLCOBJ     OBJ((EDBRV00F *FILE *EXCL))
+003601061024             ENDDO
+003700050415FINE:
+003800050415             ENDPGM
+003900050415/* ?------------------------------------------------------------------ */

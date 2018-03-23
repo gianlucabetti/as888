@@ -1,0 +1,91 @@
+000100890707             PGM        PARM(&KPJBA)
+000200890707
+000300940315             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+000400940315             DCL        VAR(&NRRBOL) TYPE(*DEC)   LEN(10 0)
+000500940315             DCL        VAR(&NRRVAR) TYPE(*DEC)   LEN(10 0)
+000600940315             DCL        VAR(&RISP)   TYPE(*CHAR) LEN(1)
+000700940316             DCL        VAR(&RIPR)   TYPE(*CHAR) LEN(2)
+000800950302             DCL        VAR(&D66BOL) TYPE(*CHAR) LEN(10)
+000801120326             DCL        VAR(&D66MUL) TYPE(*CHAR) LEN(10)
+000900950302             DCL        VAR(&D66VAR) TYPE(*CHAR) LEN(10)
+001000950302             DCL        VAR(&D66LIB) TYPE(*CHAR) LEN(10)
+001100980105             DCL        VAR(&D66LBR) TYPE(*CHAR) LEN(10)
+001200940316             DCL        VAR(&MSG) TYPE(*CHAR) LEN(200) VALUE('(C G) +
+001300940316                          Montare nastro su unità TAP03 per +
+001400940316                          ripristino archivi Pulizia Contrassegni +
+001500940316                          di sede')
+001600940316             DCL        VAR(&ERRO1) TYPE(*CHAR) LEN(200) +
+001700940316                          VALUE('ERRORE !!! Gli archivi di sede +
+001800940316                          sono pieni !!! Impossibile procedere al +
+001900940316                          ripristino')
+002000940316             DCL        VAR(&ERRO2) TYPE(*CHAR) LEN(300) +
+002100940316                          VALUE('ERRORE nel ripristino del +
+002200940316                          file          !!! Sono cambiati i +
+002300940316                          tracciati !!! Vuoi effettuare ugualmente +
+002400940316                          il ripristino ? SI/NO')
+002500940712
+002600940712/*---------------------------------------------------------------------*/
+002700940712/*  Richiamo pgm. x richiesta parametri ripristino archivi C/  A       */
+002800940712/*---------------------------------------------------------------------*/
+002900950302             CHGVAR     VAR(&D66BOL) VALUE(%SUBSTRING(&KPJBA 247 10))
+003000950302             CHGVAR     VAR(&D66VAR) VALUE(%SUBSTRING(&KPJBA 257 10))
+003100950302             CHGVAR     VAR(&D66LIB) VALUE(%SUBSTRING(&KPJBA 267 10))
+003200980105             CHGVAR     VAR(&D66LBR) VALUE(%SUBSTRING(&KPJBA 277 10))
+003201120326             CHGVAR     VAR(&D66MUL) VALUE(%SUBSTRING(&KPJBA 287 10))
+003300890707
+003400940315/*---------------------------------------------------------------------*/
+003500940315/*  Inizio Ripristino: Mando messaggio all'operatore di sistema        */
+003600940315/*---------------------------------------------------------------------*/
+003700890707             SNDUSRMSG  MSG(&MSG) VALUES(C G) DFT(C) TOMSGQ(QSYSOPR) +
+003800890707                          MSGRPY(&RISP)
+003900890707             IF         COND((&RISP *EQ 'C') *OR (&RISP *EQ 'c')) +
+004000890707                          THEN(GOTO CMDLBL(ENDPGM))
+004100890707
+004200940315/*---------------------------------------------------------------------*/
+004300940712/*  Controllo che gli archivi di sede non siano pieni                  */
+004400940315/*---------------------------------------------------------------------*/
+004500980105             IF         COND(&D66LIB *EQ D66LBR) THEN(DO)
+004600950302                        RTVMBRD    FILE(&D66LIB/TNCPB00F) MBR(*FIRST) +
+004700940712                        NBRCURRCD(&NRRBOL)
+004800950302                        RTVMBRD    FILE(&D66LIB/TNCPV00F) MBR(*FIRST) +
+004900940712                        NBRCURRCD(&NRRVAR)
+005000940315
+005100940315/*---------------------------------------------------------------------*/
+005200940315/*  Se gli archivi di sede sono pieni non siano pieni                  */
+005300940315/*---------------------------------------------------------------------*/
+005400940712                        IF         COND((&NRRBOL *GT 0) *OR (&NRRVAR *GT 0)) +
+005500940315                        THEN(DO)
+005600940712                           SNDUSRMSG  MSG(&ERRO1) MSGTYPE(*INFO) TOMSGQ(QSYSOPR)
+005700940712                           GOTO CMDLBL(ENDPGM)
+005800940315                        ENDDO
+005900940315
+006000940712             ENDDO
+006100940315/*---------------------------------------------------------------------*/
+006200940316/*  Carico in QTEMP gli archivi di pulizia dei Contrassegni, poi da    */
+006300980105/*            QTEMP li porto in GAITRAGRU                              */
+006400940315/*---------------------------------------------------------------------*/
+006500120326             RSTOBJ     OBJ(&D66BOL &D66VAR &D66MUL) SAVLIB(&D66LBR) +
+006600120326                          DEV(TAP03) RSTLIB(QTEMP)
+006700940316
+006800940316/*---------------------------------------------------------------------*/
+006900120326/*  Ripristino in TNCPB                                                */
+007000940316/*---------------------------------------------------------------------*/
+007100950302             CPYF       FROMFILE(QTEMP/&D66BOL) +
+007200950302                          TOFILE(&D66LIB/TNCPB00F) MBROPT(*REPLACE) +
+007300940712                          CRTFILE(*YES)
+007400940316
+007401120326/*---------------------------------------------------------------------*/
+007402120326/*  Ripristino in TNCPM                                                */
+007403120326/*---------------------------------------------------------------------*/
+007404120326             CPYF       FROMFILE(QTEMP/&D66MUL) +
+007405120326                          TOFILE(&D66LIB/TNCPM00F) MBROPT(*REPLACE) +
+007406120326                          CRTFILE(*YES)
+007407120326
+007500940316/*---------------------------------------------------------------------*/
+007600120326/*  Ripristino in TNCPV                                                */
+007700940316/*---------------------------------------------------------------------*/
+007800950302             CPYF       FROMFILE(QTEMP/&D66VAR) +
+007900950302                          TOFILE(&D66LIB/TNCPV00F) MBROPT(*REPLACE) +
+008000940712                          CRTFILE(*YES)
+008100890707
+008200890707 ENDPGM:     ENDPGM

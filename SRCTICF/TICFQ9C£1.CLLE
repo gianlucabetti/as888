@@ -1,0 +1,84 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200130123/* TICF31C - Crea w-file per confronto fatturazione                           */
+000300000000/*----------------------------------------------------------------------------*/
+000400130123 TICF31C:    PGM        PARM(&KPJBA)
+000500000000
+000600040416             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700121217             DCL        VAR(&LIBRERIA) TYPE(*CHAR) LEN(10)
+000800130123             DCL        VAR(&LIBRERIAB) TYPE(*CHAR) LEN(10)
+000900130208             DCL        VAR(&PILOTA) TYPE(*CHAR) LEN(1)
+001000130208             DCL        VAR(&WLIB) TYPE(*CHAR) LEN(10)
+001100121217
+001200121217/* Imposto le variabili */
+001300121217             CHGVAR     VAR(&LIBRERIA) VALUE(%SST(&KPJBA 261 10))
+001400130123             CHGVAR     VAR(&LIBRERIAB) VALUE(%SST(&KPJBA 271 10))
+001500130208             CHGVAR     VAR(&PILOTA) VALUE(%SST(&KPJBA 281 1))
+001600130211             CHGVAR     VAR(&WLIB) VALUE('EDPTAR' !! %SST(&KPJBA +
+001700130211                          257 4))
+001800121217
+001900050609/* pulizia Work-file                  */
+002000130123             CLRPFM     FILE(&LIBRERIA/WFCFT00F)
+002100130123             CLRPFM     FILE(&LIBRERIA/WFCFT10F)
+002200130123             CLRPFM     FILE(&LIBRERIA/WFCFT20F)
+002300130123             CLRPFM     FILE(&LIBRERIA/WFCFT30F)
+002400060914
+002500060915    /* aggiungo libreria bolle + file work */
+002600121217             ADDLIBLE   LIB(&LIBRERIA)
+002700130208
+002800130214
+002900130208/* Se elaborazione per variazioni tariffe devo accodare le nuove tariffe */
+003000130208             IF         COND(&PILOTA *EQ 'M') +
+003100130214                        THEN(DO)
+003200130214
+003300130214         /* Creo le Viste logiche che mi servono */
+003400130214             CRTDUPOBJ  OBJ(TNTAM01L) FROMLIB(&LIBRERIA) +
+003500130214                          OBJTYPE(*FILE) TOLIB(&WLIB)
+003600130214             CRTDUPOBJ  OBJ(TITAD04L) FROMLIB(&LIBRERIA) +
+003700130214                          OBJTYPE(*FILE) TOLIB(&WLIB)
+003800130214             CRTDUPOBJ  OBJ(TITPT01L) FROMLIB(&LIBRERIA) +
+003900130214                          OBJTYPE(*FILE) TOLIB(&WLIB)
+004000130214             CRTDUPOBJ  OBJ(TITPD01L) FROMLIB(&LIBRERIA) +
+004100130214                          OBJTYPE(*FILE) TOLIB(&WLIB)
+004200130214             CRTDUPOBJ  OBJ(TITGC01L) FROMLIB(&LIBRERIA) +
+004300130214                          OBJTYPE(*FILE) TOLIB(&WLIB)
+004400130214
+004500130214         /* Richiamo pgm che accoda le tariffe nuove */
+004600130214             CALL       PGM(TICF31R) PARM(&KPJBA &WLIB)
+004700130214
+004800130214             ENDDO
+004900130214
+005000050608
+005100130123/* lancio pgm di scrittura file per memorizzazione dettaglio */
+005200130130             CALL       PGM(TICF92R) PARM(&KPJBA)
+005300050608
+005400050608/* lancio pgm di scrittura file per memorizzazione totali */
+005500130130             CALL       PGM(TICF91R) PARM(&KPJBA)
+005600130123
+005700130123/* lancio pgm di scrittura file per memorizzazione totali per unificante */
+005800130130             CALL       PGM(TICF93R) PARM(&KPJBA)
+005900121228
+006000130219/* Copio file di WORK nella libreria EDP* per scarico su Excel */
+006100130219             CPYF       FROMFILE(&LIBRERIA/WFCFT00F) +
+006200130219                          TOFILE(&LIBRERIAB/WFCFT00F) CRTFILE(*YES)
+006300130219             CPYF       FROMFILE(&LIBRERIA/WFCFT10F) +
+006400130219                          TOFILE(&LIBRERIAB/WFCFT10F) CRTFILE(*YES)
+006500130219             CPYF       FROMFILE(&LIBRERIA/WFCFT20F) +
+006600130219                          TOFILE(&LIBRERIAB/WFCFT20F) CRTFILE(*YES)
+006700130219             CPYF       FROMFILE(&LIBRERIA/WFCFT30F) +
+006800130219                          TOFILE(&LIBRERIAB/WFCFT30F) CRTFILE(*YES)
+006900130214
+007000130214/* Se elaborazione per variazioni tariffe devo cancellare le viste logiche create */
+007100130214             IF         COND(&PILOTA *EQ 'M') +
+007200130214                        THEN(DO)
+007300130214
+007400130214             DLTF       FILE(&WLIB/TNTAM01L)
+007500130214             DLTF       FILE(&WLIB/TITAD04L)
+007600130214             DLTF       FILE(&WLIB/TITPT01L)
+007700130214             DLTF       FILE(&WLIB/TITPD01L)
+007800130214             DLTF       FILE(&WLIB/TITGC01L)
+007900130214
+008000130214             ENDDO
+008100130214
+008200050608
+008300050607             DLTOVR     FILE(*ALL)
+008400050613             ENDPGM

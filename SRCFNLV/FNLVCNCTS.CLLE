@@ -1,0 +1,170 @@
+000100991217/*PARMS DFTACTGRP(*YES)                                                       */
+000200991217
+000300021204 TRVRCNC:    PGM        PARM(&KNSIF)
+000400901003
+000500021204             DCL        VAR(&KNSIF)     TYPE(*CHAR) LEN(10)
+000600021204             DCL        VAR(&KPJBA)     TYPE(*CHAR) LEN(502)
+000700021204             DCL        VAR(&JOBNAME)   TYPE(*CHAR) LEN(10)
+000800021204             DCL        VAR(&JOBUSER)   TYPE(*CHAR) LEN(10)
+000900021204             DCL        VAR(&JOBNBR)    TYPE(*CHAR) LEN(6)
+001000021204             DCL        VAR(&FLG)       TYPE(*CHAR) LEN(1) VALUE(' ')
+001100021204             DCL        VAR(&COD)       TYPE(*CHAR) LEN(3) VALUE('000')
+001200021204             DCL        VAR(&POSTATES)  TYPE(*CHAR) LEN(55)
+001300021204             DCL        VAR(&RDET5)     TYPE(*CHAR) LEN(198)
+001400991217             DCL        VAR(&CNC0611DS) TYPE(*CHAR) LEN(32)
+001500021204             DCL        VAR(&ESI0611)   TYPE(*CHAR) LEN(1)
+001600021204
+001700021204/*-------------------------------------------------------------------*/
+001800021204/* IMPOSTAZIONE DATI DELLA KPJBA                                     */
+001900021204/*-------------------------------------------------------------------*/
+002000991217
+002100991217             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNBR)
+002200021204             CHGVAR     VAR(%SST(&KPJBA   1 10)) VALUE(&JOBUSER)
+002300021204
+002400021204             CHGVAR     VAR(%SST(&KPJBA  92 10)) VALUE(&KNSIF)
+002500021204
+002600021204             CHGVAR     VAR(%SST(&KPJBA 247  1)) VALUE('S')
+002700021204
+002800021204
+002900021204/*-------------------------------------------------------------------*/
+003000021204/* IMPOSTAZIONE DELLA LISTA DI LIBRERIE DEL SISTEMA INFORMATIVO      */
+003100021204/*-------------------------------------------------------------------*/
+003200021204
+003300021204             CALL       PGM(GAITRAOBJ/TRUL07C) PARM(&KNSIF)
+003400910226
+003500020411
+003600020411/*-------------------------------------------------------------------*/
+003700020411/* GESTIONE NUMERATORI DI GRUPPO                                     */
+003800020411/*-------------------------------------------------------------------*/
+003900021204
+004000021204/* AZNUM00F ---------------------------------------------------------*/
+004100021204
+004200021204/* Vedo se esiste file AZNUM00F */
+004300021204             CHGVAR     VAR(&FLG) VALUE(' ')
+004400021204             CHKOBJ     OBJ(AZNUM00F) OBJTYPE(*FILE)
+004500021204             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&FLG) +
+004600021204                          VALUE('1'))
+004700021204
+004800021204/* Creo numeratori se esistente */
+004900021204             IF         COND(&FLG *NE '1') THEN(DO)
+005000020411
+005100021204  /* Pulizia numeratori inesistenti */
+005200021204               CALL       PGM(TIBS19R) PARM(&KPJBA)
+005300021204
+005400021204  /* Creazione numeratori anno nuovo */
+005500021204    /* Impostazione parametri: */
+005600021204      /* Codice Società - *blanks = tutte */
+005700021204               CHGVAR     VAR(%SST(&KPJBA 247 3)) VALUE('   ')
+005800021204      /* Codice Numeratore - *zeros = tutti */
+005900021204               CHGVAR     VAR(%SST(&KPJBA 250 3)) VALUE(&COD)
+006000021204      /* Flag di Cancellazione pre ri-creazione se già esistente */
+006100021204               CHGVAR     VAR(%SST(&KPJBA 253 1)) VALUE(' ')
+006200021204
+006300021204               CALL       PGM(TIBS15R) PARM(&KPJBA)
+006400021204               MONMSG     MSGID(CPF0000) EXEC(DO)
+006500021204                 CHGVAR     VAR(&POSTATES) VALUE('Pulizia vecchi +
+006600021204                              numeratori AZNUM00F non eseguita.')
+006700021204                 CHGVAR     VAR(&RDET5) VALUE('S.I.' *BCAT &KNSIF +
+006800021204                              *BCAT 'Lavoro' *BCAT &JOBNAME *TCAT '/' +
+006900021204                              *TCAT &JOBUSER *TCAT '/' *TCAT &JOBNBR)
+007000021204    /* >>> ***   CALL       PGM(TNSYM0C) PARM(&POSTATES &RDET5)  *****/
+007100021204               ENDDO
+007200021014
+007300020411             ENDDO
+007400021204
+007500020411
+007600020411/*-------------------------------------------------------------------*/
+007700021204/* GESTIONE ALTRI NUMERATORI                                         */
+007800020411/*-------------------------------------------------------------------*/
+007900991217
+008000021204/* FLNUF00F ---------------------------------------------------------*/
+008100021204
+008200021204/* Vedo se esiste file FLNUF00F */
+008300911216             CHGVAR     VAR(&FLG) VALUE(' ')
+008400021204             CHKOBJ     OBJ(FLNUF00F) OBJTYPE(*FILE)
+008500911216             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&FLG) +
+008600911216                          VALUE('1'))
+008700911216
+008800021204/* Creo numeratori se esistente */
+008900911216             IF         COND(&FLG *NE '1') THEN(DO)
+009000000113
+009100021204  /* Pulizia numeratori inesistenti */
+009200021204               CALL       PGM(FNLV07R) PARM(&KPJBA)
+009300021204
+009400021204  /* Creazione numeratori anno nuovo */
+009500021204               CALL       PGM(FNLVCNR) PARM(&COD)
+009600021204               MONMSG     MSGID(CPF0000) EXEC(DO)
+009700021204                 CHGVAR     VAR(&POSTATES) VALUE('Pulizia vecchi +
+009800021204                              numeratori FLNUF00F non eseguita.')
+009900021204                 CHGVAR     VAR(&RDET5) VALUE('S.I.' *BCAT &KNSIF +
+010000021204                              *BCAT 'Lavoro' *BCAT &JOBNAME *TCAT '/' +
+010100021204                              *TCAT &JOBUSER *TCAT '/' *TCAT &JOBNBR)
+010200021204    /* >>> ***   CALL       PGM(TNSYM0C) PARM(&POSTATES &RDET5)  *****/
+010300021204               ENDDO
+010400021204
+010500911216             ENDDO
+010600991216
+010700021204/* CNNUM00F ---------------------------------------------------------*/
+010800021204
+010900021204/* Vedo se esiste file CNNUM00F */
+011000991217             CHGVAR     VAR(&FLG) VALUE(' ')
+011100021204             CHKOBJ     OBJ(CNNUM00F) OBJTYPE(*FILE)
+011200991216             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&FLG) +
+011300991216                          VALUE('1'))
+011400021204
+011500021204/* Creo numeratori se esistente */
+011600991216             IF         COND(&FLG *NE '1') THEN(DO)
+011700021204
+011800991216/* Copia dei numeratori (anno vecchio - anno nuovo) solo vendite ----*/
+011900021204               CHGVAR     VAR(&ESI0611) VALUE(' ')
+012000021204               CHGVAR     VAR(&CNC0611DS) VALUE('3 L00002   0000    +
+012100021204                            0000000000101')
+012200021204               CALL       PGM(CNC0611R) PARM(&CNC0611DS)
+012300021204               MONMSG     MSGID(CPF0000) EXEC(DO)
+012400021204                 CHGVAR     VAR(&ESI0611) VALUE('1')
+012500021204               ENDDO
+012600021204               IF         COND(&ESI0611 *EQ ' ') THEN(DO)
+012700021204                 CHGVAR     VAR(&ESI0611) VALUE(%SST(&CNC0611DS 2 1))
+012800021204               ENDDO
+012900021204               IF         COND(&ESI0611 *NE '0') THEN(DO)
+013000021204                 CHGVAR     VAR(&POSTATES) VALUE('Creazione numeratori -
+013100021204                              CNNUM00F non eseguita.')
+013200021204                 CHGVAR     VAR(&RDET5) VALUE('Codice esito' *BCAT +
+013300021204                              &ESI0611 *BCAT 'S.I.' *BCAT &KNSIF *BCAT +
+013400021204                              'Lavoro' *BCAT &JOBNAME *TCAT '/' *TCAT +
+013500021204                              &JOBUSER *TCAT '/' *TCAT &JOBNBR)
+013600021204    /* >>> ***   CALL       PGM(TNSYM0C) PARM(&POSTATES &RDET5)  *****/
+013700021204               ENDDO
+013800021204
+013900021204  /* Riorganizzazione -----------------------------------------------*/
+014000021204               CHGVAR     VAR(&ESI0611) VALUE(' ')
+014100021204               CHGVAR     VAR(&CNC0611DS) VALUE('5 L0000    0000    +
+014200021204                            0000000000000')
+014300021204               CALL       PGM(CNC0611R) PARM(&CNC0611DS)
+014400021204               MONMSG     MSGID(CPF0000) EXEC(DO)
+014500021204                 CHGVAR     VAR(&ESI0611) VALUE('1')
+014600021204               ENDDO
+014700021204               IF         COND(&ESI0611 *EQ ' ') THEN(DO)
+014800021204                 CHGVAR     VAR(&ESI0611) VALUE(%SST(&CNC0611DS 2 1))
+014900021204               ENDDO
+015000021204               IF         COND(&ESI0611 *NE '0') THEN(DO)
+015100021204                 CHGVAR     VAR(&POSTATES) VALUE('Pulizia vecchi +
+015200021204                              numeratori CNNUF00F non eseguita.')
+015300021204                 CHGVAR     VAR(&RDET5) VALUE('Codice esito' *BCAT +
+015400021204                              &ESI0611 *BCAT 'S.I.' *BCAT &KNSIF *BCAT +
+015500021204                              'Lavoro' *BCAT &JOBNAME *TCAT '/' *TCAT +
+015600021204                              &JOBUSER *TCAT '/' *TCAT &JOBNBR)
+015700021204    /* >>> ***   CALL       PGM(TNSYM0C) PARM(&POSTATES &RDET5)  *****/
+015800021204               ENDDO
+015900021204
+016000021204               RGZPFM     FILE(CNNUM00F)
+016100021204               MONMSG     MSGID(CPF0000)
+016200021204
+016300991216             ENDDO
+016400021204
+016500910226
+016600021204/*-------------------------------------------------------------------*/
+016700021204/* FINE                                                              */
+016800021204/*-------------------------------------------------------------------*/
+016900971127
+017000021204             ENDPGM

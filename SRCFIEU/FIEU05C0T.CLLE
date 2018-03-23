@@ -1,0 +1,79 @@
+000100060609/*?******************************************************************/
+000200130716/*?  RICEVE ED ELABORA BOLLE   DPD   "MPSEXPDATA" da UPLOAD         */
+000300060609/*?  Ricezione in Sede tramite server FTP cliente "0DPD00IN"        */
+000400060609/*?******************************************************************/
+000500060613
+000600060613             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000700060609
+000800060613             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+000900150916             DCL        VAR(&ERRDET) TYPE(*CHAR) LEN(1)
+001000060613             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001100060613             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001200060613             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001300060620             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001400060613
+001500060620             CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))
+001600060613/* ?-----------------------------------------------------------------  */
+001700060613/* ? Lista di librerie per reperire correttamente i programmi          */
+001800060613/* ?-----------------------------------------------------------------  */
+001900151022
+002000151022             ADDLIBLE   LIB(EDPABDPD) POSITION(*FIRST)
+002100151022             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002200060614
+002300060614             ADDLIBLE   LIB(FILTRAGRU) POSITION(*AFTER UNITRAGRU)
+002400060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002500060614
+002600060614             ADDLIBLE   LIB(FILTRA201) POSITION(*AFTER FILTRAGRU)
+002700060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002800060620
+002900151022             OVRDBF     FILE(EDIVAB0F) TOFILE(EDPABDPD/EDIVAB0F)
+003000151022             OVRDBF     FILE(EDIVAT0F) TOFILE(EDPABDPD/EDIVAB0F)
+003100151022             OVRDBF     FILE(FIVAB00F) TOFILE(EDPABDPD/EDIVAB0F)
+003200151022             OVRDBF     FILE(FIVAT00F) TOFILE(EDPABDPD/EDIVAB0F)
+003300150714
+003400150714/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003500150714/* procedura/programma fosse finita in maniera anomala occorre */
+003600150714/* parare il colpo riducendo il male al male minore ossia      */
+003700150714/* con un rollback chiudere le precedenti transazioni fatte a  */
+003800150714/* metà piuttosto che confermarle. E ripartendo da una         */
+003900150714/* situazione pulita.                                          */
+004000151022             STRCMTCTL  LCKLVL(*chg) CMTSCOPE(*JOB)
+004100150714/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+004200150714             MONMSG     MSGID(CPF8351) EXEC(DO)
+004300150714             ENDCMTCTL
+004400150714             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004500151022             STRCMTCTL  LCKLVL(*chg) CMTSCOPE(*JOB)
+004600150714             ENDDO
+004700060613
+004800050413/* ?-----------------------------------------------------------------  */
+004900050413/* ?  Parte Nuova di trascodifica senza uso delle trasmissioni         */
+005000050413/* ?-----------------------------------------------------------------  */
+005100150916RILEGGE:
+005200150916             CHGVAR     VAR(&ERRDET) VALUE(' ')
+005300150916             CALL       PGM(FIEU05R) PARM(&ESITO &ERRDET)
+005400060710             MONMSG     MSGID(CPF0000) EXEC(DO)
+005500060710    /*       CHGVAR     VAR(&ESITO) VALUE('2')        */
+005600150714             ROLLBACK
+005700060710             ENDDO
+005800150916
+005900150916             IF         COND(&ERRDET *NE ' ') THEN(GOTO +
+006000150916                          CMDLBL(RILEGGE))
+006100150714
+006200150714 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006300150714 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006400150714 /* in modo pulito senza lasciare transazioni a metà.            */
+006500150714             ENDCMTCTL
+006600150714
+006700151022             DLTOVR     FILE(*ALL)
+006800060614
+006900060614             rmvLIBLE   LIB(FILTRAGRU)
+007000060614             MONMSG     MSGID(CPF0000)
+007100060614             rmvLIBLE   LIB(FILTRA201)
+007200060614             MONMSG     MSGID(CPF0000)
+007300151022             rmvLIBLE   LIB(EDPABDPD)
+007400151022             MONMSG     MSGID(CPF0000)
+007500060620
+007600060614
+007700050413/* ?-----------------------------------------------------------------  */
+007800050413FINE:
+007900020911             ENDPGM

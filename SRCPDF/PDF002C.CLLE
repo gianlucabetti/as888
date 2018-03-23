@@ -1,0 +1,317 @@
+000100130227PGM (&pServer &pPdf &pResol &pOrient &pDelete)
+000200000000
+000300130226  Dcl &pServer    *Char 60
+000400140828  Dcl &pPdf       *Char 61
+000500130226  /* 'S' 300pi o 'H' 600pi */
+000600130226  Dcl &pResol     *Char  1
+000700130227  Dcl &pOrient    *Char 10
+000800130227  Dcl &pDelete    *Char  4
+000900000000
+001000000000  DclF PDFTABEL  RTABEL  OPNID(TABEL)
+001100000000
+001200000000  Dcl &PathDOC    *Char 120
+001300000000  Dcl &PathTmp    *Char 120
+001400000000  Dcl &PathErr    *Char 120
+001500000000  Dcl &PathTst    *Char 120
+001600140828  Dcl &PathJob    *Char 120
+001700130226  Dcl &TstPath    *Char 120
+001800000000  Dcl &Null       *Char 1    VALUE(X'00')
+001900130226  Dcl &RC         *Int
+002000000000
+002100000000  Dcl &PdfName    *Char 120
+002200000000  Dcl &TiffName   *Char 120
+002300130226  Dcl &TiffResol  *Char 4
+002400130226
+002500000000  Dcl &ResolStd   *Char 4
+002600000000  Dcl &ResolHi    *Char 4
+002700000000  Dcl &PdfServer  *Char 1
+002800000000
+002900000000  Dcl &Debug      *Char 1
+003000130226  Dcl &Cmd        *Char 100
+003100000000  Dcl &oDebug     *Char 10
+003200000000  Dcl &Msg        *Char 100
+003300000000  Dcl &JError     *Lgl
+003400000000  Dcl &JServer    *Char 4
+003500000000
+003600000000  Dcl &FileInfo   *Char 128
+003700000000  Dcl &ObjSize    *UInt        Stg(*Defined) DefVar(&FileInfo 21)
+003800130226  Dcl &ObjAlloc   *UInt        Stg(*Defined) DefVar(&FileInfo 45)
+003900000000  Dcl &ObjTyp     *Char 10     Stg(*Defined) DefVar(&FileInfo 49)
+004000000000
+004100000000  Dcl &EOF        *Lgl
+004200000000  Dcl &X          *Int  2
+004300000000
+004400140828  Dcl &LogData    *Char 128
+004500000000  Dcl &LogMsg     *Char 40
+004600000000  dcl &MsgId      *char 7
+004700000000  Dcl &TotPdf     *Dec  6
+004800000000  Dcl &Error      *Lgl
+004900000000  Dcl &FlgMsg     *Lgl
+005000000000  Dcl &JobNbr     *Char 6
+005100000000
+005200000000  /* Attibuti Pdf */
+005300000000  Dcl &Stat       *Char 250
+005400000000  Dcl &Size       *Uint 4    Stg(*Defined)  Defvar(&Stat 21)
+005500000000
+005600000000  /* Global Error */
+005700000000  Dcl &ErrorSw    *Lgl
+005800000000  MonMsg CPF0000 EXEC(goto ERROR)
+005900000000
+006000000000  /******************************************************************/
+006100000000  /*?Impostazione parametri                                         */
+006200000000  /******************************************************************/
+006300000000
+006400000000  CLOF TABEL
+006500000000  MONMSG CPF4520
+006600000000  ChgVar &EOF '0'
+006700000000  OVRDBF PDFTABEL SHARE(*YES)
+006800000000  CLOF TABEL
+006900000000  MONMSG CPF4520
+007000000000  OPNQRYF FILE((PDFTABEL *FIRST RTABEL)) OPNID(TABEL) +
+007100000000          QRYSLT('TBKEY = "DDT"')
+007200000000  RCVF OPNID(TABEL)
+007300000000  MONMSG CPF0864 EXEC(ChgVar &EOF '1')
+007400000000  DoWhile (*NOT &EOF)
+007500000000    /* imposta i path IFS */
+007600000000    If (&TABEL_TBELE = 'DOCPATH') +
+007700000000      ChgVar &PathDOC &TABEL_TBDAT
+007800000000    Else If (&TABEL_TBELE = 'WORKPATH') +
+007900000000      ChgVar &PathTmp &TABEL_TBDAT
+008000000000    Else If (&TABEL_TBELE = 'ERRPATH') +
+008100000000      ChgVar &PathErr &TABEL_TBDAT
+008200000000    Else If (&TABEL_TBELE = 'TIFFRESOLUTION') +
+008300000000      ChgVar &ResolStd &TABEL_TBDAT
+008400000000    Else If (&TABEL_TBELE = 'TIFFRESOLUTIONH') +
+008500000000      ChgVar &ResolHi &TABEL_TBDAT
+008600000000    Else If (&TABEL_TBELE = 'SERVER') +
+008700000000      ChgVar &PdfServer &TABEL_TBDAT
+008800000000    Else If (&TABEL_TBELE = 'DEBUG') +
+008900000000      ChgVar &Debug &TABEL_TBDAT
+009000000000    RCVF OPNID(TABEL)
+009100000000    MONMSG CPF0864 EXEC(ChgVar &EOF '1')
+009200000000  EndDo
+009300000000  CLOF TABEL
+009400000000
+009500000000/* Rimuove i messaggi dal JobLog */
+009600000000  DoUntil (&MsgId = ' ')
+009700000000    ChgVar &MsgId ' '
+009800000000    RCVMSG MSGTYPE(*LAST) MsgId(&MsgId)
+009900000000  EndDo
+010000000000
+010100000000  /* Crea un path specifico per questa richiesta */
+010200140828  ChgVar &X 120
+010300000000  DoWhile (&X > 1)
+010400000000    If (%sst(&PathTmp &X 1) *NE ' ') Do
+010500000000      If (%sst(&PathTmp &X 1) *NE '/') Do
+010600000000        ChgVar &X (&X + 1)
+010700000000        ChgVar %sst(&PathTmp &X 1) '/'
+010800000000      EndDo
+010900000000    Leave
+011000000000    EndDo
+011100000000    ChgVar &X (&X - 1)
+011200000000  EndDo
+011300000000  RtvJoba Nbr(&JobNbr)
+011400000000  ChgVar &PathJob (&PathTmp *TCAT &JobNbr *CAT '/')
+011500000000  MD &PathJob DTAAUT(*RWX) OBJAUT(*ALL)
+011600000000  MonMsg CPF0000
+011700130227           RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+011800130226
+011900130226  /* Impostazione Risoluzione */
+012000130227  If (&pResol = H) ChgVar &TiffResol &ResolHi
+012100130226  Else ChgVar &TiffResol &ResolStd
+012200130227
+012300130226  /* Impostazione Server */
+012400130226  If (&PdfServer = S) ChgVar &JServer *YES
+012500130226  Else ChgVar &JServer *NO
+012600000000
+012700000000/********************************************************************/
+012800000000/*?ACQUISIZIONE DOCUMENTI                                           */
+012900000000/********************************************************************/
+013000000000ImportDOC:
+013100130227
+013200130226  /*?Controllo size documento */
+013300130227    ChgVaR &PathTst (&pServer *TCAT '/' *CAT &pPDF *TCAT &NULL)
+013400130227    CallPrc 'stat' (&PathTst &Stat) RtnVal(&RC)
+013500130226    /*?Elaborazione PDF */
+013600130226    If ((&RC = 0) *AND (&Size > 0)) Do
+013700130226      CallSubr CrtPdf RtnVal(&RC)
+013800130227      /*?Se presente errore */
+013900130226      If (&RC *NE 0) Do
+014000130227        SndPgmMsg  MSGID(CPF9897) MSGF(QCPFMSG) +
+014100130227           MSGDTA('Acquisizione PDF' *BCAT &pPdf *BCAT 'fallita') +
+014200130227           MSGTYPE(*Escape)
+014300130227        EndDo
+014400130226      /*?Cancellazione PDF origine */
+014500130226      Else Do
+014600130227        If (&pDelete = *YES) Do
+014700130227           ChgVar &PdfName (&pServer *TCAT '/' *CAT &pPDF)
+014800130227           Del &PdfName
+014900130227           MonMsg CPF0000
+015000130227           RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+015100130227        EndDo
+015200130227        SndPgmMsg  MSGID(CPF9897) MSGF(QCPFMSG) +
+015300130227           MSGDTA('Acquisizione PDF' *BCAT &pPdf *BCAT 'terminata regolarmente') +
+015400130227           TOPGMQ(*EXT) MSGTYPE(*Comp)
+015500130226      EndDo
+015600130226    EndDo
+015700130226
+015800130227 /*?Cancellazione PDF origine da PATH temporanea */
+015900130226  If (&Debug *NE S) Do
+016000130226    RD &PathJob
+016100130226    MonMsg CPFA0AC Exec(Do)
+016200130227      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+016300130226      chgvar &Cmd ('rm -rf' *BCAT &PathJob)
+016400130226      QSH CMD(&Cmd)
+016500130226      MonMsg Cpf0000
+016600130227      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+016700130226    EndDo
+016800130226  EndDo
+016900130226
+017000130227Call PDFLOGR
+017100130227
+017200130226RETURN
+017300130226
+017400000000/********************************************************************/
+017500000000/*?ERRORI                                                           */
+017600000000/********************************************************************/
+017700000000ERROR:
+017800000000
+017900000000  If &ErrorSw +
+018000000000     SndPgmMsg MsgId(cpf9899) +
+018100000000     Msgf(qcpfmsg) msgtype(*escape)    /* function check           */
+018200000000  ChgVar &errorsw '1'                  /* set switch to error      */
+018300000000
+018400000000  RcvMsg MsgQ(*PGMQ) MsgType(*LAST) MsgId(&MsgId)
+018500000000  If (&MsgId *eq 'CPF9898') Do
+018600000000    ChgVar &ErrorSw '0'
+018700000000    GoTo ImportDOC
+018800000000  EndDo
+018900000000
+019000000000  DspJobLog Output(*PRINT)
+019100000000
+019200000000  Call QMHRSNEM ('    ' x'0000000f0000000040404040404040' +
+019300000000                 X'000000015cd5d6d5c540404040405cd5d6d5c54040404040+
+019400000000                   000000095cd7c7d4c2c4e840404040404040404040404040' +
+019500000000                 X'00000030' rsnm0100 * x'00000000')
+019600000000  Return
+019700000000
+019800000000
+019900000000/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+020000000000/*?Creazione/Accodamento PDF in IFS                                 */
+020100000000/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+020200000000
+020300000000  Subr CrtPdf
+020400000000
+020500000000    SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+020600130226               MSGDTA('Acquisizione di' *BCAT &pPdf) +
+020700000000               TOPGMQ(*EXT) MSGTYPE(*STATUS)
+020800000000
+020900000000    /*?Trasforma il PDF in TIFF */
+021000130226    ChgVar &PdfName (&pServer *TCAT '/' *CAT &pPDF)
+021100130226    ChgVar &TiffName &pPDF
+021200000000    ChgVar &TiffName (&PathJob *TCAT '/' *CAT &TiffName *TCAT '.tif')
+021300000000    PDF2TIFF PDFNAME(&PdfName) TIFFNAME(&TiffName) +
+021400130226             RESOLUTION(&TiffResol) OUTPUT(*NONE)
+021500000000    MonMsg CPE3469
+021600000000    MonMsg CPF0000 Exec(Do)
+021700000000      PDF2TIFF PDFNAME(&PdfName) TIFFNAME(&TiffName) +
+021800000000               RESOLUTION(*DFT) OUTPUT(*PRINT)
+021900000000      MonMsg CPF0000 Exec(Do)
+022000000000        ChgVar &RC -1
+022100130226        ChgVar &LogData &pPdf
+022200000000        ChgVar &LogMsg 'Errore PDF2TIFF'
+022300000000        Call PDFLOGR ('IMPORT' &LogData '50' &LogMsg)
+022400000000        MonMsg CPF0000
+022500000000        CPY &PdfName ToDir(&PathErr) Replace(*YES)
+022600000000        MonMsg CPF0000
+022700000000        RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+022800000000        DEL &PdfName
+022900000000        MonMsg CPF0000
+023000000000        RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+023100000000        SndPgmMsg  MsgId(CPF9897) MsgF(QCPFMSG) +
+023200130226                   MsgDta('PDF errato: ' *CAT &pPdf) +
+023300000000                   MsgType(*DIAG)
+023400000000        RtnSubr RtnVal(&RC)
+023500000000      EndDo
+023600000000    EndDo
+023700000000
+023800000000    /*?Verifica TIFF */
+023900000000    ChgVar &TstPath (&TiffName *TCAT &Null)
+024000000000    CallPrc 'stat' Parm(&TstPath &FileInfo) RtnVal(&RC)
+024100000000    If ((&RC *NE 0) *OR (&ObjSize < 1000)) Do
+024200000000      ChgVar &RC -1
+024300130226      ChgVar &LogData &pPdf
+024400000000      ChgVar &LogMsg 'Size TIFF errata'
+024500000000      Call PDFLOGR ('IMPORT' &LogData '50' &LogMsg)
+024600000000      MonMsg CPF0000
+024700000000      CPY &PdfName ToDir(&PathErr) Replace(*YES)
+024800000000      MonMsg CPF0000
+024900000000      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+025000000000      DEL &PdfName
+025100000000      MonMsg CPF0000
+025200000000      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+025300000000      SndPgmMsg  MsgId(CPF9897) MsgF(QCPFMSG) +
+025400130226                 MsgDta('PDF errato: ' *CAT &pPdf) +
+025500000000                 MsgType(*DIAG)
+025600000000      RtnSubr RtnVal(&RC)
+025700000000    EndDo
+025800000000
+025900000000    /*?Trasforma il TIFF in PDF */
+026000000000    TIFF2PDF:
+026100130226    ChgVar &PdfName (&PathDoc *TCAT '/' *CAT &pPdf)
+026200130227    ChgVar &JError '0'
+026300130227    TIFF2PDF   TIFFNAME(&TiffName) PDFNAME(&PdfName) +
+026400130227               ORIENT(&pOrient) RESIZE(*YES) +
+026500130227               JSERVER(&JServer)
+026600000000    MonMsg CPF0000 Exec(Chgvar &JError '1')
+026700000000    If (&PdfServer = N) Do
+026800000000      If (&Jerror) +
+026900000000        SndPgmMsg  MsgId(CPF9898) Msgf(QCPFMSG) +
+027000000000                   MsgDta('TIFF2PDF  FAILED') +
+027100000000                   ToPgmQ(*SAME) MsgType(*COMP)
+027200000000      Else +
+027300000000        SndPgmMsg  MsgId(CPF9898) Msgf(QCPFMSG) +
+027400000000                   MsgDta('TIFF2PDF  SUCCESS') +
+027500000000                   ToPgmQ(*SAME) MsgType(*COMP)
+027600000000    EndDo
+027700000000    RcvMsg MsgQ(*PGMQ) MsgType(*LAST) Msg(&Msg)
+027800130227
+027900000000    If (%sst(&Msg 11 7) *NE SUCCESS) Do
+028000130227    /*?Ci riprova in modalità DEBUG e noSERVER */
+028100130227      If (*not &Error) Do
+028200130227        ChgVar &PdfServer N
+028300130227        ChgVar &JServer *NO
+028400130227        ChgVar &oDebug *PRT
+028500130227        ChgVar &Error '1'
+028600130227        Goto TIFF2PDF
+028700130227      EndDo
+028800130227
+028900000000      If (*not &FlgMsg) Do
+029000000000        SndPgmMsg  MsgId(CPF9897) MsgF(QCPFMSG) +
+029100130226                   MsgDta('PDF errato: ' *CAT &pPdf) +
+029200000000                   MsgType(*DIAG)
+029300000000        ChgVar &FlgMsg '1'
+029400000000      EndDo
+029500130227
+029600000000      ChgVar &RC -1
+029700130226      ChgVar &PdfName (&pServer *TCAT '/' *CAT &pPdf)
+029800000000      CPY &PdfName ToDir(&PathErr) Replace(*YES)
+029900000000      MonMsg CPF0000
+030000000000      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+030100000000      DEL &PdfName
+030200000000      MonMsg CPF0000
+030300000000      RcvMsg MsgQ(*PGMQ) MsgType(*LAST)
+030400130226      ChgVar &LogData &pPdf
+030500000000      ChgVar &LogMsg  'Errore TIFF2PDF'
+030600000000      Call PDFLOGR ('IMPORT' &LogData '50' &LogMsg)
+030700000000      MonMsg CPF0000
+030800000000      RtnSubr RtnVal(&RC)
+030900000000    EndDo
+031000000000
+031100000000    ChgVar &TotPdf (&TotPdf + 1)
+031200130226    ChgVar &LogData &pPdf
+031300000000    ChgVar &LogMsg  'Acquisito'
+031400000000    Call PDFLOGR ('IMPORT' &LogData '00' &LogMsg)
+031500000000    MonMsg CPF0000
+031600000000
+031700000000  EndSubr RtnVal(&RC)

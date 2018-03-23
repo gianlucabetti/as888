@@ -1,0 +1,120 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600081212             PGM        PARM(&OPZ &PATHFROM &PATHIFS &FILIFS &EXTIFSTMP +
+000700081212                             &FILETMP &FILEEND &ESITO)
+000800081212
+000900991026
+001000081212             DCL        VAR(&PATHFROM)   TYPE(*CHAR) LEN(255)
+001100081212             DCL        VAR(&PATHIFS)    TYPE(*CHAR) LEN(255)
+001200081212             DCL        VAR(&FILIFS)     TYPE(*CHAR) LEN(255)
+001300081212             DCL        VAR(&EXTIFSTMP)  TYPE(*CHAR) LEN(255)
+001400081212             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1)
+001500081103
+001600081212             DCL        VAR(&OPZ)        TYPE(*CHAR) LEN(1)
+001700081212             DCL        VAR(&PATHFILEF)  TYPE(*CHAR) LEN(2048)
+001800081212             DCL        VAR(&FILETMP)    TYPE(*CHAR) LEN(2048)
+001900081212             DCL        VAR(&FILEEND)    TYPE(*CHAR) LEN(255)
+002000090226
+002100090226             DCL        VAR(&EML)        TYPE(*CHAR) LEN(253)
+002200090226             DCL        VAR(&OGG)        TYPE(*CHAR) LEN(44)
+002300090226             DCL        VAR(&MSG)        TYPE(*CHAR) LEN(5000)
+002400090226
+002500081212
+002600081103             DCL        VAR(&USERID)   TYPE(*CHAR) LEN(10) +
+002700081212                                       VALUE('ESTQNTC')
+002800081103
+002900081103             DCL        VAR(&PWD)      TYPE(*CHAR) LEN(50) +
+003000081212                                       VALUE('setrasapps')
+003100081103
+003200081103             DCL        VAR(&PWDLEN)   TYPE(*CHAR) LEN(4)  +
+003300081103                                       VALUE(X'00000010')
+003400081103
+003500081103             DCL        VAR(&PWDCCSID) TYPE(*CHAR) LEN(4) +
+003600081103                                       VALUE( X'FFFFFFFF')
+003700081103
+003800081103             DCL        VAR(&ERRCODE)  TYPE(*CHAR) LEN(8) +
+003900081103                                       VALUE( X'0000000000000000')
+004000081103
+004100081103             DCL        VAR(&CURPWD)   TYPE(*CHAR) LEN(10) +
+004200081103                                       VALUE('          ')
+004300081103
+004400081103             DCL        VAR(&PRFHNDL1) TYPE(*CHAR) LEN(12)
+004500081103             DCL        VAR(&PRFHNDL2) TYPE(*CHAR) LEN(12)
+004600081103
+004700081103
+004800081103
+004900081103
+005000081103             CALL       PGM(QSYGETPH)   PARM('*CURRENT  ' +
+005100081103                                             &CURPWD      +
+005200081103                                             &PRFHNDL1)
+005300090226    /*       MONMSG     MSGID(CPF0000)   */
+005400081103
+005500081103             CALL       PGM(QSYGETPH)   PARM(&USERID      +
+005600081103                                             &PWD         +
+005700081103                                             &PRFHNDL2    +
+005800081103                                             &ERRCODE     +
+005900081103                                             &PWDLEN      +
+006000081103                                             &PWDCCSID)
+006100090226    /*       MONMSG     MSGID(CPF0000)   */
+006200081103
+006300081103             CALL       PGM(QWTSETP)    PARM(&PRFHNDL2)
+006400090226    /*       MONMSG     MSGID(CPF0000)   */
+006500081103
+006600081103
+006700081103
+006800081212   /* Effettuo operazioni: spostamento oggetto  --- */
+006900081212             IF         COND(&OPZ *EQ '3') THEN(DO)
+007000081212             CHGVAR     VAR(&PATHFILEF) VALUE(&PATHFROM *TCAT &FILIFS +
+007100081212                            *TCAT &EXTIFSTMP)
+007200081212
+007300081212             MOV        OBJ(&PATHFILEF) TODIR(&PATHIFS) TOCCSID(*CALC)
+007400081212             MONMSG     MSGID(CPF0000) EXEC(DO)
+007500081212             CHGVAR     VAR(&ESITO)  VALUE('2')
+007600090226             CHGVAR     VAR(&MSG) VALUE('Errore in comando MOV:' +
+007700090226                          *BCAT &PATHFILEF *BCAT '-->' *BCAT &PATHIFS)
+007800090226             GOTO       CMDLBL(ERRORE)
+007900081212             ENDDO
+008000081212             ENDDO
+008100081103
+008200081103
+008300081103   /* ----------------------- */
+008400081212
+008500081212
+008600081212   /* Effettuo operazioni: rinomina oggetto  --- */
+008700081212             IF         COND(&OPZ *EQ '4') THEN(DO)
+008800081212             CALL       PGM(TRBMURNMC) PARM(&FILETMP &FILEEND &ESITO)
+008900081212             MONMSG     MSGID(CPF0000) EXEC(DO)
+009000081212             CHGVAR     VAR(&ESITO) VALUE('2')
+009100090226             CHGVAR     VAR(&MSG) VALUE('Errore in rinomina oggetto:' +
+009200090226                          *BCAT &FILETMP *BCAT '-->' *BCAT &FILEEND)
+009300090226             GOTO       CMDLBL(ERRORE)
+009400081212             ENDDO
+009500081212             ENDDO
+009600081212
+009700081212
+009800081212   /* ----------------------- */
+009900090303
+010000090303
+010100090303ERRORE:
+010200081103
+010300081103             CALL       PGM(QWTSETP)    PARM(&PRFHNDL1)
+010400090226   /*        MONMSG     MSGID(CPF0000)  */
+010500081103
+010600081103             CALL       PGM(QSYRLSPH)   PARM(&PRFHNDL1)
+010700090226   /*        MONMSG     MSGID(CPF0000)  */
+010800081103             CALL       PGM(QSYRLSPH)   PARM(&PRFHNDL2)
+010900090226   /*        MONMSG     MSGID(CPF0000)  */
+011000090303
+011100090303
+011200090226             IF         COND(&ESITO *EQ '2') THEN(DO)
+011300171006             CHGVAR     VAR(&EML)   VALUE('cedalert@brt.it')
+011400090226             CHGVAR     VAR(&OGG)   VALUE('DOWNLOAD 1990050 - ERRORE')
+011500090226             CALL       PGM(TIS701C) PARM(&EML &OGG &MSG)
+011600090226             ENDDO
+011700090226
+011800081103
+011900991026
+012000990907             ENDPGM

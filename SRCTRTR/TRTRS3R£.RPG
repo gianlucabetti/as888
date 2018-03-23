@@ -1,0 +1,339 @@
+000100931117     H              J
+000200941102     F* TRTRS3R  *---------------------------------------------------*
+000300931020     F*----------*                                                   *
+000400931020     F* - RICEZIONE DATI CONTRASSEGNI PAGATI IN FILIALE DA SEDE      *
+000500931020     F*--------------------------------------------------------------*
+000600931213     F* - I N D I C A T O R I                                        *
+000700931213     F*--------------------------------------------------------------*
+000800931213     F* 10 - CHAIN SU TABEL                                          *
+000900931213     F* 20 - ERRORE IN CALL A QCMDEXEC                               *
+001000931213     F* 80 - READ SU FLCSB00R  X CARICAMENTO DATI TRASMESSI          *
+001100931213     F* 90 - CHAIN SU FLCSB01L X CONTROLLARE SE RECORD ESISTE GIA'   *
+001200931213     F*--------------------------------------------------------------*
+001300941102     FFNCSB00RUF  E                    DISK                           UC
+001400941102     F            FNCSB000                          KRENAMEFNCSBR
+001500931020     F*-------------
+001600941102     FFNCSB01LUF  E           K        DISK                      A
+001700931021     F*-------------
+001800931021     FCMRIC01LUF  E           K        DISK
+001900931117     F*-------------
+002000931117     FTABEL00FUF  E           K        DISK                           UC
+002100931020     E*--------------------------------------------------------------*
+002200931020     E*  SCHIERE X ESECUZIONE QCMDEXEC
+002300931020     E*--------------------------------------------------------------*
+002400931020     E                    CMD1    1   1 55               CHKOBJ MBR...
+002500931020     E                    CMD2    1   1 55               ALCOBJ MBR...
+002600931020     E                    CMD3    1   1 55               OVRDBF MBR..
+002700931020     E                    CMD4    1   1 55               DLTOVR *ALL
+002800931020     E                    CMD5    1   1 55               DLCOBJ MBR..
+002900931020     I*--------------------------------------------------------------*
+003000931020     I*   Ridenomino campi file CSB. di arrivo da aggiornare
+003100931020     I*--------------------------------------------------------------*
+003200941102     IFNCSB000
+003300931020     I              CSBLNA                          LNA
+003400941102     I              CSBMGS                          MGS
+003500941102     I              CSBCAS                          CAS
+003600941102     I              CSBVCA                          VCA
+003700931020     I              CSBNRA                          NRA
+003800931020     I              CSBDTE                          DTE
+003900931020     I              CSBABI                          ABI
+004000931020     I              CSBCAB                          CAB
+004100931020     I              CSBTPA                          TPA
+004200931020     I              CSBTPI                          TPI
+004300931020     I              CSBDDC                          DDC
+004400931020     I              CSBNDT                          NDT
+004500931020     I              CSBCDI                          CDI
+004600931020     I              CSBRSM                          RSM
+004700931020     I              CSBRSD                          RSD
+004800941102     I              CSBRMA                          RMA
+004900931020     I              CSBRMN                          RMN
+005000931020     I              CSBFPC                          FPC
+005100931020     I              CSBPAB                          PAB
+005200931020     I              CSBPCA                          PCA
+005300931020     I              CSBNDP                          NDP
+005400931020     I              CSBDDP                          DDP
+005500931020     I              CSBDGC                          DGC
+005600931020     I              CSBPAA                          PAA
+005700931020     I              CSBPLP                          PLP
+005800931020     I              CSBPNS                          PNS
+005900931020     I              CSBPSP                          PSP
+006000960918     I              CSBSTA                          STA
+006100931020     I*--------------------------------------------------------------*
+006200931020     I*   DS
+006300931020     I*--------------------------------------------------------------*
+006400931020     IKPJBA     E DS
+006500931020     I                                      483 492 LEGFIL
+006600931020     I                                      493 502 MBRFIL
+006700931020     IUT§DSE    E DSUT§DSE0F
+006800931020     I*
+006900941102     IWLBDA8      DS
+007000941102     I                                        1   80G02DAT
+007100941102     I                                        9  160G02INV
+007200941102     I                                       17  17 G02ERR
+007300941102     I                                       18  220G02TGI
+007400931117     IWLBGIO      DS
+007500941102     I                                        1   80GIODAT
+007600941102     I                                        9  160GIOINV
+007700941102     I                                       17  210GIOTGI
+007800931117     IDS5A      E DS
+007900931020     C*--------------------------------------------------------------*
+008000931020     C*   C I C L O    P R I N C I P A L E                           *
+008100931020     C*--------------------------------------------------------------*
+008200931020     C*  Apertura archivio di ricezione
+008300931020     C                     EXSR OPNMBR
+008400931020     C*  Prima lettura
+008500941102     C                     READ FNCSB00R                 80
+008600931117     C                     MOVE ' '       FLGSBM  1
+008700931020     C*  Ciclo
+008800931020     C           *IN80     DOWEQ'0'
+008900931117     C*  Controllo se devo sottomettere la pulizia dei contrassegni
+009000931117     C           FLGSBM    IFEQ ' '
+009100931117     C           CSBTPI    ANDNE'M'
+009200931117     C                     MOVE 'S'       FLGSBM  1
+009300931117     C                     EXSR SBMPUL
+009400931117     C                     END
+009500931117     C*  Aggiorno FLCSB
+009600931020     C                     EXSR UPDCSB
+009700941102     C                     READ FNCSB00R                 80
+009800931020     C                     END
+009900931020     C*
+010000931020     C*  Provvedo alla chiusura del file di riceizione
+010100931020     C                     EXSR CLOMBR
+010200931020     C*
+010300931020     C           FINE      TAG
+010400931020     C                     SETON                     LR
+010500931020     C*--------------------------------------------------------------*
+010600931020     C*   OPNMBR: Apertura membro x ricezione movimenti              *
+010700931020     C*--------------------------------------------------------------*
+010800931020     C           OPNMBR    BEGSR
+010900931020     C*
+011000931020     C***  Controllo se il membro esiste
+011100931020     C***  se no vado a fine pgm.
+011200931020     C                     MOVE ')'       VAR11  11
+011300931020     C                     MOVELMBRFIL    VAR11
+011400931020     C                     MOVE '))'      VAR12  12
+011500931020     C                     MOVELMBRFIL    VAR12
+011600931020     C                     Z-ADD55        LUNG   155
+011700931020     C                     Z-ADD64        LUNG1  155
+011800931020     C                     SETOF                     20
+011900931020     C                     MOVE VAR11     CMD1
+012000931020     C                     MOVEL*BLANKS   COMMAN
+012100931020     C                     MOVEACMD1,1    COMMAN 80
+012200931020     C                     CALL 'QCMDEXC'              20
+012300931020     C                     PARM           COMMAN
+012400931020     C                     PARM           LUNG
+012500931020     C   20                GOTO FINE
+012600931020     C** Alloco membro
+012700931020     C** se non riesce chiudo il programma
+012800931020     C                     SETOF                     20
+012900931020     C                     MOVE VAR12     CMD2
+013000931020     C                     MOVEL*BLANKS   COMMAN
+013100931020     C                     MOVEACMD2,1    COMMAN
+013200931020     C                     CALL 'QCMDEXC'              20
+013300931020     C                     PARM           COMMAN
+013400931020     C                     PARM           LUNG
+013500931020     C   20                GOTO FINE
+013600931020     C** Esegue ovrdbf del membro desiderato
+013700931020     C** se non riesce chiudo il programma
+013800931020     C                     MOVE VAR11     CMD3
+013900931020     C                     MOVEL*BLANKS   COMMAN
+014000931020     C                     MOVEACMD3,1    COMMAN
+014100931020     C                     CALL 'QCMDEXC'              20
+014200931020     C                     PARM           COMMAN
+014300931020     C                     PARM           LUNG
+014400931020     C   20                GOTO FINE
+014500931020     C**** Apertura file di ricezione dati CONTRASSEGNI
+014600941102     C                     OPEN FNCSB00R
+014700931020     C*
+014800931020     C                     ENDSR
+014900931020     C*--------------------------------------------------------------*
+015000931020     C*   UPDCSB: Aggiorno dati contrassegno in base a dati di sede  *
+015100931020     C*--------------------------------------------------------------*
+015200931020     C           UPDCSB    BEGSR
+015300931020     C*
+015400931020     C                     MOVE CSBAAS    CSWAAS
+015500931020     C                     MOVE CSBLNP    CSWLNP
+015600931020     C                     MOVE CSBNRS    CSWNRS
+015700931020     C                     MOVE CSBNSP    CSWNSP
+015800941102     C           KEYCSB    CHAINFNCSB01L             90
+015900931021     C                     ADD  1         CSBREC  50
+016000931020     C*  Aggiorno campi
+016100931020     C                     MOVE CSBLNA    LNA
+016200941102     C                     MOVE CSBMGS    MGS
+016300941102     C                     MOVE CSBCAS    CAS
+016400941102     C                     MOVE CSBVCA    VCA
+016500931020     C                     MOVE CSBNRA    NRA
+016600931020     C                     MOVE CSBDTE    DTE
+016700931020     C                     MOVE CSBABI    ABI
+016800931020     C                     MOVE CSBCAB    CAB
+016900931020     C                     MOVE CSBTPA    TPA
+017000931020     C                     MOVE CSBTPI    TPI
+017100931020     C                     MOVE CSBDDC    DDC
+017200931020     C                     MOVE CSBNDT    NDT
+017300931020     C                     MOVE CSBCDI    CDI
+017400931020     C                     MOVE CSBRSM    RSM
+017500931020     C                     MOVE CSBRSD    RSD
+017600941102     C                     MOVE CSBRMA    RMA
+017700931020     C                     MOVE CSBRMN    RMN
+017800931020     C                     MOVE CSBFPC    FPC
+017900931020     C                     MOVE CSBPAB    PAB
+018000931020     C                     MOVE CSBPCA    PCA
+018100931020     C                     MOVE CSBNDP    NDP
+018200931020     C                     MOVE CSBDDP    DDP
+018300931020     C                     MOVE CSBDGC    DGC
+018400931020     C                     MOVE CSBPAA    PAA
+018500931020     C                     MOVE CSBPLP    PLP
+018600931020     C                     MOVE CSBPNS    PNS
+018700931020     C                     MOVE CSBPSP    PSP
+018800960918     C                     MOVE CSBSTA    STA
+018900931020     C*
+019000941102     C  N90                UPDATFNCSB000
+019100941102     C   90                WRITEFNCSB000
+019200931020     C*  Cancello record da archivio di ricezione
+019300941102     C                     DELETFNCSBR
+019400931020     C*
+019500931020     C                     ENDSR
+019600931020     C*--------------------------------------------------------------*
+019700931020     C*   CLOMBR: Chiusura membro x ricezione movimenti              *
+019800931020     C*--------------------------------------------------------------*
+019900931020     C           CLOMBR    BEGSR
+020000931020     C*
+020100931020     C                     MOVE ')'       VAR11  11
+020200931020     C                     MOVELMBRFIL    VAR11
+020300931020     C                     MOVE '))'      VAR12  12
+020400931020     C                     MOVELMBRFIL    VAR12
+020500931020     C                     Z-ADD55        LUNG   155
+020600931020     C** Chiudo File ricezione dati contraasegni pagati
+020700941102     C                     CLOSEFNCSB00R
+020800931020     C** Dltovr *All
+020900931020     C                     SETOF                     20
+021000931020     C                     MOVEL*BLANKS   COMMAN
+021100931020     C                     MOVEACMD4,1    COMMAN
+021200931020     C                     CALL 'QCMDEXC'              20
+021300931020     C                     PARM           COMMAN
+021400931020     C                     PARM           LUNG
+021500931020     C** Disalloco il membro aggiornato
+021600931020     C                     MOVE VAR12     CMD5
+021700931020     C                     MOVEL*BLANKS   COMMAN
+021800931020     C                     MOVEACMD5,1    COMMAN
+021900931020     C                     CALL 'QCMDEXC'              20
+022000931020     C                     PARM           COMMAN
+022100931020     C                     PARM           LUNG
+022200931020     C*
+022300931021     C* 1° ARCHIVIO = CNMOV
+022400931021     C           LEGFIL    CHAINCMRIC01L             20
+022500931021     C  N20                DO
+022600931021     C                     Z-ADDCSBREC    RICNR1
+022700931021     C                     MOVE '1'       RICFL2            AGG.TO
+022800931021     C                     UPDATCMRIC000
+022900931021     C                     END
+023000931020     C                     ENDSR
+023100931117     C*--------------------------------------------------------------*
+023200931117     C*   SBMPUL: Controllo se devo sottomettere pulizia C/A         *
+023300931117     C*--------------------------------------------------------------*
+023400931117     C           SBMPUL    BEGSR
+023500931117     C*
+023600931117     C                     Z-ADD1         TBWKUT
+023700931117     C                     MOVE '5A'      TBWCOD
+023800931117     C                     MOVEL*BLANKS   TBWKEY
+023900931117     C                     MOVEL'1'       TBWKEY
+024000931117     C                     CLEARDS5A
+024100931117     C                     OPEN TABEL00F
+024200931117     C*----------------------------------------------------*
+024300931117     C           KTAB      CHAINTABEL                10
+024400931117     C           *IN10     IFEQ '0'
+024500931117     C                     MOVELTBLUNI    DS5A
+024600931117     C                     Z-ADD§5AFCA    GIORCA  30
+024700931117     C*----------------------------------------------------*
+024800931117     C*  Calcolo data inizio pulizia contrassegni pagati
+024900931117     C*  se non è gia stata sottomessa la pulizia.
+025000931117     C           §5ACAF    IFEQ ' '
+025100931117     C*  aggiorno flag x sottomissione pulizia C/A
+025200931117     C                     MOVE 'S'       §5ACAF
+025300931117     C                     MOVELDS5A      TBLUNI
+025400931117     C                     UPDATTABEL
+025500931117     C*  calcolo la data di pulizia
+025600950125     C                     Z-ADDUDATE     G02DAT
+025700931117     C                     MOVEL*BLANK    G02ERR
+025800941102     C                     CALL 'XSRDA8'
+025900941102     C                     PARM           WLBDA8
+026000950125     C                     Z-ADDG02TGI    GGUDAT  60
+026100931117     C           G02TGI    SUB  GIORCA    G02TGI
+026200931117     C                     MOVE *ZEROS    GIODAT
+026300931117     C                     MOVE *ZEROS    GIOINV
+026400931117     C                     Z-ADDG02TGI    GIOTGI
+026500960919     C                     CALL 'XSRGI8'
+026600931117     C                     PARM           WLBGIO
+026700931117     C*  Sottomissione Batch
+026800950125     C                     Z-ADDGIODAT    G02DAT
+026900931117     C                     MOVEL*BLANK    G02ERR
+027000941102     C                     CALL 'XSRDA8'
+027100941102     C                     PARM           WLBDA8
+027200950125     C                     Z-ADDG02INV    AMGPCA  80       GG.PULIZ.C/A.
+027300941102     C                     MOVE 'SC28'    KCOAZ
+027400931118     C                     MOVE *BLANKS   KQEBI
+027500931118     C                     MOVEL'KSNOTTE' KQEBI
+027600931118     C                     MOVE *BLANKS   KQIEB
+027700931118     C                     MOVEL'KSNOTTE' KQIEB
+027800931117     C                     MOVELAMGPCA    KPJBU
+027900931117     C                     CALL 'BCH10'
+028000931117     C                     PARM           KPJBA
+028100931117     C                     END
+028200931117     C*----------------------------------------------------*
+028300931117     C                     END
+028400931117     C*----------------------------------------------------*
+028500931117     C                     CLOSETABEL00F
+028600931117     C*----------------------------------------------------*
+028700931117     C                     ENDSR
+028800931020     C*--------------------------------------------------------------*
+028900941102     C*   *INZSR: Operazioni iniziali                                *
+029000931020     C*--------------------------------------------------------------*
+029100941102     C           *INZSR    BEGSR
+029200931020     C*
+029300931020     C           *ENTRY    PLIST
+029400931020     C                     PARM           KPJBA
+029500931020     C* Se il membro da trascodificare non è stato passato
+029600931020     C* assumo il primo membro del file
+029700931020     C           MBRFIL    IFEQ *BLANK
+029800931020     C                     MOVEL'*FIRST'  MBRFIL
+029900931020     C                     ELSE
+030000931020     C                     MOVELMBRFIL    §ALF4   4
+030100931020     C                     MOVE §ALF4     §FIPRI  30
+030200931020     C                     END
+030300931020     C* Richiamo XPARUT
+030400931020     C                     Z-ADD1         CODUT
+030500931020     C                     CALL 'X§PARUT'
+030600931020     C                     PARM           UT§DSE
+030700931020     C           CODUT     CABEQ-1        FINE
+030800931020     C*
+030900931020     C* Definizione KLIST
+031000931020     C           KEYCSB    KLIST
+031100931020     C                     KFLD           CSWAAS
+031200931020     C                     KFLD           CSWLNP
+031300931020     C                     KFLD           CSWNRS
+031400931020     C                     KFLD           CSWNSP
+031500931117     C*  CHIAVE TABELLA 5A
+031600931117     C           KTAB      KLIST
+031700931117     C                     KFLD           TBWKUT
+031800931117     C                     KFLD           TBWCOD
+031900931117     C                     KFLD           TBWKEY
+032000931020     C* Definizione varibili
+032100931020     C           *LIKE     DEFN CSBAAS    CSWAAS
+032200931020     C           *LIKE     DEFN CSBLNP    CSWLNP
+032300931020     C           *LIKE     DEFN CSBNRS    CSWNRS
+032400931020     C           *LIKE     DEFN CSBNSP    CSWNSP
+032500931117     C           *LIKE     DEFN TBLKUT    TBWKUT
+032600931117     C           *LIKE     DEFN TBLCOD    TBWCOD
+032700931117     C           *LIKE     DEFN TBLKEY    TBWKEY
+032800931020     C*
+032900931020     C                     ENDSR
+033000931020**         CMD1
+033100941102CHKOBJ OBJ(FNCSB00R) OBJTYPE(*FILE)     MBR(M234567890)
+033200931020**         CMD2
+033300941102ALCOBJ OBJ((FNCSB00R *FILE *EXCL           M234567890))
+033400931020**         CMD3
+033500941102OVRDBF FILE(FNCSB00R)                   MBR(M234567890)
+033600931020**         CMD4
+033700931020DLTOVR FILE(*ALL)
+033800931020**         CMD5
+033900941102DLCOBJ OBJ((FNCSB00R *FILE *EXCL           M234567890))

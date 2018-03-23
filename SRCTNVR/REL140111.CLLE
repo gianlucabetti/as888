@@ -1,0 +1,64 @@
+000100060111/*********************************************************************/
+000200060317             pgm
+000300070131
+000400070612/* ___Salvo copia archivio  automezzi __________*/
+000500140109             CRTDUPOBJ  OBJ(fnevb20F) FROMLIB(UNITRAGRU) +
+000600070612                          OBJTYPE(*FILE) TOLIB(EDPSED) +
+000700140109                          NEWOBJ(fnevb20f) DATA(*YES)
+000800140109
+000900070612/* ___Ridenomino i vecchi file automezzi __________*/
+001000070201
+001100140109             RNMOBJ     OBJ(UNITRAGRU/fnevb22L) OBJTYPE(*FILE) +
+001200140109                          NEWOBJ(fnevb22lEX)
+001300140109             RNMOBJ     OBJ(UNITRAGRU/fnevb20f) OBJTYPE(*FILE) +
+001400140109                          NEWOBJ(fnevb20FEX)
+001500070612
+001600070612/* ___genera nuovi tracciati da libreria di appoggio _______*/
+001700070612
+001800140109             CRTDUPOBJ  OBJ(fnevb2*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+001900070612                          TOLIB(UNITRAGRU)
+002000140109
+002100070612/* ___elimina da libreria di work ________________*/
+002200070612
+002300140109             DLTF       FILE(EDPWKSE/fnevb2*)
+002400060428
+002500070612/* ___esegue copia dati da file salvato nel nuovo modificato _______*/
+002600140109             CPYF       FROMFILE(EDPSED/fnevb20F) +
+002700140109                          TOFILE(UNITRAGRU/fnevb20F) +
+002800070612                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+002900070612
+003000140109/* _____ Cambia la descrizione nel campo del file FNACR00F.ACRMAI ___*/
+003100140109             EDTFFD     FILE(UNITRAGRU/FNACR00F) FIELD(ACRMAI) +
+003200140109                          COLHDG1('DS DACR01') TEXT('VEDI DS "DACR01"')
+003300140109             MONMSG     MSGID(CPF0000)
+003400070612
+003500060428/* _____ Sposta i programmi dalla EDPWKSE alla OBJ __________________*/
+003600060428             call       pgm(GAITRAOBJ/TNSYMVC) +
+003700060428                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+003800060331
+003900140110
+004000140110/* _____ LF AZCOS00F: azcos01l la cancello e ricreo _________________*/
+004100140110             DLTF       FILE(unitragru/AZCOS01L)
+004200140110             MONMSG     MSGID(CPF0000)
+004300140110
+004400140110             CRTDUPOBJ  OBJ(AZCOS01L) FROMLIB(EDPWKSE) +
+004500140110                          OBJTYPE(*FILE) TOLIB(UNITRAGRU)
+004600140110             MONMSG     MSGID(CPF0000)
+004700140110
+004800140110/* _____ LF AZCOS00F: nuove 03l e 04l _______________________________*/
+004900140110             CRTDUPOBJ  OBJ(AZCOS03L) FROMLIB(EDPWKSE) +
+005000140110                          OBJTYPE(*FILE) TOLIB(UNITRAGRU)
+005100140110             MONMSG     MSGID(CPF0000)
+005200140110             CRTDUPOBJ  OBJ(AZCOS04L) FROMLIB(EDPWKSE) +
+005300140110                          OBJTYPE(*FILE) TOLIB(UNITRAGRU)
+005400140110             MONMSG     MSGID(CPF0000)
+005500140110
+005600140110             DLTF       FILE(EDPWKSE/AZCOS*)
+005700140110             MONMSG     MSGID(CPF0000)
+005800140110
+005900140110/* _____ Cambia la descrizione nel campo del file AZOCS00F.COSSERV___*/
+006000140110             EDTFFD     FILE(UNITRAGRU/AZCOS00F) FIELD(COSSERV) +
+006100140110                          COLHDG1('SOGLIA"P"') TEXT('SOGLIA P=POMERIGGIO')
+006200140110             MONMSG     MSGID(CPF0000)
+006300140110
+006400060317             endpgm

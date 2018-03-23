@@ -1,0 +1,89 @@
+000100950420     H              J
+000200950420     H*--------------------------------------------------------------*
+000300950420     H*       - AGGIORNAMENTO IN SEDE DATI DI CONSEGNA SU BOLLE -    *
+000400950420     H*         ORIGINALI CONSEGNATE + TRASMISSIONE IN FILIALE       *
+000500950420     H*--------------------------------------------------------------*
+000600950503     FFNARBAPPIF  E           K        DISK
+000700950420     F*--------
+000800950420     FFNARBC0TO   E                    DISK                      A    UC
+000900950420     E*--------------------------------------------------------------*
+001000950420     E* SCHIERE X QCMDEXEC
+001100950420     E*--------------------------------------------------------------*
+001200950420     E                    CMDF    1   3 45               QCAEXEC FNARBC
+001300950420     C*--------------------------------------------------------------*
+001400950420     C*    C I C L O      P R I N C I P A L E                        *
+001500950420     C*--------------------------------------------------------------*
+001600950420     C           *LOVAL    SETLLFNARBAPP
+001700950420     C                     READ FNARBAPP                 31
+001800950420     C           *IN31     DOWEQ'0'
+001900950420     C                     EXSR WRTARB
+002000950420     C                     END
+002100950420     C                     CLOSEFNARBAPP
+002200950420     C*
+002300950420     C                     SETON                     LR
+002400950420     C*--------------------------------------------------------------*
+002500950420     C*    Operazioni iniziali                                       *
+002600950420     C*--------------------------------------------------------------*
+002700950420     C           *INZSR    BEGSR
+002800950420      *--------------------------------------------*
+002900950420      *  Definisco variabili
+003000950420     C           *LIKE     DEFN ARBLNP    WSVLIN
+003100950420     C                     ENDSR
+003200950420     C*--------------------------------------------------------------*
+003300950420     C*    Aggiorno FNARBC0T                                         *
+003400950420     C*--------------------------------------------------------------*
+003500950420     C           WRTARB    BEGSR
+003600950420     C* Nuova filiale
+003700950420     C                     EXSR NEWFIL
+003800950420     C*
+003900950420     C           WSVLIN    DOWEQARBFLE
+004000950420     C           *IN31     ANDEQ'0'
+004100950420     C                     WRITEFNARBC00
+004200950420     C                     READ FNARBAPP                 31
+004300950420     C                     END
+004400950420     C*
+004500950420     C                     CLOSEFNARBC0T
+004600950420     C*
+004700950420     C                     ENDSR
+004800950420     C*--------------------------------------------------------------*
+004900950420     C*    Nuova filiale                                             *
+005000950420     C*--------------------------------------------------------------*
+005100950420     C           NEWFIL    BEGSR
+005200950420     C*
+005300950420     C** FILIALE PER APERTURA MEMBRO
+005400950420     C                     MOVE ')'       VAR     4
+005500950420     C                     MOVELARBFLE    VAR
+005600950420     C                     Z-ADD45        LUNG   155
+005700950420      *
+005800950420     C** CONTROLLO SE ESISTE IL MEMBRO X FNARBC0T
+005900950420     C                     SETOF                     60
+006000950420     C                     MOVE VAR       CMDF,1
+006100950420     C                     MOVEL*BLANKS   COMMAN
+006200950420     C                     MOVELCMDF,1    COMMAN 80
+006300950420     C                     CALL 'QCMDEXC'              60
+006400950420     C                     PARM           COMMAN
+006500950420     C                     PARM           LUNG
+006600950420     C** ESEGUE ADDPFM DEL MEMBRO NUOVO
+006700950420     C   60                DO
+006800950420     C                     MOVE VAR       CMDF,2
+006900950420     C                     MOVEL*BLANKS   COMMAN
+007000950420     C                     MOVELCMDF,2    COMMAN
+007100950420     C                     CALL 'QCMDEXC'
+007200950420     C                     PARM           COMMAN
+007300950420     C                     PARM           LUNG
+007400950420     C                     END
+007500950420     C*+ ESEGUE IN OGNI CASO OVRDBF DEL MEMBRO DESIDERATO
+007600950420     C                     MOVE VAR       CMDF,3
+007700950420     C                     MOVEL*BLANKS   COMMAN
+007800950420     C                     MOVELCMDF,3    COMMAN
+007900950420     C                     CALL 'QCMDEXC'
+008000950420     C                     PARM           COMMAN
+008100950420     C                     PARM           LUNG
+008200950420      *
+008300950420     C                     OPEN FNARBC0T
+008400950503     C                     MOVE ARBFLE    WSVLIN
+008500950420     C                     ENDSR
+008600950420**         CMDF
+008700950420CHKOBJ OBJ(FNARBC0T) OBJTYPE(*FILE) MBR(M000)
+008800950420ADDPFM FILE(FNARBC0T)               MBR(M000)
+008900950420OVRDBF FILE(FNARBC0T)               MBR(M000)

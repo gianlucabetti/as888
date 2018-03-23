@@ -1,0 +1,3 @@
+000100090710     D inet_addr...
+000200090710     D                 PR            10U 0 ExtProc('inet_addr')
+000300090710     D  address_str                    *   value options(*string)

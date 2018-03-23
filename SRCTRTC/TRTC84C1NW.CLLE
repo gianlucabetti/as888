@@ -1,0 +1,123 @@
+000100880609/********************************************************************/
+000200880609/*                                                                  */
+000300960527/*       CONTROLLA SE RICEVUTI RECORD ED EVENTUALMENTE TRASCODIFICA */
+000400960527/*                  DATE DI CONSEGNA  BOLLE EXPORT  - ESTERO -      */
+000500930507/*                                                                  */
+000600880609/********************************************************************/
+000700020926             PGM        PARM(&KPJBA)
+000800020926             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900970108
+001000021008 /* Parametri per il TRULOUTQ */
+001100021008             DCL        VAR(&TYPCALL) TYPE(*CHAR) LEN(1) VALUE('L')
+001200021008             DCL        VAR(&FGS) TYPE(*CHAR) LEN(3)
+001300021008             DCL        VAR(&TYPCODA) TYPE(*CHAR) LEN(1) VALUE('0')
+001400021008             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001500021008             DCL        VAR(&LIBCODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001600021008             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1) VALUE('0')
+001700021008
+001800021008 /* Parametri per il CNCR80 da UT§DES0F */
+001900021008             DCL        VAR(&SIMPOU) TYPE(*DEC) LEN(3 0) VALUE(0)
+002000021008             DCL        VAR(&PAR1591) TYPE(*CHAR) LEN(1591)
+002100040604             DCL        VAR(&PAR111) TYPE(*CHAR) LEN(111)
+002200040604             DCL        VAR(&LIN90) TYPE(*CHAR) LEN(90)
+002300040604             DCL        VAR(&POS) TYPE(*DEC) LEN(3 0)
+002400041201             DCL        VAR(&VAVANTI) TYPE(*CHAR) LEN(2)
+002500050617             DCL        VAR(&AS400) TYPE(*CHAR) LEN(10)
+002600021008
+002700050617             RTVNETA    SYSNAME(&AS400)
+002800050617
+002900021008 /* Ricerca del P.O.x OUTQ    */
+003000021008             CHGVAR     VAR(%SST(&PAR1591 1 1)) VALUE('0')
+003100021008             CALL       PGM(X§PARUT) PARM(&PAR1591)
+003200021008             CHGVAR     VAR(&SIMPOU) VALUE(%SST(&PAR1591 1509 3))
+003300021008
+003400021008 /* Ricerca la coda x OUTQ    */
+003500021008             CHGVAR     VAR(&FGS) VALUE(&SIMPOU)
+003600021008             CALL       PGM(TRULOUTQ) PARM(&TYPCALL &FGS &TYPCODA +
+003700021008                          &CODA &LIBCODA &ESITO)
+003800040603             IF         COND(&ESITO = '1') THEN(CHGVAR VAR(&CODA) +
+003900040603                          VALUE('R' *CAT &FGS *CAT 'ESTERO'))
+004000021008
+004100021008 /* Controlla esistenza della coda in filiale    */
+004200021008 /*  se non c'è --> allora imposta il default    */
+004300021018             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+004400021008             MONMSG     MSGID(CPF9801) EXEC(DO)
+004500040603             CHGVAR     VAR(&CODA) VALUE('R' *CAT &FGS *CAT 'ESTERO')
+004600021017
+004700021017 /*  x la filiale trasferita su As Unico di sede */
+004800021017 /*  se non c'è --> allora imposta il default    */
+004900021017             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+005000021017             MONMSG     MSGID(CPF9801) EXEC(DO)
+005100021017             CHGVAR     VAR(&CODA) VALUE('QDKT      ')
+005200021008             ENDDO
+005300021017
+005400021017             RTVOBJD    OBJ(&CODA) OBJTYPE(*OUTQ) RTNLIB(&LIBCODA)
+005500021017             ENDDO
+005600020910
+005700041201/*-----------------------------------------------------------------------*/
+005800041201/* X assurdo cancella da QTEMP il file che andrà a creare                */
+005900041201/*-----------------------------------------------------------------------*/
+006000041201             DLTF       FILE(QTEMP/EDIFTSTA)
+006100041201             MONMSG     MSGID(CPF0000)
+006200041201
+006300041201/*-----------------------------------------------------------------------*/
+006400041201/* Crea in Qtemp il file per la trascodifica dei dati in formato FLAT    */
+006500041201/* prendendo l'immagine dal EDIFTSTA di INTESA                           */
+006600041201/*-----------------------------------------------------------------------*/
+006700041201             CRTDUPOBJ  OBJ(EDIFTSTA) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+006800041201                          TOLIB(QTEMP)
+006900041201
+007000041201/*-----------------------------------------------------------------------*/
+007100041201/* Scrive il file x elaborare gli STATUS gestiti dall'utente             */
+007200041201/* quindi controllando la linea di appartenenza   all'utente             */
+007300041201/* che ha lanciato la procedura interattivamente.                        */
+007400041201/* ATTENZIONE i numeratori li deve prendere dalle tabelle di sede        */
+007500041201/*-----------------------------------------------------------------------*/
+007600050617             IF         COND(&AS400 *EQ 'AS888') THEN(OVRDBF +
+007700050617                          FILE(EDTAB01L) TOFILE(GAITRAGRPS/EDTAB01L))
+007800050617
+007900050617             ELSE       CMD(OVRDBF FILE(EDTAB01L) +
+008000050617                          TOFILE(GAITRAGRU/EDTAB01L))
+008100050617
+008200041201             CALL       PGM(TRTC84R1) PARM(&KPJBA)
+008300041201             CHGVAR     VAR(&VAVANTI) VALUE(%SST(&KPJBA 247 2))
+008400041201             DLTOVR     FILE(EDTAB01L)
+008500970108
+008600970108/*  Se il membro ha record copio in RRIFTSTASV e trascodifico  */
+008700041201             IF         COND(&VAVANTI *EQ 'OK') THEN(DO)
+008800040604
+008900970108/*  Eseguo OVRDBF e richiamo pgm per trascodifica date consegna */
+009000041201             OVRDBF     FILE(EDIFTSTA) TOFILE(QTEMP/EDIFTSTA)
+009100040604             OVRPRTF    FILE(QSYSPRT) SAVE(*YES)
+009200040604             OVRPRTF    FILE(SYSPRT) SAVE(*YES)
+009300020926             CALL       PGM(TRTC84R) PARM(&KPJBA)
+009400020906             DLTOVR     FILE(*ALL)
+009500040604
+009600020906             ENDDO
+009700021031
+009800021031 /* ----------------------------------------------------- */
+009900021031 /*   Esegue P.O.D. Fedex da FIFEST0F                     */
+010000021031 /* ----------------------------------------------------- */
+010100040604 /*   Lo può fare solo chi ha la Linea   --> 400          */
+010200040603 /* ----------------------------------------------------- */
+010300040604
+010400040604             CHGVAR     VAR(&PAR111) VALUE(' ')
+010500040604             CHGVAR     VAR(%SST(&PAR111 91 2)) VALUE('£1')
+010600040604             CHGVAR     VAR(%SST(&PAR111 93 3)) VALUE(&FGS)
+010700040604             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&PAR111)
+010800040604             CALL       PGM(TRUL06R) PARM(&KPJBA)
+010900040604             CHGVAR     VAR(&LIN90) VALUE(%SST(&KPJBA 247 90))
+011000040604             CHGVAR     VAR(&POS) VALUE(1)
+011100040604
+011200040604ALTRALIN:
+011300040604             IF         COND(%SST(&LIN90 &POS 3) = '400') THEN(DO)
+011400021031             CALL       PGM(TRTCF2C) PARM(&KPJBA)
+011500040604             GOTO       CMDLBL(FINE)
+011600040603             ENDDO
+011700040604             IF         COND(&POS = 88) THEN(GOTO CMDLBL(FINE))
+011800040604             CHGVAR     VAR(&POS) VALUE(&POS + 3)
+011900040604             GOTO       CMDLBL(ALTRALIN)
+012000960404
+012100040604
+012200040604FINE:
+012300970108             ENDPGM

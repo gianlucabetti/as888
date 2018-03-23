@@ -1,0 +1,491 @@
+000100910403     H              J
+000200910403     F* FLFA22R  *---------------------------------------------------*
+000300910403     F*-----------------*                                            *
+000400910403     F* STAMPA SEGNACOLLO CON BARCODE A 18 CON RJS                   *
+000401921120     F*        CON BARCODE 3X70                                      *
+000500910403     F*--------------------------------------------------------------*
+000600910403     FFLFA22P O   F     132            PRINTER
+000700910403     E                    §CB        18  1 0             CODICE CON CONTR.
+000800910403     E                    §CA        18  1               CODICE CON CONTR.
+000900910403     E                    §C         17  1 0             CODICE S/CONTR.
+001000910403     E                    §2          2  1 0             COMODO
+001100910403     E                    §2A         2  1               COMODO
+001200910404     E                    §RI        37  1               RIGA DI STAMPA
+001300910403     E                    §S7         7  1               CAMPO NUMERICO
+001400910403     E                    §O7         7  1               0 > O
+001500910403     I            DS
+001600910403     I                                        1  180§CB
+001700910403     I                                        1  18 §CA
+001800910403     I            DS
+001900910403     I                                        1   70§N7
+002000910403     I                                        1   7 §S7
+002100910403     I            DS
+002200910403     I                                        1   20§2
+002300910403     I                                        1   2 §2A
+002400910403     IDSBLD     E DS
+002500910403     IDSBLD7    E DS
+002600910403     I                                        1  170§C
+002700910403     I/SPACE 3
+002800910403     C*---------------------------------------------------------------*
+002900910403     C           *ENTRY    PLIST
+003000910403     C                     PARM           DSBLD
+003100920910     C*
+003101940524     C*
+003102940524     C** LOOP X PIU ETICHETTE
+003103940524     C*
+003104940524     C                     DO   5         WW      20
+003105940524     C** IMPOSTA VALORI FISSI
+003106940524     C                     MOVE *BLANK    §LDDLP
+003107940524     C                     MOVE *BLANK    §LDCDP
+003108940524     C                     MOVE *BLANK    §LDDLA
+003109940524     C                     MOVE *BLANK    §LDRSM
+003110940524     C                     MOVE *BLANK    §LDRSD
+003111940524     C                     MOVE *BLANK    §LDIND
+003112940524     C                     MOVE *BLANK    §LDLOD
+003113940524     C*
+003114940524     C                     TIME           §HMS    60
+003115940524     C                     Z-ADD049       §LDLNP
+003116940524     C                     MOVEL'TORINO  '§LDDLP
+003117940524     C                     MOVEL§HMS      §LDCDP
+003118940527     C                     MOVE '   0'    §LDCDP
+003119940524     C                     Z-ADD02        §LDNRS
+003120940524     C                     Z-ADD6789015   §LDNCD
+003121940524     C                     ADD  WW        §LDNCD
+003122940524     C                     Z-ADD082       §LDLNA
+003123940524     C                     MOVEL'CAGLIARI'§LDDLA
+003124940524     C                     Z-ADD028       §LDTNA
+003125940524     C                     MOVE 'E'       §LDTSP
+003126940524     C                     Z-ADD69        §LDZSC
+003127940524     C                     Z-ADD1         §LDNC1
+003128940524     C                     Z-ADD1         §LDNC2
+003129940524     C                     MOVEL'WERUSKA '§LDRSM
+003130940524     C                     MOVEL'TO'      §LDPRM
+003131940524     C                     MOVEL'AUTOSOLE'§LDRSD
+003132940524     C                     Z-ADD09011     §LDCAD
+003133940524     C                     MOVEL'V. VERDI'§LDIND
+003134940524     C                     MOVEL'CAGLIARI'§LDLOD
+003135940524     C                     MOVEL'CA'      §LDPRD
+003136940524     C                     Z-ADD0         §LDCPD
+003137940524     C                     Z-ADD0         §LDNCP
+003138940524     C                     Z-ADD0         §LDNCU
+003139940524     C                     MOVEL' '       §LDRST
+003140940524     C                     Z-ADD1         §LDVOL
+003141940524     C                     Z-ADD75        §LDPKG
+003142940524     C                     MOVEL'P'       §LDFVR
+003143940524     C* FINE VALORI FISSI
+003144921202     C                     MOVEL§LDNRS    §LDNRT  3
+003145921202     C                     MOVE '-'       §LDNRT
+003146921202     C*
+003200910403     C                     MOVE §LDLNP    §LCLNP
+003300910403     C                     MOVE §LDLNA    §LCLNA
+003400910403     C                     MOVE §LDNRS    §LCNRS
+003500910403     C                     MOVE §LDNCD    §LCNCD
+003600910403     C                     MOVE §LDZSC    §LCZSC
+003700910403     C*
+003800910403     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+003900910403     C                     EXSR M10
+004000910403     C                     MOVEA§CA       §C18A  18
+004100910403     C                     MOVE §C18A     §CDBAR 18
+004200910403     C*
+004300910403     C           §LDTSP    COMP 'E'                      17 ESPRESSO
+004400910403     C           §LDCDP    COMP *BLANK               18     COD.PROD.
+004500910403     C           §LDNRS    COMP *ZERO                19     NR.SERIE
+004600910403     C*
+004700921106     C** INIZIALIZZA STAMPANTE
+004800910403     C                     EXCPTFA22
+004900910403     C*
+005000910404     C                     MOVEA*BLANK    §RI
+005100910403     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL PRIMO NUMERO COLLI
+005200910403     C                     SETOF                     77
+005300910403     C                     MOVE *BLANK    §A7     7
+005400910403     C                     Z-ADD§LDNC1    §N7
+005500910403     C                     DO   7         §1
+005600910403     C           §S7,§1    IFEQ *ZERO
+005700910403     C                     MOVE *BLANK    §S7,§1
+005800910403     C                     ELSE
+005900910403     C                     SETON                     77
+006000910403     C                     END
+006100910403     C  N77                END
+006200910403     C                     MOVEA§S7       §A7
+006300910403     C                     MOVE §A7       §A3     3
+006400910403     C                     MOVEA§A3       §RI,26
+006500910403     C                     MOVEA'-'       §RI,29
+006600910403     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL ULTIMO NUMERO COLLI
+006700910403     C                     SETOF                     77
+006800910403     C                     MOVE *BLANK    §A7
+006900910403     C                     Z-ADD§LDNC2    §N7
+007000910403     C                     DO   7         §1
+007100910403     C           §S7,§1    IFEQ *ZERO
+007200910403     C                     MOVE *BLANK    §S7,§1
+007300910403     C                     ELSE
+007400910403     C                     SETON                     77
+007500910403     C                     END
+007600910403     C  N77                END
+007700910403     C                     MOVEA§S7       §A7
+007800910403     C                     MOVE §A7       §A3
+007900910403     C                     MOVEA§A3       §RI,30
+008000910403     C                     MOVE §LDCPD    §A3
+008100910404     C                     MOVEA§A3       §RI,34
+008200910403     C* STAMPA LINEA PARTENZA
+008300910403     C                     EXCPTFA22H
+008400910403     C*
+008500910404     C                     MOVEA*BLANK    §RI
+008600910403     C                     MOVEA§LDRSM    §RI,8
+008700920910     C                     MOVEA§LDPRM    §RI,30
+008800910403     C                     EXCPTFA22D1
+008900910403     C* STAMPA DATI MITTENTE
+009000910403     C*
+009100910403     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL SEGNACOLLO
+009200910403     C                     SETOF                     77
+009300910403     C                     MOVE §LDNCD    §N7
+009400910403     C                     DO   7         §1
+009500910403     C           §S7,§1    IFEQ *ZERO
+009600910403     C                     MOVE *BLANK    §S7,§1
+009700910403     C                     ELSE
+009800910403     C                     SETON                     77
+009900910403     C                     END
+010000910403     C  N77                END
+010100910403     C* SOSTITUISCO GLI ALTRI ZERI CON -O- E SPOSTO A SX LE CIFRE
+010200910403     C                     MOVE *ZERO     §X      10
+010300910403     C                     MOVEA*BLANK    §O7
+010400910403     C                     DO   7         §1
+010500910403     C           §S7,§1    IFNE *BLANK
+010600910403     C                     ADD  1         §X
+010700910403     C           §S7,§1    IFEQ '0'
+010800910403     C                     MOVE 'O'       §O7,§X
+010900910403     C                     ELSE
+011000910403     C                     MOVE §S7,§1    §O7,§X
+011100910403     C                     END
+011200910403     C                     END
+011300910403     C                     END
+011400910403     C                     MOVEA§O7       §S7
+011500910403     C*
+011600910403     C* STAMPA NUMERO SEGNACOLLO
+011700910403     C                     EXCPTFA22D2
+011800910403     C*
+012000921106     C                     MOVE §LDTNA    §A3     3
+012001921106     C           '0':'O'   XLATE§A3       §ODTNA  3
+012002921106     C                     MOVE §LDLNA    §A3
+012003921106     C           '0':'O'   XLATE§A3       §ODLNA  3
+012004921106     C                     MOVE §LDZSC    §A2
+012005921106     C           '0':'O'   XLATE§A2       §ODZSC  2
+015501921106     C* DECODIFICA LINEA DI ARRIVO DA 10 A 8
+015502921106     C                     MOVEL§LDDLA    §ODDLA  8
+015600910403     C* STAMPA LINEA ARRIVO
+015700921104     C                     EXCPTFA22D3
+015800910403     C*
+015900910404     C                     MOVEA*BLANK    §RI
+016000910403     C                     MOVEA§LDRSD    §RI,8
+016100931116     C                     MOVEA§LDPRD    §RI,31
+016200910403     C* STAMPA 1° DATI DESTINATARIO
+016300910403     C                     EXCPTFA22D4
+016400910403     C*
+016500910404     C                     MOVEA*BLANK    §RI
+016600910404     C                     MOVEA§LDIND    §RI,8
+016700910404     C* TROVO L'ULTIMO CARATTERE DI §RI UTILIZZATO DALL'INDIRIZZO
+016800910404     C                     Z-ADD37        §Y      20     88
+016900910404     C                     DO   36
+017000910404     C                     SUB  1         §Y
+017100910404     C           §RI,§Y    IFNE ' '
+017200910404     C                     SETON                     88
+017300910404     C                     END
+017400910404     C  N88                END
+017500910404     C           §Y        IFLE 25
+017600910404     C                     ADD  3         §Y
+017700910404     C                     ELSE
+017800910404     C                     MOVEA'  '      §RI,26
+017900910404     C                     Z-ADD28        §Y
+018000910404     C                     END
+018100910404     C                     MOVEA§LDLOD    §RI,§Y
+018200910403     C* STAMPA 2° DATI DESTINATARIO
+018300910403     C                     EXCPTFA22D5
+018400910403     C*
+018500910403     C* STAMPA BARCODE
+018501920720     C*
+018502920720     C* (CAMPO UNICO BARCODE E COSTANTI)
+018503920720     C                     MOVE *BLANK    §§CDB1 19
+018504920720     C                     MOVE §CDBAR    §§CDB1
+018505920720     C                     MOVEL'"'       §§CDB1
+018506920720     C                     MOVE *BLANK    §§CDB2 21
+018507920720     C                     MOVEL§§CDB1    §§CDB2
+018508920720     C                     MOVE '";'      §§CDB2
+018600910403     C                     EXCPTFA22D6
+018700910403     C*
+018800910410     C                     MOVEA*BLANK    §RI
+018900910403     C   18                DO
+019000910410     C                     MOVEA'Riferim.'§RI,1
+019100910403     C                     MOVEA':'       §RI,9
+019200910403     C                     MOVEA§LDCDP    §RI,11
+019300910410     C                     END
+019400910410     C                     MOVEA§LDRST    §RI,36
+019500910410     C* STAMPA CODICE PRODOTTO/RISTAMPA
+019600910403     C                     EXCPTFA22D7
+019700910403     C*
+019800910403     C* STAMPA CHIUSURA ETICHETTA
+019900910403     C                     EXCPTFA22D8
+019901940524     C*
+020100940524     C* ENDDO X LOOP STAMPA ETICHETTE DI PROVA
+020101940524     C                     ENDDO
+020102940524     C*
+020200910403     C                     SETON                     LR
+020300910403     C/SPACE 005
+020400910403     C*****************************************************
+020500910403     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+020600910403     C*****************************************************
+020700910403     C           M10       BEGSR
+020800910403     C                     MOVE *ZERO     §TT     30
+020900910403     C                     MOVE *ZERO     §TT2    30
+021000910403     C                     MOVE *ZERO     §1      10
+021100910403     C                     Z-ADD18        §S      20
+021200910403     C                     DO   17        §N      20
+021300910403     C                     SUB  1         §S
+021400910403     C* INTANTO SPOSTO DA UNA SCHIERA AL CAMPO COD.BARRE
+021500910403     C                     MOVE §C,§N     §CB,§N
+021600910403     C           §N        DIV  2         §CTR    30
+021700910403     C                     MVR            §RST    30 10
+021800910403     C           *IN,10    IFEQ '1'
+021900910403     C           §C,§S     MULT 2         §N2     20
+022000910403     C                     MOVE §N2       §A2     2
+022100910403     C                     MOVEA§A2       §2A
+022200910403     C                     XFOOT§2        §CTR
+022300910403     C                     ELSE
+022400910403     C                     Z-ADD§C,§S     §CTR
+022500910403     C                     END
+022600910403     C                     ADD  §CTR      §TT
+022700910403     C                     END
+022800910403     C*
+022900910403     C           §TT       ADD  9         §TT2
+023000910403     C                     MOVE 0         §TT2
+023100910403     C           §TT2      SUB  §TT       §1
+023200910403     C*
+023300910403     C                     MOVE §1        §CB,18
+023400910403     C                     ENDSR
+023500910403     OFLFA22P E 1              FA22
+023501931026     O******                                 inizializzazione
+023502931026     O**                                 13 '%%7E%^"FA22";'
+023503931008     O******                                 inizializzazione NUOVA
+023504931008     O                                   20 '&&??%%P%%7E%^"FA22";'
+023800910403     O        E 1              FA22
+023900940524     O*LOGICA                                N.ET. V (H) O=30 X TB340
+024000940527     O                                   16 '00001;0;389;000;'
+024100910403     O        E 1              FA22
+024200910403     O*FISICA
+024300921104     O                                   14 'UTOF;4100;SPB;'
+024400940525     O        E 1              FA22
+024500910403     O*GIRO SCRITTA A 180°
+024600940525     O                                    9 'FLIP;800;'
+024800910404     O        E 1              FA22
+024900910404     O                                   14 'HBR;00;VBR;00;'
+025700910403     O        E 1              FA22
+025800910403     O*                                       FONT
+025900910403     O                                    7 'DHR;$1;'
+026000910403     O        E 1              FA22
+026100910403     O                                   14 'HLT;01;VLT;01;'
+026200910403     O********* Mittente
+026300910403     O        E 1              FA22D1
+026400910403     O*                                       CARATTERE
+026500910403     O                                   21 'DCH;15;DCW;26;ICS;03;'
+026600910403     O        E 1              FA22D1
+026700910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+026800910403     O                                   16 'VBR;028;HBR;060;'
+026900910403     O        E 1              FA22D1
+027000910403     O                                    1 '"'
+027100910404     O                         §RI       38
+027200920910     O                                   40 '";'
+027300910403     O********* Destinatario (Rag.Soc.)
+027400910403     O        E 1              FA22D4
+027500910403     O*                         RIGA DI SEPARAZIONE:
+027600910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+027700910403     O                                   16 'VBR;032;HBR;060;'
+027800910403     O        E 1              FA22D4
+027900920910     O                                    6 'HLT;3;'
+028000910403     O        E 1              FA22D4
+028100910403     O*                         RIGA             O    V   L
+028200920910     O                                   16 'DHL;115;000;390;'
+028300910403     O        E 1              FA22D4
+028400910403     O*                                       CARATTERE
+028500910403     O                                   21 'DCH;15;DCW;26;ICS;03;'
+028600910403     O        E 1              FA22D4
+028700910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+028800910403     O                                   16 'VBR;048;HBR;060;'
+028900910403     O        E 1              FA22D4
+029000910403     O                                    1 '"'
+029100910404     O                         §RI       38
+029200910404     O                                   40 '";'
+029300910403     O********* Destinatario (Località)
+029400910403     O        E 1              FA22D5
+029500910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+029600910403     O                                   16 'VBR;063;HBR;060;'
+029700910403     O        E 1              FA22D5
+029800910403     O                                    1 '"'
+029900910404     O                         §RI       38
+030000910404     O                                   40 '";'
+030100920221     O********* MC. SPEDIZIONE
+030200921104     O        E 1              FA22D5
+030300920221     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+030400921104     O                                   16 'VBR;079;HBR;060;'
+030500921104     O        E 1              FA22D5
+030600921104     O                                    1 '"'
+030700921104     O                                   28 'MC.'
+030800921104     O                         §LDVOL    34 ' 0 ,  '
+030900921104     O                         §LDFVR    37
+031000921104     O                                   40 '";'
+031001921104     O********* ESPRESSO
+031002921104     O        E 1      17      FA22D5
+031003921104     O*                                       CARATTERE
+031004921104     O                                   22 'DCH;45;DCW;085;ICS;03;'
+031005921104     O        E 1      17      FA22D5
+031006921104     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+031007921204     O                                   16 'VBR;045;HBR;600;'
+031008921104     O                                   20 '"E";'
+031009921104     O        E 1      17      FA22D5
+031010921204     O                                   21 'HOME;VBR;010;HBR;575;'
+031011921104     O        E 1      17      FA22D5
+031012921104     O*                                                L   H
+031013921104     O                                   16 'DCBX;0;0;100;40;'
+031100910403     O********* Linea Partenza
+031200910403     O        E 1              FA22H
+031300910403     O*                                       CARATTERE
+031400910403     O                                   23 'DCH;015;DCW;026;ICS;03;'
+031500910403     O        E 1              FA22H
+031600910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+031700910403     O                                   16 'VBR;093;HBR;060;'
+031800910403     O        E 1              FA22H
+031900910403     O                                    1 '"'
+032000910404     O                         §RI       38
+032100910404     O                                   40 '";'
+032200910403     O        E 1              FA22H
+032300910403     O*                                       CARATTERE
+032400910403     O                                   23 'DCH;030;DCW;030;ICS;03;'
+032500910403     O        E 1              FA22H
+032600910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+032700910403     O                                   16 'VBR;093;HBR;175;'
+032800910403     O        E 1              FA22H
+032900910403     O                                    1 '"'
+033000910403     O                         §LDLNP     4
+033100910403     O                                    6 '";'
+033200910403     O        E 1              FA22H
+033300910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+033400910403     O                                   16 'VBR;093;HBR;245;'
+033500910403     O        E 1              FA22H
+033600910403     O                                    1 '"'
+033700910403     O                         §LDDLP    11
+033800910403     O                                   13 '";'
+033900910403     O********* Segnacollo
+034000910403     O        E 1      19      FA22D2
+034100910403     O*                                       CARATTERE
+034200921104     O                                   23 'DCH;080;DCW;050;ICS;08;'
+034300910403     O        E 1      19      FA22D2
+034400910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+034500921105     O                                   16 'VBR;175;HBR;080;'
+034600910403     O        E 1      19      FA22D2
+034700910403     O                                    1 '"'
+034800920910     O                         §LDNRT     4
+034900920910     O                                    6 '";'
+035500910403     O        E 1              FA22D2
+035600910403     O*                                       CARATTERE
+035700921105     O                                   23 'DCH;110;DCW;105;ICS;12;'
+035800910403     O        E 1              FA22D2
+035900910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+036000921105     O                                   16 'VBR;175;HBR;205;'
+036100910403     O        E 1              FA22D2
+036200910403     O                                    1 '"'
+036300910403     O                         §S7        8
+036400910403     O                                   10 '";'
+036500921106     O********* TERMINAL/LINEA/ZONA ARRIVO
+036600910403     O        E 1              FA22D3
+036700921106     O                                   14 'HLT;05;VLT;08;'
+036800910403     O        E 1              FA22D3
+036900910403     O*                                       CARATTERE
+037000921106     O                                   21 'DCH;75;DCW;70;ICS;08;'
+037001921106     O********* TERMINAL
+037100910403     O        E 1              FA22D3
+037200910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+037300921105     O                                   16 'VBR;240;HBR;060;'
+037400910403     O        E 1              FA22D3
+037500910403     O                                    1 '"'
+037600921106     O                         §ODTNA     4
+037700921106     O                                    6 '";'
+037800910403     O* BOX X TERMINAL ARRIVO
+037900910403     O        E 1              FA22D3
+038000910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+038100921105     O                                   21 'HOME;VBR;185;HBR;046;'
+038200910403     O        E 1              FA22D3
+038300921106     O* FONDO NERO                                     L   H
+038400921106     O                                   16 'DCBX;0;0;147;60;'
+038401921106     O* FONDO BIANCO                                   L   H
+038402921106     O*                                  16 'DBOX;0;0;147;60;'
+038403921106     O********* CODICE LINEA ARRIVO
+038404921106     O        E 1              FA22D3
+038405921106     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+038406921106     O                                   16 'VBR;240;HBR;207;'
+038407921106     O        E 1              FA22D3
+038408921106     O                                    1 '"'
+038409921106     O                         §ODLNA     4
+038410921106     O                                    6 '";'
+038411921106     O********* ZONA ARRIVO
+038412921106     O        E 1              FA22D3
+038413921106     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+038414921106     O                                   16 'VBR;240;HBR;592;'
+038415921106     O        E 1              FA22D3
+038416921106     O                                    1 '"'
+038417921106     O                         §ODZSC     3
+038418921106     O                                    5 '";'
+038500910403     O* BOX X ZONA ARRIVO
+038600910403     O        E 1              FA22D3
+038700910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+038800921105     O                                   21 'HOME;VBR;185;HBR;582;'
+038900910403     O        E 1              FA22D3
+038901921106     O* FONDO NERO                                     L   H
+039100921106     O                                   16 'DCBX;0;0;102;60;'
+039101921106     O* FONDO BIANCO                                   L   H
+039102921106     O*                                  16 'DBOX;0;0;102;60;'
+039103921106     O********* DESCRIZIONE LINEA DI ARRIVO
+039104921106     O        E 1              FA22D3
+039105921106     O                                   14 'HLT;05;VLT;06;'
+039106921106     O        E 1              FA22D3
+039107921106     O*                                       CARATTERE
+039108921106     O                                   21 'DCH;75;DCW;45;ICS;04;'
+039109921106     O        E 1              FA22D3
+039110921106     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+039111921106     O                                   16 'VBR;240;HBR;355;'
+039112921106     O        E 1              FA22D3
+039113921106     O                                    1 '"'
+039114921106     O                         §ODDLA     9
+039115921106     O                                   11 '";'
+039200910403     O********* Bar Code
+039300910403     O        E 1              FA22D6
+039400940526     O                                   16 'VBR;371;HBR;090;'
+039500910403     O        E 1              FA22D6
+039600920720     O*                                      BARCODE
+039700920910     O                                   22 'BDEF;8;BNEW;3;BWEW;10;'
+039800910403     O        E 1              FA22D6
+039900921104     O                                   14 'BCSH;121;BCST;'
+040501921104     O*
+040502920720     O        E 1              FA22D6
+040503921104     O                         §§CDB2    21
+040600910403     O        E 1              FA22D6
+040700910403     O                                    5 'BSTP;'
+042300910403     O********* Codice Prodotto
+042400910403     O        E 1              FA22D7
+042500910403     O*                                       CARATTERE
+042600910403     O                                   21 'DCH;15;DCW;26;ICS;03;'
+042700910403     O        E 1              FA22D7
+042800910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+042900921104     O                                   16 'VBR;385;HBR;060;'
+043000910403     O        E 1              FA22D7
+043101921104     O                                    1 '"'
+043102921104     O                         §RI       38
+043103921104     O                                   40 '";'
+043400920221     O********* KG. SPEDIZIONE
+043500921104     O        E 1              FA22D7
+043600920221     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+043700921104     O                                   16 'VBR;385;HBR;060;'
+043800921104     O        E 1              FA22D7
+043900921104     O                                    1 '"'
+044000921104     O                                   26 'KG.'
+044100921104     O                         §LDPKG    34 '    0 , '
+044200921104     O                                   40 '";'
+044300910403     O********* Chiusura etchetta
+044400910403     O        E 1              FA22D8
+044500910403     O                                    9 'TRM;%%5C%'

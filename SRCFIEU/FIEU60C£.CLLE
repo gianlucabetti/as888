@@ -1,0 +1,44 @@
+000100030623             PGM
+000200030623
+000300030703             DCL        VAR(&NRREC) TYPE(*DEC) LEN(10 0)
+000400060726             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000500060726             DCL        VAR(&NOMEAS) TYPE(*CHAR) LEN(10)
+000600060726             DCL        VAR(&SYSINFO) TYPE(*CHAR) LEN(10)
+000700070829             DCL        VAR(&NUMREC) TYPE(*DEC) LEN(10 0)
+000800040923
+000900040923             DCLF       FILE(QSYS/QAFDMBRL)
+001000080122
+001100060726             RTVNETA    SYSNAME(&NOMEAS)
+001200060726             IF         COND(&NOMEAS *EQ 'AS888') THEN(DO)
+001300060726             CHGVAR     VAR(&SYSINFO) VALUE('GAITRAPSP')
+001400060726             enddo
+001500060726             ELSE       CMD(DO)
+001600060726             CHGVAR     VAR(&SYSINFO) VALUE('GAITRA201')
+001700060726             enddo
+001800060726
+001900060726/* ? Lista di librerie per reperire correttamente i programmi       */
+002000060726             CALL       PGM(XCHGLIBL) PARM(&SYSINFO &ESITO)
+002100060726
+002200060726/* ? Se Esito con problemi - La procedura invia msg                 */
+002300060726             IF         COND(&ESITO *NE ' ') THEN(DO)
+002400060726             SNDPGMMSG  MSG('<<  ATTENZIONE   - Ricezione Clearing +
+002500060726                          DPD >>  : Problemi durante la +
+002600060726                          configurazione della lista delle Librerie +
+002700140227                          con XCHGLIBL in FIEU60C.   La Ricezione è +
+002800060726                          bloccata. ATTENZIONE !!!!') TOUSR(*SYSOPR)
+002900060726             GOTO       CMDLBL(FINE)
+003000060726             ENDDO
+003100060726
+003200070829/* ? Controlla esistenza di membri presenti nel file                */
+003300081216             RTVMBRD    FILE(WFDPD1PC) NBRCURRCD(&NUMREC)
+003400081202             MONMSG     MSGID(CPF3019) EXEC(GOTO CMDLBL(FINE))
+003500070829
+003600081216/* ?Importa i dati con il traduttore sul TNEFR00F                   */
+003700081216             IF         COND(&NUMREC *GT 0) THEN(DO)
+003800140227             CALL       PGM(FIEU60R) PARM(&ESITO)
+003900081216             ENDDO
+004000091014
+004100091014             CLRPFM     FILE(WFDPD1PC)
+004200070829
+004300070829FINE:
+004400030623             ENDPGM

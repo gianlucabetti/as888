@@ -1,0 +1,35 @@
+000100160609/*PARMS DFTACTGRP(*NO) ACTGRP('TRMK19')           */
+000200100120             PGM        PARM(&KPJBA &TRMK19DS)
+000300100120
+000400100120             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000500100120             DCL        VAR(&TRMK19DS) TYPE(*CHAR) LEN(200)
+000600100301             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000700100301             RTVJOBA    JOB(&DSP)
+000800100120
+000900100120/* Avvio il controllo di sincronia */
+001000100120             STRCMTCTL  LCKLVL(*CHG)
+001100100120             MONMSG     MSGID(CPF8351)
+001200100120
+001300100120/* controllo di sincronia già attivo */
+001400100120             MONMSG     MSGID(CPF8351) EXEC(DO)
+001500100120             ENDCMTCTL
+001600100120             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001700100120             STRCMTCTL  LCKLVL(*CHG)
+001800100120             ENDDO
+001900100120
+002000100120/* Richiamo programma */
+002100100120             CALL       PGM(TRMK19R) PARM(&KPJBA &TRMK19DS)
+002200100120             MONMSG     MSGID(CPF0000) EXEC(DO)
+002300100120             ROLLBACK
+002400100301             SNDBRKMSG  MSG('ERRORE Il programma Gestione  +
+002500100301                          Attività è +
+002600100301                          terminata in modo anomalo. +
+002700100301                          Segnalare il +
+002800100301                          problema alla persona responsabile della +
+002900100301                          manutenzione del programma.') TOMSGQ(&DSP)
+003000100120             ENDDO
+003100100120
+003200100120/* Stoppo il controllo di sincronia */
+003300100120             ENDCMTCTL
+003400100120
+003500100120             ENDPGM

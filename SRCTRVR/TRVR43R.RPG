@@ -1,0 +1,149 @@
+000100000000     H              J
+000200910416     H* TRVR43R *----------------------------------------------------*
+000300000000     H*-----------------*                                            *
+000400910416     H*       ELENCO BOLLE CON VARIA "I" - GIACENZE          *
+000500000000     H*--------------------------------------------------------------*
+000600910416     FBLTAS11LIF  E           K        DISK
+000700900426     FAZORG01LIF  E           K        DISK
+000800910416     FQSYSPRT O   F     132     OF     PRINTER
+000900000000     E                    TCU        50  6               TAB FLAG CNT
+001000000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001100000000     E                    DTU        12  6 0             DATE PARAM
+001200000000     I*----------------------------------------------------------------
+001300000000     ITCUDS       DS
+001400000000     I                                        1   1 F1
+001500000000     I                                        3   3 F3
+001600000000     I                                        2   2 F2
+001700000000     I                                        4   4 F4
+001800000000     I                                        5   6 F56
+001900000000     IKPJBA     E DS
+002000000000     I                                       92 100 LIBSYS
+002100910416     I                                      247 2520§DAL
+002200910416     I                                      253 2580§AL
+002300000000     IUTEDSE    E DSUTEDSE0F
+002400000000     I                                      398 697 TCU
+002500000000     I                                    P 698 847 KCU
+002600000000     I                                    P 848 8950DTU
+002700000000     I/SPACE 3
+002800000000     C*---------------------------------------------------------------*
+002900000000     C           *ENTRY    PLIST
+003000000000     C                     PARM           KPJBA
+003100000000     C                     Z-ADD1         CODUT
+003200000000     C                     CALL 'XPARUT'
+003300000000     C                     PARM           UTEDSE
+003400000000     C           CODUT     CABEQ-1        FINE
+003500000000     C                     MOVELRAGUT     RSUT   20
+003600000000     C*--- RICERCA CAPOCONTI------------------------------------------*
+003700000000     C                     DO   50        X       20
+003800000000     C                     MOVE TCU,X     TCUDS
+003900000000     C           F56       CABNE'CG'      END1
+004000000000     C           F4        COMP '1'                      21
+004100000000     C           F4        COMP '2'                      22
+004200000000     C           F4        COMP '3'                      23
+004300000000     C           F4        COMP '6'                      27
+004400000000     C** 1 CLIENTI   21
+004500000000     C** 2 FORNITORI 22
+004600000000     C** 3 AGENTI    23
+004700000000     C           F3        COMP '0'                  242425
+004800000000     C           F3        COMP 'I'                      26
+004900000000     C** 0 ITALIA   25
+005000000000     C** 1 ESTERO   24
+005100891205     C* I CAPO CONTO IVA
+005200000000     C   21 24             Z-ADDKCU,X     KCE     40
+005300000000     C   21 25             Z-ADDKCU,X     KCI     40
+005400000000     C   22 24             Z-ADDKCU,X     KFE     40
+005500000000     C   22 25             Z-ADDKCU,X     KFI     40
+005600000000     C   23 24             Z-ADDKCU,X     KAE     40
+005700000000     C   23 25             Z-ADDKCU,X     KAI     40
+005800000000     C   26                Z-ADDKCU,X     KIVA    40
+005900000000     C   27                Z-ADDKCU,X     KBNA    40
+006000000000     C           END1      TAG
+006100000000     C                     END
+006200000000     C*---------------------------------------------------------------*
+006300000000     C           INIZIO    TAG
+006400000000     C*
+006500000000     C* -- LETTURA FUORI CICLO
+006600930303££££ C           *LOVAL    SETLLBLTAS10
+006700930217££PP C***********CODUT     SETLLBLTAS                    21
+006900910416     C*
+007000910416     C                     EXCPTTESTA
+007100000000     C*
+007200910416     C* LETTURA
+007300000000     C*
+007400000000     C           LOOP      TAG
+007500910416     C                     MOVE *ZERO     §VARI   90
+007600930217££££ C                     READ BLTAS10                  31
+007700930217£££P C***********CODUT     READEBLTAS                    31
+007800910416     C   31                GOTO ENDLEG
+007900910416     C  N99                MOVE TASLNP    SAVLNP
+008000910416     C  N99                SETON                     99
+008100910416     C* CONTROLLO LIMITI DATA
+008200910416     C           TASDSP    CABLT§DAL      LOOP
+008300910416     C           TASDSP    CABGT§AL       LOOP
+008400910416     C*
+008500910416     C* CONTROLLO SE ESISTE VARIA 'I'
+008600910416     C           TASSV1    IFEQ 'I'
+008700910416     C                     ADD  TASVA1    §VARI
+008800910416     C                     END
+008900910416     C           TASSV2    IFEQ 'I'
+009000910416     C                     ADD  TASVA2    §VARI
+009100910416     C                     END
+009101930405     C           TASSV3    IFEQ 'I'
+009102930405     C                     ADD  TASVA3    §VARI
+009103930405     C                     END
+009200910416     C           §VARI     CABLE*ZERO     LOOP
+009300910416     C                     ADD  §VARI     §VARIF 110
+009400910416     C                     ADD  §VARI     §VARIT 110
+009500910416     C*
+009600000000     C*---CONTROLLO ROTTURE
+009700910416     C           TASLNP    IFNE SAVLNP
+009800910416     C           SAVLNP    CHAINAZORG01L             54
+009900910416     C                     EXCPTTOTLIN
+010000910416     C                     Z-ADDTASLNP    SAVLNP  30
+010100910416     C                     MOVE *ZERO     §VARIF
+010200910416     C                     END
+010300000000     C*
+010400910416     C   OF                EXCPTTESTA
+010500000000     C                     EXCPTDETTA
+010600910416     C*
+010700000000     C                     GOTO LOOP
+010800910416     C*
+010900910416     C           ENDLEG    TAG
+011000910417     C           TASLNP    CHAINAZORG01L             54
+011100910416     C                     EXCPTTOTLIN
+011200000000     C           FINE      TAG
+011300910416     C                     EXCPTTOTFIN
+011400000000     C                     SETON                     LR
+011500910416     C*
+011600910416     OQSYSPRT E  202           TESTA
+011700000000     O                         RSUT      25
+011800000000     O                         UDATE    117 '  /  /  '
+011900000000     O                         PAGE     128
+012000910416     O        E  2             TESTA
+012100910416     O                                   30 'ELENCO BOLLE CON SPESE'
+012200910416     O                                 +  1 'GIACENZA'
+012300910416     O                                  100 'LIMITI DATA SPEDIZIONE:'
+012400910416     O                                  118 '-'
+012500910416     O                         §DAL     116 '  /  /  '
+012600910416     O                         §AL      127 '  /  /  '
+012700910416     O        E  2             TESTA
+012800910416     O                                      'LNP SR N.SPED. TB'
+012900910416     O                                 +  2 'DT.BOLLA  LNA'
+013000910416     O                                 +  2 'COD.CLI.         IMPORTO'
+013100910416     O        E  1             DETTA
+013200000000     O                         TASLNP     3
+013300891205     O                         TASNRSZ +  1
+013400910416     O                         TASNSPZ +  1
+013500910416     O                         TASTBL  +  1
+013600910416     O                         TASDSPY +  2
+013700910416     O                         TASLNA  +  2
+013800910416     O                         TASKSC  +  2 '   .    '
+013900910416     O                         §VARI K +  5
+014000910416     O        E 21             TOTLIN
+014100910416     O                         SAVLNP     3
+014200910416     O                         ORGDES  +  1
+014300910416     O                                 +  2 'TOTALI FILIALE:'
+014400910416     O                         §VARIFK +  5
+014500910416     O        E 21             TOTFIN
+014600910416     O                                 +  2 'TOTALE FINALE:'
+014700910416     O                         §VARITK +  5

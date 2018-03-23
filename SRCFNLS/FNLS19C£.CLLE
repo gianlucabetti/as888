@@ -1,0 +1,56 @@
+000100941228 FNLS19C:    PGM        PARM(&KPJBA)
+000200950308             DCL        VAR(&KPJBA)  TYPE(*CHAR)  LEN(502)
+000300950308             DCL        VAR(&KPJBU)  TYPE(*CHAR)  LEN(256)
+000400950308             DCL        VAR(&FGS)    TYPE(*DEC)   LEN(3 0)
+000500950308             DCL        VAR(&MODBOL) TYPE(*CHAR)  LEN(10)
+000600030625                          /*  Modulo LDV vecchio */
+000700030625             DCL        VAR(&MODBOL4) TYPE(*CHAR)  LEN(10)
+000800030625                          /*  Modulo LDV A4 X Laser */
+000900030625             DCL        VAR(&MODBOL5) TYPE(*CHAR)  LEN(10)
+001000030625                          /*  Modulo LDV A5 X Laser */
+001100950308             DCL        VAR(&PRT)    TYPE(*CHAR)  LEN(10)
+001200030625                          /*  Stampante LDV vecchie */
+001300030625             DCL        VAR(&PRT4)    TYPE(*CHAR)  LEN(10)
+001400030625                          /*  Stampante LDV A4 */
+001500030625             DCL        VAR(&PRT5)    TYPE(*CHAR)  LEN(10)
+001600030625                          /*  Stampante LDV A5 */
+001700030625             DCL        VAR(&PGMSL) TYPE(*CHAR) LEN(10) +
+001800030625                          /*  PGM stampa LDV */
+001900920220
+002000950308             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+002100950308             CHGVAR     VAR(&FGS)    VALUE(%SST(&KPJBU 13 3))
+002200950308             CHGVAR     VAR(&MODBOL) VALUE(%SST(&KPJBU 77 10))
+002300030625             CHGVAR     VAR(&MODBOL4) VALUE(%SST(&KPJBU 137 10))
+002400030625             CHGVAR     VAR(&MODBOL5) VALUE(%SST(&KPJBU 147 10))
+002500950308             CHGVAR     VAR(&PRT)    VALUE(%SST(&KPJBU 87 10))
+002600030625             CHGVAR     VAR(&PRT4)    VALUE(%SST(&KPJBU 167 10))
+002700030625             CHGVAR     VAR(&PRT5)    VALUE(%SST(&KPJBU 177 10))
+002800030625             CHGVAR     VAR(&PGMSL)    VALUE(%SST(&KPJBU 157 10))
+002900910305
+003000991206             IF         COND(&FGS *GT 0) THEN(DO)
+003100991206
+003200030625             OVRPRTF    FILE(FNLSB0P) OUTQ(&PRT) FORMTYPE(&MODBOL) +
+003300030625                          USRDTA('Prepagati') SHARE(*YES)
+003400991206
+003500030625             OVRPRTF    FILE(FNLSB0P1) OUTQ(&PRT) +
+003600030625                          FORMTYPE('BOLLE-dpd') USRDTA('Prepagati') +
+003700030625                          SHARE(*YES)
+003800030304
+003900030625             OVRPRTF    FILE(FNLSB0P2) OUTQ(&PRT) +
+004000030625                          FORMTYPE('BOLLE-Fed') COPIES(2) +
+004100030625                          USRDTA('Prepagati') SHARE(*YES)
+004200030625
+004300030625             OVRPRTF    FILE(FNLSB5PA4) OUTQ(&PRT4) +
+004400030625                          FORMTYPE(&MODBOL4) USRDTA('Prepag_A4') +
+004500030625                          SHARE(*YES)
+004600030625
+004700030625             OVRPRTF    FILE(FNLSB5PA5) OUTQ(&PRT5) +
+004800030625                          FORMTYPE(&MODBOL5) USRDTA('Prepag_A5') +
+004900030625                          SHARE(*YES)
+005000910305
+005100991206             ENDDO
+005200991206
+005300941228             CALL       PGM(FNLS19R) PARM(&KPJBA)
+005400911209             RCLRSC     LVL(*CALLER)
+005500900925             DLTOVR     FILE(*ALL)
+005600911209             ENDPGM

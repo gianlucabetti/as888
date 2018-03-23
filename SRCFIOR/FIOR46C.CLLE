@@ -1,0 +1,42 @@
+000100100526             PGM        parm(&kpjba)
+000200100526
+000300100526             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400130516             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000500100528             DCL        VAR(&AS400) TYPE(*CHAR) LEN(8)
+000600100528             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000700130517
+000800130517/* Imposto variabili */
+000900130517             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001000130516
+001100130516/* Se ordinamento per commerciale devo creare file di work */
+001200130516
+001300130522             IF         COND(%SST(&KPJBU 27 1) = 'U') THEN(DO)
+001400100526
+001500100526 /* Reprisco il sistema AS/400 corrente */
+001600100526             RTVNETA    SYSNAME(&AS400)
+001700100528
+001800100528 /* Reprisco il sistema informativo */
+001900130522             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+002000100526
+002100100526
+002200100526 /* Se presente elimino dalla QTEMP il file WFRCT* già esistenti */
+002300130516             DLTF       FILE(QTEMP/WFROM10F)
+002400100526             MONMSG     MSGID(CPF0000)
+002500100526
+002600130516 /* Duplica in QTEMP del file WFROM10F */
+002700130522             IF         COND(&AS400 *EQ 'AS888') THEN(CRTDUPOBJ +
+002800130516                          OBJ(WFROM10F) FROMLIB(UNITRAGRP) +
+002900130522                          OBJTYPE(*FILE) TOLIB(QTEMP))
+003000100528
+003100130516             IF         COND(&AS400 *EQ 'SETRAS') THEN(CRTDUPOBJ +
+003200130516                          OBJ(WFROM10F) FROMLIB(UNITRAGRU) +
+003300130516                          OBJTYPE(*FILE) TOLIB(QTEMP))
+003400100526
+003500130517/* Richiamo programma di creazione file work */
+003600130516             CALL       PGM(FIOR46R1) PARM(&KPJBA)
+003700130516             ENDDO
+003800100714
+003900130516/* Richiamo programma di stampe statistica */
+004000130516             CALL       PGM(FIOR46R) PARM(&KPJBA)
+004100100526
+004200100526ENDPGM:      ENDPGM

@@ -1,0 +1,81 @@
+000100111011             PGM        /* PARM(&ESITO) */
+000200100921
+000300100921             DCL        VAR(&ESITO) TYPE(*DEC) LEN(15 5)
+000400111011             DCL        VAR(&LIBBRTNEW) TYPE(*CHAR) LEN(10) VALUE('EDPWKSE')
+000500111011             DCL        VAR(&LIBBRTOBJ) TYPE(*CHAR) LEN(10) VALUE('GAITRAOBJ')
+000600111011             DCL        VAR(&LIBBRTGRU) TYPE(*CHAR) LEN(10) VALUE('GAITRAGRU')
+000700111011             DCL        VAR(&LIBBRTUNI) TYPE(*CHAR) LEN(10) VALUE('UNITRAGRU')
+000800111011             DCL        VAR(&LIBBRTSAV) TYPE(*CHAR) LEN(10) VALUE('EDPDC')
+000900100921             DCL        VAR(&LIBPJDTAG) TYPE(*CHAR) LEN(10) VALUE('PJBARGRU')
+001000100921             DCL        VAR(&LIBPJDTAS) TYPE(*CHAR) LEN(10) VALUE('PJBARSOC')
+001100100921             DCL        VAR(&LIBPJOBJA) TYPE(*CHAR) LEN(10) VALUE('PJAI1O3')
+001200100921             DCL        VAR(&LIBPJOBJC) TYPE(*CHAR) LEN(10) VALUE('PJCI1O3')
+001300100921
+001400100921             MONMSG     MSGID(CPF0000)
+001500100921
+001600110314             IF         COND(&ESITO = 1) THEN(CALLSUBR SUBR(SET_TEST))
+001700110314
+001800100921/******************************************************************************/
+001900100921/*                                                                            */
+002000111011/*           Oggetti da spostare in UNITRAGRU.                                */
+002100100921/*                                                                            */
+002200100921/******************************************************************************/
+002300100921
+002400111011             MOVOBJ     OBJ(&LIBBRTGRU/CNABI00F) OBJTYPE(*FILE) TOLIB(&LIBBRTUNI)
+002500100921             MONMSG     MSGID(CPF0000) EXEC(CALLSUBR SUBR(ERRORE))
+002600111011             MOVOBJ     OBJ(&LIBBRTGRU/CNABI01L) OBJTYPE(*FILE) TOLIB(&LIBBRTUNI)
+002700111011             MOVOBJ     OBJ(&LIBBRTGRU/CNABI02L) OBJTYPE(*FILE) TOLIB(&LIBBRTUNI)
+002800110314
+002900110314/******************************************************************************/
+003000110314/*                                                                            */
+003100110314/*           Oggetti da spostare in GAITRAOBJ.                                */
+003200110314/*                                                                            */
+003300110314/******************************************************************************/
+003400110314
+003500111011             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBRTNEW &LIBBRTOBJ '*ALL     ')
+003501111014/******************************************************************************/
+003502111014/*                                                                            */
+003503111014/*           Oggetti da cancellare dalla gaicur006                            */
+003504111014/*                                                                            */
+003505111014/******************************************************************************/
+003506111014             DLTF       FILE(GAICUR006/FNLR36D)
+003508111014             DLTPGM     PGM(GAICUR006/FNLR36C)
+003510111014             DLTPGM     PGM(GAICUR006/FNLR36R)
+003600100921
+003700100921/******************************************************************************/
+003800100921/*                                                                            */
+003900100921/*           Subroutine gestione errore.                                      */
+004000100921/*                                                                            */
+004100100921/******************************************************************************/
+004200100921
+004300100921             SUBR       SUBR(ERRORE)
+004400100921                CHGVAR     VAR(&ESITO) VALUE(-1)
+004500100921                DSPJOB     OUTPUT(*PRINT) OPTION(*JOBLOG)
+004600100921                RETURN
+004700100921             ENDSUBR
+004800110314
+004900110314/******************************************************************************/
+005000110314/*                                                                            */
+005100110314/*           Imposta ambiente per test.                                       */
+005200110314/*                                                                            */
+005300110314/******************************************************************************/
+005400110314
+005500110314             SUBR       SUBR(SET_TEST)
+005600111011                CHGVAR     VAR(&LIBBRTNEW) VALUE('EDPDCWKSE')
+005700111011                CHGVAR     VAR(&LIBBRTOBJ) VALUE('EDPDCOBJ')
+005800111011                CHGVAR     VAR(&LIBBRTGRU) VALUE('EDPDCGRU')
+005900111011                CHGVAR     VAR(&LIBBRTUNI) VALUE('EDPDCUNI')
+006000111011                CHGVAR     VAR(&LIBBRTSAV) VALUE('EDPDCSAV')
+006100110314                CHGVAR     VAR(&LIBPJDTAG) VALUE('EDPDCPJGRU')
+006200110314                CHGVAR     VAR(&LIBPJDTAS) VALUE('EDPDCPJSOC')
+006300110314                CHGVAR     VAR(&LIBPJOBJA) VALUE('EDPDCPJA')
+006400110314                CHGVAR     VAR(&LIBPJOBJC) VALUE('EDPDCPJC')
+006500110314             ENDSUBR
+006600100921
+006700100921/******************************************************************************/
+006800100921/*                                                                            */
+006900110314/*           Se arrivo qui non è detto che tutto sia andato bene.             */
+007000100921/*                                                                            */
+007100100921/******************************************************************************/
+007200100921
+007300100921             ENDPGM

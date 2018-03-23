@@ -1,0 +1,201 @@
+000100951123     H*------------------------------------------------------------------------*
+000200951204     H* ANNULLAMENTO GRIGLIA TRAINI (BATCH)                            NO      *
+000300951123     H*------------------------------------------------------------------------*
+000400951123     H              J
+000500951123     F*------------------------------------------------------------------------*
+000600951124     FTNTST01LUF  E           K        DISK                           UC
+000700951124     FTNTST03LUF  E           K        DISK                           UC
+000800951124     F            TNTST000                          KRENAMETNTST3
+000900951124     FTNTST04LUF  E           K        DISK                           UC
+001000951124     F            TNTST000                          KRENAMETNTST4
+001100951124     FTNTSR01LUF  E           K        DISK
+001200951124     FTNTSM01LUF  E           K        DISK
+001300951124     FTNFVS01LUF  E           K        DISK
+001400951124     FFNFV201LUF  E           K        DISK
+001500951123     IWLBDA8      DS
+001600951123     I                                        1   80G08DAT
+001700951123     I                                        9  160G08INV
+001800951123     I                                       17  17 G08ERR
+001900951123     I                                       18  220G08TGI
+002000951127     IWGIDAT      DS
+002100951127     I                                        1   80GI8DAT
+002200951127     I                                        9  160GI8INV
+002300951127     I                                       17  210GI8TGI
+002400951123     IKPJBA     E DS
+002500951123     ITNTL30    E DSTNTL30DS
+002600951123     IUT§DSE    E DSUT§DSE0F
+002700951123     IPARAM       DS
+002800951123     I* DATA TRAINO DAL
+002900951123     I                                        1   80PARDTD
+003000951123     I* DATA TRAINO AL
+003100951123     I                                        9  160PARDTA
+003200951123     I* NUMERO TRAINO
+003300951123     I                                       17  230PARTRN
+003400951123     I* TERMINAL DI PARTENZA
+003500951124     I                                       24  260PARTFP
+003600960315     I* Opzione di ricreazione immediata della griglia:
+003700960315     I* ('S'=Ricrea ' '=Non ricrea)
+003800960318     I                                       27  27 PARCRT
+003900951124     C****************************************************************
+004000951124     C*  RIEPILOGO INDICATORI
+004100951124     C***************************************************************
+004200951124     C* 01    - ELABORAZIONE PER NUMERO TRAINO
+004300951124     C* 03    - ELABORAZIONE PER DATA TRAINO
+004400951124     C* 04    - ELABORAZIONE PER TERMINAL DI PARTENZA TRAINO
+004500951124     C* 19    - CICLO LETTURA TESTATE GRIGLIA
+004600951124     C* 30    - COMODO
+004700951124     C***************************************************************
+004800951124     C           *LOCK     IN   TNTL30
+004900951124    1C           D30BLC    IFEQ ' '
+005000951124     C                     MOVE '1'       D30BLC
+005100951124     C                     OUT  TNTL30
+005200951124   X1C                     ELSE
+005300951204     C* se impegnata non è possibile annullare grigl e invio quindi msg
+005400951124     C                     UNLCKTNTL30
+005500951124     C                     CALL 'TNTL31C'
+005600951124     C                     PARM           KNMUS
+005700951124     C                     PARM '1'       TIPO    1
+005800951124     C                     GOTO FINE
+005900951124    1C                     END
+006000951124     C   01      KTST1     SETLLTNTST01L
+006100951124     C   03      PARDTD    SETLLTNTST03L
+006200951124     C   04      KTST4     SETLLTNTST04L
+006300951124     C   01      PARTRN    READETNTST01L                 19
+006400951124     C   03                READ TNTST03L                 19
+006500951124     C   04      PARTFP    READETNTST04L                 19
+006600960318    1C           *IN19     DOWEQ*OFF
+006700951124     C* VERIFICO SUPERAMENTO DATA AL
+006800960318    2C           TSTDTN    IFGT PARDTA
+006900951124     C                     SETON                     19
+007000951124     C                     GOTO LEGGI
+007100960318    2C                     END
+007200951204     C* NON POSSO ANNULLARE GRIGLIA SE TRAINO GIA' FATTURATO
+007300951124     C           TSTNFT    CABGT*ZEROS    LEGGI
+007400951204     C* ANNULLO GRIGLIA
+007500951204     C                     EXSR ANNGRI
+007600951124     C           LEGGI     TAG
+007700951124     C   01N19   PARTRN    READETNTST01L                 19
+007800951124     C   03N19             READ TNTST03L                 19
+007900951124     C   04N19   PARTFP    READETNTST04L                 19
+008000960318    1C                     ENDDO
+008100951124     C* SBLOCCO AREA DATI + EVENTUALE AGGIORN. DATA ULTIMO CONTROLLO
+008200960318    1C           PARCRT    IFEQ *BLANKS
+008300951127     C                     CLEARW30DAT
+008400960318    2C           PARDTD    IFLE D30DAT
+008500951127     C                     CLEARWLBDA8
+008600951127     C                     CLEARWGIDAT
+008700951127     C                     MOVE PARDTD    G08INV
+008800951127     C                     MOVEL'3'       G08ERR
+008900951127     C                     CALL 'XSRDA8'
+009000951127     C                     PARM           WLBDA8
+009100951127     C           G08TGI    SUB  1         GI8TGI
+009200951127     C                     CALL 'XSRGI8'
+009300951127     C                     PARM           WGIDAT
+009400951127     C                     MOVE GI8INV    W30DAT
+009500960318    2C                     END
+009600960318    1C                     END
+009700951124     C           *LOCK     IN   TNTL30
+009800951124     C                     MOVE *BLANKS   D30BLC
+009900960318    1C           PARDTD    IFLE D30DAT
+010000960318     C           PARCRT    ANDEQ*BLANKS
+010100951127     C                     MOVE W30DAT    D30DAT
+010200960318    1C                     END
+010300951124     C                     OUT  TNTL30
+010400951124     C           FINE      TAG
+010500951123     C                     SETON                     LR
+010600951204     C****************** ANNULLAMENTO GRIGLIA  ************************
+010700951204     C           ANNGRI    BEGSR
+010800951124     C* METRI CUBI
+010900951124     C           KTSR      SETLLTNTSM01L
+011000951124     C           KTSR      READETNTSM01L                 30
+011100951124    1C           *IN30     DOWEQ*OFF
+011200951124     C                     DELETTNTSM000
+011300951124     C           KTSR      READETNTSM01L                 30
+011400951124    1C                     ENDDO
+011500951218     C* FOGLI VIAGGIO TEORICI
+011600951124     C           KTSR      SETLLTNTSR01L
+011700951124     C           KTSR      READETNTSR01L                 30
+011800951124    1C           *IN30     DOWEQ*OFF
+011900951124     C* A rottura di LNP/NFV aggiorno fogli viaggio
+012000951124    2C           TSRNFV    IFNE *ZEROS
+012100951124    3C           TSRLNP    IFNE COMLNP
+012200951124     C           TSRNFV    ORNE COMNFV
+012300951124     C           KFV2      SETLLFNFV201L
+012400951124     C           KFV2      READEFNFV201L                 30
+012500951124    4C           *IN30     DOWEQ*OFF
+012600951124     C                     MOVE *BLANKS   FV2ABN
+012700951124     C                     UPDATFNFV2000
+012800951124     C           KFV2      READEFNFV201L                 30
+012900951124    4C                     ENDDO
+013000951124     C           KFVS      CHAINTNFVS01L             30
+013100951124    4C           *IN30     IFEQ *OFF
+013200951124     C                     MOVE *ZEROS    FVSTRS
+013300960312     C                     CLEARFVSTFS
+013400951207     C           FVSTRN    IFGT *ZEROS
+013500951124     C                     MOVE *BLANKS   FVSABN
+013600951124     C                     END
+013700951124     C                     UPDATTNFVS000
+013800951124    4C                     END
+013900951124     C                     MOVE TSRLNP    COMLNP
+014000951124     C                     MOVE TSRNFV    COMNFV
+014100951124    3C                     END
+014200951124    2C                     END
+014300951124     C                     DELETTNTSR000
+014400951124     C           KTSR      READETNTSR01L                 30
+014500951124    1C                     ENDDO
+014600951124     C* DELETO TESTATA STORICO
+014700951124     C   01                DELETTNTST000
+014800951124     C   03                DELETTNTST3
+014900951124     C   04                DELETTNTST4
+015000951124     C                     ENDSR
+015100951123     C****************    OPERAZIONI INIZIALI  ************************
+015200951123     C           *INZSR    BEGSR
+015300951123     C           *ENTRY    PLIST
+015400951123     C                     PARM           KPJBA
+015500951124     C                     MOVELKPJBU     PARAM
+015600951124     C*
+015700951124     C           PARDTA    IFEQ *ZEROS
+015800951124     C                     MOVE PARDTD    PARDTA
+015900951124     C                     END
+016000951124     C* ACCESSO A TESTATA TRAINI
+016100951124     C           KTST1     KLIST
+016200951124     C                     KFLD           PARTRN
+016300951124     C                     KFLD           PARDTD
+016400951124     C           KTST4     KLIST
+016500951124     C                     KFLD           PARTFP
+016600951124     C                     KFLD           PARDTD
+016700951218     C* ACCESSO A STORICO F.V. TEORICI E STORICO METRI CUBI
+016800951124     C           KTSR      KLIST
+016900951124     C                     KFLD           TSTTRN
+017000951124     C                     KFLD           TSTDTN
+017100951124     C* ACCESSO A FOGLI VIAGGIO
+017200951124     C           KFVS      KLIST
+017300951124     C                     KFLD           TSRLNP
+017400951124     C                     KFLD           TSRNFV
+017500951124     C* ACCESSO A DATE REALI ARRIVO
+017600951124     C           KFV2      KLIST
+017700951124     C                     KFLD           TSRLNP
+017800951124     C                     KFLD           TSRNFV
+017900951124     C                     KFLD           WEPA
+018000951124     C                     MOVEL'A'       WEPA
+018100951124     C*
+018200951127     C           *NAMVAR   DEFN           TNTL30
+018300951127     C*
+018400951124     C           *LIKE     DEFN TSRLNP    COMLNP
+018500951124     C           *LIKE     DEFN TSRNFV    COMNFV
+018600951124     C           *LIKE     DEFN FV2EPA    WEPA
+018700951127     C           *LIKE     DEFN D30DAT    W30DAT
+018800951124     C* APRO V.L. TESTATA STORICO IN BASE A PARAMETRI RICEVUTI
+018900951124     C                     SELEC
+019000951124     C           PARTRN    WHEQ *ZEROS
+019100951124     C           PARTFP    ANDEQ*ZEROS
+019200951124     C                     SETON                     03
+019300951124     C                     OPEN TNTST03L
+019400951124     C           PARTRN    WHGT *ZEROS
+019500951124     C                     SETON                     01
+019600951124     C                     OPEN TNTST01L
+019700951124     C           PARTFP    WHGT *ZEROS
+019800951124     C                     SETON                     04
+019900951124     C                     OPEN TNTST04L
+020000951124     C                     ENDSL
+020100951123     C                     ENDSR

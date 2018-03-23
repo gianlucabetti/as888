@@ -1,0 +1,162 @@
+000100940304/*-------------------------------------------------------------------*/
+000200940304/* GUIDA PER STAMPA/PULIZIA CONTRASSEGNI DI SEDE                     */
+000300940304/*                                                                   */
+000400120326/*    - Allocazione di TNCPB00F/TNCPV00F/tncpm00F                    */
+000500120326/*    - Allocazione di TNCSB00F/TNCSV00F/                            */
+000600950127/*    - TNSC61R  Creazione archivi salvataggio dati                  */
+000700950127/*    - TNSC62R1 Stampa Contrassegni  (se richiesta)                 */
+000800950127/*    - TNSC63R1 Pulizia Contrassegni bolle (se richiesta)           */
+000900950127/*    - TNSC63R2 Pulizia Contrassegni variazioni (se richiesta)      */
+001000950127/*    - TNSC63R3 Pulizia dati errati da archivio anagrafico e        */
+001100940308/*                                   da archivio variazioni          */
+001200940304/*    - Disallocazione dei file                                      */
+001300940304/*                                                                   */
+001400940304/*-------------------------------------------------------------------*/
+001500940304             PGM        PARM(&KPJBA)
+001600940304
+001700940304             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001800940304             DCL        VAR(&STAMP) TYPE(*CHAR) LEN(1)
+001900940304             DCL        VAR(&PULIZ) TYPE(*CHAR) LEN(1)
+002000040330             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+002100040330             DCL        VAR(&PRTF) TYPE(*CHAR) LEN(10)
+002200130715             DCL        VAR(&libs) TYPE(*CHAR) LEN(10)
+002300170328
+002400170328             dcl        var(&JOB)       type(*char) len(10)
+002500170328             dcl        var(&USR)       type(*char) len(10)
+002600170328             dcl        var(&NBR)       type(*char) len(6)
+002700170427             dcl        var(&Coda)      type(*char) len(10) value('QPRINTS   ')
+002800170614             dcl        var(&AplKey)    type(*char) len(15) +
+002900170614                                        value('TNSC61C        ')
+003000170328             dcl        var(&SubFldr)   type(*char) len(50) value('CASS')
+003100940304
+003200950203             CHGVAR     VAR(&STAMP) VALUE(%SST(&KPJBA 263 1))
+003300950203             CHGVAR     VAR(&PULIZ) VALUE(%SST(&KPJBA 264 1))
+003400130715             CHGVAR     VAR(&libs) VALUE(%SST(&KPJBA 265 10))
+003500940304
+003600130715 /* duplica i file nella libreria passata */
+003700130715
+003800130718             CRTDUPOBJ  OBJ(TNCPB00f) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+003900130715                          TOLIB(&LIBS)
+004000130718             CRTDUPOBJ  OBJ(TNCPB01l) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004100130718                          TOLIB(&LIBS)
+004200130718             CRTDUPOBJ  OBJ(TNCPV00f) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004300130715                          TOLIB(&LIBS)
+004400130718             CRTDUPOBJ  OBJ(TNCPV01l) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004500130718                          TOLIB(&LIBS)
+004600130718             CRTDUPOBJ  OBJ(TNCPM00f) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004700130715                          TOLIB(&LIBS)
+004800130718             CRTDUPOBJ  OBJ(TNCPM03l) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004900130718                          TOLIB(&LIBS)
+005000130715
+005100130715 /* duplica i file nella libreria passata */
+005200130715             ADDLIBLE   LIB(&LIBS)
+005300130715
+005400940304 /* .................................................................*/
+005500940304 /* Testo se richiesta la pulizia dei contrassegni                   */
+005600940304 /* se SI procedo all'allocazione degli archivi a al richiamo del    */
+005700940304 /* programma che provvede alla creazione dei file di Work           */
+005800940304
+005900950203             IF         COND(&PULIZ *EQ '1') THEN(DO)
+006000940304
+006100950127 /* Allocazione di TNCPB00F                                          */
+006200950127             ALCOBJ     OBJ((TNCPB00F *FILE *EXCL))
+006300940304             MONMSG     MSGID(CPF0000) EXEC(DO)
+006400940304             SNDPGMMSG  MSG('Impossibile allocare oggetti  per +
+006500940304                          pulizie contrassegni: archivio di Work +
+006600940304                          memorizzazione bolle già in uso !!!!!') +
+006700940304                         TOMSGQ(QSYSOPR)
+006800940304             GOTO       FINE
+006900940304             ENDDO
+007000940304
+007100950127 /* Allocazione di TNCPV00F                                          */
+007200950127             ALCOBJ     OBJ((TNCPV00F *FILE *EXCL))
+007300940304             MONMSG     MSGID(CPF0000) EXEC(DO)
+007400940304             SNDPGMMSG  MSG('Impossibile allocare oggetti  per +
+007500940304                          pulizie contrassegni: archivio di Work +
+007600940304                          memorizzazione variazione C/A in uso !!!!!') +
+007700940304                         TOMSGQ(QSYSOPR)
+007800940304             GOTO       DIS000
+007900940304             ENDDO
+008000120326 /* Allocazione di TNCPM00F                                          */
+008100120326             ALCOBJ     OBJ((TNCPM00F *FILE *EXCL))
+008200120326             MONMSG     MSGID(CPF0000) EXEC(DO)
+008300120326             SNDPGMMSG  MSG('Impossibile allocare oggetti  per +
+008400120326                          pulizie contrassegni: archivio di Work +
+008500120326                          memorizzazione bolle già in uso !!!!!') +
+008600120326                         TOMSGQ(QSYSOPR)
+008700120326             GOTO       dis002
+008800120326             ENDDO
+008900120326
+009000940304
+009100950127                        CLRPFM     FILE(TNCPB00F)
+009200120326                        CLRPFM     FILE(TNCPM00F)
+009300121019                        CLRPFM     FILE(TNCPV00F)
+009400031023 /* Richiamo pgm x cancellare contrassegni già archiviati            */
+009500031024 /* ma rimasti perchè ancora presente la bolla su titas*             */
+009600031023                        CALL       PGM(TNSC63R4) PARM(&KPJBA)
+009700031023 /* Richiamo pgm x Creazione archivi di Work                         */
+009800950127                        CALL       PGM(TNSC61R) PARM(&KPJBA)
+009900940304             ENDDO
+010000940304
+010100940304 /* .................................................................*/
+010200940304 /* Richiamo pgm. stampa Contrassegni se richiesta                   */
+010300940304
+010400040330             IF         COND(&STAMP *EQ '1') THEN(DO)
+010500170613             OvrPrtF    file(TNSC62P)  tofile(TNSC62P)    outq(&Coda)
+010600040330             CALL       PGM(TNSC62R) PARM(&KPJBA)
+010700040330 /* Richiamo pgm. CPYSPLF x archiviazione ottico                   */
+010800170427      /***   CHGVAR     VAR(&FILE) VALUE('CONTRA    ')               ***/
+010900170427      /***   CHGVAR     VAR(%SST(&FILE 7 2)) VALUE(%SST(&KPJBA 257 2)) */
+011000170427      /***   CHGVAR     VAR(&PRTF) VALUE('TNSC62P   ')               ***/
+011100170328      /***   CALL       PGM(TNSC62C) PARM(&FILE &PRTF)               ***/
+011200130715        /*                                                */
+011300130715        /*   duplica file di spool                        */
+011400170328      /***   CRTDUPOBJ  OBJ(&FILE) FROMLIB(LIBASP4) OBJTYPE(*FILE) + ***/
+011500170328      /***                TOLIB(&LIBS) DATA(*YES)                    ***/
+011600170328
+011700170614 /*?Copia lo spool TNSC62P nella rispettiva cartella DOCFLOW "CASS"?*/
+011800170614             chgvar     var(&File)     value('CASS' *tcat +
+011900170615                                             %sst(&KPJBA 255 4))
+012000170427             chgvar     var(&PrtF)     value('TNSC62P   ')
+012100170614             chgvar     var(&AplKey)   value('TNSC61C        ')
+012200170427             chgvar     var(&SubFldr)  value('CASS')
+012300170328
+012400170427             RtvJobA    job(&JOB)      user(&USR)         nbr(&NBR)
+012500170328
+012600170328             call       pgm(TREC30C1)  parm(&File &PrtF +
+012700170328                                            &Job &Usr &Nbr +
+012800170427                                            &Coda +
+012900170328                                            &AplKey &SubFldr)
+013000170328
+013100170328
+013200040330             ENDDO
+013300940304 /* .................................................................*/
+013400940304 /* Testo se richiesta la pulizia dei contrassegni                   */
+013500940304 /* se SI richiamo il programma di pulizia archivio bolle C/A        */
+013600940304 /*              e il programma di pulizia archivio variazioni C/A   */
+013700940304
+013800950127             IF         COND(&PULIZ *EQ '1') THEN(DO)
+013900031023                        CALL       PGM(TNSC63R1) PARM(&KPJBA)
+014000950127                        CALL       PGM(TNSC63R2) PARM(&KPJBA)
+014100950127                        CALL       PGM(TNSC63R3) PARM(&KPJBA)
+014200940304             ENDDO
+014300940304 /* .................................................................*/
+014400940304 /* Se non è stata richiesta la pulizia vado a fine pgm.             */
+014500940304             ELSE       CMD(GOTO CMDLBL(FINE))
+014600940304
+014700120326 /* Disallocazione TNCPB00F                                          */
+014800120326
+014900120326DIS002:      DLCOBJ     OBJ((TNCPM00F *FILE *EXCL))
+015000940304 /* .................................................................*/
+015100950127 /* Disallocazione TNCPV00F                                          */
+015200940304
+015300950127DIS001:      DLCOBJ     OBJ((TNCPV00F *FILE *EXCL))
+015400940304
+015500940304 /* .................................................................*/
+015600950127 /* Disallocazione TNCPB00F                                          */
+015700940304
+015800950127DIS000:      DLCOBJ     OBJ((TNCPB00F *FILE *EXCL))
+015900940304 /* .................................................................*/
+016000940304 /* Fine Pgm.                                                        */
+016100940304
+016200940304FINE:        ENDPGM

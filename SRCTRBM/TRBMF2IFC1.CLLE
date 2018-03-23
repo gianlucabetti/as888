@@ -1,0 +1,110 @@
+000100080711/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600110620             PGM        PARM(&LIBIN &FILIN &MBRIN &FLDSELIN &NOMEALIAS &PATHIFS &FILIFS +
+000700110620                             &EXTIFS &LUNGH &OUTTRIM &ENDLIN &CCCSID &MESSAGGIO &ESITO)
+000800990908
+000900080711             DCL        VAR(&LIBIN)       TYPE(*CHAR) LEN(10)
+001000080711             DCL        VAR(&FILIN)       TYPE(*CHAR) LEN(10)
+001100080711             DCL        VAR(&MBRIN)       TYPE(*CHAR) LEN(10)
+001200110613             DCL        VAR(&FLDSELIN)    TYPE(*CHAR) LEN(20)
+001300080711             DCL        VAR(&PATHIFS)     TYPE(*CHAR) LEN(255)
+001400080711             DCL        VAR(&FILIFS)      TYPE(*CHAR) LEN(255)
+001500080711             DCL        VAR(&EXTIFS)      TYPE(*CHAR) LEN(255)
+001600080711             DCL        VAR(&FILEXTIFS)   TYPE(*CHAR) LEN(255)
+001700080711             DCL        VAR(&PATHFILTMP)  TYPE(*CHAR) LEN(255)
+001800081126             DCL        VAR(&LUNGH)       TYPE(*DEC)  LEN(5 0)
+001900110620             DCL        VAR(&OUTTRIM)     TYPE(*CHAR) LEN(1)
+002000081201             DCL        VAR(&CCCSID)      TYPE(*DEC)  LEN(5 0)
+002100081202             DCL        VAR(&CURRCCSID)   TYPE(*DEC)  LEN(5 0)
+002200081127             DCL        VAR(&ENDLIN)      TYPE(*CHAR) LEN(6)
+002300080711             DCL        VAR(&MESSAGGIO)   TYPE(*CHAR) LEN(80)
+002400080711             DCL        VAR(&ESITO)       TYPE(*CHAR) LEN(1)
+002500081201             DCL        VAR(&EXTIFSTMP)   TYPE(*CHAR) LEN(255)
+002600081205             DCL        VAR(&NOMEALIAS)   TYPE(*CHAR) LEN(22)
+002700121112
+002800121112             DCL        VAR(&FILETMP)     TYPE(*CHAR) LEN(2048)
+002900121112             DCL        VAR(&FILEEND)     TYPE(*CHAR) LEN(255)
+003000080711
+003100081201             CHGVAR     VAR(&ESITO)       VALUE('0')
+003200081201             CHGVAR     VAR(&EXTIFSTMP)   VALUE('.TMP')
+003300081201             CHGVAR     VAR(&FILEXTIFS)   VALUE(&FILIFS *TCAT &EXTIFS)
+003400081201             CHGVAR     VAR(&PATHFILTMP)  VALUE(&PATHIFS *TCAT &FILIFS *TCAT &EXTIFSTMP)
+003500110615
+003600080711
+003700080711/* Verifico parametri di input                                 ------*/
+003800080711             IF         COND(&LIBIN *EQ ' ') THEN(DO)
+003900080711             CHGVAR     VAR(&LIBIN) VALUE('*LIBL')
+004000080711             ENDDO
+004100110620/*           IF         COND(&MBRIN *EQ ' ') THEN(DO)                */
+004200110620/*           CHGVAR     VAR(&MBRIN) VALUE('*FIRST')                  */
+004300110620/*           ENDDO                                                   */
+004400110613             IF         COND(&FLDSELIN *EQ ' ') THEN(DO)
+004500110613             CHGVAR     VAR(&FLDSELIN) VALUE('*')
+004600110613             ENDDO
+004700110615             IF         COND(&NOMEALIAS *EQ ' ') THEN(DO)
+004800110620             CHGVAR     VAR(&NOMEALIAS) VALUE(&FILIN *TCAT '_FIRST')
+004900110615             ENDDO
+005000081126             IF         COND(&LUNGH *EQ 0) THEN(DO)
+005100081128             CHGVAR     VAR(&LUNGH) VALUE(2060)
+005200081126             ENDDO
+005300080711             IF         COND(&FILIN *EQ ' ') THEN(DO)
+005400080711             CHGVAR     VAR(&ESITO) VALUE('2')
+005500080711             CHGVAR     VAR(&MESSAGGIO) VALUE('TRBMF2IFC - Errore in +
+005600080711                          passaggio parametri')
+005700080711             GOTO       CMDLBL(FINE)
+005800080711             ENDDO
+005900080711             IF         COND(&PATHIFS *EQ ' ') THEN(DO)
+006000080711             CHGVAR     VAR(&ESITO) VALUE('2')
+006100080711             CHGVAR     VAR(&MESSAGGIO) VALUE('TRBMF2IFC - Errore in +
+006200080711                          passaggio parametri')
+006300080711             GOTO       CMDLBL(FINE)
+006400080711             ENDDO
+006500080711             IF         COND(&FILIFS *EQ ' ') THEN(DO)
+006600080711             CHGVAR     VAR(&ESITO) VALUE('2')
+006700080711             CHGVAR     VAR(&MESSAGGIO) VALUE('TRBMF2IFC - Errore in +
+006800080711                          passaggio parametri')
+006900080711             GOTO       CMDLBL(FINE)
+007000080711             ENDDO
+007100081202
+007200081202
+007300081202/* Retrievo il CCSID del job corrente ---------------*/
+007400081202             RTVJOBA    CCSID(&CURRCCSID)
+007500081202
+007600080711
+007700081202/* Cambio il CCSID del job in 1144 ------------------*/
+007800081202             CHGJOB     CCSID(1144)
+007900081202
+008000080711
+008100080711/* Copia wrk-source file nell' IFS AS/400 -----------*/
+008200080711             IF         COND(&ESITO *NE '2') THEN(DO)
+008300110613             CALL       PGM(TRBMF2IFR) PARM(&LIBIN &FILIN &MBRIN &FLDSELIN &NOMEALIAS +
+008400110620                            &PATHIFS &FILIFS &EXTIFSTMP &LUNGH &OUTTRIM &ENDLIN &CCCSID &ESITO)
+008500080711             MONMSG     MSGID(CPF0000) EXEC(DO)
+008600080711             CHGVAR     VAR(&ESITO) VALUE('2')
+008700081201             CHGVAR     VAR(&MESSAGGIO) VALUE('TRBMF2IFC - Errore in creazione file in IFS')
+008800080711             ENDDO
+008900080711             ENDDO
+009000080711
+009100080711
+009200080711/* Rinomina file IFS al termine della creazione -----*/
+009300080711             IF         COND(&ESITO *NE '2') THEN(DO)
+009400121112   /*        RNM        OBJ(&PATHFILTMP) NEWOBJ(&FILEXTIFS)   */
+009500121112             CHGVAR     VAR(&FILETMP) VALUE(&PATHFILTMP)
+009600121112             CHGVAR     VAR(&FILEEND) VALUE(&FILEXTIFS)
+009700121112             CALL       PGM(TRBMURNMC) PARM(&FILETMP &FILEEND &ESITO)
+009800080711             MONMSG     MSGID(CPF0000) EXEC(DO)
+009900080711             CHGVAR     VAR(&ESITO) VALUE('2')
+010000081201             CHGVAR     VAR(&MESSAGGIO) VALUE('TRBMF2IFC - Errore in rinomina file in IFS')
+010100080711             ENDDO
+010200080711             ENDDO
+010300081202
+010400081202
+010500081202/* Rirpristino il CCSID originale del job corrente --*/
+010600081202             CHGJOB     CCSID(&CURRCCSID)
+010700080711
+010800080711FINE:
+010900030402
+011000990907             ENDPGM

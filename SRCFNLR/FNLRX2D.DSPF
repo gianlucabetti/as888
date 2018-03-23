@@ -1,0 +1,647 @@
+000100131211      */*PRM rstdsp(*yes) dfrwrt(*yes) decfmt(*job)
+000200131120      */*END
+000300131120      **-------------------------------------------------------------**
+000400131120      **?Gestione Telefonate (Dettaglio per Autotrasportatore)      ?**
+000500131120      **-------------------------------------------------------------**
+000600131120     A                                      DSPSIZ(24 80 *DS3)
+000700131120     A                                      REF(*LIBL/CNDIZION)
+000800131120     A                                      CHGINPDFT(HI UL)
+000900131120     A                                      MSGLOC(23)
+001000131120     A                                      INDARA
+001100131120     A                                      PRINT
+001200131030      *---------------------------------------------------------------*
+001300131120     A          R LRX2T01
+001400131120     A                                      TEXT('Testata')
+001500131030      *
+001600131030     A            RSUT      R           1  2REFFLD(RSUT     DDATIUTE)
+001700140131     A                                  1 30'*  Gestione Contatti  *'
+001800131030     A                                      DSPATR(RI)
+001900131030     A            V1TPGM    R           1 60REFFLD($PGM)
+002000131030     A                                  1 71DATE(*YY)
+002100131120     A                                      EDTCDE(Y)
+002200131030     A            KNSIF     R           2  2REFFLD(KNSIF    KPJBA)
+002300131030     A                                  2 13USER
+002400140131     A                                  2 30'*  Fornitore Servizi  *'
+002500140131     A                                      DSPATR(RI)
+002600131030     A                                  2 71TIME
+002700131031      *---------------------------------------------------------------*
+002800131031     A          R LRX2S01
+002900131031     A                                      TEXT('Subfile')
+003000131031      *
+003100131031     A                                      SFL
+003200131031     A  32                                  SFLNXTCHG
+003300131120      *
+003400131120      * -?Campi hidden?
+003500131122     A            S1HFGS    R        H      REFFLD(CAUFGS     FICAU00F)
+003600131122     A            S1HDTOINS R        H      REFFLD(CAUDTOINS  FICAU00F)
+003700131122     A            S1HTOR    R        H      REFFLD(CAUTOR     FICAU00F)
+003800131121     A            S1HOGG    R        H      REFFLD(CAUOGG     FICAU00F)
+003900131204     A            S1HCMD    R        H      REFFLD(CAUDESCMD  FICAU00F)
+004000131031      *
+004100131031      * -?Campo opzione?
+004200140130     A            S01OPZ         1Y 0B  8  3
+004300131031     A                                      TEXT('Opzione')
+004400131031     A                                      EDTCDE(Z)
+004500131031     A*//                                   CHECK(RB)
+004600131031     A     50                               DSPATR(PC)
+004700131031      *
+004800131031      * -?Campi di solo output?
+004900131204     A            S01TOR    R            + 2REFFLD(CAUTOR     FICAU00F)
+005000131204     A            S01CMD    R   15       + 2REFFLD(CAUDESCMD  FICAU00F)
+005100131206     A N39                                  DSPATR(HI)
+005200131204     A            S01VAR    R   30       + 1REFFLD(CAUDESVA   FICAU00F)
+005300140108     A            S01RSC    R   18       + 1REFFLD($RSD)
+005400140108     A            S01HMI    R            + 1REFFLD($HM)
+005500140108     A                                      EDTWRD('  :  ')
+005600140108     A  39                                  DSPATR(HI)
+005700131204      *
+005800140130     A            S01OGG        32A     9 25
+005900131204     A                                      TEXT('n° Spedizione/ORM')
+006000140110     A*//                                   COLOR(YLW)
+006100131031      *---------------------------------------------------------------*
+006200131120     A          R LRX2C01
+006300131120     A                                      TEXT('Subfile Control')
+006400131031      *
+006500131031     A                                      SFLCTL(LRX2S01)
+006600140130     A                                      SFLSIZ(0015)
+006700140130     A                                      SFLPAG(0007)
+006800131031      *
+006900131031     A                                      OVERLAY
+007000131204     A  01                                  CF01
+007100131031     A                                      CA03
+007200140131     A                                      CF04
+007300131031     A                                      CF05
+007400131205     A  11                                  CF11
+007500131121     A                                      CA12
+007600131204     A                                      SFLDROP(CF09)
+007700131031      *
+007800131031     A N30                                  SFLDSP
+007900131031     A    N31                               SFLDSPCTL
+008000131031     A  30 31                               SFLCLR
+008100131031     A        33                            SFLEND(*MORE)
+008200131031     A                                      SFLCSRRRN(&C1CSRRRN)
+008300131031     A            C1RCDNBR       4S 0H      SFLRCDNBR(CURSOR)
+008400131031     A            C1CSRRRN       5S 0H      TEXT('Numero relativo reco-
+008500131031     A                                      rd cursore.')
+008600131031      *
+008700131031     A  28        V1DMSG        78   M
+008800131031      *
+008900140131     A*//                               3  2'AUT:'
+009000140131     A            C1CPDR    R           3  2REFFLD($PDR)
+009100131031     A                                      EDTCDE(X)
+009200131031     A                                      DSPATR(HI)
+009300140131     A            C1DPDR    R           4  2REFFLD(APDRSC     FIAPD00F)
+009400140131     A*//                                   COLOR(BLU)
+009500140131     A                                      DSPATR(HI)
+009600131204     A*//                                + 2'Tel.'
+009700140131     A            C1TELPDR  R            + 3REFFLD($TELE)
+009800140131     A                                      DSPATR(HI)
+009900140131     A                                  4 64'Dati a PDA:'
+010000140131     A            C1DPDA         2       + 1TEXT('"NO" o flag PDA')
+010100131204     A                                      DSPATR(HI)
+010200140131     A            C1DTST         1       + 1TEXT('Flag "TEST PDA"')
+010300140131     A                                      COLOR(RED)
+010400140131     A                                      DSPATR(BL)
+010500131031      *
+010600140130     A                                  6  2'OPZIONI:'
+010700131031     A                                      DSPATR(UL)
+010800131031     A                                      COLOR(BLU)
+010900131031     A                                   + 1'1=Gestione.'
+011000131031     A                                      COLOR(BLU)
+011100131031      *
+011200131031*...+.*..1....+....2....+....3....+....4....+....5....+....6....+....7....+....8
+011300131204 Opz  *omando  Variazione                   Ragione Sociale
+011400131127  1   *2345678 1234567890123456789012345678 12345678901234567890123456789012345
+011500131204 Opz  *omando              Variazione                   Ragione Sociale
+011600131129  1   *2345678901234567890 1234567890123456789012345678 12345678901234567890123
+011700140108 Opz T* Comando         Variazione                     Ragione Sociale
+011800140108  1  1* 123456789012345 123456789012345678901234567890 123456789012345678901234
+011900140108      * Ora Ins. 12:34  Sped. 123 12 1234567  12/34/5678
+012000140131 Opz T* Comunicazione   Variazione                     Ragione Sociale     Ins.
+012100140108  1  1* 123456789012345 123456789012345678901234567890 123456789012345678 12:34
+012200140108      *                 Sped. 123 12 1234567  12/34/5678
+012300140130     A                                  7  2'Opz +
+012400131204     A                                       Tp +
+012500140131     A                                       Comunicazione   +
+012600131204     A                                       Variazione               -
+012700131204     A                                            +
+012800140108     A                                       Ragione Sociale     +
+012900140108     A                                       Ins.'
+013000131031     A                                       DSPATR(HI UL)
+013100131031      *---------------------------------------------------------------*
+013200131031     A          R LRX2S00                   TEXT('Nessun rec. nel sfl')
+013300131031      *
+013400131031     A                                      OVERLAY
+013500131031      *
+013600131120     A                                 15  2'N E S S U N A   +
+013700131120     A                                       T E L E F O N A T A   +
+013800131031     A                                       D A   +
+013900131031     A                                       V I S U A L I Z Z A R E'
+014000131031     A                                      COLOR(RED)
+014100131104      *---------------------------------------------------------------*
+014200131122     A          R LRX2P01                   TEXT('Piede Subfile')
+014300131104      *
+014400131104     A                                      OVERLAY
+014500131104      *
+014600140131     A                                 23  2'F12=Ritorno'
+014700140131     A                                      COLOR(BLU)
+014800140131      *
+014900131204     A  01                             24  2'F1=Selez.Tot.'
+015000131204     A                                      COLOR(BLU)
+015100131204     A                                   + 2'F3=Fine'
+015200131104     A                                      COLOR(BLU)
+015300140131     A                                   + 2'F4=Distinta'
+015400140131     A                                      COLOR(BLU)
+015500131204     A                                   + 2'F5=Aggiorna'
+015600131104     A                                      COLOR(BLU)
+015700131204     A  09                               + 2'F9=Altri dati'
+015800131204     A                                      COLOR(BLU)
+015900131205     A  11        V1PF11        14A      + 2
+016000131205     A                                      TEXT('F11=Ord. x ... ')
+016100131205     A                                      COLOR(BLU)
+016200131120      *---------------------------------------------------------------*
+016300131127     A          R LRX2DS1
+016400131120     A                                      TEXT('Dati Spedizione')
+016500131120      *
+016600131125     A                                      OVERLAY
+016700131125      *
+016800131128     A  01                                  CF01
+016900131125     A                                      CA03
+017000140226     A                                      CF05
+017100131120     A                                      CF06
+017200131120     A                                      CF07
+017300140108     A*//                                   CF10
+017400131120     A                                      CA12
+017500131120      *
+017600131120     A  28        V1DMSG        78   M
+017700131120      *
+017800131129      * -?Autotrasportatore?
+017900131129     A                                  4  2'AUT'
+018000131204     A                                      COLOR(GRN)
+018100131129     A            V1CPDR    R            + 1REFFLD($PDR)
+018200131204     A                                      COLOR(WHT)
+018300131204     A            V1DPDR    R            + 1REFFLD(APDRSC     FIAPD00F)
+018400131204     A                                      COLOR(WHT)
+018500131204     A*//                                + 1'Tel.'
+018600131204     A*//                                   COLOR(GRN)
+018700131204     A*//         V1DTEL    R            + 1REFFLD($TELE)
+018800131204     A*//                                   COLOR(WHT)
+018900131129      * -?Ultimo contatto?
+019000131204     A  40        V1DUCO        26      4 53
+019100131129     A                                      TEXT('"Ultimo Contatto all-
+019200131129     A                                      e hh:mm"')
+019300131204     A                                      DSPATR(RI)
+019400131120      *
+019500140131      * -?Comando/Comunicazione?
+019600131129     A                                  5  2'---------------------------'
+019700131120     A                                      DSPATR(HI)
+019800131204     A  41        V1DCMD        20       + 2
+019900140131     A                                      TEXT('Comando/Comunicazione')
+020000131204     A                                      DSPATR(RI)
+020100131204     A                                      COLOR(RED)
+020200131209     A N41                              5 31'--------------------'
+020300131209     A                                      DSPATR(HI)
+020400131121     A                                   + 2'---------------------------'
+020500131120     A                                      DSPATR(HI)
+020600131129      * -?Variazioni?
+020700131204     A  42                              6  2'Variazioni:'
+020800131204     A                                      COLOR(GRN)
+020900140108     A  42        V1DVAR        38       + 1
+021000131120     A                                      TEXT('Variazioni')
+021100131204     A                                      COLOR(RED)
+021200131129     A                                  7  2'-----------------------------------
+021300131121     A                                      ------------------------------------
+021400131121     A                                      ---------'
+021500131120     A                                      DSPATR(HI)
+021600131120      *
+021700131129      * -?Spedizione?
+021800131129     A                                  8  2'Spedizione'
+021900131204     A                                      COLOR(GRN)
+022000131120     A            V1CLNP    R     Y      + 1REFFLD($LNP)
+022100131204     A                                      COLOR(WHT)
+022200131120     A            V1CNRS    R     Y      + 1REFFLD($NRS)
+022300131204     A                                      COLOR(WHT)
+022400131120     A            V1CNSP    R     Y      + 1REFFLD($NSP)
+022500131120     A                                      EDTCDE(Z)
+022600131204     A                                      COLOR(WHT)
+022700131204     A*//                                + 1'del'
+022800131204     A*//         V1CDSP    R     Y      + 1REFFLD($DA8)
+022900131204     A*//                                   EDTCDE(8)
+023000131204     A*//                                   COLOR(WHT)
+023100131204     A            V1DTSP    R           8 72REFFLD(§5ED08     DS5E)
+023200131204     A                                      COLOR(WHT)
+023300131204     A  43                                  DSPATR(RI)
+023400131204     A*//         V1CCBO    R            + 2REFFLD($CBO)
+023500131204     A*//                                   COLOR(WHT)
+023600131204     A*//                                + 1'-'
+023700131204     A*//                                   COLOR(WHT)
+023800131204     A*//         V1DCBO    R   20       + 1REFFLD(§3ADES     DS3A)
+023900131204     A*//                                   COLOR(WHT)
+024000131120      *
+024100131209      * -?Destinatario?
+024200131129     A*//                               9  2'Dest.'
+024300131204     A*//                                   COLOR(GRN)
+024400131209     A            V1DRSD    R   70      9  2REFFLD($RSD)
+024500131204     A                                      COLOR(WHT)
+024600131209     A            V1DIND    R          10  2REFFLD($IND)
+024700131204     A                                      COLOR(WHT)
+024800131209     A*//         V1DCAD    R     A    11  2REFFLD($CAP)
+024900131209     A*//                                   COLOR(WHT)
+025000131209     A            V1DLPD    R  +10     11  2REFFLD($LOD)
+025100131204     A                                      COLOR(WHT)
+025200131209      *
+025300131209      * -?Fermo Deposito?
+025400131209     A  44                             10 70'F.DEPOSITO'
+025500131209     A                                      COLOR(WHT)
+025600131209      *
+025700131209      * -?Colli?
+025800131129     A                                 11 53'Colli'
+025900131204     A                                      COLOR(GRN)
+026000131127     A            V1CNCL    R     Y      + 1REFFLD($NCL)
+026100131127     A                                      EDTCDE(Z)
+026200131204     A                                      COLOR(WHT)
+026300131209      * -?Peso?
+026400131127     A                                   + 3'Peso'
+026500131204     A                                      COLOR(GRN)
+026600131127     A            V1CPKB    R     Y      + 1REFFLD($PKB)
+026700131127     A                                      EDTCDE(4)
+026800131204     A                                      COLOR(WHT)
+026900131120      *
+027000131209      * -?Referente?
+027100131129     A                                 12  2'Referente:'
+027200131204     A                                      COLOR(GRN)
+027300131209     A            V1DREF    R  +19       + 1REFFLD(§AR5REF    DAR5GEN)
+027400131204     A                                      COLOR(WHT)
+027500131127      *
+027600131209      * -?Particolarità?
+027700131205     A     45
+027800131205     AO    46
+027900131205     AO    47                          13  2'Particolarità:'
+028000131204     A                                      COLOR(GRN)
+028100131205     A     45
+028200131205     AO    46
+028300131205     AO    47                            + 1'Giac.?'
+028400131204     A                                      COLOR(GRN)
+028500131129     A     45     V1IGGA    R        B   + 1REFFLD($FLA)
+028600131205     A     45
+028700131205     AO    46
+028800131205     AO    47     V1CGGA    R            + 1REFFLD($GGA)
+028900131204     A                                      COLOR(WHT)
+029000131205     A     45
+029100131205     AO    46
+029200131205     AO    47                            + 1'Cons.?'
+029300131204     A                                      COLOR(GRN)
+029400131129     A     46     V1IGMA    R        B   + 1REFFLD($FLA)
+029500131205     A     45
+029600131205     AO    46
+029700131205     AO    47     V1CGMA    R            + 1REFFLD($GMA)
+029800131204     A                                      COLOR(WHT)
+029900131205     A     45
+030000131205     AO    46
+030100131205     AO    47                            + 1'Varie?'
+030200131204     A                                      COLOR(GRN)
+030300131129     A     47     V1IGVA    R        B   + 1REFFLD($FLA)
+030400131205     A     45
+030500131205     AO    46
+030600131205     AO    47     V1CGVA    R            + 1REFFLD($GVA)
+030700131204     A                                      COLOR(WHT)
+030800131120      *
+030900131209      * -?Contrassegno?
+031000131204     A  48                             14  2'Contrassegno:'
+031100131129     A                                      DSPATR(HI)
+031200131204     A  48        V1CCAS    R     Y 2    + 1REFFLD($CAS)
+031300131120     A                                      EDTCDE(1)
+031400131204     A                                      COLOR(WHT)
+031500131204     A  48        V1CVCA    R            + 1REFFLD($VCA)
+031600131204     A                                      COLOR(WHT)
+031700131120      *
+031800131209      * -?Importo Fattura?
+031900131204     A  49                             14 45'Imp. Fattura:'
+032000131129     A                                      DSPATR(HI)
+032100131204     A  49        V1CIFT    R     Y 2    + 1REFFLD($IFT)
+032200131120     A                                      EDTCDE(1)
+032300131204     A                                      COLOR(WHT)
+032400131204     A  49        V1CDIV    R            + 1REFFLD($DIV)
+032500131204     A                                      COLOR(WHT)
+032600131120      *
+032700131209      * -?Note Spedizione?
+032800131129     A                                 15  2'Note:'
+032900131204     A                                      COLOR(GRN)
+033000131120     A            V1DNOT8   R            + 1REFFLD($NOT)
+033100131120     A                                      DSPATR(UL)
+033200131204     A                                      COLOR(WHT)
+033300131120     A            V1DNOT9   R            + 2REFFLD($NOT)
+033400131120     A                                      DSPATR(UL)
+033500131204     A                                      COLOR(WHT)
+033600131120      *
+033700131209      * -?Note AUT?
+033800131129     A                                 17  2'NoteAUT:'
+033900131204     A                                      COLOR(GRN)
+034000131120     A            V1CNT1    R            + 1REFFLD($NOB)
+034100131204     A                                      COLOR(WHT)
+034200131129     A            V1CNT2    R          18 11REFFLD($NOB)
+034300131204     A                                      COLOR(WHT)
+034400131129     A            V1CNT3    R          19 11REFFLD($NOB)
+034500131204     A                                      COLOR(WHT)
+034600131129     A            V1CNT4    R          20 11REFFLD($NOB)
+034700131204     A                                      COLOR(WHT)
+034800131120      *
+034900131127      * -?Note R.A.?
+035000131127     A                                 22  2'NoteR.A.'
+035100131204     A                                      COLOR(GRN)
+035200140108     A            V1NRA1    R        B   + 1REFFLD($NOB)
+035300140108     A                                      CHECK(LC)
+035400140108     A*//                                   DSPATR(UL)
+035500140108     A*//                                   COLOR(WHT)
+035600140108     A            V1NRA2    R        B 23 11REFFLD($NOB)
+035700140108     A                                      CHECK(LC)
+035800140108     A*//                                   DSPATR(UL)
+035900140108     A*//                                   COLOR(WHT)
+036000131120      *
+036100131120      * -?Tasti funzionali?
+036200131128     A  01                             24  2'F1=Ult.Contatto'
+036300131128     A                                      COLOR(BLU)
+036400140226     A                                   + 2'F3=Fine'
+036500131125     A                                      COLOR(BLU)
+036600140226     A                                   + 2'F5=Altri Dati'
+036700140226     A                                      COLOR(BLU)
+036800140226     A                                   + 2'F6=Eseguita'
+036900131120     A                                      COLOR(BLU)
+037000140108     A*//                                + 2'F10=Rifiuta'
+037100140108     A*//                                   COLOR(BLU)
+037200140226     A                                   + 2'F7=Int.Bolla'
+037300131120     A                                      COLOR(BLU)
+037400140226     A                                   + 2'F12=Ritorno'
+037500131120     A                                      COLOR(BLU)
+037600131209      *---------------------------------------------------------------*
+037700131209     A          R LRX2DO1
+037800131209     A                                      TEXT('Dati O.R.M.')
+037900131209      *
+038000131209     A                                      OVERLAY
+038100131209      *
+038200131209     A  01                                  CF01
+038300131209     A                                      CA03
+038400140226     A                                      CF05
+038500131209     A                                      CF06
+038600131209     A                                      CF08
+038700140108     A*//                                   CF10
+038800131209     A                                      CA12
+038900131209      *
+039000131209     A  28        V1DMSG        78   M
+039100131209      *
+039200131209      * -?Campi hidden?
+039300131209     A*//         V1HDRT    R        H      REFFLD($DRT)
+039400131209      *
+039500131209      * -?Autotrasportatore?
+039600131209     A                                  4  2'AUT'
+039700131209     A                                      COLOR(GRN)
+039800131209     A            V1CPDR    R            + 1REFFLD($PDR)
+039900131209     A                                      COLOR(WHT)
+040000131209     A            V1DPDR    R            + 1REFFLD(APDRSC     FIAPD00F)
+040100131209     A                                      COLOR(WHT)
+040200131209     A*//                                + 1'Tel.'
+040300131209     A*//                                   COLOR(GRN)
+040400131209     A*//         V1DTEL    R            + 1REFFLD($TELE)
+040500131209     A*//                                   COLOR(WHT)
+040600131209      * -?Ultimo contatto?
+040700131209     A  40        V1DUCO        26      4 53
+040800131209     A                                      TEXT('"Ultimo Contatto all-
+040900131209     A                                      e hh:mm"')
+041000131209     A                                      DSPATR(RI)
+041100131209      *
+041200140131      * -?Comando/Comunicazione?
+041300131209     A                                  5  2'---------------------------'
+041400131209     A                                      DSPATR(HI)
+041500131209     A  41        V1DCMD        20       + 2
+041600140131     A                                      TEXT('Comando/Comunicazione')
+041700131209     A                                      DSPATR(RI)
+041800131209     A                                      COLOR(RED)
+041900131209     A N41                              5 31'--------------------'
+042000131209     A                                      DSPATR(HI)
+042100131209     A                                   + 2'---------------------------'
+042200131209     A                                      DSPATR(HI)
+042300131209      * -?Variazioni?
+042400131209     A  42                              6  2'Variazioni:'
+042500131209     A                                      COLOR(GRN)
+042600140108     A  42        V1DVAR        38       + 1
+042700131209     A                                      TEXT('Variazioni')
+042800131209     A                                      COLOR(RED)
+042900131209     A                                  7  2'-----------------------------------
+043000131209     A                                      ------------------------------------
+043100131209     A                                      ---------'
+043200131209     A                                      DSPATR(HI)
+043300131209      *
+043400131209      * -?O.R.M.?
+043500131209     A                                  8  2'O.R.M.'
+043600131209     A            V1CPOE    R     Y      + 1REFFLD(ORMPOE     FNORM00F)
+043700131209     A                                      COLOR(WHT)
+043800131209     A            V1CNSR    R     Y      + 1REFFLD(ORMNSR     FNORM00F)
+043900131209     A                                      COLOR(WHT)
+044000131209     A            V1CNOR    R     Y      + 1REFFLD(ORMNOR     FNORM00F)
+044100131209     A                                      EDTCDE(Z)
+044200131209     A                                      COLOR(WHT)
+044300131209     A            V1CNRV    R     Y      + 1REFFLD(ORMNRV     FNORM00F)
+044400131209     A                                      EDTCDE(Z)
+044500131209     A                                      COLOR(WHT)
+044600131209      *
+044700131209      * -?Orari di Apertura?
+044800131209     A                                  8 40'Orari apertura'
+044900131209     A            V1ORAAMDA R     Y      + 1REFFLD(§OREORAMDA DOREORARI)
+045000131209     A                                      EDTWRD('  :  ')
+045100131209     A                                      COLOR(WHT)
+045200131209     A            V1ORAAMA  R     Y      + 1REFFLD(§OREORAMA  DOREORARI)
+045300131209     A                                      EDTWRD('  :  ')
+045400131209     A                                      COLOR(WHT)
+045500140121     A            V1ORASEP       1A      + 1
+045600140121     A                                      TEXT('"-"')
+045700131209     A            V1ORAPMDA R     Y      + 1REFFLD(§OREORAPDA DOREORARI)
+045800131209     A                                      EDTWRD('  :  ')
+045900131209     A                                      COLOR(WHT)
+046000131209     A            V1ORAPMA  R     Y      + 1REFFLD(§OREORAPA  DOREORARI)
+046100131209     A                                      EDTWRD('  :  ')
+046200131209     A                                      COLOR(WHT)
+046300131209      *
+046400131209      * -?ORM prepagato con importi / Ricevuta di Ritiro?
+046500131209     A*/5j                            ... 41'Numero'
+046600131209     A*/5j        V1POS     R     Y      + 1REFFLD(ORMPOS     FNORM00F)
+046700131209     A*/5j        V1ORS     R     Y      + 1REFFLD(ORMORS     FNORM00F)
+046800131209     A*/                                    EDTCDE(Z)
+046900131209     A*/5k                               + 3'Invio Partner'
+047000131209     A*/5k        V1DFCS         4A      + 1
+047100131209     A*//                                   TEXT('Invio Partner')
+047200131209     A*/5w                            ... 54'ORM CON RICEVUTA DI RITIRO'
+047300131209     A*//                                   DSPATR(RI)
+047400131209     A*//         V1DPRE        20A   ... 60TEXT('"Prevviso Mail"')
+047500131209     A*/5x                                  COLOR(WHT)
+047600131209     A            V1DATN        26A     9 55
+047700140121     A*/51                                  COLOR(WHT)
+047800140121     A*/52                                  DSPATR(RI)
+047900140121     A  51
+048000140121     AO 52                                  DSPATR(RI)
+048100131209      *
+048200131209      * -?Cliente Ritiro?
+048300131209     A            V1DRSR    R           9  2REFFLD(ORMRSR     FNORM00F)
+048400131209     A                                      COLOR(WHT)
+048500131209     A            V1DINR    R          10  2REFFLD(ORMINR     FNORM00F)
+048600131209     A                                      COLOR(WHT)
+048700131209     A            V1DLOR    R          11  2REFFLD(ORMLOR     FNORM00F)
+048800131209     A                                      COLOR(WHT)
+048900131209     A            V1DPRR    R            + 1REFFLD(ORMPRR     FNORM00F)
+049000131209     A                                      COLOR(WHT)
+049100131209     A            V1DCAR    R            + 1REFFLD(ORMCAR     FNORM00F)
+049200131209     A                                      COLOR(WHT)
+049300131209     A            V1DNAR    R            + 1REFFLD(ORMNAR     FNORM00F)
+049400131209     A                                      COLOR(WHT)
+049500131209      *
+049600131209      * -?Ora Merce Pronta?
+049700131209     A                                 11 58'Ora merce pronta'
+049800131209     A            V1ORR     R     Y      + 1REFFLD(ORMORR     FNORM00F)
+049900131209     A                                      EDTWRD('  :  ')
+050000131209     A                                      COLOR(WHT)
+050100131209      *
+050200131209      * -?Referente?
+050300131209     A                                 12  2'Referente'
+050400131209     A            V1DREF    R  +19       + 1REFFLD(ORMRER     FNORM00F)
+050500131209     A                                      COLOR(WHT)
+050600131209      *
+050700131209      * -?Quantità?
+050800131209     A                                 13  2'Colli'
+050900131209     A            V1CNCL    R     Y      + 1REFFLD(ORMNCL     FNORM00F)
+051000131209     A                                      EDTCDE(Z)
+051100131209     A                                      COLOR(WHT)
+051200131209     A                                   + 3'Peso Kg'
+051300131209     A            V1CPKG    R     Y      + 1REFFLD(ORMPKG     FNORM00F)
+051400131211     A                                      EDTCDE(4)
+051500131209     A                                      COLOR(WHT)
+051600131209     A                                   + 3'Bancali'
+051700131209     A            V1CBNC    R     Y      + 1REFFLD(ORMBNC     FNORM00F)
+051800131211     A                                      EDTCDE(4)
+051900131209     A                                      COLOR(WHT)
+052000131209     A                                   + 3'Vol.MC'
+052100131209     A            V1CVLM    R     Y      + 1REFFLD(ORMVLM     FNORM00F)
+052200131211     A                                      EDTCDE(4)
+052300131209     A                                      COLOR(WHT)
+052400131209     A                                   + 3'Sponda idr.'
+052500131209     A            V1CSPI    R    2       + 1REFFLD(ORMSPI     FNORM00F)
+052600131209     A                                      COLOR(WHT)
+052700131209      *
+052800131209      * -?Note O.R.M.?
+052900131209     A                                 15  2'Note:'
+053000131209     A                                      COLOR(GRN)
+053100131209     A            V1DNOT1   R            + 1REFFLD(ORMNO1     FNORM00F)
+053200131209     A                                      DSPATR(UL)
+053300131209     A                                      COLOR(WHT)
+053400131209     A            V1DNOT2   R            + 2REFFLD(ORMNO1     FNORM00F)
+053500131209     A                                      DSPATR(UL)
+053600131209     A                                      COLOR(WHT)
+053700131209      *
+053800131209      * -?Note AUT?
+053900131209     A                                 17  2'NoteAUT:'
+054000131209     A                                      COLOR(GRN)
+054100131209     A            V1CNT1    R            + 1REFFLD($NOB)
+054200131209     A                                      COLOR(WHT)
+054300131209     A            V1CNT2    R          18 11REFFLD($NOB)
+054400131209     A                                      COLOR(WHT)
+054500131220     A*//         V1CNT3    R          19 11REFFLD($NOB)
+054600131220     A*//                                   COLOR(WHT)
+054700131220     A*//         V1CNT4    R          20 11REFFLD($NOB)
+054800131220     A*//                                   COLOR(WHT)
+054900131209      *
+055000131209      * -?Note R.A.?
+055100131220     A                                 20  2'NoteR.A.'
+055200131209     A                                      COLOR(GRN)
+055300140108     A            V1NRA1    R        B   + 1REFFLD($NOB)
+055400140108     A                                      CHECK(LC)
+055500140108     A*//                                   DSPATR(UL)
+055600140108     A*//                                   COLOR(WHT)
+055700140108     A            V1NRA2    R        B 21 11REFFLD($NOB)
+055800140108     A                                      CHECK(LC)
+055900140108     A*//                                   DSPATR(UL)
+056000140108     A*//                                   COLOR(WHT)
+056100131209      *
+056200131209      * -?Tasti funzionali?
+056300131209     A  01                             24  2'F1=Ult.Contatto'
+056400131209     A                                      COLOR(BLU)
+056500140226     A                                   + 2'F3=Fine'
+056600131209     A                                      COLOR(BLU)
+056700140226     A                                   + 2'F5=Altri Dati'
+056800140226     A                                      COLOR(BLU)
+056900140226     A                                   + 2'F6=Eseguita'
+057000131209     A                                      COLOR(BLU)
+057100140108     A*//                                + 2'F10=Rifiuta'
+057200140108     A*//                                   COLOR(BLU)
+057300140226     A                                   + 2'F8=Int.ORM'
+057400131209     A                                      COLOR(BLU)
+057500140226     A                                   + 2'F12=Ritorno'
+057600131209     A                                      COLOR(BLU)
+057700131128      *---------------------------------------------------------------*
+057800131128     A          R LRX2W01
+057900131128     A                                      TEXT('Window per Ultimo +
+058000131128     A                                            Contatto')
+058100131128      *
+058200131204     A                                      WINDOW(15 14  7 62 +
+058300131129     A                                             *NOMSGLIN)
+058400131128     A                                      WDWTITLE((*TEXT 'Ultimo Co-
+058500131128     A                                      ntatto') (*COLOR RED))
+058600131128      *
+058700131128     A                                      OVERLAY
+058800131128      *
+058900131128     A                                      CA12
+059000131128      *
+059100131128     A  28        V1DMSG        78   M
+059200131128      *
+059300131204     A                                  1  1'Utente ...:'
+059400131128     A            W1PRUTEL  R            + 1REFFLD($PRU)
+059500131128      *
+059600131204     A                                  2  1'Data .....:'
+059700131128     A            W1DTTEL   R     Y      + 1REFFLD($DA8)
+059800131128     A                                      EDTCDE(Y)
+059900131204     A                                  3  1'Ora ......:'
+060000131128     A            W1ORTEL   R     Y      + 1REFFLD($HMD)
+060100131128     A                                      EDTWRD('  :  :  ')
+060200140131     A*//                               4  1'Comando ..:'
+060300140131     A                                  4  1'Comunicaz.:'
+060400131128     A            W1DESCMD  R            + 1REFFLD(CAUDESCMD  FICAU00F)
+060500131129     A                                      DSPATR(HI)
+060600131204     A                                  5  1'Variazioni:'
+060700131128     A            W1DESVA1  R   50       + 1REFFLD(CAUDESVA   FICAU00F)
+060800131128     A                                      DSPATR(HI)
+060900131204     A            W1DESVA2  R   50      6 13REFFLD(CAUDESVA   FICAU00F)
+061000131128     A                                      DSPATR(HI)
+061100131128      *
+061200131128     A                                  7  1'F12=Ritorno'
+061300131128     A                                      COLOR(BLU)
+061400140226      *---------------------------------------------------------------*
+061500140226     A          R LRX2W02
+061600140226     A                                      TEXT('Window per Altri +
+061700140226     A                                            Dati')
+061800140226      *
+061900140226     A                                      WINDOW(&W2RIG 54  4 22 +
+062000140226     A                                             *NOMSGLIN)
+062100140226     A                                      WDWTITLE((*TEXT 'Altri Dat-
+062200140226     A                                      i') (*COLOR RED))
+062300140226      *
+062400140226     A                                      OVERLAY
+062500140226      *
+062600140226     A                                      CA12
+062700140226      *
+062800140226     A            W2RIG          3S 0P      TEXT('Riga posiz. window')
+062900140226     A*//         W2COL          3S 0P      TEXT('Colonna posiz. window')
+063000140226      *
+063100140226     A  28        V1DMSG        78   M
+063200140226      *
+063300140303     A                                  1  1'Inserito da'
+063400140226     A            W2PRUTEL  R            + 1REFFLD($PRU)
+063500140226      *
+063600140303     A                                  2  1'il'
+063700140226     A            W2DTTEL   R     Y      + 1REFFLD($DA8)
+063800140226     A                                      EDTCDE(Y)
+063900140303     A                                  3  1'alle'
+064000140226     A            W2ORTEL   R     Y      + 1REFFLD($HMD)
+064100140226     A                                      EDTWRD('  :  :  ')
+064200140226      *
+064300140226     A            W2NULL         1A     4  1
+064400140226     A                                      DSPATR(PC)
+064500140226      *
+064600140226     A                                  4 12'F12=Ritorno'
+064700140226     A                                      COLOR(BLU)

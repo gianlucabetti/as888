@@ -1,0 +1,42 @@
+000100091022/*PRM  dftactgrp(*no)                                                */
+000200090925/*END                                                                */
+000300100414/*===================================================================*/
+000400100414/*?          Compilatore SETRAS (BARTOLINI)                         ?*/
+000500100414/*?          3° passo: richiamo funzione di compilazione   e        ?*/
+000600100414/*?                    emissione messaggio di fine lavoro           ?*/
+000700100414/*===================================================================*/
+000800090925
+000900091022             pgm        parm(&SrcFile &SrcMbr &MbrType &ObjLib +
+001000100413                             &Replace &Err    &MsgTxt)
+001100090925
+001200091022             dcl        var(&SrcFile)  type(*char)   len( 20)
+001300091022             dcl        var(&SrcMbr)   type(*char)   len( 10)
+001400091022             dcl        var(&MbrType)  type(*char)   len( 10)
+001500091022             dcl        var(&ObjLib)   type(*char)   len( 10)
+001600100414             dcl        var(&Replace)  type(*lgl)
+001700091022             dcl        var(&Err)      type(*int)    len(  4)
+001800091022             dcl        var(&MsgTxt)   type(*char)   len(160)
+001900091022             dcl        var(&User)     type(*char)   len( 10)
+002000091022
+002100091022             rtvjoba    user(&User)
+002200090925
+002300100413             call       pgm(UBCRTOBJR2) +
+002400100413                        parm(&SrcFile &SrcMbr &MbrType +
+002500100413                             &ObjLib  &Replace +
+002600100413                             &Err     &MsgTxt)
+002700091022
+002800100414             select
+002900100414               when     cond(&Err *eq 0) then(do)
+003000100414                 sndmsg     msg(&MsgTxt) tousr(&User)
+003100100414                 enddo
+003200100414               when     cond(&Err *lt 0) then(do)
+003300100414                 sndpgmmsg  msgid(CPF9898) msgf(QCPFMSG) msgdta(&MsgTxt) +
+003400100414                            msgtype(*escape)
+003500100414                 enddo
+003600100414               when     cond(&Err *gt 0) then(do)
+003700100414                 sndpgmmsg  msgid(CPF9898) msgf(QCPFMSG) msgdta(&MsgTxt) +
+003800100414                            msgtype(*escape)
+003900100414                 enddo
+004000100414             endselect
+004100091020
+004200091020             endpgm

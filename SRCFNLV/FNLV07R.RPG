@@ -1,0 +1,136 @@
+000100931222     H              J
+000200000112     H* FNLV07R *-----------------------------------------------------*
+000300000112     H*       PULIZIA NUMERATORI DI PO CHE NON ESISTONO PIU'
+000400931222     H*---------------------------------------------------------------*
+000500000113     FFLNUF02LUF  E           K        DISK
+000600931222     FAZORG01LIF  E           K        DISK
+000700931222     FTABEL00FIF  E           K        DISK
+000800000113     FQSYSPRT O   F     132     OF     PRINTER
+000900931222     IKPJBA     E DS
+001000931222     IDS1C      E DS
+001100000113     IPARAM       DS
+001200000113     I                                        1   1 PARDEL
+001300931222     C*****************************************************************
+001400931222     C* RIEPILOGO INDICATORI
+001500931222     C*****************************************************************
+001600931222     C* 01    - CODICE NUMERATORE PASSATO E' PIENO
+001700931222     C* 02    - ON   CREO NUMERATORI SOLO PER FILIALE DI 1° LIVELLO
+001800931222     C*       - OFF  CREO NUMERATORI SOLO PER FILIALE DI 2° LIVELLO
+001900931228     C* 03    - ON   ANNO = 00
+002000931223     C* 30/31 - DI COMODO
+002100931222     C*****************************************************************
+002200931222     C           *ENTRY    PLIST
+002300931222     C                     PARM           KPJBA
+002400000113     C                     MOVELKPJBU     PARAM
+002500931222     C                     Z-ADD1         CODUT   10
+002600931222     C*---------------------------------------------------------------*
+002700931223     C* ACCESSO TABEL00F
+002800931223     C           KTAB      KLIST
+002900931223     C                     KFLD           CODUT
+003000931223     C                     KFLD           COD
+003100931223     C                     KFLD           KEY
+003200931222     C*
+003300931222     C* DEFINIZIONE CAMPI
+003400991209     C           *LIKE     DEFN TBLCOD    COD
+003500931222     C           *LIKE     DEFN TBLKEY    KEY
+003600000112     C                     MOVEL'1C'      COD
+003700931222     C*---------------------------------------------------------------*
+003800000112     C           *LOVAL    SETLLFLNUF02L
+003900000112     C                     READ FLNUF02L                 30
+004000000113     C*
+004100000112    1C           *IN30     DOWEQ*OFF
+004200000113     C                     CLEARWDEL
+004300000113     C                     CLEARDESCNU
+004400000113     C                     SETOF                     010203
+004500000112     C* CERCO CODICE NUMERATORE IN TABELLA: SE NON ESISTE ANNULLO
+004600000113     C                     MOVELNUFCNU    KEY       P
+004700000112     C           KTAB      CHAINTABEL                31
+004800000112     C*
+004900000112    2C           *IN31     IFEQ *ON
+005000000112     C           TBLFLG    ORNE ' '
+005100000113     C**  DELETO
+005200000113     C           PARDEL    IFEQ 'S'
+005300000112     C                     DELETFLNUF
+005400000113     C                     ELSE
+005500000113     C                     SETON                     01
+005600000113     C                     EXCPTSTAMP1
+005700000113     C                     ADD  1         CONT    40
+005800000113     C                     SETOF                     01
+005900000113     C                     ENDIF
+006000000113     C**
+006100000112   X2C                     ELSE
+006200000112     C                     MOVELTBLUNI    DS1C
+006300000113     C                     MOVEL§1CDES    DESCNU 20
+006400000112     C*
+006500000112     C* SE NUMFIL E' UNA FILIALE
+006600000113    3C           §1CFG2    IFNE 'S'
+006700000113     C           NUFFIL    ANDGT0
+006800000112     C           NUFFIL    CHAINAZORG01L             32
+006900000112    4C           *IN32     IFEQ *ON
+007000000112     C           ORGFVA    ORNE ' '
+007100000112     C           ORGFAG    ORNE 'A'
+007200000112     C           ORGFAG    ANDNE'F'
+007300000113     C**  DELETO
+007400000113     C           PARDEL    IFEQ 'S'
+007500000113     C                     DELETFLNUF
+007600000113     C                     ELSE
+007700000113     C                     SETON                     02
+007800000113     C                     EXCPTSTAMP1
+007900000113     C                     ADD  1         CONT    40
+008000000113     C                     SETOF                     02
+008100000113     C                     ENDIF
+008200000113     C                     MOVEL'S'       WDEL    1
+008300000113    4C                     ENDIF
+008400000113    3C                     ENDIF
+008500000113     C*
+008600000113     C* SE IL 2 CAMPO FILIALE E' PIENO CONTROLLO SE E' P.O. ESISTENTE
+008700000113    3C           NUFFL2    IFGT 0
+008800000113     C           WDEL      ANDEQ' '
+008900000113     C*
+009000000113    4C           §1CCK2    IFEQ 'TUT'
+009100000113     C           §1CCK2    OREQ 'FIL'
+009200000113     C           NUFFL2    CHAINAZORG01L             32
+009300000113    5C           *IN32     IFEQ *ON
+009400000113     C           ORGFVA    ORNE ' '
+009500000113     C           ORGFAG    ORNE 'A'
+009600000113     C           ORGFAG    ANDNE'F'
+009700000113     C**  DELETO
+009800000113     C           PARDEL    IFEQ 'S'
+009900000113     C                     DELETFLNUF
+010000000113     C                     ELSE
+010100000113     C                     SETON                     03
+010200000113     C                     EXCPTSTAMP1
+010300000113     C                     ADD  1         CONT    40
+010400000113     C                     SETOF                     03
+010500000113     C                     ENDIF
+010600000113    5C                     ENDIF
+010700000113    4C                     ENDIF
+010800000112    3C                     ENDIF
+010900000112    2C                     ENDIF
+011000931222     C*
+011100000112     C                     READ FLNUF02L                 30
+011200000112     C                     ENDDO
+011300000113     C**
+011400000113     C           CONT      IFGT 0
+011500000113     C                     EXCPTTOT
+011600000113     C                     ENDIF
+011700931222     C*
+011800931222     C                     SETON                     LR
+011900000113     OQSYSPRT E 1              STAMP1
+012000000113     O                         NUFAAA
+012100000113     O                         NUFCNU  +  1
+012200000113     O                         DESCNU  +  1
+012300000113     O                         NUFFILZ +  1
+012400000113     O                         NUFFL2Z +  1
+012500000113     O                         NUFNUMZ +  1
+012600000113     O                         NUFRINZ +  1
+012700000113     O                                 +  0 '/'
+012800000113     O                         NUFRFIZ +  0
+012900000113     O                         NUFDAT  +  1 '  /  /  '
+013000000113     O                 01              +  1 'MANCA TABELLA "1C"'
+013100000113     O                 02              +  1 'NUFFIL INESISTENTE'
+013200000113     O                 03              +  1 'NUFFL2 INESISTENTE'
+013300000113     O        E 2              TOT
+013400000113     O                                 + 10 'TOTALE RECORD DA CANCELL'
+013500000113     O                                 +  0 'ARE'
+013600000113     O                         CONT  2 +  3

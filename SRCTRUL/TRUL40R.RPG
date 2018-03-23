@@ -1,0 +1,98 @@
+000100930511     H        1     J
+000200930511     F*--------------------------------------------------------------*
+000300930511     F*                - RICERCA SU TABELLA '2A' -                   *
+000400930511     F*                ---------------------------                   *
+000500930511     F*--------------------------------------------------------------*
+000600930511     FTABEL00FIF  E           K        DISK
+000700930511     FTRUL40D CF  E                    WORKSTN
+000800930511     F                                        REC1  KSFILE TABESF1
+000900930512     E                    TIPI        8  1               TIPI CODICI
+001000930511     IDS2A      E DS
+001100930511     C*--------------------------------------------------------------*
+001200930511     C           *ENTRY    PLIST                           *
+001300930512     C                     PARM           §TIP    8        *
+001400930511     C                     PARM           §KEY             *
+001500930511     C                     PARM           §DES             *
+001600930511     C**
+001700930511     C           *LIKE     DEFN TBLKUT    §KUT
+001800930511     C           *LIKE     DEFN TBLCOD    §COD
+001900930511     C           *LIKE     DEFN TBLKEY    §KEY
+002000930511     C           *LIKE     DEFN TBLCOD    §CODK
+002100930511     C           *LIKE     DEFN TBLKEY    §KEYK
+002200890915     C*
+002300930511     C                     MOVEL'2A'      §COD
+002400930511     C                     Z-ADD1         §KUT
+002500930512     C                     MOVEA§TIP      TIPI
+002600930511     C           §TIP      IFEQ *ALL'*'
+002700930511     C                     SETON                     20
+002800930511     C                     END
+002900930511     C*
+003000890915     C           KEYTAB    KLIST                           *
+003100890915     C                     KFLD           §KUT             *
+003200890915     C                     KFLD           §COD             *
+003300890915     C           KEYTAK    KLIST                           *
+003400890915     C                     KFLD           §KUT             *
+003500890915     C                     KFLD           §CODK            *
+003600890915     C                     KFLD           §KEYK            *
+003700890915     C*
+003800890915     C* DECODIFICO IL CODICE TABELLA   PASSATO
+003900890915     C                     MOVE *BLANK    §CODK
+004000890915     C                     MOVE *ZEROS    §KEYK
+004100890915     C                     MOVE §COD      §KEYK
+004200890915     C                     MOVE *BLANK    DETIPT
+004300900724     C                     MOVE §COD      COTIPT
+004400890915     C           KEYTAK    CHAINTABEL                90
+004500890915     C  N90                MOVELTBLUNI    DETIPT
+004600890915     C   90                MOVEL'ERRORE'  DETIPT
+004700890915     C                     WRITETABED1                     *
+004800930511     C*---------- GESTIONE SUBFILE ------------------------*
+004900930511     C*---------- PULIZIA SLFCT----------------------------*
+005000930511     C                     Z-ADD0         REC1    40       *
+005100930511     C                     MOVE *BLANKS   SCELTA           *
+005200930511     C                     SETON                         70*
+005300930511     C                     WRITETABESC1                    *
+005400930511     C                     SETOF                     7071  *
+005500930511     C*---------- CARICAMENTO SFL--------------------------*
+005600930511     C           KEYTAB    SETLLTABEL00F             90  91*
+005700930511     C  N91                SETON                     90
+005800930511     C           *IN90     DOWEQ'0'
+005900930511     C           KEYTAB    READETABEL                    90*
+006000930511     C  N90      TBLFLG    IFNE '*'                        *
+006100930511     C                     MOVELTBLUNI    DS2A
+006200930511     C*
+006300930511     C                     MOVELTBLKEY    CODTAB           *
+006400930511     C                     MOVELTBLUNI    DESCRI           *
+006500930511     C                     MOVELTBLFLG    STATTB           *
+006600930511     C*
+006700930511     C                     SETOF                     15
+006800930511     C           §2ATIP    LOKUPTIPI                     15
+006900930511     C*
+007000930511     C  N20      *IN15     IFEQ '1'
+007100930511     C                     ADD  1         REC1       71    *
+007200930511     C                     WRITETABESF1                    *
+007300930511     C                     END                             *
+007400930511     C   20                DO
+007500930511     C                     ADD  1         REC1       71    *
+007600930511     C                     WRITETABESF1                    *
+007700930511     C                     END                             *
+007800930511     C                     END                             *
+007900930511     C                     END                             *
+008000930511     C*---------- EMISSIONE SFL----------------------------*
+008100930511     C           EMISF1    TAG                             *
+008200930511     C                     EXFMTTABESC1                    *
+008300930512     C   KC                SETON                         92*
+008400930511     C   KC                GOTO FINE                       *
+008500930511     C*---------- LETTURA RECORD VARIATI-------------------*
+008600930511     C   71                READCTABESF1                  91*
+008700930511     C  N71                                                *
+008800930511     COR 91                GOTO EMISF1                     *
+008900930511     C           SCELTA    CABNE'1'       EMISF1           *
+009000930511     C                     MOVE CODTAB    §KEY             *
+009100930511     C                     MOVELDESCRI    §DES             *
+009200930511     C*----------------------------------------------------*
+009300930511     C           FINE      TAG                             *
+009400930512     C   92                MOVE *BLANKS   §KEY             *
+009500930512     C   92                MOVE *BLANKS   §DES             *
+009600930512     C   92                MOVEL'ERRORE'  §DES   30        *
+009700930511     C                     SETON                         LR*
+009800930511     C*----------------------------------------------------*

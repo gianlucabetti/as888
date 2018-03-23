@@ -1,0 +1,62 @@
+000100101209             PGM        PARM(&KPJBA)
+000200891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000300101209             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000301130326             DCL        VAR(&LIBFIL)     TYPE(*CHAR) LEN(10)
+000500101209             RTVJOBA    JOB(&DSP)
+002300060929/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+002400060929/* procedura/programma fosse finita in maniera anomala occorre */
+002500060929/* parare il colpo riducendo il male al male minore ossia      */
+002600060929/* con un rollback chiudere le precedenti transazioni fatte a  */
+002700060929/* metà piuttosto che confermarle. E ripartendo da una         */
+002800060929/* situazione pulita.                                          */
+002801130326             RTVMBRD    FILE(wfnlrq10f)    RTNLIB(&LIBFIL)
+002802130326             CRTDUPOBJ  OBJ(WFNLRQ1*) FROMLIB(&LIBFIL) +
+002803130326                          OBJTYPE(*FILE) TOLIB(QTEMP)
+002804130326             MONMSG     MSGID(CPF2130) EXEC(CLRPFM +
+002805130326                          FILE(QTEMP/wfnlrq10F))
+002806130326
+002807130326             OVRDBF     FILE(WFNLRQ10F) TOFILE(QTEMP/WFNLRQ10F) +
+002808130326                          OVRSCOPE(*JOB)
+002809130326
+002810130326             OVRDBF     FILE(WFNLRQ11l) TOFILE(QTEMP/WFNLRQ11l) +
+002811130326                          OVRSCOPE(*JOB)
+002812130326
+002813130402             RTVMBRD    FILE(wfnlrq20f)    RTNLIB(&LIBFIL)
+002814130326             CRTDUPOBJ  OBJ(WFNLRQ2*) FROMLIB(&LIBFIL) +
+002815130326                          OBJTYPE(*FILE) TOLIB(QTEMP)
+002816130326             MONMSG     MSGID(CPF2130) EXEC(CLRPFM +
+002817130326                          FILE(QTEMP/wfnlrq20F))
+002818130326
+002819130326             OVRDBF     FILE(WFNLRQ20F) TOFILE(QTEMP/WFNLRQ20F) +
+002820130326                          OVRSCOPE(*JOB)
+002821130326             OVRDBF     FILE(WFNLRQ21l) TOFILE(QTEMP/WFNLRQ21l) +
+002822130326                          OVRSCOPE(*JOB)
+002823130326
+002900070928             STRCMTCTL  LCKLVL(*CHG)
+003000060929             MONMSG     MSGID(CPF8351) EXEC(DO)
+003100070928             ROLLBACK
+003200070928             ENDCMTCTL
+003300070928             STRCMTCTL  LCKLVL(*CHG)
+003400060929             ENDDO
+003500950908
+003600101209             CALL       PGM(FNLRQ1R) PARM(&KPJBA)
+003700060929             MONMSG     MSGID(CPF0000) EXEC(DO)
+003800060929             ROLLBACK
+003900101209             SNDBRKMSG  MSG('ERRORE La Sistemazione del controllo +
+004000101209                          autista è terminata in modo anomalo. +
+004100101209                          Segnalare il problema alla persona +
+004200101209                          responsabile della manutenzione del +
+004300101209                          programma.') TOMSGQ(&DSP)
+004400060929             ENDDO
+004500060929
+004600060929             ENDCMTCTL
+004601130326
+004602130326             DLTF       FILE(QTEMP/wfnlrq*)
+004603130326             DLTOVR     FILE(WFNLRQ10f) LVL(*JOB)
+004604130326             DLTOVR     FILE(WFNLRQ11l) LVL(*JOB)
+004605130326             DLTOVR     FILE(WFNLRQ20f) LVL(*JOB)
+004606130326             DLTOVR     FILE(WFNLRQ21l) LVL(*JOB)
+004607130326
+004700950529
+004800900924             RCLRSC     LVL(*CALLER)
+005200101209             ENDPGM

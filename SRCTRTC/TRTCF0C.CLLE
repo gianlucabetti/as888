@@ -1,0 +1,50 @@
+000100021016/********************************************************************/
+000200021016/*  TRADUCE NUOVAMENTE ARCHIVI E.D.I.  IN SEDE E LI TRASMETTE       */
+000300021016/********************************************************************/
+000400021016             PGM        PARM(&KPJBA)
+000500021016
+000600021016             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700021016             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+000800021016             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+000900021016
+001000021016             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+001100021016             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+001200021016
+001300021016             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+001400021016
+001500021016/* DETERMINO SE IL PGM è BATCH O INTERATTIVO  */
+001600021016             RTVJOBA    JOB(&JOB) TYPE(&TYPE)
+001700021017
+001800021017             ADDLIBLE   LIB(EDFLATIN2)
+001900060912             MONMSG     MSGID(CPF0000) /* E' GIA IN LISTA LIBRERIE */
+002000021016
+002100050825/*           RTVDTAARA  DTAARA(ACTERRMSG (5 10)) RTNVAR(&USRMSG)       */
+002200050825/* ?Reperisce lo User a cui inviare msg di avviso                      */
+002300050825             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+002400050825             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+002500050825             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+002600021016
+002700021016             CHGVAR     VAR(&SIF) VALUE(%SST(&KPJBA 92 10))
+002800021016
+002900021016/*  SE IL SISTEMA INFORMATIVO PASSATO IN KPJBA È QUELLO BUONO LO CAMBIA */
+003000021016             IF         COND(%SST(&SIF 7 1) *EQ 'P') THEN(CHGVAR +
+003100021016                          VAR(&TEST) VALUE('P'))
+003200021016
+003300021016/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+003400021016/* RICHIAMO PGM x scaricare e inviare i dati da FIFES00W           */
+003500021016/*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+003600021030             OVRPRTF    FILE(QSYSPRT) SAVE(*YES) USRDTA(FEDEX_ERR)
+003700021016
+003800050607/* ?------------------------------------------------------------------ */
+003900050607/* ? Tolte le trasmissioni da Sede a Filiale richiamo nuovo pgm        */
+004000050607/* ?------------------------------------------------------------------ */
+004100050607/* ?         CALL       PGM(TRTCF0R) PARM(&TEST &USRMSG)               */
+004200050607             CALL       PGM(TRTCF0R0) PARM(&TEST &USRMSG)
+004300021016
+004400021016             DLTOVR     FILE(*ALL)
+004500021016 FINE:
+004600021017
+004700021017             RMVLIBLE   LIB(EDFLATIN2)
+004800021017             MONMSG     MSGID(CPF0000)
+004900021016
+005000021016             ENDPGM

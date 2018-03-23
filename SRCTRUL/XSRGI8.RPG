@@ -1,0 +1,63 @@
+000100000000     H              J
+000200000000      *-------------------------------------------------------------------------
+000300000000      *   ROUTINE GENERALIZZATA PER CALCOLO DATA DA GIORNI DATA
+000400000000      *-------------------------------------------------------------------------
+000500000000      *   CAMPO GI8DAT - CONTERRA' LA DATA IN FORMATO    -GGMMAAAA-
+000600000000      *         GI8INV - CONTERRA' LA DATA IN FORMATO    -AAAAMMGG-
+000700000000      *         GI8TGI - DEVE CONTENERE LA DATA IN GIORNI DAL 01/01/1901
+000800000000      *-------------------------------------------------------------------------
+000900000000     E                    GPM    12  12  3 0A            GG. PROGR. MESI
+001000000000     E                    GM     12  12  2 0             GG. DEL MESE
+001100000000      *
+001200000000     IWGIDAT      DS
+001300000000     I                                        1   80GI8DAT
+001400000000     I                                        9  160GI8INV
+001500000000     I                                       17  210GI8TGI
+001600000000      *-------------------------------------------------------------------------
+001700000000     C           *ENTRY    PLIST
+001800000000     C                     PARM           WGIDAT
+001900000000     C*  TROVO ANNO
+002000000000     C           GI8TGI    DIV  365       WAA     40
+002100000000     C           WAA       DIV  4         WNBIS   30       QUANTI BISEST.
+002200000000     C                     MVR            WRES       71
+002300000000     C           GI8TGI    SUB  WNBIS     GI8TGI           GG - BISESTILI
+002400000000     C           GI8TGI    DIV  365       WAA
+002500000000     C                     MVR            WRES    30     75GG.RESTANTI
+002600000000     C*                                                    0 = 31/12/PR
+002700000000     C   75 71             DO                              BIS. E NON ERA
+002800000000     C           WAA       SUB  1         WAA
+002900000000     C                     Z-ADD365       WRES
+003000000000     C                     END
+003100000000     C*
+003200000000     C           WAA       DIV  4         WNBIS                        T.
+003300000000     C                     MVR            WRBIS   30 73
+003400000000     C   73N71                                             NON PIU' BISEST
+003500000000     CORN73                ADD  1         WRES             E'BISESTILE
+003600000000     C  N73                ADD  1         GM,2             FEBB.SE BIS.
+003700000000     C  N73                ADD  1         GPM              SE BIS.+1GG
+003800000000     C  N73                SUB  1         GPM,1
+003900000000     C                     Z-ADD1         WI      20
+004000000000     C* TROVO IL MESE E GIORNI
+004100000000     C           WRES      LOKUPGPM,WI               74  73
+004200000000     C                     MOVE WI        WMM     20
+004300000000     C           WI        COMP 1                        72
+004400000000     C  N72 73             MOVE GM,WI     WGG              ULTIMO DEL MM
+004500000000     C         74          SUB  1         WI
+004600000000     C  N72N73   WRES      SUB  GPM,WI    WGG     20       ALTRI GG.
+004700000000     C   72                MOVE WRES      WGG
+004800000000     C*      - COMPONE DATA -AAMMGG-
+004900000000     C                     MOVE WGG       W4      40
+005000000000     C                     MOVELWMM       W4
+005100000000     C                     Z-ADDW4        GI8INV
+005200000000     C                     ADD  1900      WAA
+005300000000     C                     MOVELWAA       GI8INV
+005400000000     C*      - COMPONE DATA -GGMMAA-
+005500000000     C                     MOVELWGG       W4
+005600000000     C                     MOVE WMM       W4
+005700940725     C                     Z-ADDWAA       GI8DAT
+005800000000     C                     MOVELW4        GI8DAT
+005900000000     C                     SETON                     LR
+006000000000**
+006100000000031059090120151181212243273304334365
+006200000000**
+006300000000312831303130313130313031

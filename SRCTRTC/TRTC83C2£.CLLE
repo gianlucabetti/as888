@@ -1,0 +1,208 @@
+000100050201/*?=======================================================================*/
+000200081210/*?   PER DETOF  PILOTA LO SPLIT IN 2 PARTI DEGLI IFCSUM                  */
+000300050201/*?=======================================================================*/
+000400081210/* ?TOF    VUOLE 2 FILES 1 GERMANIA e 1 POLONIA                           */
+000500050201/* ?L'ELEMNTO FONDAMENTALE CHE CONTRADDISTINGUE I 2 FILES È IL SEGMENTO   */
+000600081210/* ?NAD+ST+DE/TOF/DE1 <--- 1° FILE  e  NAD+ST+PL/TOF/PL1 <--- 2° FILE     */
+000700010612/*========================================================================*/
+000800010524             PGM        PARM(&KPJBA)
+000900010524
+001000010524             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001100050826             DCL        VAR(&SAVKPJBA) TYPE(*CHAR) LEN(502)
+001200050201             DCL        VAR(&KNMUS) TYPE(*CHAR) LEN(10)
+001300010524             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001400010524             DCL        VAR(&NRRSUM1) TYPE(*DEC)  LEN(10 0)
+001500010524             DCL        VAR(&NRRSUM2) TYPE(*DEC)  LEN(10 0)
+001600050201             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+001700050201             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1) VALUE(' ')
+001800050201             DCL        VAR(&FILSUM) TYPE(*CHAR) LEN(10) +
+001900050201                          VALUE('IFCSUM')
+002000050207             DCL        VAR(&DAPROGR) TYPE(*CHAR) LEN(5) VALUE('     ')
+002100050201             DCL        VAR(&CODFILE) TYPE(*CHAR) LEN(3) VALUE('785')
+002200010524
+002300050826             CHGVAR     VAR(&SAVKPJBA) VALUE(&KPJBA)
+002400050826/* ?Reperisce lo User a cui inviare msg di avviso                    */
+002500050826             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+002600050826             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+002700050826             MONMSG     MSGID(CPF0000) EXEC(DO)
+002800050826             CHGVAR     VAR(&USRMSG) VALUE(&KNMUS)
+002900050826             ENDDO
+003000050826             IF         COND(&USRMSG *EQ ' ') THEN(DO)
+003100050826             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+003200050826             ENDDO
+003300050826/* ?Reimposta KPJBA poichè aveva sporcato la KPJBU                   */
+003400050826             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+003500970107
+003600050201/* ?PORTA TUTTO IN QTEMP POICHÈ POTREBBERO ESSERCI PIÙ MANIFEST IN ELABORAZIONE */
+003700050905/* ?QUINDI I WORKFILES POTREBBERO SOVRAPPORSI                                   */
+003800050906
+003900050906             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004000050906                          TOLIB(QTEMP) NEWOBJ(EDIFCSUM0)
+004100050906             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004200050906                          TOLIB(QTEMP) NEWOBJ(EDIFCSUM1)
+004300050906             CRTDUPOBJ  OBJ(EDIFCSUM) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+004400050906                          TOLIB(QTEMP) NEWOBJ(EDIFCSUM2)
+004500050906
+004600010524             CLRPFM     FILE(QTEMP/EDIFCSUM0)
+004700010524             CLRPFM     FILE(QTEMP/EDIFCSUM1)
+004800081210             CLRPFM     FILE(QTEMP/EDIFCSUM2) /* Polonia */
+004900010524
+005000050201/* ?DOPO AVERLI PULITI LI PUNTA PRIMA DI PASSARE IL CONTROLLO AL PROGRAMMA      */
+005100050201/* ?CHE DEVE SDOPPIARE I DATI                                                   */
+005200010524             OVRDBF     FILE(EDIFCSUM0) TOFILE(QTEMP/EDIFCSUM0)
+005300010524             OVRDBF     FILE(EDIFCSUM1) TOFILE(QTEMP/EDIFCSUM1)
+005400010524             OVRDBF     FILE(EDIFCSUM2) TOFILE(QTEMP/EDIFCSUM2)
+005500010524
+005600081210/* ?Pgm che DIVIDE in 2 il FlatFile di WORK di dettaglio in QTEMP/EDIFCSUMDE    */
+005700081210/* ?NELLA LOCAL DATA AREA PASSA I TOTALI DEI 2 FILES GENERATI                   */
+005800050905/*? Divide ulteriormente in 2 per spedizioni verso la Polonia                   */
+005900081210             CALL       PGM(TRTC83R7) PARM(&KPJBA)
+006000940329
+006100081210/* ?Generati i 2 Flat Files controlla quanti records contengono ciascuno        */
+006200010524             RTVMBRD    FILE(QTEMP/EDIFCSUM1) NBRCURRCD(&NRRSUM1)
+006300010524             RTVMBRD    FILE(QTEMP/EDIFCSUM2) NBRCURRCD(&NRRSUM2)
+006400010524
+006500050201/*?=======================================================================*/
+006600081210/*? IL 1°  DEI 2 ARCHIVI QUELLO CHE DETOF VUOLE x LA GERMANIA             */
+006700050201/*?=======================================================================*/
+006800050201
+006900050201/* ?PER IL 1° FILE.  */
+007000010612             IF         COND(&NRRSUM1 *GT 0) THEN(DO)
+007100050907
+007200050907/* ? - PRIMA però ...PULISCE in QTEMP EDIFCSUM                             */
+007300050907             CLRPFM     FILE(QTEMP/EDIFCSUMTS)
+007400010612
+007500050204/* ? - SCRIVO I RECORDs DI TESTATA in EDIFCSUMTS in QTEMP                  */
+007600050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+007700010612             CALL       PGM(TRTC83R3) PARM(&KPJBA)
+007800050204/* ? - ACCODO I RECORDs DI DETTAGLIO al EDIFCSUMTS in QTEMP                */
+007900050204             CPYF       FROMFILE(QTEMP/EDIFCSUM1) +
+008000050204                          TOFILE(QTEMP/EDIFCSUMTS) MBROPT(*ADD)
+008100050201/* ? - RETTIFICO I CAMPI DI TESTATA A TOTALE E SOPRATTUTTO                 */
+008200081210/* ? - GLI INDIRIZZI DEL NAD+ST+........DE1 <=====                         */
+008300050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+008400010612             CHGDTAARA  DTAARA(*LDA (59 1)) VALUE('1') /* 1° file */
+008500081210             CALL       PGM(TRTC83R71) PARM(&KPJBA)
+008600010612
+008700090817/* ?******************************************************************* */
+008800090817/* ?                                                                    */
+008900090817/* ? Prova ad ALLOCARE  il FILE SNDIFCSUM per eseguire il CPYF  in      */
+009000090817/* ?  modo che altri Manifest non eseguano contemporaneamente da        */
+009100090817/* ?  altre code lo stesso CPYF mischiando irreparabilmente i dati      */
+009200090817/* ?  nelle righe del FLAT FILE in modo incomprensibile.                */
+009300090817/* ?                                                                    */
+009400090817/* ? COMUNQUE ritenta più volte fino a riuscirci.                       */
+009500090817/* ?   (dopo 60 secondi di intervallo)                                  */
+009600090817/* ?******************************************************************* */
+009700090817
+009800090817  ALLOCFILE1:
+009900090817
+010000090817             ALCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+010100090817             MONMSG     MSGID(CPF1002) EXEC(DO)
+010200090817             DLYJOB     DLY(60) /* attende e riprova */
+010300090817             GOTO       CMDLBL(ALLOCFILE1)
+010400090817             ENDDO
+010500090817
+010600050201/* ?******************************************************************* */
+010700050201/* ? Il Flat File completo di Testata + Dettaglio  viene copiato sul    */
+010800050201/* ? SNDIFCSUM per essere tradotto e INVIATO                            */
+010900050201/* ?******************************************************************* */
+011000050204             CPYF       FROMFILE(QTEMP/EDIFCSUMTS) TOFILE(SNDIFCSUM) +
+011100050204                          MBROPT(*ADD) FMTOPT(*NOCHK)
+011200050201/*?-----------------------------------------------------------------------*/
+011300050201/*?    Aggiorna i campi del Flat File x la traduzione ed il               */
+011400050201/*?    DOWNLOAD del SNDIFCSUM tramite il TRTC102R                         */
+011500050201/*?-----------------------------------------------------------------------*/
+011600050201
+011700050201             CHGVAR     VAR(&CODFILE) VALUE('785')
+011800050221             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSUM +
+011900050207                          &CODFILE &DAPROGR)
+012000010524
+012100090817/* ?******************************************************************* */
+012200090817/* ? quindi disalloca il SNDIFCSUM                                      */
+012300090817/* ?******************************************************************* */
+012400090817             DLCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+012500090817
+012600050201/* ? FINE 1° FILE */
+012700010612             ENDDO
+012800010612
+012900050201/*?=======================================================================*/
+013000081210/*? IL 2°  DEI 2 ARCHIVI QUELLO CHE DETOF VUOLE x LA POLONIA              */
+013100050201/*?=======================================================================*/
+013200050201
+013300050201/* ?PER IL 2° FILE.  */
+013400010612             IF         COND(&NRRSUM2 *GT 0) THEN(DO)
+013500050201
+013600050201/* ? - PRIMA però ...PULISCE in QTEMP EDIFCSUM                             */
+013700050204             CLRPFM     FILE(QTEMP/EDIFCSUMTS)
+013800050201
+013900050204/* ? - SCRIVO I RECORDs DI TESTATA in EDIFCSUMTS in QTEMP                  */
+014000050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+014100010612             CALL       PGM(TRTC83R3) PARM(&KPJBA)
+014200050204/* ? - ACCODO I RECORDs DI DETTAGLIO al EDIFCSUMTS in QTEMP                */
+014300050204             CPYF       FROMFILE(QTEMP/EDIFCSUM2) +
+014400050204                          TOFILE(QTEMP/EDIFCSUMTS) MBROPT(*ADD)
+014500050201/* ? - RETTIFICO I CAMPI DI TESTATA A TOTALE E SOPRATTUTTO                 */
+014600081210/* ? - GLI INDIRIZZI DEL NAD+ST+........PL1 <=====                         */
+014700050204             OVRDBF     FILE(EDIFCSUM) TOFILE(QTEMP/EDIFCSUMTS)
+014800010612             CHGDTAARA  DTAARA(*LDA (59 1)) VALUE('2') /* 2° file */
+014900081210             CALL       PGM(TRTC83R71) PARM(&KPJBA)
+015000010612
+015100050201/* -------------------------------------------------------------------- */
+015200050201/* ?ASPETTA 4 MINUTI prima di inviare il 2° FILE          altrimenti    */
+015300050201/* ? il traduttore potrebbe ricompattare in un unico IFCSUM 80          */
+015400081210/* ?           colonne cosa che DETOF  non vuole.                       */
+015500050201/* ?ATTENZIONE può essere in certe occasioni che ciò non sia sufficiente*/
+015600050201/* -------------------------------------------------------------------- */
+015700050919             DLYJOB     DLY(120)
+015800030717
+015900090817/* ?******************************************************************* */
+016000090817/* ?                                                                    */
+016100090817/* ? Prova ad ALLOCARE  il FILE SNDIFCSUM per eseguire il CPYF  in      */
+016200090817/* ?  modo che altri Manifest non eseguano contemporaneamente da        */
+016300090817/* ?  altre code lo stesso CPYF mischiando irreparabilmente i dati      */
+016400090817/* ?  nelle righe del FLAT FILE in modo incomprensibile.                */
+016500090817/* ?                                                                    */
+016600090817/* ? COMUNQUE ritenta più volte fino a riuscirci.                       */
+016700090817/* ?   (dopo 60 secondi di intervallo)                                  */
+016800090817/* ?******************************************************************* */
+016900090817
+017000090817  ALLOCFILE2:
+017100090817
+017200090817             ALCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+017300090817             MONMSG     MSGID(CPF1002) EXEC(DO)
+017400090817             DLYJOB     DLY(60) /* attende e riprova */
+017500090817             GOTO       CMDLBL(ALLOCFILE2)
+017600090817             ENDDO
+017700090817
+017800050201/* ?******************************************************************* */
+017900050201/* ? Il Flat File completo di Testata + Dettaglio  viene copiato sul    */
+018000050201/* ? SNDIFCSUM per essere tradotto e INVIATO                            */
+018100050201/* ?******************************************************************* */
+018200050204             CPYF       FROMFILE(QTEMP/EDIFCSUMTS) TOFILE(SNDIFCSUM) +
+018300050204                          MBROPT(*ADD) FMTOPT(*NOCHK)
+018400050201/*?-----------------------------------------------------------------------*/
+018500050201/*?    Aggiorna i campi del Flat File x la traduzione ed il               */
+018600050201/*?    DOWNLOAD del SNDIFCSUM tramite il TRTC102R                         */
+018700050207/*?    ma x il secondo IFCSUM la numerazione delle righe parte da 5000    */
+018800050201/*?-----------------------------------------------------------------------*/
+018900050201
+019000050201             CHGVAR     VAR(&CODFILE) VALUE('785')
+019100050207             CHGVAR     VAR(&DAPROGR) VALUE('05000')
+019200050221             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSUM +
+019300050207                          &CODFILE &DAPROGR)
+019400050201
+019500090817/* ?******************************************************************* */
+019600090817/* ? quindi disalloca il SNDIFCSUM                                      */
+019700090817/* ?******************************************************************* */
+019800090817             DLCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+019900090817
+020000050201/* ? FINE 2° FILE */
+020100010612             ENDDO
+020200050905
+020300010612/*========================================================================*/
+020400010612/* USCITA PROGRAMMA */
+020500010612/*========================================================================*/
+020600010612             COMMIT
+020700010524FINE:
+020800010124             ENDPGM

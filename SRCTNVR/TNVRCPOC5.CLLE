@@ -1,0 +1,169 @@
+000100140724             /*?Parametri di compilazione --------------------------?*/
+000200140724/*END                                                                */
+000300140724
+000400140723             /*?AGGIORNAMENTO DATI IN TNCPO00F ---------------------?*/
+000500140724
+000600140723             pgm
+000700140723
+000800140724             /*?Definizione variabili ------------------------------?*/
+000900140723             dcl        var(&File)         type(*char)  len(10)
+001000140724             dcl        var(&File_Save)    type(*char)  len(10)
+001100140724             dcl        var(&Libr)         type(*char)  len(10)
+001200140724             dcl        var(&LibrWF)       type(*char)  len(10)
+001300140724             dcl        var(&MsgRpy)       type(*char)  len(01)
+001400140723
+001500140724             /*?Rintracciamento / Verifica esistenza WFCPOTFF ------?*/
+001600140724             chgvar     var(&LibrWF)       value(' ')
+001700140723             RtvObjD    obj(WFCPOTFF)      objtype(*file) +
+001800140724                        rtnlib(&LibrWF)
+001900140723             monmsg     msgid(CPF0000)       exec(do)
+002000140724               SndUsrMsg  msg('Non trovati i work-file da riempire.') +
+002100140723                          msgtype(*info) +
+002200140723                          tomsgq(*ext)
+002300140723               return
+002400140723             enddo
+002500140723
+002600140724             /*?Rintracciamento / Verifica esistenza WFCPOCNF ------?*/
+002700140724             chgvar     var(&LibrWF)       value(' ')
+002800140723             RtvObjD    obj(WFCPOCNF)      objtype(*file) +
+002900140724                        rtnlib(&LibrWF)
+003000140723             monmsg     msgid(CPF0000)       exec(do)
+003100140724               SndUsrMsg  msg('Non trovati i work-file da riempire.') +
+003200140723                          msgtype(*info) +
+003300140723                          tomsgq(*ext)
+003400140723               return
+003500140723             enddo
+003600140723
+003700140724             /*?Richiesta copia archivi che saranno modificati -----?*/
+003800140724             SndUsrMsg  msg('Si vogliono copiare i file +
+003900140724                             CNACO00F, TFACO00F e TNCPO00F ?   (S/N)') +
+004000140723                        values(S N) +
+004100140723                        dft(N) +
+004200140723                        msgtype(*inq) +
+004300140723                        tomsgq(*ext) +
+004400140724                        msgrpy(&MsgRpy)
+004500140723
+004600140724             if         cond(&MsgRpy = 'N')   then(goto cmdlbl(No_Save))
+004700140723
+004800140723             /*?Cancellazione CNACO_SAVE ---------------------------?*/
+004900140724             chgvar     var(&File)         value('CNACO00F  ')
+005000140724             chgvar     var(&File_Save)    value('CNACO_SAVE')
+005100140724             chgvar     var(&Libr)         value(' ')
+005200140724
+005300140723             RtvObjD    obj(&File)         objtype(*file) +
+005400140724                        rtnlib(&Libr)
+005500140724
+005600140724             chkobj     obj(&Libr/&File_Save) +
+005700140724                        objtype(*file)
+005800140724
+005900140724             monmsg     msgid(CPF0000)     exec(goto cmdlbl(NotExist1))
+006000140724
+006100140724             DltF       file(&Libr/&File_Save)
+006200140724             monmsg     msgid(CPF0000)       exec(do)
+006300140724               SndUsrMsg  msg('Non riuscita cancellazione del file' +
+006400140724                               *bcat &Libr *tcat '/' *tcat &File_Save +
+006500140724                               *tcat ' già esistente.') +
+006600140724                          msgtype(*info) +
+006700140724                          tomsgq(*ext)
+006800140724               return
+006900140724             enddo
+007000140723
+007100140724     NotExist1:
+007200140723
+007300140723             /*?Copia di CNACO00F in CNACO_SAVE --------------------?*/
+007400140724             CrtDupObj  obj(&File)         fromlib(&Libr) +
+007500140724                        objtype(*file)     tolib(&Libr) +
+007600140724                        NewObj(&File_Save) data(*yes)
+007700140723             monmsg     msgid(CPF0000)     exec(do)
+007800140724               SndUsrMsg  msg('Non riuscita la copia del file' *bcat +
+007900140724                               &Libr *tcat '/' *tcat &File *tcat '.') +
+008000140723                          msgtype(*info) +
+008100140723                          tomsgq(*ext)
+008200140723               return
+008300140723             enddo
+008400140723
+008500140723             /*?Cancellazione TFACO_SAVE ---------------------------?*/
+008600140724             chgvar     var(&File)         value('TFACO00F  ')
+008700140724             chgvar     var(&File_Save)    value('TFACO_SAVE')
+008800140724             chgvar     var(&Libr)         value(' ')
+008900140724
+009000140724             RtvObjD    obj(&File)         objtype(*file) +
+009100140724                        rtnlib(&Libr)
+009200140724
+009300140724             chkobj     obj(&Libr/&File_Save) +
+009400140724                        objtype(*file)
+009500140724
+009600140724             monmsg     msgid(CPF0000)     exec(goto cmdlbl(NotExist2))
+009700140724
+009800140724             DltF       file(&Libr/&File_Save)
+009900140724             monmsg     msgid(CPF0000)       exec(do)
+010000140724               SndUsrMsg  msg('Non riuscita cancellazione del file' +
+010100140724                               *bcat &Libr *tcat '/' *tcat &File_Save +
+010200140724                               *tcat ' già esistente.') +
+010300140724                          msgtype(*info) +
+010400140724                          tomsgq(*ext)
+010500140724               return
+010600140724             enddo
+010700140724
+010800140724     NotExist2:
+010900140723
+011000140723             /*?Copia di TFACO00F in TFACO_SAVE --------------------?*/
+011100140724             CrtDupObj  obj(&File)         fromlib(&Libr) +
+011200140724                        objtype(*file)     tolib(&Libr) +
+011300140724                        NewObj(&File_Save) data(*yes)
+011400140724             monmsg     msgid(CPF0000)     exec(do)
+011500140724               SndUsrMsg  msg('Non riuscita la copia del file' *bcat +
+011600140724                               &Libr *tcat '/' *tcat &File *tcat '.') +
+011700140724                          msgtype(*info) +
+011800140724                          tomsgq(*ext)
+011900140724               return
+012000140724             enddo
+012100140723
+012200140723             /*?Cancellazione TNCPO_SAVE ---------------------------?*/
+012300140724             chgvar     var(&File)         value('TNCPO00F  ')
+012400140724             chgvar     var(&File_Save)    value('TNCPO_SAVE')
+012500140724             chgvar     var(&Libr)         value(' ')
+012600140724
+012700140724             RtvObjD    obj(&File)         objtype(*file) +
+012800140724                        rtnlib(&Libr)
+012900140724
+013000140724             chkobj     obj(&Libr/&File_Save) +
+013100140724                        objtype(*file)
+013200140724
+013300140724             monmsg     msgid(CPF0000)     exec(goto cmdlbl(NotExist3))
+013400140724
+013500140724             DltF       file(&Libr/&File_Save)
+013600140724             monmsg     msgid(CPF0000)       exec(do)
+013700140724               SndUsrMsg  msg('Non riuscita cancellazione del file' +
+013800140724                               *bcat &Libr *tcat '/' *tcat &File_Save +
+013900140724                               *tcat ' già esistente.') +
+014000140724                          msgtype(*info) +
+014100140724                          tomsgq(*ext)
+014200140724               return
+014300140724             enddo
+014400140724
+014500140724     NotExist3:
+014600140723
+014700140723             /*?Copia di TNCPO00F in TNCPO_SAVE --------------------?*/
+014800140724             CrtDupObj  obj(&File)         fromlib(&Libr) +
+014900140724                        objtype(*file)     tolib(&Libr) +
+015000140724                        NewObj(&File_Save) data(*yes)
+015100140724             monmsg     msgid(CPF0000)     exec(do)
+015200140724               SndUsrMsg  msg('Non riuscita la copia del file' *bcat +
+015300140724                               &Libr *tcat '/' *tcat &File *tcat '.') +
+015400140724                          msgtype(*info) +
+015500140724                          tomsgq(*ext)
+015600140724               return
+015700140724             enddo
+015800140723
+015900140723     No_Save:
+016000140723
+016100140724             /*?Pulizia work-file WFCPOCNF e WFCPOTFF --------------?*/
+016200140724             clrpfm     file(&LibrWF/WFCPOCNF)
+016300140724             clrpfm     file(&LibrWF/WFCPOTFF)
+016400140723
+016500140724             /*?Richiamo *pgm TNVRCPOR5 ----------------------------?*/
+016600140723             call       pgm(TNVRCPOR5)
+016700140723
+016800140724             /*?Fine -----------------------------------------------?*/
+016900140723             endpgm

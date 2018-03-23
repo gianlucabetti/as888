@@ -1,0 +1,38 @@
+000100050907 /* Values that can be returned for job status (&JOBSTS):             */
+000200050907 /* *ACTIVE  The job has started.                                     */
+000300050907 /*          This does not guarantee that the job is currently running:+
+000400050907 /*          HLDJOB, RLSJOB, TFRGRPJOB, TFRSECJOB, DSCJOB or MSGW.    */
+000500050907 /* *JOBQ    The job is currently on a job queue.                     */
+000600050907 /* *OUTQ    The job has completed running and has spooled output.    */
+000700050907 /* *ERROR   The Job with the specified job identifier does not exist.*/
+000800050907
+000900050907              PGM        PARM(&JOB_NAME &USER &JOB_NUM &JOB_STATUS)
+001000990204
+001100040923/* Dichiarazione variabili ______________________________________________________________________ */
+001200050907              DCL        VAR(&JOB_NAME) TYPE(*CHAR) LEN(10)
+001300050907              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+001400050907              DCL        VAR(&JOB_NUM) TYPE(*CHAR) LEN(6)
+001500050907              DCL        VAR(&JOB_STATUS) TYPE(*CHAR) LEN(10)
+001600050907              DCL        VAR(&RCV) TYPE(*CHAR) LEN(60)
+001700050907              DCL        VAR(&RCVL) TYPE(*CHAR) LEN(4)
+001800050907              DCL        VAR(&JOBID) TYPE(*CHAR) LEN(26)
+001900050907              DCL        VAR(&JOBFMT) TYPE(*CHAR) LEN(8)
+002000050907              DCL        VAR(&ERR) TYPE(*CHAR) LEN(30)
+002100050907
+002200050907 /* Set receiver variable to Hex 3C (= Decimal 60) */
+002300050907              CHGVAR     VAR(&RCVL) VALUE(X'0000003C')
+002400050907
+002500050907 /* Use qualified job name format */
+002600050907              CHGVAR     VAR(&JOBFMT) VALUE(JOBS0300)
+002700050907
+002800050907 /* Set qualified name of job */
+002900050907              CHGVAR     VAR(&JOBID) VALUE(&JOB_NAME *CAT &USER *CAT &JOB_NUM)
+003000050907
+003100050907 /* Retrieve job status */
+003200050907              CALL       PGM(QWCRJBST) PARM(&RCV &RCVL &JOBID &JOBFMT &ERR)
+003300050907
+003400050907 /* Extract job status from receiver */
+003500050907              CHGVAR     VAR(&JOB_STATUS) VALUE(%SST(&RCV 9 10))
+003600050907
+003700930402
+003800980917             ENDPGM

@@ -1,0 +1,3 @@
+000100150918     D Proj_Numero2Lettere...
+000101150918     D                 PR                  EXTPGM('X25NITAL')
+000102150918     D  x25nitalDs                         LIKEDS(x25nitalDs)

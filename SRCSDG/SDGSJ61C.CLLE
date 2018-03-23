@@ -1,0 +1,38 @@
+000100141229/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER )                                   */
+000200141229/*-------------------------------------------------------------------*/
+000300150119/* Dichiarazioni d'intento - creazione file di scarico               */
+000400141229/*-------------------------------------------------------------------*/
+000500141229             PGM        PARM(&KPJBA)
+000600141229
+000700141229             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800141229             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000900141229             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10)
+001000141229             DCL        VAR(&LIBRF) TYPE(*CHAR) LEN(10)
+001100141229
+001200141229/* Libreria file                                              */
+001300141229             DCL        VAR(&LIBFIL)   TYPE(*CHAR) LEN(10)
+001400141229
+001500141229             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001600141229             CHGVAR     VAR(&FILE)  VALUE(%SST(&KPJBU 45 10))
+001700141229             CHGVAR     VAR(&LIBRF) VALUE(%SST(&KPJBU 55 10))
+001800141229
+001900150119             CLRPFM     FILE(QTEMP/SDGDIW00F)
+002000150119             MONMSG     MSGID(CPF3142) EXEC(DO)
+002100150119
+002200150119             RTVMBRD    FILE(SDGDIW00F) RTNLIB(&LIBFIL)
+002300150119             CRTDUPOBJ  OBJ(SDGDIW*) FROMLIB(&LIBFIL) OBJTYPE(*ALL) +
+002400150119                          TOLIB(QTEMP)
+002500150119/*- Se  errore  vado a fine                                    */
+002600150119             MONMSG     MSGID(CPF0000) EXEC(DO)
+002700150119             GOTO       CMDLBL(FINE)
+002800150119             ENDDO
+002900150119
+003000150119             ENDDO
+003100141229
+003200141229             CALL       PGM(SDGSJ61R) PARM(&KPJBA)
+003300141229
+003400141229             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+003500150107             CHGVAR     VAR(&FILE)  VALUE(%SST(&KPJBU 35 10))
+003600141229             CHGVAR     VAR(&LIBRF) VALUE(%SST(&KPJBU 55 10))
+003700141229
+003800141229 FINE:       ENDPGM

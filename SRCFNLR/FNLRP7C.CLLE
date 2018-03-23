@@ -1,0 +1,37 @@
+000100000000     /*****************************************************************/
+000200050517     /*  Nome programma:  FNLRP7C                                     */
+000300050517     /*  Descrizione   :  ELENCO SPEDIZIONI MESSAG.IN DISTINTE PARCEL */
+000400000000     /*****************************************************************/
+000500000000             PGM        PARM(&KPJBA)
+000600000000
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800000000             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+000900000000
+001000050517     /*  Duplico il file di work in QTEMP per evitare conflitti       */
+001100000000
+001200050517             CHKOBJ     OBJ(QTEMP/WFTPM00F) OBJTYPE(*FILE)
+001300080307
+001400000000             MONMSG     MSGID(CPF9801) EXEC(DO)
+001500080307               RTVOBJD    OBJ(WFTPM00F) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+001600080307               CRTDUPOBJ  OBJ(WFTPM00F) FROMLIB(&RTNLIB) +
+001700080307                            OBJTYPE(*FILE) TOLIB(QTEMP) DATA(*NO)
+001800000000             ENDDO
+001900000000
+002000050517             CLRPFM     FILE(QTEMP/WFTPM00F)
+002100000000             MONMSG     MSGID(CPF0000)
+002200050517
+002300050517             CRTDUPOBJ  OBJ(WFTPM01l) FROMLIB(&RTNLIB) +
+002400050517                          OBJTYPE(*FILE) TOLIB(QTEMP) DATA(*NO)
+002500050517             MONMSG     MSGID(CPF0000)
+002600000000
+002700080307             ovrdbf     file(WFTPM01L) tofile(QTEMP/WFTPM01L) +
+002800080307                          mbr(*all) ovrscope(*actgrpdfn)
+002900080307             monmsg     msgid(CPF0000)
+003000080307
+003100050517             CALL       PGM(FNLRP7R) PARM(&KPJBA)
+003200000000             MONMSG     MSGID(CPF0000)
+003300080307
+003400080307             dltovr     file(WFTPM01L)
+003500080307             monmsg     msgid(CPF0000)
+003600080307
+003700000000             ENDPGM

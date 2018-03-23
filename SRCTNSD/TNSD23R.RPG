@@ -1,0 +1,96 @@
+000100000000     H        1     J
+000200890915     F*--------------------------------------------------------------*
+000300910225     F*       - RICERCA CODICI ORGANIGRAMMA -                        *
+000400000000     F*--------------------------------------------------------------*
+000500900612     FAZORG03LIF  E           K        DISK
+000600910225     FAZOSE03LIF  E           K        DISK
+000700910225     F            AZORG                             KRENAMEAZOSE
+000800000000     F*---------
+000900961017     FTNSD23D CF  E                    WORKSTN
+001000961017     F                                        REC1  KSFILE SD23DSF
+001100961017     E                    COD        30  3               FIL SELEZIONAT
+001200961017     C*----------------------------------------------------
+001300961017     C           *LIKE     DEFN ORGFAG    §TIP
+001400961017     C**
+001500961017     C           *ENTRY    PLIST
+001600961017     C                     PARM           §TIP
+001700961017     C                     PARM           §CF    90
+001800961017     C*
+001900961017     C                     MOVEA*ZEROS    COD
+002000961017     C** §TIP = '§' --> AZOSE
+002100961017     C**        'A' --> SOLO AGENZIE
+002200961017     C**        'F' --> SOLO FILIALI
+002300961017     C**        'E' --> FILIALI E AGENZIE
+002400961017     C**        'V' --> SOLO DESCRIZIONI AZIENDALI
+002500961017     C**        ' ' --> TUTTI
+002600961017     C**
+002700910225     C           §TIP      COMP '§'                      88
+002800961017     C*----------
+002900961017     C                     MOVE *BLANKS   SCELTA
+003000900418     C                     Z-ADD0         REC1    30
+003100961017     C*---------- PULIZIA SLFCT :
+003200961017     C                     SETON                         70
+003300961017     C                     WRITESD23DCT
+003400961017     C                     SETOF                     7071
+003500900418     C*----------
+003600961017     C                     WRITESD23D1
+003700961017     C           SOPRA     TAG
+003800910225     C  N88                READ AZORG                    91
+003900910225     C   88                READ AZOSE                    91
+004000961017     C* FINE LETTURA
+004100900418     C   91                GOTO EMISF1                     *
+004200961017     C*
+004300961017    1C           *IN88     IFEQ *OFF
+004400961017     C           §TIP      ANDNE' '
+004500961017     C*
+004600961017    2C           §TIP      IFEQ 'V'
+004700961017     C           §TIP      OREQ 'A'
+004800961017     C           §TIP      OREQ 'F'
+004900961017    3C           ORGFAG    IFNE §TIP
+005000961017     C                     GOTO SOPRA
+005100961017    3C                     ENDIF
+005200961017    2C                     ENDIF
+005300961017     C*
+005400961017    2C           §TIP      IFEQ 'E'
+005500961017     C           ORGFAG    ANDNE'A'
+005600961017     C           ORGFAG    ANDNE'F'
+005700961017     C                     GOTO SOPRA
+005800961017    2C                     ENDIF
+005900961017    1C                     ENDIF
+006000890915     C*§
+006100000000     C*---------- CARICAMENTO SFL :                        *
+006200900418     C           REC1      ADD  1         REC1       71    *
+006300961017     C                     WRITESD23DSF                    *
+006400000000     C                     GOTO SOPRA                      *
+006500000000     C*---------- EMISSIONE SFL :                          *
+006600000000     C           EMISF1    TAG                             *
+006700961017     C                     EXFMTSD23DCT                    *
+006800961017     C* F3 - FINE
+006900900418     C   KC                SETON                         90*
+007000000000     C   KC                GOTO FINE                       *
+007100961017     C**
+007200000000     C*---------- LETTURA RECORD VARIATI :                 *
+007300961017     C                     Z-ADD1         XX      30
+007400961017     C   71                READCSD23DSF                  91*
+007500000000     C  N71                                                *
+007600000000     COR 91                GOTO EMISF1                     *
+007700961017     C**
+007800961017     C   71      *IN91     DOWEQ*OFF
+007900961017     C           XX        ANDLE30
+008000961017     C           SCELTA    IFEQ '1'
+008100961017     C                     MOVELORGFIL    COD,XX           *
+008200961017     C                     ADD  1         XX
+008300961017     C                     ENDIF
+008400961017     C**
+008500961017     C                     READCSD23DSF                  91*
+008600961017     C                     ENDDO
+008700961017     C*
+008800961017     C* SE NON SELEZIONATO NESSUN RECORD RIMANGO NELLA RICERCA
+008900961017     C           COD,1     IFLE *ZEROS
+009000961017     C                     GOTO EMISF1
+009100961017     C                     ENDIF
+009200961017     C*--
+009300000000     C           FINE      TAG                             *
+009400961017     C   90                MOVEA*ZEROS    COD
+009500961017     C                     MOVEACOD       §CF
+009600000000     C                     SETON                         LR*

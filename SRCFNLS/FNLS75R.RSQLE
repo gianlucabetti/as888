@@ -1,0 +1,906 @@
+000100000614     H DECEDIT('0,') DATEDIT(*DMY.)
+000200941116     H* FNLS75R *----------------------------------------------------*
+000300941116     H*         - RISTAMPA BOLLE E SEGNACOLLI
+000400000000     H*--------------------------------------------------------------*
+000500941116     FFNLS75D   CF   E             WORKSTN
+000600910207     FAZORG01L  IF   E           K DISK
+000700021203     FFIAPD01L  IF   E           K DISK
+000800941228     FFNBLP01L  IF   E           K DISK
+000900990201     FTABEL00F  IF   E           K DISK
+001000910205     FCNACO00F  IF   E           K DISK
+001100030613
+001200180117     D MSG             S             78    DIM(22) CTDATA PERRCD(1)
+001300941227     D L1              S              3  0 DIM(30)
+001400020628
+001500020628     d wpopdr          s              3  0
+001600050329     d pflg            s              1    inz
+001700020628
+001800941228     D PARAM           DS                  INZ
+001900941227     D  V1CLNP                 1      3  0
+002000941227     D  V1CLNA                 4      6  0
+002100941227     D  WDSD                   7     14  0
+002200941227     D  WDSA                  15     22  0
+002300941227     D*
+002400941227     D  V1CLPD                23     25  0
+002500941227     D  V1CSED                26     27  0
+002600941227     D  V1CNSD                28     34  0
+002700941227     D*
+002800941227     D  V1CSEA                35     36  0
+002900941227     D  V1CNSA                37     43  0
+003000941227     D  V1CAAS                44     47  0
+003100941227     D*
+003200941227     D  VSCSOP                48     48
+003300941227     D  VSCLNA                49     51  0
+003400941227     D  VSCFLS                52     54  0
+003500941227     D  VSCSCD                55     61  0
+003600941227     D  VSCSCA                62     68  0
+003700941227     D  VSCKSC                69     75  0
+003800950116     D*
+003900941227     D  VSCCPR                76     82  0
+004000950116     D  VSCFPP                83     83
+004100950116     D  VSCNRT                84     84
+004200970701     D  VSCBAM                85     85
+004300180103     D* campo vuoto riutilizzabile( era per le poste)
+004400000613     D  VSCSNP                86     86
+004500050329
+004600050329     d  vldvcli               87     87
+004700050329
+004800030613      * PARFLG = 'E' --> STAMPATE PIU' DI 6000 PAGINE  impostare a blanks
+004900030613     D  PARFLG               156    156
+005000030613     d* - parametri da TRUL90R:
+005100030613     d* · pgm.   per stampa LDV
+005200030613     d  wD90psl              157    166
+005300030613     d* · stampante per LDV in formato "A4" (laser)
+005400030613     d  wD90prb4             167    176
+005500030613     d* · stampante per LDV in formato "A5" (laser)
+005600030613     d  wD90prb5             177    186
+005700030613     d* · modulo per stampa LDV su "A4"     (laser)
+005800030613     d  wD90mdb4             187    196
+005900030613     d* · modulo per stampa LDV su "A5"     (laser)
+006000030613     d  wD90mdb5             197    206
+006100030613     d* · pgm di stampa etichette segnacolli
+006200030613     d  wD90pss              207    216
+006300030613     d* · modulo per stampa etichette
+006400030613     d  wD90mde              227    236
+006500030613     d* · stampante per etichette
+006600030613     d  wD90pre              247    256
+006700030613      *
+006800021203      * Ds esterna per ricerca codice padroncino
+006900021203     D FNLV24DS      E DS
+007000941227     D***
+007100941227     D* PARAMETRI PER CONTROLLO DATA E TRASFORM IN GIORNI - XSRDA8 -
+007200941227     D***
+007300941227     D WLBDAT          DS                  INZ
+007400941227     D  G02DAT                 1      8  0
+007500941227     D  G02INV                 9     16  0
+007600941227     D  G02ERR                17     17
+007700941227     D  G02TGI                18     22  0
+007800941116     D KPJBA         E DS
+007900910205     D TCUDS           DS
+008000910205     D  F1                     1      1
+008100910205     D  F3                     3      3
+008200910205     D  F2                     2      2
+008300910205     D  F4                     4      4
+008400910205     D  F56                    5      6
+008500990201     D DS3C          E DS
+008600990201     D DS3A          E DS
+008700051018     D Dcli          E DS
+008800990201     D CNCR80        E DS
+008900941227     D UT§DSE        E DS                  EXTNAME(UT§DSE0F)
+009000030613     D  TCU                  398    697    DIM(50)
+009100030613     D  KCU                  698    847P 0 DIM(50)   PACKEVEN
+009200941227     D* DS PER TRUL06R - CARICAMENTO £X
+009300941227     D DSUL06        E DS                  EXTNAME(TRUL06DS)
+009400030613     D  LIN                    1     90  0 DIM(30)
+009500030613     D* DS PER TRUL90R - RICHIESTA STAMPANTI
+009600030613     D Trul90DS      E DS                  inz
+009700050329
+009800050329     d tibs02ds      e ds
+009900021203
+010000021203     D kpdpdr          S                   LIKE(APDpdr)
+010100021203     D kpdtip          S                   LIKE(APDtip)
+010200910412     C****************************************************************
+010300910412     C*  RIEPILOGO INDICATORI
+010400910412     C***************************************************************
+010500050329     c* 01    - STAMPA LDV x CLIENTE
+010600910412     C* 30    - DI COMODO
+010700910903     C* 40-54 - ERRORE
+010800180103     C*
+010900910412     C* 90    - ERRORE GENERICO
+011000910412     C*****************************************************************
+011100941116     C* RICHIESTA STAMPANTI
+011200030613     C                   MOVEL     'S'           d90RSE
+011300030613     C                   MOVEL     'S'           d90RSB
+011400030613     C                   CALL      'TRUL90R'
+011500941116     C                   PARM                    KPJBA
+011600030613     C                   PARM                    trul90Ds
+011700941116     C*
+011800030613      * Parametri x ovrprtf
+011900030613      * · stampante per etichette
+012000030613     c                   movel     D90pre        wD90pre
+012100030613      * · modulo per stampa etichette
+012200030613     c                   movel     D90mde        wD90mde
+012300030613      * · pgm. di stampa etichette segnacolli
+012400030613     c                   movel     D90pss        wD90pss
+012500030613      * · stampante per LDV in formato "A4" - laser
+012600030613     c                   movel     D90prb4       wD90prb4
+012700030613      * · stampante per LDV in formato "A5" - laser
+012800030613     c                   movel     D90prb5       wD90prb5
+012900030613      * · modulo per stampa LDV su "A4" ... - laser
+013000030613     c                   movel     D90mdb4       wD90mdb4
+013100030613      * · modulo per stampa LDV su "A5" ... - laser
+013200030613     c                   movel     D90mdb5       wD90mdb5
+013300030613      * · pgm.   per stampa LDV ........... - ad aghi o laser
+013400030613     c                   movel     D90psl        wD90psl
+013500030613     C*
+013600941116     C**
+013700941116     C* F3 - FINE
+013800030613     C     d90F3         IFEQ      '1'
+013900941116     C                   GOTO      FINE
+014000941116     C                   ENDIF
+014100941116     C**
+014200950411     C     INIZIO        TAG
+014300000613     C                   MOVE      'N'           VSCSNP            1
+014400000613      *
+014500950411     C                   CLEAR                   V1CLNA
+014600950411     C                   CLEAR                   V1CLNP
+014700950411     C                   MOVEL     *ZEROS        V1CDSD
+014800950411     C                   MOVEL     *ZEROS        V1CDSA
+014900950411     C*
+015000950411     C                   CLEAR                   V1CLPD
+015100950411     C                   MOVEL     *ZEROS        V1CSED
+015200950411     C                   MOVEL     *ZEROS        V1CSEA
+015300950411     C                   MOVEL     *ZEROS        V1CNSD
+015400950411     C                   MOVEL     *ZEROS        V1CNSA
+015500950411     C*  SOLO PER LE SPEDIZ.DI RECUPERO E' TRA DATA G. - 3  E  + 3
+015600950411     C                   TIME                    W0140            14 0
+015700950411     C* UDATE IN GGMMAAAA
+015800950411     C                   MOVE      W0140         V1CAAS
+015900950411     C*
+016000950411     C                   CLEAR                   VSCSOP
+016100950411     C                   CLEAR                   VSCLNA
+016200950411     C                   CLEAR                   DESLNA
+016300950411     C                   CLEAR                   VSCSCD
+016400950411     C                   CLEAR                   VSCSCA
+016500950411     C                   CLEAR                   DESKSC
+016600950411     C                   CLEAR                   VSCKSC
+016700950411     C                   CLEAR                   DESPDR
+016800950411     C                   CLEAR                   VSCPDR
+016900950411     C                   CLEAR                   VSCFLS
+017000950411     C                   CLEAR                   VSCNRT
+017100950411     C                   CLEAR                   VSCFPP
+017200970701     C                   CLEAR                   VSCBAM
+017300990203     C                   CLEAR                   SAVKSC
+017400990203     C                   CLEAR                   UNO
+017500950411     C**
+017600900509     C     FOR01         TAG
+017700941227     C                   EXFMT     LS75D01
+017800941227     C* SPENGO INDICATORI DI POSIZIONAMENTO CURSORE
+017900941227     C                   SETOFF                                       902840
+018000941227     C                   SETOFF                                       414243
+018100941227     C                   SETOFF                                       444546
+018200000613     C                   SETOFF                                       474864
+018300180103     c                   setoff                                       5153
+018400941116     C** CMD3 - FINE LAVORO
+018500900509     C   KC              GOTO      FINE
+018600910205     C* CONTROLLI FORMATO
+018700910205     C                   EXSR      CONTR
+018800941228     C  NKF
+018900941228     CANNKA
+019000941228     COR 90              GOTO      FOR01
+019100901214     C*
+019200950116     C*
+019300950116     C     VSCPDR        IFGT      *ZEROS
+019400950116     C                   MOVEL     VSCPDR        VSCCPR
+019500950116     C                   ENDIF
+019600050329     c                   eval      vldvcli = pflg
+019700910207     C* RISTAMPA BOLLE
+019800900523     C   KA              DO
+019900900523     C                   MOVEL     PARAM         KPJBU
+020000941227     C                   MOVEL     'LS77'        KCOAZ
+020100030616     C***                movel(p)  'FNLS77C'     Wpgm             10
+020200030616     C                   movel(p)  'BCH10'       Wpgm             10
+020300030616     C                   call      Wpgm
+020400900523     C                   PARM                    KPJBA
+020500900523     C                   END
+020600900523     C*
+020700910207     C* R I S T A M P A   S E G N A C O L L I
+020800910207     C   KF              DO
+020900910207     C                   MOVEL     PARAM         KPJBU
+021000941227     C                   MOVEL     'LS76'        KCOAZ
+021100030616     C***                movel(p)  'FNLS76C'     Wpgm             10
+021200030616     C                   movel(p)  'BCH10'       Wpgm             10
+021300030616     C                   call      Wpgm
+021400910207     C                   PARM                    KPJBA
+021500910207     C                   END
+021600910207     C*
+021700950411     C                   GOTO      INIZIO
+021800000000     C     FINE          TAG
+021900000000     C                   SETON                                        LR
+022000941116     C*
+022100910205     C* CONTROLLO FORMATO -------------------------------------------
+022200910205     C     CONTR         BEGSR
+022300910205     C                   SETOFF                                       90
+022400050329
+022500050329     c                   eval      *In49 = *Off
+022600050329
+022700941227     C                   MOVEL     *BLANKS       DESPDR
+022800910208     C                   MOVEL     *BLANKS       DESLNA
+022900950116     C                   CLEAR                   VSCCPR
+023000941116     C* LE 3 SELEZIONI SONO IN ALTERNATIVA
+023100180103    1C     V1CLNP        IFNE      0
+023200941116     C*
+023300941116     C     V1CLNA        IFNE      0
+023400941116     C     V1CLPD        ORNE      0
+023500941116     C     V1CSED        ORNE      0
+023600941116     C     V1CNSD        ORNE      0
+023700941116     C     V1CSEA        ORNE      0
+023800941116     C     V1CNSA        ORNE      0
+023900941116     C                   MOVEL     MSG(1)        VIDMSG
+024000941228     C                   SETON                                        409028
+024100941116     C                   GOTO      ENDCTR
+024200941116     C                   ENDIF
+024300180103    1C                   ENDIF
+024400941116     C*
+024500180103    1C     V1CLNA        IFNE      0
+024600941116     C*
+024700941116     C     V1CLNP        IFNE      0
+024800941116     C     V1CLPD        ORNE      0
+024900941116     C     V1CSED        ORNE      0
+025000941116     C     V1CNSD        ORNE      0
+025100941116     C     V1CSEA        ORNE      0
+025200941116     C     V1CNSA        ORNE      0
+025300941116     C                   MOVEL     MSG(2)        VIDMSG
+025400941228     C                   SETON                                        419028
+025500941116     C                   GOTO      ENDCTR
+025600941116     C                   ENDIF
+025700180103    1C                   ENDIF
+025800941116     C*
+025900180103    1C     V1CLPD        IFNE      0
+026000941116     C*
+026100941116     C     V1CLNP        IFNE      0
+026200941116     C     V1CLNA        ORNE      0
+026300941116     C     V1CDSD        ORNE      0
+026400941116     C     V1CDSA        ORNE      0
+026500941116     C                   MOVEL     MSG(3)        VIDMSG
+026600941116     C                   SETON                                        449028
+026700941116     C                   GOTO      ENDCTR
+026800941116     C                   ENDIF
+026900180103    1C                   ENDIF
+027000910412     C*
+027100941116     C* SE TUTTE E 3 VUOTE ERRORE
+027200180103    1C     V1CLPD        IFEQ      0
+027300941116     C     V1CLNP        ANDEQ     0
+027400941227     C     V1CLNA        ANDEQ     0
+027500941116     C                   MOVEL     MSG(4)        VIDMSG
+027600941116     C                   SETON                                        409028
+027700941116     C                   GOTO      ENDCTR
+027800180103    1C                   ENDIF
+027900941116     C*
+028000941116     C* LINEA DI PARTENZA
+028100180103    1C     V1CLNP        IFNE      0
+028200020701      * se p.o. di secondo livello
+028300020701 b2  c                   if        (simtpp = '2' or simtpp = *blanks)
+028400020701      * la lnp deve essere se stesso
+028500020701 b3  c                   if        v1clnp <> simpou
+028600020701     c                   eval      *in40 = *on
+028700020701     c                   eval      *in28 = *on
+028800020701     c                   eval      *in90 = *on
+028900020701     c                   eval      vidmsg = msg(5)
+029000020701     c                   goto      endctr
+029100020701 e3  c                   endif
+029200020701      * se p.o. di primo livello
+029300020701 x2  c                   else
+029400020701      * controllo che faccia parta dei p.o. del terminal di partenza
+029500941116     C     V1CLNP        LOOKUP    L1                                     30
+029600941116     C     *IN30         IFEQ      *OFF
+029700941116     C                   MOVEL     MSG(5)        VIDMSG
+029800941227     C                   SETON                                        409028
+029900910207     C                   GOTO      ENDCTR
+030000941116     C                   ENDIF
+030100020701 b2  c                   endif
+030200941116     C                   ENDIF
+030300941116     C* LINEA DI ARRIVO
+030400950807     C     V1CLNA        IFNE      0
+030500950331     C     V1CLNA        ANDNE     999
+030600941116     C     V1CLNA        CHAIN     AZORG                              30
+030700941116     C     *IN30         IFEQ      *ON
+030800941116     C     ORGFAG        OREQ      'V'
+030900941116     C                   MOVEL     MSG(6)        VIDMSG
+031000941227     C                   SETON                                        419028
+031100941116     C                   GOTO      ENDCTR
+031200941116     C                   ENDIF
+031300941116     C                   ENDIF
+031400941116     C**
+031500941116     C* DATA SPEDIZIONE : SE LNP O LNA DATA DAL OBBLIGATORIA
+031600941116     C**
+031700950807    1C     V1CLNP        IFNE      0
+031800950807     C     V1CLNA        ORNE      0
+031900941227     C                   Z-ADD     V1CDSD        G02DAT
+032000941116     C                   MOVEL     *BLANK        G02ERR
+032100941116     C                   CALL      'XSRDA8'
+032200941116     C                   PARM                    WLBDAT
+032300941116     C* ERRATA
+032400941116    2C     G02ERR        IFEQ      '1'
+032500941116     C                   SETON                                        429028
+032600941116     C                   MOVEL     MSG(7)        VIDMSG
+032700020628     c                   goto      endctr
+032800941116    2C                   ENDIF
+032900941116     C                   Z-ADD     G02INV        WDSD              8 0
+033000941228     C                   Z-ADD     G02DAT        V1CDSD
+033100941116     C* DATA AL SE C'E'
+033200950807    2C     V1CDSA        IFNE      0
+033300941227     C                   Z-ADD     V1CDSA        G02DAT
+033400941116     C                   MOVEL     *BLANK        G02ERR
+033500941116     C                   CALL      'XSRDA8'
+033600941116     C                   PARM                    WLBDAT
+033700941116     C* ERRATA
+033800941116    3C     G02ERR        IFEQ      '1'
+033900941116     C                   SETON                                        439028
+034000941116     C                   MOVEL     MSG(7)        VIDMSG
+034100020628     c                   goto      endctr
+034200941116    3C                   ENDIF
+034300941228     C                   Z-ADD     G02DAT        V1CDSA
+034400941116     C                   Z-ADD     G02INV        WDSA              8 0
+034500941116     C* DATA AL NON PUO' ESSERE INFERIORE A DATA AL
+034600941116    3C     WDSA          IFLT      WDSD
+034700941116     C                   SETON                                        439028
+034800941116     C                   MOVEL     MSG(8)        VIDMSG
+034900020628     c                   goto      endctr
+035000941116    3C                   ENDIF
+035100180103    2C                   ENDIF
+035200950418     C*
+035300180103     C* PER EVITARE LUNGHE ELABORAZIONI, ACCETTARE LA DATA
+035400180103     c* DAL e AL solo se
+035500950418     C*  E' STATA EFFETTUATA ALMENO UNA PARZIALIZZAZIONE
+035600180103    3C***  V1CDSA        IFNE      V1CDSD
+035700180103
+035800180103    2c                   if        v1cdsd>0 or v1cdsa<>0
+035900180103     c
+036000180103   2aC     VSCSOP        ifeq      ' '
+036100180103     C***  VSCLNA        ANDLE     0
+036200950807     C     VSCSCD        ANDLE     0
+036300950807     C     VSCFLS        ANDLE     0
+036400950807     C     VSCKSC        ANDLE     0
+036500950418     C     VSCFPP        ANDEQ     ' '
+036600950418     C     VSCNRT        ANDEQ     ' '
+036700180103
+036800950419    4C     VSCPDR        IFEQ      *BLANKS
+036900950807     C     VSCPDR        ORLE      *ZEROS
+037000180103     C                   SETON                                        429028
+037100950418     C                   MOVEL     MSG(13)       VIDMSG
+037200020628     c                   goto      endctr
+037300950418    4C                   ENDIF
+037400180103   2aC                   ENDIF
+037500180103    2C                   ENDIF
+037600180105
+037700180105     c* Per ristampa segnacolli selezione ancora più stretta
+037800180105    2c   kf              if        v1cdsd>0 or v1cdsa<>0
+037900180105     c
+038000180105     C     VSCSCD        ifle      0
+038100180105     C     VSCKSC        ANDLE     0
+038200180105     C     VSCFPP        ANDEQ     ' '
+038300180105     C     VSCNRT        ANDEQ     ' '
+038400180105
+038500180105    4C     VSCPDR        IFEQ      *BLANKS
+038600180105     C     VSCPDR        ORLE      *ZEROS
+038700180105     C                   SETON                                        429028
+038800180105     C                   MOVEL     MSG(13)       VIDMSG
+038900180105     c                   goto      endctr
+039000180105    4C                   ENDIF
+039100180105   2aC                   ENDIF
+039200180105    2C                   ENDIF
+039300950418     C*
+039400941116    1C                   ENDIF
+039500180105     c*
+039600941228     C**
+039700941228     C* LINEA DI PARTENZA PER NUMERO SPEDIZIONE
+039800941228     C**
+039900950807     C     V1CLPD        IFNE      0
+040000020701      * se p.o. di secondo livello
+040100020701 b2  c                   if        (simtpp = '2' or simtpp = *blanks)
+040200020701      * la lnp deve essere se stesso
+040300020701 b3  c                   if        v1clpd <> simpou
+040400020701     c                   eval      *in44 = *on
+040500020701     c                   eval      *in28 = *on
+040600020701     c                   eval      *in90 = *on
+040700020701     c                   eval      vidmsg = msg(5)
+040800020701     c                   goto      endctr
+040900020701 e3  c                   endif
+041000020701      * se p.o. di primo livello
+041100020701 x2  c                   else
+041200020701      * controllo che faccia parta dei p.o. del terminal di partenza
+041300941228     C     V1CLPD        LOOKUP    L1                                     30
+041400941228     C     *IN30         IFEQ      *OFF
+041500941228     C                   MOVEL     MSG(5)        VIDMSG
+041600941228     C                   SETON                                        449028
+041700941228     C                   GOTO      ENDCTR
+041800941228     C                   ENDIF
+041900020701 b2  c                   endif
+042000941228     C                   ENDIF
+042100970102     C*
+042200970102     C* IMPOSTO PER BENE L'ANNO
+042300970102     C* SE L'ANNO E' IMMESSO DI DUE CIFRE, METTO LE ALTRE DUE
+042400970102     C     V1CAAS        IFLT      100
+042500970102     C     V1CAAS        IFGT      60
+042600970102     C                   ADD       1900          V1CAAS
+042700970102     C                   ELSE
+042800970102     C                   ADD       2000          V1CAAS
+042900970102     C                   ENDIF
+043000970102     C                   ENDIF
+043100941116     C**
+043200910903     C* NUMERO SPEDIZIONE AL > DAL
+043300941116     C**
+043400941116     C* SE IMMESSO SOLO IL NUMERO DAL CONTROLLO SE ESISTE
+043500180103    1C     V1CNSA        IFNE      0
+043600941227     C                   MOVEL     V1CSEA        COMSPA            9 0
+043700941227     C                   MOVE      V1CNSA        COMSPA
+043800910903     C*
+043900941227     C                   MOVEL     V1CSED        COMSPD            9 0
+044000941227     C                   MOVE      V1CNSD        COMSPD
+044100910903     C*
+044200180103    2C     COMSPA        IFLT      COMSPD
+044300941227     C                   MOVEL     MSG(9)        VIDMSG
+044400941227     C                   SETON                                        469028
+044500910903     C                   GOTO      ENDCTR
+044600180103    2C                   END
+044700910903     C* DAL > 0 SE IMMESSO AL
+044800180103    2C     V1CNSD        IFLE      *ZEROS
+044900941227     C                   MOVEL     MSG(10)       VIDMSG
+045000941227     C                   SETON                                        469028
+045100910903     C                   GOTO      ENDCTR
+045200180103    2C                   END
+045300180117     c* la serie è bene che sia uguale
+045400180117     c                   if        v1csed<>v1csea
+045500180117     C                   MOVEL     MSG(22)       VIDMSG
+045600180117     C                   SETON                                        469028
+045700180117     C                   GOTO      ENDCTR
+045800180117    2C                   END
+045900180103    1C                   END
+046000950419     C*
+046100180103     C* CONTROLLO CHE NON CI SIANO PIU' DI 1000 BOLLE DA STAMPARE
+046200950419     C*   COMPRESE NEL RANGE DEL NUMERO SPEDIZIONE DAL/AL
+046300950419     C                   CLEAR                   WNSDAL
+046400950419     C                   CLEAR                   WNSAL
+046500180103
+046600180103    1c                   if        comspa<>0 and comspa<>comspd
+046700950419     C*
+046800950419     C* REPERISCO IL PRIMO NUMERO SPEDIZIONE ESISTENTE NEL RANGE
+046900950419     C                   Z-ADD     V1CSED        WSER
+047000970102     C*
+047100950419     C                   Z-ADD     V1CNSD        WNSP
+047200950419     C     KBLP          SETLL     FNBLP01L
+047300950419     C                   READ      FNBLP01L                               30
+047400970102     C*
+047500950419     C  N30              MOVEL     BLPNSP        WNSDAL
+047600950419     C*
+047700950419     C* REPERISCO L'ULTIMO NUMERO SPEDIZIONE ESISTENTE NEL RANGE
+047800950419     C                   Z-ADD     V1CSEA        WSER
+047900950419     C                   Z-ADD     V1CNSA        WNSP
+048000950419     C     KBLP          SETGT     FNBLP01L
+048100950419     C                   READP     FNBLP01L                               30
+048200950419     C  N30              MOVEL     BLPNSP        WNSAL
+048300950419     C*
+048400180103     C* SE LA DIFFERENZA TROVATA E' MAGGIORE DI 1000 --> ERRORE
+048500180103     c*  per la ristampa bolle
+048600180103     C     WNSAL         SUB       WNSDAL        WCONT             7 0
+048700180103     C   kaWCONT         IFGT      1000
+048800950419     C                   MOVEL     MSG(14)       VIDMSG
+048900950419     C                   SETON                                        469028
+049000950419     C                   GOTO      ENDCTR
+049100950419     C                   ENDIF
+049200180103     C* SE LA DIFFERENZA TROVATA E' MAGGIORE DI 50 colli -> ERRORE
+049300180103     c* In caso di ristampa segnacolli
+049400180103     C   kFWCONT         IFGT      50
+049500180103     C                   MOVEL     MSG(21)       VIDMSG
+049600180103     C                   SETON                                        469028
+049700180103     C                   GOTO      ENDCTR
+049800180103     C                   ENDIF
+049900950419     C*
+050000180103   x1C                   ELSE
+050100990201     C* SE IMMESSA SERIE IMMETTERE ANCHE NUMERO
+050200941227     C     V1CLPD        IFGT      0
+050300950807     C     V1CNSD        ANDLE     0
+050400941227     C                   MOVEL     MSG(12)       VIDMSG
+050500941227     C                   SETON                                        469028
+050600941227     C                   GOTO      ENDCTR
+050700941227     C                   END
+050800941227     C*
+050900950807     C     V1CNSD        IFNE      0
+051000950419     C                   Z-ADD     V1CSED        WSER
+051100950419     C                   Z-ADD     V1CNSD        WNSP
+051200990201     C     KBLP          CHAIN     FNBLP01L                           30
+051300990201     C     *IN30         IFEQ      *ON
+051400941227     C                   MOVEL     MSG(11)       VIDMSG
+051500941227     C                   SETON                                        469028
+051600941227     C                   GOTO      ENDCTR
+051700910903     C                   END
+051800990201     C**
+051900990201     C* SE IL CTM NON PERMETTE LA RISTAMPA ERRORE
+052000990201     c* solo se premuto F1 - ristampa bolle
+052100990201    2C     *INKA         IFEQ      *ON
+052200990201     C     BLPNRS        ANDGT     0
+052300180103     C* VEDO SE BOLLA FRANCO O ASSEGNATO
+052400990201     C                   MOVEL     '3A'          COD
+052500990201     C                   MOVEL(P)  BLPCBO        KEY
+052600990201     C     KTAB          CHAIN     TABEL                              30
+052700990201    3C     *IN30         IFEQ      *OFF
+052800990201     C                   MOVEL     TBLUNI        DS3A
+052900990201     C                   ELSE
+053000990201     C                   CLEAR                   DS3A
+053100990201    3C                   ENDIF
+053200990201     C                   MOVEL     §3ATB1        W001A             1
+053300990201     C**
+053400990201     C* SE BOLLA CON SERIE CERCO LA 3C DEL CLIENTE
+053500990201     C                   MOVEL     '3C'          COD
+053600990201     C* ASSEGNATO
+053700990201    3C     W001A         IFEQ      'A'
+053800990201     C                   MOVEL(P)  BLPCCM        KEY
+053900990201     C                   ELSE
+054000990201     C* FRANCO
+054100990201     C                   MOVEL(P)  BLPKSC        KEY
+054200990201    3C                   ENDIF
+054300990201     C**
+054400990201     C     KTAB          CHAIN     TABEL                              30
+054500990201    3C     *IN30         IFEQ      *OFF
+054600990201     C                   MOVEL     TBLUNI        DS3C
+054700990201     C                   ELSE
+054800990201     C                   CLEAR                   DS3C
+054900990201    3C                   ENDIF
+055000990201     C* NON RISTAMPABILE
+055100990201    3C     §3CRSB        IFEQ      'N'
+055200990201     C                   MOVEL     MSG(15)       VIDMSG
+055300990201     C                   SETON                                        469028
+055400990201     C                   GOTO      ENDCTR
+055500990201    3C                   ENDIF
+055600990201    2C                   ENDIF
+055700990201     C**
+055800941227     C                   END
+055900941227     C                   END
+056000910903     C*
+056100910207     C* LINEA DI ARRIVO NON OBBLIGATORIA
+056200941227     C     VSCLNA        IFNE      0
+056300941227     C     VSCLNA        CHAIN     AZORG                              30
+056400941227     C   30              SETON                                        5790
+056500910207     C   30              GOTO      ENDCTR
+056600910207     C                   MOVEL     ORGDES        DESLNA
+056700910207     C                   END
+056800180103     c* se immessa v1clna, vsclna deve essere uguale = 0
+056900180103     c                   if        v1clna>0 and vsclna>0
+057000180103     C                   SETON                                        5790
+057100180103     C                   GOTO      ENDCTR
+057200180103     c                   endif
+057300941227     C*
+057400180103     C*
+057500941227     C     VSCFLS        IFNE      0
+057600941227     C     VSCFLS        CHAIN     AZORG                              30
+057700941227     C   30              SETON                                        5890
+057800941227     C   30              GOTO      ENDCTR
+057900941227     C                   END
+058000910207     C* NUMERO SEGNACOLLO AL > DAL
+058100941227     C     VSCSCA        IFNE      0
+058200941227     C     VSCSCA        IFLT      VSCSCD
+058300941227     C                   SETON                                        5990
+058400910207     C                   GOTO      ENDCTR
+058500910207     C                   END
+058600910207     C* DAL > 0 SE IMMESSO AL
+058700950807     C     VSCSCD        IFLE      *ZEROS
+058800941227     C                   SETON                                        6090
+058900910207     C                   GOTO      ENDCTR
+059000910207     C                   END
+059100180103     c* Il range non deve superare i 50 colli
+059200180103     c                   if        (vscsca-vscscd)>50
+059300180103     C                   MOVEL     MSG(21)       VIDMSG
+059400180103     C                   SETON                                        539028
+059500180103     C                   GOTO      ENDCTR
+059600180103     C                   endif
+059700180103     c
+059800910207     C                   END
+059900910205     C*
+060000910207     C* CODICE CLIENTE NON OBBLIGATORIO
+060100050329
+060200050329      * obbligatorio se stampa ldv x cliente
+060300050329     c                   If        *In01 and vscksc = *Zeros
+060400050329     c                   Eval      vidmsg = msg(19)
+060500050329     c                   Eval      *In28 = *On
+060600050329     c                   Eval      *In49 = *On
+060700050329     c                   Eval      *In90 = *On
+060800050329     c                   Goto      EndCtr
+060900050329     c                   EndIf
+061000050329
+061100990203    1C     VSCKSC        IFNE      0
+061200910205     C     KACO          CHAIN     CNACO000                           30
+061300910207     C   30              SETON                                        5090
+061400910205     C   30              GOTO      ENDCTR
+061500910207     C                   MOVEL     ACORAG        DESKSC
+061600990203     C**
+061700990203     C** A CAMBIO CLIENTE RICONTROLLO
+061800990203     C     VSCKSC        IFNE      SAVKSC
+061900990203     C                   CLEAR                   UNO
+062000990203     C                   MOVEL     VSCKSC        SAVKSC
+062100990203     C                   ENDIF
+062200990203     C**
+062300990203     C* CONTROLLO SE PER IL CLIENTE SI POSSONO RISTAMPARE LE BOLLE
+062400990203     C* ERRORE FORZABILE
+062500990203    2C     UNO           IFEQ      ' '
+062600990203     C                   MOVEL     '3C'          COD
+062700990203     C                   MOVEL(P)  VSCKSC        KEY
+062800990203     C     KTAB          CHAIN     TABEL                              30
+062900990203    3C     *IN30         IFEQ      *OFF
+063000990203     C                   MOVEL     TBLUNI        DS3C
+063100990203     C                   ELSE
+063200990203     C                   CLEAR                   DS3C
+063300990203    3C                   ENDIF
+063400990203     C* NON RISTAMPABILE
+063500990203    3C     §3CRSB        IFEQ      'N'
+063600990203     C                   SETON                                        5290
+063700990203     C                   MOVEL     '1'           UNO               1
+063800990203     C                   GOTO      ENDCTR
+063900990203    3C                   ENDIF
+064000990203    2C                   ENDIF
+064100990203    1C                   END
+064200050329
+064300050329      * se stampa ldv x cliente il cliente deve essere in tabella CLI
+064400050329     c                   If        *In01
+064500050329     c                   Clear                   Tibs02ds
+064600050329     c                   Eval      t02mod = 'C'
+064700050329     c                   Eval      t02sif = knsif
+064800050329     c                   Eval      t02cod = 'CLI'
+064900050329     c                   Movel(p)  vscksc        T02ke1
+065000050329     c                   Call      'TIBS02R'
+065100050329     c                   Parm                    kpjba
+065200050329     c                   Parm                    Tibs02ds
+065300051018     c                   movel     t02uni        dcli
+065400051018     c                   If        t02err <> *blanks or §clildv <> 'S'
+065500050329     c                   Eval      vidmsg = msg(20)
+065600050329     c                   Eval      *In28 = *On
+065700050329     c                   Eval      *In49 = *On
+065800050329     c                   Eval      *In90 = *On
+065900050329     c                   Goto      EndCtr
+066000050329     c                   EndIf
+066100050329     c                   EndIf
+066200990203     C**
+066300941227     C* RICERCA ALFABETICA
+066400941227     C     DESKSC        IFNE      *BLANKS
+066500941227     C     VSCKSC        ANDEQ     0
+066600941227     C* DESCRIZIONE AZIENDA
+066700941227     C                   MOVEL     RSUT          PAXDUT
+066800941227     C* PAXSTA=9 ESCLUDO ANNULLATI
+066900941227     C                   Z-ADD     9             PAXSTA
+067000941227     C* CAPOCONTO CLIENTI
+067100941227     C                   Z-ADD     KCI           PAXCCC
+067200941227     C                   CLEAR                   PAXDMT
+067300941227     C                   MOVEL     DESKSC        PAXDMT
+067400981109     C                   CLEAR                   PAXDIT
+067500000907     C                   Z-ADD     1             PAXNUM
+067600941227     C*
+067700000907     C                   CALL      'XALFA3BR'
+067800941227     C                   PARM                    PAXDUT           30
+067900941227     C                   PARM                    CODUT
+068000941227     C                   PARM                    PAXDMT           48
+068100941227     C                   PARM                    PAXCCC            4 0
+068200941227     C                   PARM                    PAXSTA            1 0
+068300961016     C                   PARM                    PAXFLR           90
+068400981109     C                   PARM                    PAXDIT            3
+068500000907     C                   PARM                    PAXNUM            2 0
+068600000907     C                   PARM                    PAXKCM           80
+068700000907     C                   PARM                    PAXKSM          140
+068800000907     C                   PARM                    PAXKDM           60
+068900941227     C*
+069000941227     C* NON TROVATO O PREMUTO CMD12
+069100941227     C     PAXSTA        IFNE      -1
+069200941227     C* CODICE SELEZIONATO: IMPOSTO A VIDEO
+069300000907     C                   MOVEL     PAXKSM        VSCKSC
+069400941227     C                   ENDIF
+069500941227     C*
+069600941227     C                   SETON                                        90
+069700941227     C                   GOTO      ENDCTR
+069800941227     C                   ENDIF
+069900941227     C*
+070000910207     C* CODICE PADRONCINO  NON OBBLIGATORIO
+070100941227     C     '?'           SCAN      VSCPDR                                 90
+070200941227     C* RICERCA
+070300941227     C     *IN90         IFEQ      *ON
+070400021203      *
+070500021203      * imposto i campi della ds esterna fnlv24ds
+070600021203     C                   clear                   fnlv24ds
+070700021203     C                   eval      d24fil   = v1clnp
+070800021203     C                   eval      d24tip   = 'A'
+070900021203     C                   eval      d24flg   = 'R'
+071000021203     C                   movel     fnlv24ds      kpjbu
+071100941227     C                   CALL      'FNLV24R'
+071200941227     C                   PARM                    KPJBA
+071300021203      *
+071400021203      * valorizzo i campi a video
+071500021203     C                   movel     kpjbu         fnlv24ds
+071600021203     C                   if        d24pdr   >  *zeros
+071700021203     C                   move      d24pdr        VSCPDR
+071800021205     C                   movel     d24rsc        DESPDR
+071900021203     C                   endif
+072000941227     C                   GOTO      ENDCTR
+072100941227     C                   ENDIF
+072200941227     C*
+072300941227     C     VSCPDR        IFNE      *BLANKS
+072400941227     C* ESEGUO TESTN
+072500941227     C                   TESTN                   VSCPDR               30
+072600941227     C                   MOVE      VSCPDR        W001A             1
+072700941227     C     *IN30         IFEQ      *OFF
+072800941227     C     W001A         ORLT      '0'
+072900020628     c                   eval      vidmsg = msg(17)
+073000020628     c                   eval      *in28 = *on
+073100941227     C                   SETON                                        5190
+073200941227     C                   GOTO      ENDCTR
+073300941227     C                   ENDIF
+073400941227     C*
+073500941227     C                   MOVE      VSCPDR        W0070             7 0
+073600021203     C*    W0070         CHAIN     FNAPD000                           30
+073700021205     C                   move      w0070         kpdpdr
+073800021203     C                   move      'A'           kpdtip
+073900021203     C     kfapd         chain     fiapd01l                           30
+074000941227     C     *IN30         IFEQ      *ON
+074100020628     c                   eval      vidmsg = msg(17)
+074200020628     c                   eval      *in28 = *on
+074300941227     C                   SETON                                        5190
+074400941227     C                   GOTO      ENDCTR
+074500941227     C                   ENDIF
+074600020628
+074700020628      * deve essere gestito dal p.o.
+074800020628     c                   movel     vscpdr        wpopdr
+074900020701      * se p.o. di secondo livello
+075000020701 b2  c                   if        simtpp = '2' or simtpp = *blanks
+075100020701      * controllo che sia se stesso
+075200020701 b3  c                   if        wpopdr <> simpou
+075300020701     c                   eval      *in51 = *on
+075400020701     c                   eval      *in28 = *on
+075500020701     c                   eval      *in90 = *on
+075600020701     c                   eval      vidmsg = msg(18)
+075700020701     c                   goto      endctr
+075800020701 e3  c                   endif
+075900020701      * se p.o. di primo livello
+076000020701 x2  c                   else
+076100020701      * controllo che faccia parta dei p.o. del terminal di partenza
+076200020628     c     wpopdr        lookup    l1                                     30
+076300020701 b3  c                   if        not *in30
+076400020628     c                   eval      *in51 = *on
+076500020628     c                   eval      *in28 = *on
+076600020628     c                   eval      *in90 = *on
+076700020628     c                   eval      vidmsg = msg(18)
+076800020628     c                   goto      endctr
+076900020701 e3  c                   endif
+077000020701 e2  c                   endif
+077100020628      * se inserita linea di partenza
+077200020701 b2  c                   if        v1clnp <> *zeros and
+077300020628      * il p.o. dell'autotrasportatore deve essere uguale alla lnp
+077400020701     c                             wpopdr <> v1clnp
+077500020628     c                   eval      *in51 = *on
+077600020628     c                   eval      *in28 = *on
+077700020628     c                   eval      *in90 = *on
+077800020628     c                   eval      vidmsg = msg(18)
+077900020628     c                   goto      endctr
+078000020701 e2  c                   endif
+078100941227     C*
+078200941227     C                   MOVEL     APDRSC        DESPDR
+078300910207     C                   END
+078400910207     C*
+078500910205     C     ENDCTR        ENDSR
+078600910207     C*
+078700941116     C* OPERAZIONI INIZIALI-------------------------------------------*
+078800941116     C     *INZSR        BEGSR
+078900941116     C*
+079000941116     C     *ENTRY        PLIST
+079100941116     C                   PARM                    KPJBA
+079200050329
+079300050329     c                   Eval      pflg = %subst(kpjbu:1:1)
+079400050329     c                   Eval      *In01 = (pflg <> *Blanks)
+079500050329
+079600941116     C                   Z-ADD     1             CODUT
+079700941227     C                   CALL      'X§PARUT'
+079800941227     C                   PARM                    UT§DSE
+079900941116     C                   MOVEL     RAGUT         RSUT             20
+080000941227     C                   MOVEL     REC80         CNCR80
+080100000613      * IMPOSTO IL CODICE P.O. UTENTE
+080200020430     C                   Z-ADD     SIMPOU        POUTEN            3 0
+080300941116     C* RICERCA CAPOCONTI
+080400941116     C                   DO        50            X                 2 0
+080500941116     C                   MOVE      TCU(X)        TCUDS
+080600941116     C     F56           CABNE     'CG'          END1
+080700941116     C     F4            COMP      '1'                                    21
+080800941116     C     F4            COMP      '2'                                    22
+080900941116     C     F4            COMP      '3'                                    23
+081000941116     C     F4            COMP      '6'                                    27
+081100941116     C** 1 CLIENTI   21
+081200941116     C** 2 FORNITORI 22
+081300941116     C** 3 AGENTI    23
+081400941116     C     F3            COMP      '0'                                242425
+081500941116     C     F3            COMP      'I'                                    26
+081600941116     C** 0 ITALIA   25
+081700941116     C** 1 ESTERO   24
+081800941116     ** I CAPO CONTO IVA
+081900941116     C   21
+082000941116     CAN 24              Z-ADD     KCU(X)        KCE               4 0
+082100941116     C   21
+082200941116     CAN 25              Z-ADD     KCU(X)        KCI               4 0
+082300941116     C   22
+082400941116     CAN 24              Z-ADD     KCU(X)        KFE               4 0
+082500941116     C   22
+082600941116     CAN 25              Z-ADD     KCU(X)        KFI               4 0
+082700941116     C   23
+082800941116     CAN 24              Z-ADD     KCU(X)        KAE               4 0
+082900941116     C   23
+083000941116     CAN 25              Z-ADD     KCU(X)        KAI               4 0
+083100941116     C   26              Z-ADD     KCU(X)        KIVA              4 0
+083200941116     C   27              Z-ADD     KCU(X)        KBNA              4 0
+083300941116     C     END1          TAG
+083400941116     C                   END
+083500941116     C**
+083600941116     C* KLIST
+083700941116     C**
+083800941116     C* ACCESSO   CNACO
+083900941116     C     KACO          KLIST
+084000941116     C                   KFLD                    CODUT
+084100941116     C                   KFLD                    CCC               4 0
+084200941227     C                   KFLD                    VSCKSC
+084300950419     C* ACCESSO   FNBLP01L
+084400950419     C     KBLP          KLIST
+084500941227     C                   KFLD                    V1CAAS
+084600941227     C                   KFLD                    V1CLPD
+084700950419     C                   KFLD                    WSER
+084800950419     C                   KFLD                    WNSP
+084900990201     C     KTAB          KLIST
+085000990201     C                   KFLD                    CODUT
+085100990201     C                   KFLD                    COD
+085200990201     C                   KFLD                    KEY
+085300941116     C*
+085400021203     C     Kfapd         klist
+085500021203     C                   kfld                    kpdtip
+085600021203     C                   kfld                    kpdpdr
+085700021203      *
+085800941116     C                   Z-ADD     KCI           CCC
+085900950419     C     *LIKE         DEFINE    V1CNSD        WNSP
+086000950419     C     *LIKE         DEFINE    V1CSED        WSER
+086100950419     C     *LIKE         DEFINE    BLPNSP        WNSDAL
+086200950419     C     *LIKE         DEFINE    BLPNSP        WNSAL
+086300180103     C     *LIKE         DEFINE    BLPNcl        WNcDAL
+086400180103     C     *LIKE         DEFINE    BLPNcl        WNcAL
+086500990201     C     *LIKE         DEFINE    TBLCOD        COD
+086600990201     C     *LIKE         DEFINE    TBLKEY        KEY
+086700990203     C     *LIKE         DEFINE    VSCKSC        SAVKSC
+086800941116     C*
+086900941227     C***
+087000941227     C* CARICO TABELLA FILIALI GESTITE £1
+087100941227     C***
+087200941227     C                   CLEAR                   DSUL06
+087300941227     C                   MOVE      '£1'          D06COD
+087400941227     C                   MOVEL     'L'           D06TLA
+087500941227     C                   MOVEL     SIMFEL        D06KEY
+087600941227     C                   MOVEL     DSUL06        KPJBU
+087700941227     C*
+087800941227     C                   CALL      'TRUL06R'
+087900941227     C                   PARM                    KPJBA
+088000941227     C                   MOVEL     KPJBU         DSUL06
+088100941227     C                   MOVEA     LIN           L1
+088200180103     c
+088300000613     C                   ENDSR
+088400000613**
+088500941116Se selezione per Linea PARTENZA non immettere linea di arrivo e num.spedizione01
+088600941116Se selezione per Linea ARRIVO non immettere linea di partenza e num.spedizione02
+088700180103Se ristampa per NUMERO SPEDIZIONE non selezionare per linea/data
+088800941116Selezionare per Linea di PARTENZA, linea di ARRIVO o NUMERO SPEDIZIONE
+088900941116Linea di partenza errata
+089000941116Linea di arrivo errata
+089100941116Data spedizione errata
+089200941116Data AL inferiore a data DAL
+089300941227Numero spedizione DAL inferiore a numero spedizione AL
+089400990201Numero spedizione DAL obbligatorio se immesso l'AL                            10
+089500941227Numero spedizione inesistente
+089600180103Immessa la serie, immettere anche il relativo numero di spedizione            12
+089700180105Se ristampa per data spedizione, occorre inserire ulteriori parzializzazioni
+089800180103Impossibile effettuare la Ristampa: richiesti più di 1000 numeri spedizione !!14
+089900990203Impossibile ristampare bolla per questo cliente                               15
+090000000613Sono validi solo i valori S,N,P
+090100020628Codice Autotrasportatore inesistente                                          17
+090200020628Codice Autotrasportatore in gestione ad altro p.o.                            18
+090300050329Immettere il codice cliente                                                   19
+090400050329Cliente non abilitato alla stampa delle bolle                                 20
+090500180103Impossibile effettuare la Ristampa: richiesti più di 50 colli                 21
+090600180117Se ristampa per NUMERO SPEDIZIONE la serie dal/al deve essere uguale          22

@@ -1,0 +1,69 @@
+000100030120             PGM        PARM(&KPJBA)
+000200971229
+000300030120             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400020204             DCL        VAR(&SYSINF) TYPE(*CHAR) LEN(10)
+000500070228             DCL        VAR(&SOCIETA) TYPE(*CHAR) LEN(3) VALUE('249')
+000600020204             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000700030120             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+000800030120             DCL        VAR(&POSTADET) TYPE(*CHAR) LEN(198)
+001200030120             DCL        VAR(&ESEDAT) TYPE(*CHAR) LEN(6)
+001300030120             DCL        VAR(&ESETIM) TYPE(*CHAR) LEN(6)
+001301100819
+001302110331             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) VALUE('fatture@setras.eu')
+001303100819             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253)
+001304100819             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44)
+001305100819             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000)
+001306100819             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+001400030120
+001500030120             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&ESETIM)
+001600030120             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&ESEDAT)
+001700030120             CHGVAR     VAR(&SYSINF) VALUE(%SST(&KPJBA 92 10))
+001800040302 /* controllo che esista il file pcfais                    */
+001900040302             CHKOBJ     OBJ(pcfais) OBJTYPE(*FILE)
+002000040315             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(dopo))
+002100060727             CPYF       FROMFILE(PCFAIS) TOFILE(WFAIS00F) +
+002200060727                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+002300040315             DLTF       FILE(PCFAIS)
+002400031028 /* le stampe del gestionale vengono immesse nella coda uff. automez.*/
+002500120315 DOPO:       OVRPRTF    FILE(QSYSPRT) OUTQ(P046058AU)  SAVE(*YES) +
+002600040416                          SECURE(*YES) OVRSCOPE(*JOB)
+002700031105 /* lancio pgm di passaggio dati dal file PC a quello di AS*/
+002800031106             CALL       PGM(TRMZ80R) PARM(&ESITO)
+002900031105 /* cancello file PC */
+003000031107             IF         COND(&ESITO *NE '1') THEN(DO)
+003100031105 /* lancio pgm di traduzione dati                          */
+003200031028             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003300031107             CALL       PGM(TRMZ81R) PARM(&SYSINF &SOCIETA &ESITO +
+003400031107                          &KPJBA)
+003500031107             MONMSG     MSGID(CPF0000) EXEC(DO)
+003600031107 /* se chiude con un errore rollback e mando msg di errore */
+003700031107             ROLLBACK
+003800031107             CHGVAR     VAR(&ESITO) VALUE('1')
+003900031107             ENDDO
+004000010829             ENDCMTCTL
+004100020204             RCLRSC
+004200031107             ENDDO
+004300031105 /* invio messaggio di ricezione movimenti FAIS x contab.  */
+004400031125             IF         COND(&ESITO *NE '1') THEN(DO)
+004500031125             CHGVAR       VAR(&POSTATES) VALUE('- OK RICEZIONE +
+004600031125                          MOVIMENTI FATTURA FAI SERVICE')
+004700040226 /* salvo in un file d'appoggio i movimenti esclusi dalla contabiliz.*/
+004800040315             CPYF       FROMFILE(WFAIS00F) TOFILE(WRKQUERY/CTRFAIS) +
+004900040315                          MBROPT(*REPLACE) FMTOPT(*MAP)
+005000031125             ENDDO
+005100031125
+005200031105             IF         COND(&ESITO *EQ '1') THEN(CHGVAR +
+005300031105                          VAR(&POSTATES) VALUE('- ERRORI IN +
+005400031105                          RICEZIONE MOVIMENTI FATTURA FAI SERVICE'))
+005500030120             CHGVAR     VAR(&POSTADET) VALUE('Visualizzare l''esito +
+005600030120                          della traduzione ')
+005700030120             CHGVAR     VAR(%SST(&POSTADET 42 5)) VALUE('DATA:')
+005800030120             CHGVAR     VAR(%SST(&POSTADET 47 6)) VALUE(&ESEDAT)
+005900030120             CHGVAR     VAR(%SST(&POSTADET 55 4)) VALUE('ORA:')
+006000030120             CHGVAR     VAR(%SST(&POSTADET 59 6)) VALUE(&ESETIM)
+006100030120
+006301100819             CHGVAR     VAR(&emogg) VALUE(&postates)
+006302100819             CHGVAR     VAR(&emmsg) VALUE(&postadet)
+006303100819             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+006400010803
+006500031028 ENDPGM:     ENDPGM

@@ -1,0 +1,3 @@
+000100110303     D IFS_ProduceTemporaryFileName...
+000101110303     D                 PR              *   EXTPROC('_C_IFS_tmpnam')
+000102110303     D  string                       39A   OPTIONS(*OMIT)

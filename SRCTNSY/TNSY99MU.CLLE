@@ -1,0 +1,53 @@
+000100000000  /*---------------------------------------------------------------*/
+000200050218  /*  QUESTO PGM È SCHEDULATO ALLE ORE 00:01 DI OGNI 1°giorno mese */
+000300050218  /*  LAVORO "SCHEDULAMF" (COMANDO WRKJOBSCDE).                     */
+000400011129  /*  SOTTOMETTE  AUTOMATICAMENTE LE AZIONI PRESENTI NELLA TABELLA */
+000500020403  /*  "SCH" nel file Tntbe00f.                                     */
+000600050218  /*  VENGONO SOTTOMESSE SOLO LE AZIONI mensili  S.I. FILTRA201    */
+000700000000  /*---------------------------------------------------------------*/
+000800920401             PGM
+000900011129
+001000980309/* DICHIARAZIONI VARIABILI */
+001100980309             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001200980310             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001300020403             DCL        VAR(&FRE) TYPE(*CHAR) LEN(1)
+001400020912             DCL        VAR(&AS4) TYPE(*CHAR) LEN(1)
+001500980309
+001600980309/* IMPOSTAZIONE KPJBA PER LANCIO PROGRAMMI CHE LA USANO */
+001700020920    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE('EDPCEDXXX ')                 /*KNMUS*/
+001800980309    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                            /*KNRAZ*/
+001900050606    CHGVAR VAR(%SST(&KPJBA 20 10)) VALUE('EDPCEDXXX ')        /*KNMTD*/
+002000980309    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                            /*KNRVJ*/
+002100980309    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(0)                            /*KNRJO*/
+002200980309    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                          /*KSTJO*/
+002300980309    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                            /*KTMIN*/
+002400980309    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                          /*KTPAZ*/
+002500980309    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                            /*KNMSB*/
+002600980309    CHGVAR VAR(%SST(&KPJBA 77 10)) VALUE('AZNAUTO   ')                 /*KNMEB*/
+002700980309    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                            /*KKEYF*/
+002800980309    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                            /*KRCDS*/
+002900980309    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                          /*KEXCN*/
+003000010302    CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('  ')                         /*KCOJB*/
+003100980309    CHGVAR VAR(%SST(&KPJBA 156 7)) VALUE('       ')                    /*KQEBI*/
+003200980309    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')                          /*KCANC*/
+003300020403
+003400050218/* imposto la frequenza mensile     */
+003500050218             CHGVAR     VAR(&FRE) VALUE('M')
+003600020912
+003700020912/* imposto l'ambiente di sottomissione */
+003800020920             CHGVAR     VAR(&AS4) VALUE('P')
+003900980318
+004000020912           /* Controllo esistenza libreria FILTRA201 */
+004100980318
+004200020912             CHKOBJ     OBJ(FILTRA201) OBJTYPE(*LIB)
+004300020912             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(FINE))
+004400980318
+004500980318           /* Imposta lista librerie                 */
+004600020912             CHGVAR     VAR(&KNSIF) VALUE('FILTRA201 ')
+004700980318             CHGVAR     VAR(%SST(&KPJBA 92 10)) VALUE(&KNSIF)
+004800980318             CALL       PGM(GAITRAOBJ/TRUL07C) PARM(&KNSIF)
+004900980318
+005000980318           /* sottometto le azioni in tabella           */
+005100020912             CALL       PGM(TNSY99R) PARM(&KPJBA &FRE &AS4)
+005200980309
+005300000000 FINE:       ENDPGM

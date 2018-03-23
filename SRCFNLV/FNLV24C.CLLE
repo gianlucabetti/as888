@@ -1,0 +1,36 @@
+000100950524             PGM        PARM(&KPJBA)
+000200950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000201060929             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000202060929             RTVJOBA    JOB(&DSP)
+000203070208             CHGVAR     VAR(%SST(&KPJBA 296 1)) VALUE('1')
+003500950524
+003600030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003700030722/* procedura/programma fosse finita in maniera anomala occorre */
+003800030722/* parare il colpo riducendo il male al male minore ossia      */
+003900030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+004000030722/* metà piuttosto che confermarle. E ripartendo da una         */
+004100030722/* situazione pulita.                                          */
+004200030708             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004300030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+004400030722             ENDCMTCTL
+004500030722             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004600030722             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004700030722             ENDDO
+004800030708
+004900070115        /*   Eseguo CALL Gestione anagrafica autotrasp/cooperative */
+005000070115             CALL       PGM(FNLV24R) PARM(&KPJBA)
+005100030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+005200030708             ROLLBACK
+005300070115             SNDBRKMSG  MSG('ERRORE La Gestione anagrafica +
+005400060929                          autotrasp. è terminata in modo anomalo. +
+005500030722                          Segnalare il +
+005600030722                          problema alla persona responsabile della +
+005700030722                          manutenzione del programma.') TOMSGQ(&DSP)
+005800030728             RCLRSC     LVL(*CALLER)
+005900030708             ENDDO
+006000030722
+006100030722             ENDCMTCTL
+006200030708
+006300950524             DLTOVR     FILE(*ALL)
+006900950911
+007000950524             ENDPGM

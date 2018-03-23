@@ -1,0 +1,160 @@
+000100000000     H              J
+000200970527     F* TNSSL1R *------------------------------------------------------H
+000300970519     F*-------   TOTALI SPEDIZIONI SI/NO DDT
+000400000000     F*----------------------------------------------------------------H
+000500970519     FAZORG02LIF  E           K        DISK
+000600990811     FTITAS30CIF  E           K        DISK
+000700970519     FTABEL00FIF  E           K        DISK
+000800970519     FQSYSPRT O   F     132     OF     PRINTER
+000900970528     IKPJBA     E DS
+001000970528     I                                      247 2540§DAL
+001100970528     I                                      255 2620§AL
+001200970528     I            DS
+001300970528     I                                        1   80$DATA
+001400970528     I                                        1   40$ANNO
+001500970528     I                                        5   80$MMGG
+001600000000     C*---------------------------------------------------------------*
+001700970528     C* RICEVIMENTO PARAMETRI
+001800970528     C           *ENTRY    PLIST
+001900970528     C                     PARM           KPJBA
+002000970528     C                     MOVEL§DAL      $DATA
+002100970528     C                     MOVE $MMGG     WMGI    40
+002200970528     C                     MOVE $ANNO     WAAI    40
+002300970528     C                     MOVEL§AL       $DATA
+002400970528     C                     MOVE $MMGG     WMGF    40
+002500970528     C                     MOVE $ANNO     WAAF    40
+002600951220     C           KTAS      KLIST
+002700951220     C                     KFLD           AAS     40
+002800970519     C                     KFLD           ORGFIL
+002900970528     C                     Z-ADDWAAI      AAS
+003000970519     C           KTAB      KLIST
+003100970519     C                     KFLD           TBLKUT
+003200970519     C                     KFLD           TBLCOD
+003300970519     C                     KFLD           TBLKEY
+003400970519     C                     Z-ADD1         TBLKUT
+003500951220     C*
+003600970519     C                     EXCPTTESTA
+003700970519     C*
+003800970519     C           *LOVAL    SETLLAZORG02L
+003900970519     C                     READ AZORG02L                 30
+004000991103DO  1C           *IN30     DOWEQ*OFF
+004100991103IF  2C           ORGFAG    IFEQ 'F'
+004200951220     C           ORGFAG    OREQ 'A'
+004300990811     C           KTAS      SETLLTITAS30C
+004400990811     C           KTAS      READETITAS30C                 10
+004500991103DO  3C           *IN10     DOWEQ*OFF
+004600991103IF  4C           TASMGS    IFGE WMGI
+004700970528     C           TASMGS    ANDLEWMGF
+004800970519     C                     ADD  1         WFDT    70
+004900991103IF  5C           TASLL1    IFEQ 'Y'
+005000970519     C           TASLL1    OREQ 'K'
+005100970519     C           TASLL1    OREQ 'J'
+005200970519     C                     ADD  1         WFDNO   70
+005300991103E   5C                     ENDIF
+005400991103IF  5C           TASLL1    IFEQ 'S'
+005500970519     C           TASLL1    OREQ 'C'
+005600970519     C                     ADD  1         WFDSI   70
+005700991103E   5C                     ENDIF
+005800991103E   4C                     ENDIF
+005900990811     C           KTAS      READETITAS30C                 10
+006000991103E   3C                     ENDDO
+006100991103E   2C                     ENDIF
+006200951220     C*
+006300991103IF  2C           WFDT      IFGT *ZERO
+006400970519     C                     EXSR TOTFI
+006500991103E   2C                     ENDIF
+006600970519     C                     READ AZORG02L                 30
+006700991103E   1C                     ENDDO
+006800951220     C*
+006900991103IF  1C           WFDT      IFGT *ZERO
+007000970519     C                     EXSR TOTFI
+007100991103E   1C                     ENDIF
+007200970519     C                     EXSR TOTAR
+007300970519     C                     EXSR TOTAZ
+007400900124     C                     SETON                         LR
+007500970519     C*
+007600970519     C           TOTFI     BEGSR
+007700970519     C           WAREA     IFNE ORGCAR
+007800970519     C           WAREA     ANDGT*ZERO
+007900970519     C                     EXSR TOTAR
+008000970519     C                     ENDIF
+008100970519     C                     MOVE ORGCAR    WAREA   30
+008200970519     C                     MOVELORGFIL    WFIL    30
+008300970519     C                     MOVELORGDES    WDES   25
+008400970519     C           WFDNO     MULT 100       WDDT1   90
+008500970519     C           WDDT1     DIV  WFDT      WPDDTS  30H
+008600970519     C   OF                EXCPTTESTA
+008700970519     C   OF                SETOF                     OF
+008800970519     C                     EXCPTTFIL
+008900970519     C                     ADD  WFDT      WADT    70
+009000970519     C                     ADD  WFDNO     WADNO   70
+009100970519     C                     ADD  WFDSI     WADSI   70
+009200970519     C                     MOVE *ZERO     WFDT    70
+009300970519     C                     MOVE *ZERO     WFDNO   70
+009400970519     C                     MOVE *ZERO     WFDSI   70
+009500970519     C                     ENDSR
+009600970519     C*
+009700970519     C           TOTAR     BEGSR
+009800970519     C           WADT      IFGT *ZERO
+009900970519     C                     MOVEL'05'      TBLCOD
+010000970519     C                     MOVE *BLANK    TBLKEY
+010100970519     C                     MOVELWAREA     TBLKEY
+010200970519     C           KTAB      CHAINTABEL00F             54
+010300970519     C                     MOVELTBLUNI    WDES
+010400970519     C           WADNO     MULT 100       WDDT1   90
+010500970519     C           WDDT1     DIV  WADT      WPDDTS  30H
+010600970519     C   OF                EXCPTTESTA
+010700970519     C   OF                SETOF                     OF
+010800970519     C                     EXCPTTAREA
+010900970519     C                     ADD  WADT      WTDT    70
+011000970519     C                     ADD  WADNO     WTDNO   70
+011100970519     C                     ADD  WADSI     WTDSI   70
+011200970519     C                     MOVE *ZERO     WADT    70
+011300970519     C                     MOVE *ZERO     WADNO   70
+011400970519     C                     MOVE *ZERO     WADSI   70
+011500970519     C                     ENDIF
+011600970519     C                     ENDSR
+011700970519     C*
+011800970519     C           TOTAZ     BEGSR
+011900970519     C           WTDNO     MULT 100       WDDT1   90
+012000970519     C           WDDT1     DIV  WTDT      WPDDTS  30H
+012100970519     C                     EXCPTTESTA
+012200970519     C                     EXCPTTFINE
+012300970519     C                     ENDSR
+012400970519     OQSYSPRT E  202           TESTA
+012500970519     O                                   20 'SITUAZIONE D.D.T.'
+012600970519     O                                 +  5 'DEL'
+012700970519     O                         UDATE Y +  1
+012800970519     O                                 + 10 'SPEDIZIONI DAL   '
+012900970528     O                         §DAL    +  1 '    /  /  '
+013000970519     O                                 +  2 'AL'
+013100970528     O                         §AL     +  1 '    /  /  '
+013200970527     O                                  120 'TNSSL1R'
+013300970519     O                         PAGE  Z  132
+013400970519     O                                  128 'PAG.'
+013500970520     O        E  1             TFIL
+013600970519     O                         WFIL       3
+013700970519     O                         WDES      30
+013800970519     O                                 +  5 'TOT.SPED.:'
+013900970519     O                         WFDT  2 +  2
+014000970519     O                                 +  2 'NO DDT:'
+014100970519     O                         WFDNO 2 +  2
+014200970519     O                         WPDDTS2 +  2
+014300970519     O                                 +  1 '%'
+014400970520     O        E 13             TAREA
+014500970519     O                                    4 'AREA'
+014600970519     O                         WDES      30
+014700970519     O                                 +  5 'TOT.SPED.:'
+014800970519     O                         WADT  2 +  2
+014900970519     O                                 +  2 'NO DDT:'
+015000970519     O                         WADNO 2 +  2
+015100970519     O                         WPDDTS2 +  2
+015200970519     O                                 +  1 '%'
+015300970520     O        E 2              TFINE
+015400970519     O                                   30 'TOTALE AZIENDA'
+015500970519     O                                 +  5 'TOT.SPED.:'
+015600970519     O                         WTDT  2 +  2
+015700970519     O                                 +  2 'NO DDT:'
+015800970519     O                         WTDNO 2 +  2
+015900970519     O                         WPDDTS2 +  2
+016000970519     O                                 +  1 '%'

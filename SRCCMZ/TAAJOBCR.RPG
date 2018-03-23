@@ -1,0 +1,42 @@
+000100000000     F* TAAJOBCR - Called by TAAJOBCC - Convert WRKSBS to out file
+000200000000     FLISTING IF  F     132            DISK
+000300000000     FWRKSBSP O   E                    DISK
+000400000000     E                    INP       132  1               Input array
+000500000000     ILISTING AA  01
+000600000000     I                                        1 132 INP
+000700000000     C           *ENTRY    PLIST                           Parm list
+000800000000     C                     PARM           RTNCDE  8        Return code
+000900000000     C                     PARM           SBSCNT  50       Sbs count
+001000000000     C                     PARM           JOBCNT  50       Job count
+001100000000     C                     PARM           SBSYS            System name
+001200000000     C                     TIME           SBCVTT           Convert time
+001300000000     C                     MOVE UDATE     SBCVTD           Convert date
+001400000000     C                     MOVE 'NONE    'RTNCDE           No details
+001500000000     C           READ      TAG                             READ tag
+001600000000     C                     READ LISTING                  20 EOF
+001700000000     C   20                GOTO ENDPGM                     Goto ENDPGM
+001800000000     C* Bypass all, but 2nd col heading and sbs records
+001900000000     C                     MOVEAINP,7     SAV8    8        Sbs loc
+002000000000     C           SAV8      CABEQ*BLANK    READ             CAB blnk
+002100000000     C* Bypass the column heading
+002200000000     C           SAV8      IFEQ 'Subsyste'                 If title
+002300000000     C           SAV8      OREQ 'SUBSYSTE'                 If title
+002301000610     C           SAV8      OREQ 'Sottosis'                 If title
+002400000000     C                     GOTO READ                       Goto READ
+002500000000     C                     END                             If title
+002600000000     C* Must be a detail record, extract and write records
+002700000000     C                     MOVE 'GOOD    'RTNCDE           Good return
+002800000000     C                     MOVEAINP,7     SBSBS            Sbs name
+002900000000     C                     MOVEAINP,29    SBSBSN           Sbs number
+003000000610     C                     MOVEAINP,47    SAV4    4        Active jobs
+003100000000     C                     MOVE SAV4      SBACTJ           Acitve jobs
+003200000000     C                     MOVEAINP,57    SBSTS            Status
+003300000610     C                     MOVEAINP,77    SAV6    6        Tot stg
+003400000000     C                     MOVE SAV6      SBTOTK           Tot stg
+003500000000     C                     WRITEWRKSBSR                    Write rcd
+003600000000     C                     ADD  1         SBSCNT  50       Sbs count
+003700000000     C                     ADD  SBACTJ    JOBCNT  50       Act job cnt
+003800000000     C                     GOTO READ                       Goto READ
+003900000000     C           ENDPGM    TAG                             ENDPGM tag
+004000000000     C                     SETON                     LR    Set LR
+004100000000     C                     RETRN                           Return

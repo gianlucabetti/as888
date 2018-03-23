@@ -1,0 +1,74 @@
+000100140417             PGM        PARM(&kpjba)
+000200140417             DCL        VAR(&kpjba) TYPE(*CHAR) LEN(502)
+000300140417             DCL        VAR(&kpjbu) TYPE(*CHAR) LEN(256)
+000400140417             DCL        VAR(&knsif) TYPE(*CHAR) LEN(10)
+000500140417             DCL        VAR(&knmtd) TYPE(*CHAR) LEN(10)
+000600140418             DCL        VAR(&lib) TYPE(*CHAR) LEN(10)
+000700140417             DCL        VAR(&prova) TYPE(*CHAR) LEN(1)
+000800140417             DCL        VAR(&anno) TYPE(*char) LEN(4)
+000900140418             DCL        VAR(&anatt) TYPE(*char) LEN(2)
+001000140417             DCL        VAR(&an) TYPE(*char) LEN(2)
+001100140422             CHGVAR     VAR(&kpjbu) VALUE(%SST(&kpjba 247 256))
+001200140417             CHGVAR     VAR(&knsif) VALUE(%SST(&kpjba 92 10))
+001300140417             CHGVAR     VAR(&prova) VALUE(%SST(&knsif 7 1))
+001400140417             CHGVAR     VAR(&knmtd) VALUE(%SST(&kpjba 20 10))
+001500140417             CHGVAR     VAR(&lib) VALUE('UNITRAGRP ')
+001600140417
+001700140417             chgvar     var(&anno) value(%sst(&kpjbu 1 4))
+001800140417             CHGVAR     VAR(&an) VALUE(%SST(&anno 3 2))
+001900140417         /*      verifica se sistema di test(unitragrp) o  buono(unitragru)      */
+002000140417
+002100140417             IF         COND(&prova  *NE 'P') THEN(DO)
+002200140417             CHGVAR     VAR(&lib) VALUE('UNITRAGRU ')
+002300140418             enddo
+002400140417
+002500140417         /*      importa anno da una delle aree dati in linea per confronto     */
+002600140417
+002700140417             RTVDTAARA  DTAARA(&LIB/OCLBL1 (7 2)) RTNVAR(&ANATT)
+002800140417
+002900140417             IF         COND(&AN  *EQ &ANATT) THEN(DO)
+003000140417             SNDBRKMSG  MSG('ATTENZIONE si sta inserendo un anno che +
+003100140417                          è già presente nelle numerazioni di +
+003200140417                          sistema verificare la richiesta e +
+003300140417                          riproporre il comando') TOMSGQ(&KNMTD)
+003400140417             goto    endpgm
+003500140418             ENDDO
+003600140422         /* elimina eventuali salvataggi precedenti                   */
+003700140422
+003800140505             DLTDTAARA  DTAARA(&lib/exDTAORC)
+003900140505             MONMSG     MSGID(CPF2105)
+004000140505             DLTDTAARA  DTAARA(&lib/exDTAORf)
+004100140422             MONMSG     MSGID(CPF2105)
+004200140505             DLTDTAARA  DTAARA(&lib/exoclbl1)
+004300140422             MONMSG     MSGID(CPF2105)
+004400140505             DLTDTAARA  DTAARA(&lib/exoclbl2)
+004500140422             MONMSG     MSGID(CPF2105)
+004600140505             DLTDTAARA  DTAARA(&lib/exofndt1)
+004700140422             MONMSG     MSGID(CPF2105)
+004800140417
+004900140417         /*      numeratori ordini                                    */
+005000140505             CRTDUPOBJ  OBJ(DTAORC) FROMLIB(&LIB) OBJTYPE(*DTAARA) +
+005100140505                          TOLIB(&LIB) NEWOBJ(EXDTAORC)
+005200140505             CRTDUPOBJ  OBJ(DTAORF) FROMLIB(&LIB) OBJTYPE(*DTAARA) +
+005300140505                          TOLIB(&LIB) NEWOBJ(EXDTAORF)
+005400140422             CHGDTAARA  DTAARA(&lib/dtaorc) VALUE('00001')
+005500140422             CHGDTAARA  DTAARA(&lib/dtaorf) VALUE('00001')
+005600140417
+005700140417         /*      numeratori bolle clienti                             */
+005800140505             CRTDUPOBJ  OBJ(OCLBL1) FROMLIB(&LIB) OBJTYPE(*DTAARA) +
+005900140505                          TOLIB(&LIB) NEWOBJ(EXOCLBL1)
+006000140505             CRTDUPOBJ  OBJ(OCLBL2) FROMLIB(&LIB) OBJTYPE(*DTAARA) +
+006100140505                          TOLIB(&LIB) NEWOBJ(EXOCLBL2)
+006200140422             CHGDTAARA  DTAARA(&lib/oclbl1) VALUE('000000AN0101')
+006300140422             CHGDTAARA  DTAARA(&lib/oclbl1 (7 2)) VALUE(&AN)
+006400140422             CHGDTAARA  DTAARA(&lib/oclbl2) VALUE('000000AN0101')
+006500140422             CHGDTAARA  DTAARA(&lib/oclbl2 (7 2)) VALUE(&AN)
+006600140417
+006700140417         /*      numeratori bolle fornitori                           */
+006800140505             CRTDUPOBJ  OBJ(OFNDT1) FROMLIB(&LIB) OBJTYPE(*DTAARA) +
+006900140505                          TOLIB(&LIB) NEWOBJ(EXOFNDT1)
+007000140422             CHGDTAARA  DTAARA(&lib/ofndt1 (1 5)) VALUE('00000')
+007100140422             CHGDTAARA  DTAARA(&lib/OFNDT1 (18 2)) VALUE(&AN)
+007200140417
+007300140417
+007400140418 endpgm:     ENDPGM

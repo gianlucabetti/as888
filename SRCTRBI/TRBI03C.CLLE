@@ -1,0 +1,57 @@
+000100020322             PGM        PARM(&KPJBA)
+000200150504
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400161110             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+000500170421             DCL        VAR(&DATA16) TYPE(*CHAR) LEN(16)
+000600161115             DCL        VAR(&DATApul) TYPE(*CHAR) LEN(8)
+000700161117             DCL        VAR(&DATApul8) TYPE(*CHAR) LEN(8)
+000800161115             DCL        VAR(&DATA) TYPE(*CHAR) LEN(20)
+000900161115             DCL        VAR(&file) TYPE(*CHAR) LEN(10)
+001000161117             DCL        VAR(&sys) TYPE(*CHAR) LEN(8)
+001100161115
+001200161117             DCLF       FILE(AZQLK01L)
+001300150504
+001400161110             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001500170421             CHGVAR     VAR(&DATA16) VALUE(%SST(&KPJBA 247 16))
+001600161115             CHGVAR     VAR(&file) VALUE('BITVL00F  ')
+001700161115
+001800161115             RTVJOBA    DATETIME(&DATA)
+001900161115             CHGVAR     VAR(&DATApul) VALUE(%SST(&data 1 8))
+002000161115/* verifico se ho già ricevuto al mattino non devo pulire il file  */
+002100161115  read:
+002200161115             RCVF
+002300161115             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+002400161115             IF         COND(&QLKELA *EQ &file) then(do)
+002500161115                          CHGVAR VAR(&DATApul8) VALUE(%SST(&QLKTCK 1 8))
+002600161115                IF         COND(&datapul8 *ne &datapul) then(do)
+002700161115
+002800161115                        CLRPFM     FILE(BITVL00F)
+002900161115                       GOTO       CMDLBL(endf)
+003000161115                enddo
+003100161115             enddo
+003200161115             GOTO       CMDLBL(READ)
+003300150504
+003400161110/* al momento pulisco tutto poi se ci sarà da considerare una data specifica */
+003500161110/*  occorrerà fare un programma di pulizia                                   */
+003600051107
+003700161115/*  Elaboro e creo                                       */
+003800161115  endf:
+003900161111             CALL       PGM(TRBI03R) PARM(&KPJBA)
+004000161123             MONMSG     MSGID(CPF0000)
+004100161110
+004200161110/*  Aggiorno con il TRUL per dire che ha elaborato                           */
+004300161110
+004400161111             CHGVAR     VAR(%SST(&KPJBA 247 10)) VALUE('BITVL00F  ')
+004500161110             CALL       PGM(TRULQLKR) PARM(&KPJBA)
+004600161123             MONMSG     MSGID(CPF0000)
+004700170420
+004800150504
+004900170420             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&KPJBU)
+005000170420
+005100170420/* Richiama la generazione del dettaglio RITIRI                              */
+005200170420             CALL       PGM(TRBI08C) PARM(&KPJBA)
+005300170420             MONMSG     MSGID(CPF0000)
+005400170420
+005500170420             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&KPJBU)
+005600151105
+005700000000             ENDPGM

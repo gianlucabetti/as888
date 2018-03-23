@@ -1,0 +1,146 @@
+000100950721     H            Y J
+000200950721     F*-----------------------------------------------------------*
+000300950721     F*  DATA BASE                                                *
+000400950721     F*-----------------------------------------------------------*
+000500950808     FTNSY50L IP  E           K        DISK
+000600950721     FQSYSPRT O   F     132     OF     PRINTER
+000700950807     IQLIDOBJD
+000800950807     I                                              ODOBNML1
+000900950807     I                                              ODOBTPL1
+001000950807     I                                              ODOBATL1
+001100950807     IDSLET       DS
+001200950807     I                                        1  10 ODOBNM                NOME
+001300950807     I                                       11  18 ODOBTP                TIPO
+001400950807     I                                       19  28 ODOBAT                ATTR
+001500950807     I                                       29  78 ODOBTX                TEXT
+001600950808     I                                       79  84 ODCDAT                D.CRE
+001700950808     I                                       85  90 ODCTIM                O.CRE
+001800950808     I                                       91  96 ODSRCD                D.SRC
+001900950808     I                                       97 102 ODSRCT                O.SRC
+002000950807     IDSRIF       DS
+002100950807     I                                        1  10 RIFBNM                NOME
+002200950807     I                                       11  18 RIFBTP                TIPO
+002300950807     I                                       19  28 RIFBAT                ATTR
+002400950807     I                                       29  78 RIFBTX                TEXT
+002500950808     I                                       79  840RIFDAT                D.CRE
+002600950808     I                                       85  900RIFTIM                O.CRE
+002700950808     I                                       91  960RIFRCD                D.SRC
+002800950808     I                                       97 1020RIFRCT                O.SRC
+002900950807     IDSCTR       DS
+003000950807     I                                        1  10 CTRBNM                NOME
+003100950807     I                                       11  18 CTRBTP                TIPO
+003200950807     I                                       19  28 CTRBAT                ATTR
+003300950807     I                                       29  78 CTRBTX                TEXT
+003400950808     I                                       79  840CTRDAT                D.CRE
+003500950808     I                                       85  900CTRTIM                O.CRE
+003600950808     I                                       91  960CTRRCD                D.SRC
+003700950808     I                                       97 1020CTRRCT                O.SRC
+003800950807     IKPJBA     E DS
+003900950807     IPARAM       DS
+004000950808     I                                       11  20 LIBRIF
+004100950808     I                                       31  40 LIBCTR
+004200950808     IDATMGA      DS
+004300950808     I                                        1   2 MM1
+004400950808     I                                        3   4 GG1
+004500950808     I                                        5   6 AA1
+004600950808     IDATAMG      DS
+004700950808     I                                        1   2 AA2
+004800950808     I                                        3   4 MM2
+004900950808     I                                        5   6 GG2
+005000950807     C           ODLBNM    IFEQ LIBRIF
+005100950807     C                     MOVELDSLET     DSRIF
+005200950808     C           ODSRCD    IFEQ *BLANK
+005300950808     C                     CLEARRIFRCD
+005400950808     C                     END
+005500950808     C           ODSRCT    IFEQ *BLANK
+005600950808     C                     CLEARRIFRCT
+005700950808     C                     END
+005800950808      * ODCDAT = MMGGAA    DATA CREAZIONE
+005900950808     C           ODCDAT    IFNE *BLANK
+006000950808     C                     MOVELODCDAT    DATMGA
+006100950808     C                     MOVE MM1       MM2
+006200950808     C                     MOVE GG1       GG2
+006300950808     C                     MOVE AA1       AA2
+006400950808     C                     MOVE DATAMG    RIFDAT
+006500950808     C                     ELSE
+006600950808     C                     CLEARRIFDAT
+006700950808     C                     END
+006800950807     C                     ELSE
+006900950807     C                     MOVELDSLET     DSCTR
+007000950808     C           ODSRCD    IFEQ *BLANK
+007100950808     C                     CLEARCTRRCD
+007200950808     C                     END
+007300950808     C           ODSRCT    IFEQ *BLANK
+007400950808     C                     CLEARCTRRCT
+007500950808     C                     END
+007600950808      * ODCDAT = MMGGAA    DATA CREAZIONE
+007700950808     C           ODCDAT    IFNE *BLANK
+007800950808     C                     MOVELODCDAT    DATMGA
+007900950808     C                     MOVE MM1       MM2
+008000950808     C                     MOVE GG1       GG2
+008100950808     C                     MOVE AA1       AA2
+008200950808     C                     MOVE DATAMG    CTRDAT
+008300950808     C                     ELSE
+008400950808     C                     CLEARCTRDAT
+008500950808     C                     END
+008600950807     C                     ENDIF
+008700950721     C*-----------------------------------------------------------*
+008800950807     C* A ROTTURA TEST SE <>
+008900950807     C*-----------------------------------------------------------*
+009000950808     CL1 OF                EXCPTTESTA
+009100950807     CL1         DSCTR     IFNE DSRIF
+009200950807     C* SE DATA/ORA MODIF. SOURCE è DIVERSA STAMPO
+009300950807     CL1         RIFRCD    IFNE CTRRCD
+009400950807     CL1         RIFRCT    ORNE CTRRCT
+009500950808     CL1         RIFBNM    ORNE CTRBNM
+009600950807     CL1                   EXCPTSTAMPA
+009700950807     CL1                   ELSE
+009800950808     C* SE DATA CREAZIONE OGGETTO LIB.RIFER. >    STAMPO
+009900950808     CL1         RIFDAT    IFGT CTRDAT
+010000950808     CL1                   EXCPTSTAMPA
+010100950808     CL1                   ENDIF
+010200950807     CL1                   ENDIF
+010300950807     CL1                   ENDIF
+010400950807     C*
+010500950807     CL1                   CLEARDSRIF
+010600950807     CL1                   CLEARDSCTR
+010700950807     C*----------------------------------------------------*
+010800950807     C           *INZSR    BEGSR
+010900950807     C           *ENTRY    PLIST
+011000950807     C                     PARM           KPJBA
+011100950807     C                     MOVELKPJBU     PARAM
+011200950808     C                     CLEARDSRIF
+011300950808     C                     CLEARDSCTR
+011400950808     C                     EXCPTPRIMA
+011500950808     C                     EXCPTTESTA
+011600950807     C                     ENDSR
+011700950808     OQSYSPRT E  101           PRIMA
+011800950808     O                                 +  2 'LIBRERIA DI RIFERIMENTO:'
+011900950808     O                         LIBRIF  +  1
+012000950808     O                                 +  2 'LIBRERIA DA CONTROLLARE:'
+012100950808     O                         LIBCTR  +  1
+012200950808     O        E  102           TESTA
+012300950808     O                                      'LIBRERIA'
+012400950808     O                                 +  2 'OGGETTO '
+012500950808     O                                  104 'DATA CREAZIONE'
+012600950808     O                                  122 'DATA MOD.SOURCE'
+012700950808     O        E  1             STAMPA
+012800950807     O                         LIBRIF
+012900950807     O                         RIFBNM
+013000950807     O                         RIFBTP
+013100950807     O                         RIFBAT
+013200950807     O                         RIFBTX
+013300950808     O                         RIFDAT       '  /  /  '
+013400950808     O                         RIFTIM  +  1 '  :  :  '
+013500950808     O                         RIFRCD  +  1 '  /  /  '
+013600950808     O                         RIFRCT  +  1 '  :  :  '
+013700950807     O        E  1             STAMPA
+013800950807     O                         LIBCTR
+013900950807     O                         CTRBNM
+014000950807     O                         CTRBTP
+014100950807     O                         CTRBAT
+014200950807     O                         CTRBTX
+014300950808     O                         CTRDAT       '  /  /  '
+014400950808     O                         CTRTIM  +  1 '  :  :  '
+014500950808     O                         CTRRCD  +  1 '  /  /  '
+014600950808     O                         CTRRCT  +  1 '  :  :  '

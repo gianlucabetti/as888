@@ -1,0 +1,384 @@
+000100980306     H*------------------------------------------------------------------------*
+000200980306     H* CREAZIONE FILE CLIENTI/FORNOTORI PER LETTERE PRIVACY
+000300980306     H*------------------------------------------------------------------------*
+000400980306     H              J
+000500980306     F*------------------------------------------------------------------------*
+000600980306     F* DATA BASE
+000700980306     F*------------------------------------------------------------------------*
+000800980224     FCNIND00FIF  E           K        DISK
+000900980224     FCNACO00FIF  E           K        DISK
+001000980225     FCNCLP00FIF  E           K        DISK
+001100980303     FCNMOV13LIF  E           K        DISK
+001200980225     FPTKSC01LUF  E           K        DISK                      A
+001300980225     FPTKSC02LIF  E           K        DISK
+001400980225     F            PTKSC000                          KRENAMEPTKSC2
+001500980224     FPRTF198 O   F     198     OF     PRINTER
+001600980306     E*------------------------------------------------------------------------*
+001700980306     E* SCHIERE
+001800980306     E*------------------------------------------------------------------------*
+001900980306     E                    MSG     1  30 80               *MESSAGGI
+002000980306     I*------------------------------------------------------------------------*
+002100980306     I* INPUT
+002200980306     I*------------------------------------------------------------------------*
+002300980306     I*-------------
+002400980306     I* RIDENOMINAZIONE CAMPI
+002500980306     I*-------------
+002600980225     IPTKSC2
+002700980225     I              POSLIB                          PO2LIB
+002800980225     I              POSKCC                          PO2KCC
+002900980225     I              POSKSC                          PO2KSC
+003000980225     I              POSIVA                          PO2IVA
+003100980225     I              POSFIL                          PO2FIL
+003200980225     I              POSRSD                          PO2RSD
+003300980225     I              POSIND                          PO2IND
+003400980225     I              POSCAP                          PO2CAP
+003500980225     I              POSLOC                          PO2LOC
+003600980225     I              POSPRV                          PO2PRV
+003700980225     I              POSCER                          PO2CER
+003800980225     I              POSERR                          PO2ERR
+003900980306     I*-------------
+004000980306     I* DS REPERIMENTO S.I.
+004100980306     I*-------------
+004200980225     IBS50DS    E DSTIBS50DS
+004300980306     C*------------------------------------------------------------------------*
+004400980306     C* MAIN LINES
+004500980306     C*------------------------------------------------------------------------*
+004600000000     C           INIZIO    TAG
+004700980224     C           KACO      KLIST
+004800980224     C                     KFLD           ACOKUT
+004900980224     C                     KFLD           ACOKCC
+005000980224     C                     KFLD           ACOKSC
+005100980225     C           KCLP      KLIST
+005200980225     C                     KFLD           CLPKUT
+005300980225     C                     KFLD           CLPKCC
+005400980225     C                     KFLD           CLPKSC
+005500980303     C           KMOV      KLIST
+005600980303     C                     KFLD           MOVKUT
+005700980303     C                     KFLD           MOVKCC
+005800980303     C                     KFLD           MOVKSC
+005900980303     C                     KFLD           MOVDRG
+006000980224     C           PTKSC     KLIST
+006100980224     C                     KFLD           POSLIB
+006200980224     C                     KFLD           POSIVA
+006300980306     C*
+006400980224     C* REPERIMENTO LIBRERIE JOB
+006500980224     C                     CLEARBS50DS
+006600980224     C                     MOVEL'L'       I50TLA
+006700980224     C                     CALL 'TIBS50R'
+006800980224     C                     PARM           BS50DS
+006900980306     C*
+007000980224     C* CANCELLA TUTTI I RECORD DI QUESTA LIBRERIA DAL FILE INDIRIZZI
+007100980225     C           O50PLA    SETLLPTKSC01L             99
+007200980225     C  N99      O50PLA    READEPTKSC01L                 99
+007300980225DO  1C           *IN99     DOWEQ*OFF
+007400980225     C                     DELETPTKSC000
+007500980225     C           O50PLA    READEPTKSC01L                 99
+007600980225E   1C                     ENDDO
+007700980224     C* STAMPA TESTATA
+007800980212     C                     EXCPTTESTA
+007900980224     C* LOOP PRINCIPALE
+008000980224     C           *LOVAL    SETLLCNIND00F             99
+008100980224     C  N99                READ CNIND00F                 99
+008200980212DO  1C           *IN99     DOWEQ*OFF
+008300980224     C*
+008400980225     C* GESTISCE SOLO 51,161,70
+008500980225     C           INDKCC    IFEQ 51
+008600980225     C           INDKCC    OREQ 161
+008700980225     C           INDKCC    OREQ 70
+008800980225     C*
+008900980224     C* IMPOSTA FILE INDIRIZZI
+009000980225     C                     MOVELO50PLA    POSLIB
+009100980224     C                     Z-ADDINDKCC    POSKCC
+009200980224     C                     Z-ADDINDKSC    POSKSC
+009300980225     C                     MOVELINDKSC    POSFIL
+009400980224     C                     MOVEL*BLANKS   POSRSD
+009500980224     C                     MOVELINDVIA    POSIND
+009600980224     C                     MOVELINDCAP    POSCAP
+009700980224     C                     MOVELINDCIT    POSLOC
+009800980224     C                     MOVELINDPRV    POSPRV
+009900980224     C                     MOVELINDIVA    POSIVA
+010000980224     C                     MOVEL*BLANKS   POSERR
+010100980225     C* RECUPERA RAGIONE SOCIALE
+010200980225     C           POSERR    IFEQ *BLANKS
+010300980225     C                     SETOF                     98
+010400980225     C                     Z-ADDINDKUT    ACOKUT
+010500980225     C                     Z-ADDINDKCC    ACOKCC
+010600980225     C                     Z-ADDINDKSC    ACOKSC
+010700980225     C           KACO      CHAINCNACO00F             98
+010800980225     C           *IN98     IFEQ *ON                        *NON TROVATO
+010900980225     C                     MOVELMSG,1     POSERR           *RAG.SOC.NON TROV.
+011000980225     C                     ELSE
+011100980225     C                     MOVELACORAG    POSRSD           *RAG.SOC.
+011200980225     C                     ENDIF
+011300980225     C                     ENDIF
+011400980225     C* RECUPERA SOTTOCONTO DI FATTURAZIONE
+011500980225     C           POSERR    IFEQ *BLANKS
+011600980225     C           INDKCC    IFEQ 51
+011700980225     C                     SETOF                     98
+011800980225     C                     Z-ADDINDKUT    CLPKUT
+011900980225     C                     Z-ADDINDKCC    CLPKCC
+012000980225     C                     Z-ADDINDKSC    CLPKSC
+012100980225     C           KCLP      CHAINCNCLP00F             98
+012200980225     C           *IN98     IFEQ *OFF                       *TROVATO
+012300980225     C           CLPKSC    ANDNECLPSCF
+012400980225     C                     MOVELMSG,10    POSERR           *ALTRO COD.FATTURAZ
+012500980225     C                     ENDIF
+012600980225     C                     ENDIF
+012700980225     C                     ENDIF
+012800980303     C* CONTROLLA SE HA AVUTO MOVIMENTI DAL 1/1/97
+012900980303     C           POSERR    IFEQ *BLANKS
+013000980303     C                     SETOF                     98
+013100980303     C                     Z-ADDINDKUT    MOVKUT
+013200980303     C                     Z-ADDINDKCC    MOVKCC
+013300980303     C                     Z-ADDINDKSC    MOVKSC
+013400980303     C                     Z-ADD970100    MOVDRG
+013500980303     C           KMOV      SETLLCNMOV13L             98
+013600980303     C  N98                READ CNMOV13L                 98
+013700980303     C           *IN98     IFEQ *ON
+013800980303     C                     MOVELMSG,15    POSERR           *NON HA MOV.DAL 97
+013900980303     C                     ELSE
+014000980303     C           MOVKCC    IFEQ INDKCC
+014100980303     C           MOVKSC    ANDEQINDKSC
+014200980303     C           MOVDRG    ANDGT970100
+014300980303     C                     ELSE
+014400980303     C                     MOVELMSG,15    POSERR           *NON HA MOV.DAL 97
+014500980303     C                     ENDIF
+014600980303     C                     ENDIF
+014700980303     C                     ENDIF
+014800980224     C* ESCLUDE SE NON E' UN FORNITORE O UN CLIENTE
+014900980224     C           POSERR    IFEQ *BLANKS
+015000980224     C                     SELEC
+015100980224     C           INDKCC    WHEQ 161
+015200980224     C                     EXSR FORNIT                     *FORNITORI
+015300980224     C           INDKCC    WHEQ 51
+015400980224     C                     EXSR CLIENT                     *CLIENTI
+015500980224     C           INDKCC    WHEQ 70
+015600980224     C                     EXSR BANCHE                     *BANCHE
+015700980224     C                     OTHER
+015800980224     C                     MOVELMSG,4     POSERR           *NON E' CLI/FOR/BAN
+015900980224     C                     ENDSL
+016000980224     C                     ENDIF
+016100980224     C* ESCLUDE SE ESTERO
+016200980224     C           POSERR    IFEQ *BLANKS
+016300980224     C           INDSTA    IFNE *BLANKS                    *NAZIONE
+016400980224     C                     MOVELMSG,2     POSERR           *CLI/FOR ESTERO
+016500980224     C                     ENDIF
+016600980224     C                     ENDIF
+016700980227     C* ESCLUSIONE SU RAGIONE SOCIALE
+016800980227     C           POSERR    IFEQ *BLANKS
+016900980227     C                     MOVELPOSRSD    WRSD7   7
+017000980227     C                     MOVELPOSRSD    WRSD6   6
+017100980227     C                     MOVELPOSRSD    WRSD3   3
+017200980227     C           WRSD3     IFEQ 'TB '
+017300980227     C           WRSD6     OREQ 'SK.CAR'
+017400980227     C           WRSD6     OREQ 'SK CAR'
+017500980227     C           WRSD6     OREQ 'INCASS'
+017600980227     C           WRSD6     OREQ 'ASSEGN'
+017700980227     C           WRSD7     OREQ 'SCHEDA '
+017800980227     C           WRSD7     OREQ 'SCHEDE '
+017900980227     C           WRSD6     OREQ 'CONTEN'
+018000980227     C           WRSD7     OREQ 'CARTASI'
+018100980227     C           WRSD6     OREQ 'TARIFF'
+018200980227     C           WRSD6     OREQ 'TASSAZ'
+018300980227     C                     MOVELMSG,13    POSERR           *ESCLUSO X TARIFF,.
+018400980227     C                     ENDIF
+018500980227     C                     ENDIF
+018600980227     C* ESCLUSIONE SU INDIRIZZO
+018700980227     C           POSERR    IFEQ *BLANKS
+018800980227     C                     MOVELPOSIND    WIND6   6
+018900980227     C           WIND6     IFEQ 'TARIFF'
+019000980227     C           WIND6     OREQ 'INCASS'
+019100980227     C           WIND6     OREQ 'ASSEGN'
+019200980227     C           WIND6     OREQ 'SEDE  '
+019300980227     C                     MOVELMSG,13    POSERR           *ESCLUSO X TARIFF,..
+019400980227     C                     ENDIF
+019500980227     C                     ENDIF
+019600980227     C* RAGIONE SOCIALE
+019700980224     C           POSERR    IFEQ *BLANKS
+019800980226     C           POSRSD    IFEQ *BLANKS
+019900980226     C           POSRSD    OREQ 'X'
+020000980226     C           POSRSD    OREQ '.'
+020100980226     C                     MOVELMSG,8     POSERR           *RAG.SOC.NON ACCETT
+020200980224     C                     ENDIF
+020300980227     C                     ENDIF
+020400980227     C* INDIRIZZO
+020500980226     C           POSERR    IFEQ *BLANKS
+020600980226     C           POSIND    IFEQ *BLANKS
+020700980226     C           POSIND    OREQ 'DI'
+020800980226     C           POSIND    OREQ '.'
+020900980226     C           POSIND    OREQ '-'
+021000980226     C           POSIND    OREQ ':'
+021100980226     C           POSIND    OREQ 'V'
+021200980226     C           POSIND    OREQ 'V.'
+021300980226     C           POSIND    OREQ 'X'
+021400980226     C           POSIND    OREQ 'VIA'
+021500980226     C                     MOVELMSG,11    POSERR           *IND.NON ACCETT.
+021600980226     C                     ENDIF
+021700980226     C                     ENDIF
+021800980225     C* ESCLUDE SE IND/LOC/CAP/PRV = BLANK
+021900980225     C           POSERR    IFEQ *BLANKS
+022000980226     C           POSCAP    IFEQ *BLANKS
+022100980226     C           POSCAP    OREQ '00000'                    *???
+022200980225     C           POSLOC    OREQ *BLANKS
+022300980225     C           POSPRV    OREQ *BLANKS
+022400980226     C                     MOVELMSG,7     POSERR           *CAP/LOC/PRV = BLANK
+022500980225     C                     ENDIF
+022600980225     C                     ENDIF
+022700980224     C* ESCLUDE SE P.IVA DOPPIA
+022800980224     C           POSERR    IFEQ *BLANKS
+022900980227     C                     MOVEL'00000000'WIVA00 16
+023000980227     C                     MOVE '000     'WIVA00
+023100980225     C           POSIVA    IFNE *BLANKS
+023200980227     C           POSIVA    ANDNEWIVA00
+023300980224     C                     SETOF                     98
+023400980225     C           PTKSC     CHAINPTKSC02L             98
+023500980224     C           *IN98     IFEQ *OFF                       *TROVATO
+023600980224     C                     MOVELMSG,6     POSERR           *P.IVA DOPPIA
+023700980224     C                     ENDIF
+023800980225     C                     ENDIF
+023900980224     C                     ENDIF
+024000980224     C* SE TROVA UN ERRORE LO STAMPA
+024100980224     C           POSERR    IFNE *BLANKS
+024200980224     C                     MOVELPOSERR    STAERR 53
+024300980224     C                     EXCPTDETTA
+024400980224     C                     ENDIF
+024500980224     C* SCRIVE FILE INDIRIZZI
+024600980224     C                     MOVE POSERR    POSCER
+024700980224     C                     WRITEPTKSC000
+024800980225     C*
+024900980225     C                     ENDIF
+025000980224     C* LEGGE ALTRO RECORD
+025100980224     C                     READ CNIND00F                 99
+025200980212E   1C                     ENDDO
+025300000000     C                     SETON                     LR
+025400980224     C********************************************************************
+025500980224     C* GESTIONE CAPOCONTO FORNITORI (161)
+025600980224     C********************************************************************
+025700980224     C           FORNIT    BEGSR
+025800980224     C* ESCLUDE SE E' UN FORNITORE DEL TIPO 'CLIENTE - DANNI'
+025900980224     C                     MOVELPOSRSD    WPRIMO  1
+026000980224     C           INDKCC    IFEQ 161                        *FORNITORE
+026100980224     C           WPRIMO    ANDEQ'$'                        *DANNI
+026200980224     C                     MOVELMSG,3     POSERR           *CLIENTE/DANNI
+026300980224     C                     ENDIF
+026400980226     C* ESCLUDE FORNITORI EX CEPICO
+026500980302     C                     MOVEL'GAITRA21'WLIB   10
+026600980226     C                     MOVE '4 '      WLIB
+026700980226     C           POSLIB    IFEQ WLIB
+026800980226     C           POSKSC    IFGE 2140000
+026900980226     C           POSKSC    ANDLE2149999
+027000980226     C                     MOVELMSG,12    POSERR           *CLI. CEPICO
+027100980226     C                     ENDIF
+027200980226     C                     ENDIF
+027300980224     C                     ENDSR
+027400980224     C********************************************************************
+027500980224     C* GESTIONE CAPOCONTO CLIENTE (51)
+027600980224     C********************************************************************
+027700980224     C           CLIENT    BEGSR
+027800980224     C* ESCLUDE SE E' UN CLIENTE 8888 O 9999
+027900980224     C                     MOVE INDKSC    W8899   4
+028000980224     C           W8899     IFEQ '8888'
+028100980224     C           W8899     OREQ '9999'
+028200980224     C                     MOVELMSG,5     POSERR           *88/99
+028300980224     C                     ENDIF
+028400980226     C* ESCLUDE CLIENTI EX CEPICO
+028500980302     C                     MOVEL'GAITRA21'WLIB   10
+028600980226     C                     MOVE '4 '      WLIB
+028700980226     C           POSLIB    IFEQ WLIB
+028800980226     C           POSKSC    IFGE 2140000
+028900980226     C           POSKSC    ANDLE2149999
+029000980226     C                     MOVELMSG,12    POSERR           *CLI. CEPICO
+029100980226     C                     ENDIF
+029200980226     C                     ENDIF
+029300980227     C* ESCLUDE FILIALI COME CLIENTI DELLA 201
+029400980227     C                     MOVEL'GAITRA20'WLIB   10
+029500980227     C                     MOVE '1 '      WLIB
+029600980227     C           POSLIB    IFEQ WLIB
+029700980227     C           POSKSC    IFGE 465000
+029800980227     C           POSKSC    ANDLE465999
+029900980227     C                     MOVELMSG,14    POSERR           *FIL.COME CLIENTI
+030000980227     C                     ENDIF
+030100980227     C                     ENDIF
+030200980303     C* ESCLUDE CLIENTI IN CONTENZIOSO
+030300980303     C           CLPCON    IFNE *BLANKS
+030400980303     C           CLPCON    ANDNE' 41'
+030500980303     C                     MOVELMSG,16    POSERR           *CLI.CONTENZIOSO
+030600980303     C                     ENDIF
+030700980224     C                     ENDSR
+030800980224     C********************************************************************
+030900980224     C* GESTIONE CAPOCONTO BANCHE (70)
+031000980224     C********************************************************************
+031100980224     C           BANCHE    BEGSR
+031200980224     C* CONTROLLA SE E' UNA BANCA DI FILIALE
+031300980224     C           INDKSC    IFGE 0460001
+031400980225     C           INDKSC    ANDLE0469000
+031500980224     C                     ELSE
+031600980224     C           INDKSC    IFEQ 0638901
+031700980224     C           INDKSC    OREQ 0078901
+031800980224     C           INDKSC    OREQ 0538901
+031900980224     C           INDKSC    OREQ 0020012
+032000980224     C           INDKSC    OREQ 0313106
+032100980224     C           INDKSC    OREQ 0323206
+032200980224     C           INDKSC    OREQ 0890014
+032300980224     C           INDKSC    OREQ 0500013
+032400980224     C           INDKSC    OREQ 0050014
+032500980224     C           INDKSC    OREQ 0670009
+032600980224     C           INDKSC    OREQ 0620009
+032700980224     C           INDKSC    OREQ 0630001
+032800980224     C           INDKSC    OREQ 0050050
+032900980304     C           INDKSC    OREQ 0598901
+033000980304     C           INDKSC    OREQ 0010027
+033100980224     C                     ELSE
+033200980224     C                     MOVELMSG,9     POSERR           *NO BANCA VALIDA
+033300980224     C                     ENDIF
+033400980224     C                     ENDIF
+033500980224     C                     ENDSR
+033600980224     C********************************************************************
+033700980224     OPRTF198 E  102           TESTA
+033800980225     O                         O50PLA    10
+033900980224     O                                   30 'TRVR96R'
+034000980224     O                                   80 'ERRORI CREAZIONE FILE'
+034100980224     O                                 +  1 'INDIRIZZI X POSTEL'
+034200000000     O                         UDATE    117 '  /  /  '
+034300000000     O                         PAGE     128
+034400910416     O        E  1             DETTA
+034500980224     O                         POSLIB    10
+034600980224     O                         POSKCC  +  1
+034700980224     O                         POSKSC  +  1
+034800980224     O                         POSRSD  +  1
+034900980224     O                         POSIND  +  1
+035000980224     O                         POSCAP  +  1
+035100980224     O                         POSLOC  +  1
+035200980224     O                         POSPRV  +  1
+035300980224     O                         STAERR  +  1
+035400980224** MSG - MESSAGGI
+035500980224RAGIONE SOCIALE NON TROVATA                                                   01
+035600980224CLIENTE/FORNITORE ESTERO                                                      02
+035700980224FORNITORE DEL TIPO - CLIENTE/DANNI                                            03
+035800980224NON E' UN CLIENTE/FORNITORE/BANCA                                             04
+035900980224CLIENTE 8888 OPPURE 9999                                                      05
+036000980224PARTITA IVA DOPPIA                                                            06
+036100980226LOCALITA/CAP/PROVINCIA NON ACCETTABILI                                        07
+036200980226RAGIONE SOCIALE NON ACCETTABILE (ASSEGN,TARIFF,..)                            08
+036300980224NON E' UNA BANCA VALIDA                                                       09
+036400980225ESISTE UN ALTRO SOTTOCONTO DI FATTURAZIONE                                    10
+036500980226INDIRIZZO NON ACCETTABILE (ASSEGN,TARIFF,..)                                  11
+036600980226CLIENTE/FORNITORE CEPICO                                                      12
+036700980227ESCLUSO PER.. TARIFFA,ASSEGNATI,CARTASI,SCHEDA,CONTENZIOSO,..                 13
+036800980227FILIALI COME CLIENTI DELLA 201                                                14
+036900980303CLI/FORN SENZA MOVIMENTI DAL 1/1/97                                           15
+037000980303CLIENTE FALLITO/AMM.CONTR./CONCORD.                                           16
+037100980224                                                                              17
+037200980224                                                                              18
+037300980224                                                                              19
+037400980224                                                                              20
+037500980224                                                                              21
+037600980224                                                                              22
+037700980224                                                                              23
+037800980224                                                                              24
+037900980224                                                                              25
+038000980224                                                                              26
+038100980224                                                                              27
+038200980224                                                                              28
+038300980224                                                                              29
+038400980224                                                                              30

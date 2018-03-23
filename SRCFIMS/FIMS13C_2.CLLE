@@ -1,0 +1,34 @@
+000100161102/*-------------------------------------------------------------------*/
+000200161102/*?Dati per Report SIM Magazzino: Controllo Utente.                 ?*/
+000300161102/*-------------------------------------------------------------------*/
+000400161102             pgm        parm(&KPJBA)
+000500161102
+000600161107             dcl        var(&KPJBA)   type(*char)  len(502)
+000700161107             dcl        var(&KNMUS)   type(*char)  len(10)
+000800161107             dcl        var(&KPJBU)   type(*char)  len(256)
+000900161107             dcl        var(&xx)      type(*dec)   len(3 0)  value(001)
+001000161107
+001100161102
+001200161102    /*?Controllo Utente e/o relativa Filiale?*/
+001300161107             chgvar     var(&KNMUS)   value(%sst(&KPJBA   1  10))
+001400161107             chgvar     var(&KPJBU)   value(%sst(&KPJBA 247 256))
+001500161102
+001600161102    /*?Abilitati utenti EDP*, ISP* e della Filiale 131?*/
+001700161107             if         cond( %sst(&KNMUS 1 3) *ne 'EDP' *and +
+001800161107                              %sst(&KNMUS 1 3) *ne 'ISP' ) then(do)
+001900161107       Retry:
+002000161107               if       cond( &xx *le 64 *and +
+002100161107                              %sst(&KNMUS 4 3) *ne %sst(&KPJBU &xx 3) ) +
+002200161107                        then( do )
+002300161107                 chgvar var(&xx)      value(&xx + 4)
+002400161107                 goto   cmdlbl(retry)
+002500161107               enddo
+002600161107               if       cond( %sst(&KNMUS 4 3) *ne %sst(&KPJBU &xx 3) ) +
+002700161107                        then( goto    cmdlbl(Fine) )
+002800161107             enddo
+002900161102
+003000161102    /*?Richiamo pgm. di visualizzazione?*/
+003100161102             call       pgm(FIMS13R)     parm(&KPJBA)
+003200161102
+003300161102       Fine:
+003400161102             endpgm

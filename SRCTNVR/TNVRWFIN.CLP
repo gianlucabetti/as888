@@ -1,0 +1,3 @@
+000100010719             PGM        PARM(&KPJBA)
+000200010719             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000300931027             ENDPGM

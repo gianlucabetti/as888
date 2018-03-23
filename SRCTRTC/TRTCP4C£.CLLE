@@ -1,0 +1,50 @@
+000100021012/* Preparazione file FOGLI per PC ---------------------------------- */
+000200021012/*                riceve: 1) il SISTEMA INFORMATIVO                  */
+000300021012/*                        2) il P.O. utente                          */
+000400021012/*                           (che per problemi relativi ai parametri */
+000500021012/*                            per PC deve essere preceduto da una    */
+000600021012/*                            lettera)                               */
+000700021012
+000800021012             pgm        parm(&SYF &YXXX)
+000900971129
+001000040401             DCL        VAR(&SYF)   TYPE(*CHAR) LEN(10)   /* s.i. */
+001100040401             dcl        var(&YXXX)  type(*char) len(4)    /* PC e PO */
+001200021001             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001300040401             DCL        VAR(&L275)  TYPE(*CHAR) LEN(275)
+001400040401             DCL        VAR(&CMD)   TYPE(*CHAR) LEN(350)
+001500040401             DCL        VAR(&LUNG)  TYPE(*DEC)  LEN(15 5) VALUE(350)
+001600021003
+001700021003  /* Reperisco la lista librerie CORRENTE -------------------------- */
+001800021003             RTVJOBA    USRLIBL(&L275)
+001900930308
+002000021001  /* Chiamata al pgm di cambio sistema informativo ----------------- */
+002100021001             call       pgm(GAITRAOBJ/TRUL07C) parm(&SYF)
+002200971129
+002300021001  /* Impostazione KPJBA -------------------------------------------- */
+002400021001    /* KNSIF */
+002500021001             chgvar     var(%sst(&KPJBA  92  10)) value(&SYF)
+002600971112
+002700021001  /* Preparazione file fogli FIFAP e FLTR2 ------------------------- */
+002800021012             chgvar     var(%sst(&KPJBA 247 249)) +
+002900021012                          value(%sst(&YXXX 2 3))
+003000040401             call       pgm(FNLR03R)   parm(&KPJBA)
+003100930308
+003200021001  /* Preparazione file fogli FIFVP --------------------------------- */
+003300021012             chgvar     var(%sst(&KPJBA 247 249)) +
+003400021012                          value(%sst(&YXXX 2 3))
+003500040401             call       pgm(FNLS55R)   parm(&KPJBA)
+003600970520
+003700040401  /* Preparazione file P.O. / anomalie FLDSP ----------------------- */
+003800040401             CLRPFM     FILE(FLDSP00F)
+003900970520             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(END56))
+004000970520
+004100040401             CALL       PGM(FNLS56R)   PARM(&KPJBA)
+004200021001
+004300021001  /* Fine ---------------------------------------------------------- */
+004400021003END56:
+004500021003  /* Reimposto la lista librerie originale _________________________ */
+004600021003             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+004700021003                          *CAT ' )')
+004800040401             CALL       PGM(QCMDEXC)   PARM(&CMD &LUNG)
+004900040401
+005000021003             ENDPGM

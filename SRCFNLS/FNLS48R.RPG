@@ -1,0 +1,347 @@
+000100000000     H              J
+000200960209     H* FNLS48R *----------------------------------------------------*
+000300000000     H*-----------------*                                            *
+000400960209     H*              ELENCO TRAZIONI IN RITARDO           - FILTRO - *
+000500000000     H*--------------------------------------------------------------*
+000600960209     FFNLS48D CF  E                    WORKSTN
+000700960208     FAZORG01LIF  E           K        DISK
+000800960220     FFNFVA05LIF  E           K        DISK
+000900960214     FFNFGV03LIF  E           K        DISK
+001000960212     E*
+001100960212     E* SCHIERE PER CARICAMENTO L1
+001200960212     E                    L1         30  3 0             FIL.GESTITE
+001300960212     E                    LIN        30  3 0             SKI COMODO
+001400960216     E                    MSG     1  10 78               MESSAGGI ERRORE
+001500940715     I*
+001600960209     I* PARAMETRI PASSATI AL PGM DI ELABORAZIONE   - FNLS49R -
+001700000000     IPARAM       DS
+001800940715     I* CODICE FILIALE
+001900960208     I                                        1   30PARFIL
+002000960214     I* DATA FOGLIO VIAGGIO PARTENZA  DAL / AL   (AAAA/MM/GG)
+002100960208     I                                        4  110PARDFD
+002200960208     I                                       12  190PARDFA
+002300960214     I*
+002400960214     I* DATA FOGLIO ARRIVI            DAL / AL   (AAAA/MM/GG)
+002500960214     I                                       20  270PARDAD
+002600960214     I                                       28  350PARDAA
+002700960208     I* TIPO ELENCO RICHIESTO
+002800960214     I                                       36  36 PARTTB
+002900960208     I*
+003000960212     I* DS PER TRUL06R - CARICAMENTO £1
+003100960212     IDSUL06    E DSTRUL06DS
+003200960212     I                                        1  900LIN
+003300960212     I*
+003400960209     IWLBDAT      DS
+003500960209     I                                        1   80G02DAT
+003600960209     I                                        9  160G02INV
+003700960209     I                                       17  17 G02ERR
+003800960209     I                                       18  220G02TGI
+003900960215     I* PARAMETRI PER TRASFORM GIORNI IN DATA             - XSRDGI -
+004000960215     IWGIDAT     IDS
+004100960215     I                                        1   80GIODAT
+004200960215     I                                        9  160GIOINV
+004300960215     I                                       17  210GIOTGI
+004400000000     IKPJBA     E DS
+004500020429     I***                                     1   3 REM
+004600020429     I***                                     4   6 REMFIL
+004700960209     ICNCR80    E DS
+004800900406     IUT§DSE    E DSUT§DSE0F
+004900000000     I/SPACE 3
+005000921012     C*****************************************************************
+005100921012     C* RIEPILOGO INDICATORI
+005200921012     C*****************************************************************
+005300020429     C* 05    - SONO UN SECONDO LIVELLO
+005400921013     C* 30/32 - DI COMODO
+005500921012     C*****************************************************************
+005600960209     C* PULIZIA CAMPI DEL VIDEO
+005700960215     C                     MOVELDATAM     V1CDFD
+005800960215     C                     MOVELWDTGIO    V1CDAD
+005900960209     C                     CLEARV1CTTB
+006000960209     C*
+006100960209     C           FOR01     TAG
+006200960209     C                     EXFMTLS48D01
+006300960214     C                     SETOF                     284041
+006400960214     C                     SETOF                     424344
+006500960209     C*
+006600960209     C** CMD3 - FINE LAVORO
+006700960209     C   KC                GOTO FINE
+006800960209     C* CONTROLLO
+006900960209     C                     EXSR CTRD01
+007000960209     C  NKF
+007100960214     COR       28          GOTO FOR01
+007200960209     C*
+007300960209     C** CMD6 - ELABORAZIONE
+007400960209     C                     MOVELV1CFIL    PARFIL
+007500960209     C                     MOVELV1CTTB    PARTTB
+007600960209     C*
+007700960209     C                     MOVELPARAM     KPJBU
+007800960209     C                     MOVEL'LS49'    KCOAZ
+007900960209     C                     CALL 'BCH10'
+008000960209     C                     PARM           KPJBA
+008100960209     C*
+008200960214     C           FINE      TAG
+008300960209     C                     SETON                     LR
+008400960209     C*
+008500960209     C*--- INZSR INIZIALE --------------------------------------------*
+008600960209     C           *INZSR    BEGSR
+008700960212     C*
+008800960212     C           *ENTRY    PLIST
+008900960212     C                     PARM           KPJBA
+009000960212     C                     Z-ADD1         CODUT
+009100960212     C                     CALL 'X§PARUT'
+009200960212     C                     PARM           UT§DSE
+009300960212     C                     MOVELREC80     CNCR80
+009400960212     C                     MOVELRAGUT     V1CRSU
+009500960212     C*
+009600020429     C* VEDO SE SONO PRIMO O SECONDO LIVELLO
+009700020429    1C***        REM       IFEQ 'REM'
+009800020429     C***        REMFIL    ANDGT*ZEROS
+009900020429     C***                  MOVELREMFIL    V1CFIL
+010000020429     C***                  SETON                     05
+010100020429   X1C***                  ELSE
+010200020429     C***                  MOVELSIMFEL    V1CFIL
+010300020429     C                     Z-ADDSIMPOU    V1CFIL
+010400020429    1C           SIMTPP    IFEQ '2'
+010500020429     C           SIMTPP    OREQ *BLANKS
+010600020429     C                     SETON                     05
+010700020429   X1C                     ELSE
+010800960212     C*
+010900960212     C* CARICO TABELLA FILIALI GESTITE £1
+011000960212     C                     CLEARDSUL06
+011100960212     C                     MOVE '£1'      D06COD
+011200960212     C                     MOVELSIMFEL    D06KEY
+011300960212     C                     MOVELDSUL06    KPJBU
+011400960212     C                     CALL 'TRUL06R'
+011500960212     C                     PARM           KPJBA
+011600960212     C                     MOVELKPJBU     DSUL06
+011700960212     C                     MOVEALIN       L1
+011800960212    1C                     ENDIF
+011900960212     C*
+012000960214     C           KFGV      KLIST
+012100960214     C                     KFLD           V1CFIL
+012200960214     C                     KFLD           PARDFD
+012300960214     C           KFVA      KLIST
+012400960214     C                     KFLD           V1CFIL
+012500960214     C                     KFLD           PARDAD
+012600960214     C*
+012700960214     C*  SOLO PER LE SPEDIZ.DI RECUPERO E' TRA DATA G. - 3  E  + §3IGGS
+012800960214     C                     TIME           W0140  140
+012900960214     C* UDATE IN GGMMAAAA
+013000960214     C                     MOVE W0140     WDTGIO  80
+013100960214     C*
+013200960214     C* UDATE IN AAAAMMGG
+013300960214     C                     Z-ADDWDTGIO    G02DAT
+013400960214     C                     MOVEL*BLANK    G02ERR
+013500960214     C                     CALL 'XSRDA8'
+013600960214     C                     PARM           WLBDAT
+013700960215     C* SOTTRAGGO  1
+013800960215     C           G02TGI    SUB  1         GIOTGI
+013900960215     C*
+014000960215     C                     CALL 'XSRGI8'
+014100960215     C                     PARM           WGIDAT
+014200960215     C*
+014300960215     C                     Z-ADDGIODAT    DATAM   80
+014400960209     C                     ENDSR
+014500960209     C*
+014600960209     C*--- CONTROLLI FORMATO ----------------------------------------*
+014700960209     C           CTRD01    BEGSR
+014800960214     C                     CLEARPARAM
+014900960209     C*
+015000960209     C****  FILIALE  ****
+015100960209     C           V1CFIL    CHAINAZORG01L             30
+015200960209    2C           *IN30     IFEQ *ON
+015300960209     C                     MOVELMSG,1     V1CMSG
+015400960209     C                     SETON                     4028
+015500960209     C                     GOTO ENDCTR
+015600960209    2C                     ENDIF
+015700960214     C* LA FILIALE DEVE ESSERE DELL'AREA
+015800960214     C  N05      V1CFIL    LOKUPL1                       30
+015900960214    2C  N05      *IN30     IFEQ *OFF
+016000960214     C                     MOVELMSG,2     V1CMSG
+016100960214     C                     SETON                     4028
+016200960214     C                     GOTO ENDCTR
+016300960214    2C                     ENDIF
+016400960216     C* SE RICHIESTO TIPO ELENCO P O 1 O 2
+016500960216     C*  LA FILIALE DEVE ESSERE PER FORZA SIMFEL
+016600960216     C           V1CTTB    IFEQ 'P'
+016700960216     C           V1CTTB    OREQ '1'
+016800960216     C           V1CTTB    OREQ '2'
+016900960216     C           V1CFIL    IFNE SIMFEL
+017000960216     C                     MOVELMSG,10    V1CMSG
+017100960216     C                     SETON                     4028
+017200960216     C                     GOTO ENDCTR
+017300960216    2C                     ENDIF
+017400960216    2C                     ENDIF
+017500960209     C*
+017600960214     C* DATA FOGLI PARTENZA OBBLIGATORIA PER ELENCO ' '- P- 1-  2-
+017700960214    1C           V1CTTB    IFEQ ' '
+017800960214     C           V1CTTB    OREQ 'P'
+017900960214     C           V1CTTB    OREQ '1'
+018000960214     C           V1CTTB    OREQ '2'
+018100960214    2C           V1CDFD    IFEQ 0
+018200960214     C                     MOVELMSG,5     V1CMSG
+018300960214     C                     SETON                     4128
+018400960214     C                     GOTO ENDCTR
+018500960214    2C                     ENDIF
+018600960214    1C                     ENDIF
+018700960214     c* se immessa data AL IMMETTERE ANCHE DATA DAL
+018800960214    1C           V1CDFA    IFGT 0
+018900960214     C           V1CDFD    ANDEQ0
+019000960214     C                     MOVELMSG,7     V1CMSG
+019100960214     C                     SETON                     4128
+019200960214     C                     GOTO ENDCTR
+019300960214    1C                     ENDIF
+019400960214     C* DATA FOGLIO ARRIVO  OBBLIGATORIA PER ELENCO ' '- A- 3- 4-
+019500960214    1C           V1CTTB    IFEQ ' '
+019600960214     C           V1CTTB    OREQ 'A'
+019700960214     C           V1CTTB    OREQ '3'
+019800960214     C           V1CTTB    OREQ '4'
+019900960215    2C           V1CDAD    IFEQ 0
+020000960214     C                     MOVELMSG,6     V1CMSG
+020100960214     C                     SETON                     4328
+020200960214     C                     GOTO ENDCTR
+020300960214    2C                     ENDIF
+020400960214    1C                     ENDIF
+020500960214     c* se immessa data AL IMMETTERE ANCHE DATA DAL
+020600960214    1C           V1CDAA    IFGT 0
+020700960214     C           V1CDAD    ANDEQ0
+020800960214     C                     MOVELMSG,7     V1CMSG
+020900960214     C                     SETON                     4128
+021000960214     C                     GOTO ENDCTR
+021100960214    1C                     ENDIF
+021200960214     c**
+021300960214     C****  CONTROLLO DATA  FOGLIO VIAGGIO PER LE TRAZIONI IN PARTENZA
+021400960219     C           V1CDFD    IFGT 0
+021500960212     C                     Z-ADDV1CDFD    G02DAT
+021600960209     C                     MOVEL*BLANK    G02ERR
+021700960209     C                     CALL 'XSRDA8'
+021800960209     C                     PARM           WLBDAT
+021900960209     C           G02ERR    IFEQ '1'
+022000960214     C                     MOVELMSG,3     V1CMSG
+022100960214     C                     SETON                     4128
+022200960209     C                     GOTO ENDCTR
+022300960209     C                     ENDIF
+022400960212     C                     Z-ADDG02INV    PARDFD
+022500960209     C* IMPOSTO A VIDEO LA DATA A 8 SE IMMESSA A 6
+022600960212     C                     Z-ADDG02DAT    V1CDFD
+022700960219     C                     ENDIF
+022800960209     C*
+022900960214     C****  CONTROLLO DATA  AL
+023000960212    1C           V1CDFA    IFGT 0
+023100960212     C                     Z-ADDV1CDFA    G02DAT
+023200960209     C                     MOVEL*BLANK    G02ERR
+023300960209     C                     CALL 'XSRDA8'
+023400960209     C                     PARM           WLBDAT
+023500960209     C           G02ERR    IFEQ '1'
+023600960214     C                     MOVELMSG,3     V1CMSG
+023700960214     C                     SETON                     4228
+023800960209     C                     GOTO ENDCTR
+023900960209     C                     ENDIF
+024000960212     C                     Z-ADDG02INV    PARDFA
+024100960209     C* IMPOSTO A VIDEO LA DATA A 8 SE IMMESSA A 6
+024200960212     C                     Z-ADDG02DAT    V1CDFA
+024300960209     C*
+024400960209     C* DATA AL NON PUO' ESSERE MINORE DELLA DATA DAL
+024500960212    2C           PARDFA    IFLT PARDFD
+024600960214     C                     MOVELMSG,4     V1CMSG
+024700960214     C                     SETON                     4228
+024800960209     C                     GOTO ENDCTR
+024900960212    2C                     ENDIF
+025000960212    1C                     ENDIF
+025100960212     C*
+025200960214     C****  CONTROLLO DATA  FOGLIO ARRIVI  PER LE TRAZIONI IN ARRIVO
+025300960219    1C           V1CDAD    IFGT 0
+025400960214     C                     Z-ADDV1CDAD    G02DAT
+025500960214     C                     MOVEL*BLANK    G02ERR
+025600960214     C                     CALL 'XSRDA8'
+025700960214     C                     PARM           WLBDAT
+025800960214     C           G02ERR    IFEQ '1'
+025900960214     C                     MOVELMSG,3     V1CMSG
+026000960214     C                     SETON                     4328
+026100960214     C                     GOTO ENDCTR
+026200960214     C                     ENDIF
+026300960214     C                     Z-ADDG02INV    PARDAD
+026400960214     C* IMPOSTO A VIDEO LA DATA A 8 SE IMMESSA A 6
+026500960214     C                     Z-ADDG02DAT    V1CDAD
+026600960219    1C                     ENDIF
+026700960214     C*
+026800960214     C****  CONTROLLO DATA   AL  ****
+026900960214    1C           V1CDAA    IFGT 0
+027000960214     C                     Z-ADDV1CDAA    G02DAT
+027100960214     C                     MOVEL*BLANK    G02ERR
+027200960214     C                     CALL 'XSRDA8'
+027300960214     C                     PARM           WLBDAT
+027400960214     C           G02ERR    IFEQ '1'
+027500960214     C                     MOVELMSG,3     V1CMSG
+027600960214     C                     SETON                     4428
+027700960214     C                     GOTO ENDCTR
+027800960214     C                     ENDIF
+027900960214     C                     Z-ADDG02INV    PARDAA
+028000960214     C* IMPOSTO A VIDEO LA DATA A 8 SE IMMESSA A 6
+028100960214     C                     Z-ADDG02DAT    V1CDAA
+028200960214     C*
+028300960214     C* DATA AL NON PUO' ESSERE MINORE DELLA DATA DAL
+028400960214    2C           PARDAA    IFLT PARDAD
+028500960214     C                     MOVELMSG,4     V1CMSG
+028600960214     C                     SETON                     4428
+028700960214     C                     GOTO ENDCTR
+028800960214    2C                     ENDIF
+028900960214    1C                     ENDIF
+029000960214     C* verifico se ci sono dei Fv PARTENZA da stampare
+029100960219     C           PARDFD    IFGT 0
+029200960219     C*
+029300960214    1C           PARDFA    IFEQ 0
+029400960219     C                     Z-ADDPARDFD    PARDFA
+029500960214    1C                     ENDIF
+029600960214     C**
+029700960214     C           KFGV      SETLLFNFGV000
+029800960215     C           V1CFIL    READEFNFGV000                 30
+029900960214    1C           *IN30     IFEQ *OFF
+030000960214    2C           FGVDFV    IFLT PARDFD
+030100960214     C           FGVDFV    ORGT PARDFA
+030200960214     C                     SETON                     30
+030300960214    2C                     ENDIF
+030400960214    1C                     ENDIF
+030500960214     C* ERRORE: NON ESISTONO FV NELLA SELEZIONE RICHIESTA
+030600960214    1C           *IN30     IFEQ *ON
+030700960214     C                     MOVELMSG,8     V1CMSG
+030800960214     C                     SETON                     4128
+030900960214     C                     GOTO ENDCTR
+031000960214    1C                     ENDIF
+031100960219    0C                     ENDIF
+031200960219    C**
+031300960214     C* verifico se ci sono dei Fv ARRIVI da stampare
+031400960219     C           PARDAD    IFGT 0
+031500960219     C**
+031600960214    1C           PARDAA    IFEQ 0
+031700960219     C                     Z-ADDPARDAD    PARDAA
+031800960214    1C                     ENDIF
+031900960214     C**
+032000960214     C           KFVA      SETLLFNFVA000
+032100960215     C           V1CFIL    READEFNFVA000                 30
+032200960214    1C           *IN30     IFEQ *OFF
+032300960214    2C           FVADFA    IFLT PARDAD
+032400960214     C           FVADFA    ORGT PARDAA
+032500960214     C                     SETON                     30
+032600960214    2C                     ENDIF
+032700960214    1C                     ENDIF
+032800960214     C* ERRORE: NON ESISTONO FV NELLA SELEZIONE RICHIESTA
+032900960214    1C           *IN30     IFEQ *ON
+033000960214     C                     MOVELMSG,9     V1CMSG
+033100960214     C                     SETON                     4328
+033200960214     C                     GOTO ENDCTR
+033300960214    1C                     ENDIF
+033400960219    1C                     ENDIF
+033500960214     C*
+033600960214     C           ENDCTR    ENDSR
+033700960214**
+033800960214Filiale errata
+033900960214La filiale non e' una filiale dell'area
+034000960214Data errata
+034100960214Data DAL  MAGGIORE  della data AL
+034200960214Data Foglio viaggio obbligatoria se richiesti elenchi trazioni in PARTENZA
+034300960214Data Foglio arrivi obbligatoria se richiesti elenchi trazioni in ARRIVO
+034400960214Se immessa data AL immettere anche data DAL
+034500960214Non esistono fogli viaggio PARTENZA per la selezione immessa
+034600960219Non esistono Fogli viaggio abbinati a foglio arrivi per la selezione immessa
+034700960216Se richiesto elenco 1 o 2 la filiale deve essere per forza il 1 livello

@@ -1,0 +1,45 @@
+000100020904             PGM        PARM(&DEL &LIB)
+000200020904
+000300020904             DCL        VAR(&DEL)   TYPE(*CHAR) LEN(1)
+000400020904             DCL        VAR(&LIB)   TYPE(*CHAR) LEN(10)
+000500020904             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10) +
+000600020904                          VALUE('TNCPS00F  ')
+000700020904
+000800020904/* ___ Sistemo la lista di librerie ________________________________ */
+000900020904
+001000020904             IF         COND(&LIB = '          ') THEN(CHGVAR +
+001100020904                          VAR(&LIB) VALUE('GAITRAGRU '))
+001200020904
+001300020904             CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB)
+001400020904             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FINE))
+001500020904
+001600020904             CHKOBJ     OBJ(&LIB/TNCPS00F) OBJTYPE(*FILE)
+001700020904             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FINE))
+001800010601
+001900020904             ADDLIBLE   LIB(GAITRA201) POSITION(*LAST)
+002000020904             MONMSG     MSGID(CPF0000)
+002100020904             ADDLIBLE   LIB(GAITRAOBJ) POSITION(*FIRST)
+002200010607             MONMSG     MSGID(CPF0000)
+002300020904             ADDLIBLE   LIB(&LIB)      POSITION(*FIRST)
+002400010607             MONMSG     MSGID(CPF0000)
+002500011213
+002600020904/* ___ Salvo i potenziali PRIMA della "riorganizzazione" ___________ */
+002700020904
+002800020904             IF         COND(&DEL = '1') THEN(DO)
+002900020904               DLTF       FILE(&LIB/TNCPS_SAVE)
+003000020904               MONMSG     MSGID(CPF0000)
+003100020904               CPYF       FROMFILE(&LIB/TNCPS00F) +
+003200020904                            TOFILE(&LIB/TNCPS_SAVE) CRTFILE(*YES)
+003300020904               MONMSG     MSGID(CPF0000)
+003400020904             ENDDO
+003500011213
+003600020904/* ___ Lancio il pgm di comodo per pulizia del file &FILE __________ */
+003700020904/* _______________________________________ della libreria &LIB _____ */
+003800020904
+003900020904             CALL       PGM(*LIBL/TNVRCP2R) PARM(&DEL)
+004000011212             MONMSG     MSGID(CPF0000)
+004100010510
+004200020904/* ___ Fine ________________________________________________________ */
+004300020904
+004400020904    FINE:
+004500990611             ENDPGM

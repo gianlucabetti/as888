@@ -1,0 +1,118 @@
+000100910702     IRCVVAR      DS
+000200910702     I                                    B   1   40OFFSET
+000300910702     I                                    B   9  120NOENTR
+000400910702     I                                    B  13  160LSTSIZ
+000500920319     ILIST        DS
+000600920319     I                                        1  26 QJOBL
+000700920319     I                                        1  10 JOBNML
+000800920319     I                                       11  20 USRNML
+000900920319     I                                       21  26 JOBNOL
+001000920319     I                                       27  42 IJOBID
+001100920319     I                                       43  52 STATL
+001200910702     I*
+001300910702     I            DS
+001400910702     I                                    B   1   40LENDTA
+001500910702     I                                    B   5   80STRPOS
+001600910702     I                                    B   9  120RCVLEN
+001700910702     I*
+001800920319     IJOBDS       DS
+001900920319     I                                        1  10 JOBNAM
+002000920319     I                                       11  20 JOBUSR
+002100920319     I                                       21  26 JOBNBR
+002200910702     I              'AA        QTEMP     'C         SPACE
+002300910722     C*--------------------------------------------
+002400920313     C* PARAMTRI IN INGRESSO
+002500910722     C*--------------------------------------------
+002600910702     C*
+002700920313     C           *ENTRY    PLIST
+002800920319     C                     PARM           PARJOB 10            JOB
+002900920313     C                     PARM           OPZ     1            AZIONE
+003000920319     C                     PARM           JOBL   26            AZIONE
+003100920313     ***                                            '0' = RICHIESTA MEMBRI
+003200920313     ***                                            '1' = ULTERIORI MEMBRI
+003300920313     ***                                            '2' = FINE LISTA
+003400920313     ***                                            '9' = ERRORI
+003500910722     C*--------------------------------------------
+003600910722     C* IMPOSTA I DEFAULT
+003700910722     C*--------------------------------------------
+003800920313     C           OPZ       IFEQ '0'
+003900920319     C                     MOVE PARJOB    JOBNAM
+004000920313     C*
+004100920319     C                     MOVEL'*ALL'    JOBUSR
+004200920319     C                     MOVEL'*ALL'    JOBNBR
+004300920319     C                     MOVEL'*ACTIVE' STATUS 10
+004400910702     C*
+004500910722     C*------------------------------------------
+004600910702     C* CREA USER SPACE
+004700910722     C*------------------------------------------
+004800910702     C                     CALL 'QUSCRTUS'             21
+004900910702     C                     PARM SPACE     USRSPC 20
+005000910702     C                     PARM           EXTATR 10
+005100910702     C                     PARM 100       USSIZE 135
+005200910702     C                     PARM ' '       USINIT  1
+005300910702     C                     PARM '*CHANGE' USAUTH 10
+005400910702     C                     PARM           USTEXT 50
+005500910722     C*-----------------------------------------------------
+005600920313     C*  CARICA LO USR SPACE CON LISTA MEMBRI
+005700910722     C*-----------------------------------------------------
+005800920319     C                     CALL 'QUSLJOB'              21
+005900910702     C                     PARM SPACE     USRSPC
+006000920319     C                     PARM 'JOBL0100'FMTNME  8
+006100920319     C                     PARM           JOBDS
+006200920319     C                     PARM           STATUS
+006300920313     C           *IN21     IFEQ '1'
+006400920313     C                     MOVE '9'       OPZ
+006500920313     C                     GOTO FINE
+006600920313     C                     END
+006700920313     C*
+006800920313     C*
+006900910722     C*----------------------------------------------------
+007000910702     C* REPERISCE IL NUMERO DI ELEMENTI DI LISTA
+007100910722     C*----------------------------------------------------
+007200910702     C                     Z-ADD16        LENDTA
+007300910702     C                     Z-ADD125       STRPOS
+007400910702     C                     CALL 'QUSRTVUS'
+007500910702     C                     PARM SPACE     USRSPC
+007600910702     C                     PARM           STRPOS
+007700910702     C                     PARM           LENDTA
+007800910702     C                     PARM           RCVVAR
+007900910702     C*
+008000910702     C                     Z-ADDOFFSET    STRPOS
+008100910702     C                     ADD  1         STRPOS
+008200961213     C                     Z-ADD52        LENDTA
+008300910702     C                     Z-ADD1         COUNT  150
+008400920313     C*
+008500920313     C                     END
+008600910722     C*--------------------------------------
+008700910722     C*  PER OGNI ELEMENTO DELLA LISTA
+008800910722     C*--------------------------------------
+008900920313     C           COUNT     IFLE NOENTR
+009000910722     C*
+009100910722     C* -------------------------------------
+009200910722     C* REPERISCE ELEMENTO DI LISTA
+009300910722     C*--------------------------------------
+009400961213     C                     CALL 'QUSRTVUS'             21
+009500961213     C***                  CALL 'QUSRTVUS'
+009600910702     C                     PARM SPACE     USRSPC
+009700910702     C                     PARM           STRPOS
+009800910702     C                     PARM           LENDTA
+009900910702     C                     PARM           LIST
+010000910722     C*
+010100920313     C           *IN21     IFEQ '1'
+010200920313     C                     MOVE '9'       OPZ
+010300920313     C                     GOTO FINE
+010400920313     C                     END
+010500910702     C*
+010600920319     C                     MOVE QJOBL     JOBL
+010700910702     C                     ADD  LSTSIZ    STRPOS
+010800910702     C                     ADD  1         COUNT
+010900910702     C*
+011000920313     C                     MOVE '1'       OPZ
+011100920313     C                     GOTO FINE
+011200910702     C*
+011300920313     C                     ELSE
+011400920313     C                     MOVE '2'       OPZ
+011500920313     C                     GOTO FINE
+011600910702     C                     END
+011700910702     C           FINE      TAG
+011800920313     C                     SETON                       RT

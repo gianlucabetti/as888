@@ -1,0 +1,57 @@
+000100030714 FNLS17C:    pgm        parm(&KPJBA)
+000200030714
+000300030714 /* Definizione variabili -------------------------------------------*/
+000400030714             dcl        var(&KPJBA)   type(*char) len(502)
+000500030714             dcl        var(&KPJBU)   type(*char) len(256)
+000600030714    /*  PGM stampa LDV */
+000700030714             dcl        var(&D90PSL)  type(*char) len(10)
+000800030714    /*  Stampante ad aghi LDV  */
+000900030714             dcl        var(&D90PRB)  type(*char) len(10)
+001000030714    /*  Stampante laser LDV A4  */
+001100030714             dcl        var(&D90PRB4) type(*char) len(10)
+001200030714    /*  Stampante laser LDV A5  */
+001300030714             dcl        var(&D90PRB5) type(*char) len(10)
+001400030714    /*  Modulo LDV per stampante ad aghi  */
+001500030714             dcl        var(&D90MDB)  type(*char) len(10)
+001600030714    /*  Modulo LDV A4 per stampante laser  */
+001700030714             dcl        var(&D90MDB4) type(*char) len(10)
+001800030714    /*  Modulo LDV A5 per stampante laser  */
+001900030714             dcl        var(&D90MDB5) type(*char) len(10)
+002000030714
+002100030714             chgvar     var(&KPJBU)   value(%sst(&KPJBA 247 256))
+002200030714             chgvar     var(&D90PSL)  value(%sst(&KPJBU   1  10))
+002300030714             chgvar     var(&D90PRB4) value(%sst(&KPJBU  11  10))
+002400030714             chgvar     var(&D90PRB5) value(%sst(&KPJBU  21  10))
+002500030714             chgvar     var(&D90MDB4) value(%sst(&KPJBU  31  10))
+002600030714             chgvar     var(&D90MDB5) value(%sst(&KPJBU  41  10))
+002700030714             chgvar     var(&D90PRB)  value(%sst(&KPJBU  51  10))
+002800030714             chgvar     var(&D90MDB)  value(%sst(&KPJBU  61  10))
+002900030714
+003000030714 /* Override ai printer file -----------------------------------------*/
+003100030714    /* prtf bolle per stampanti laser */
+003200030714             ovrprtf    file(FNLSB5PA4) outq(&D90PRB4) +
+003300030714                          formtype(&D90MDB4) usrdta('BolleFedEx') +
+003400030714                          share(*yes)
+003500030714             ovrprtf    file(FNLSB5PA5) outq(&D90PRB5) +
+003600030714                          formtype(&D90MDB5) usrdta('BolleFedEx') +
+003700030714                          share(*yes)
+003800030714
+003900030714    /* prtf bolle per stampanti ad aghi */
+004000030714             ovrprtf    file(FNLSB0P)   outq(&D90PRB) +
+004100030714                          formtype(&D90MDB)      usrdta('BolleFedEx') +
+004200030714                          share(*yes)
+004300030714             ovrprtf    file(FNLSB0P1)  outq(&D90PRB) +
+004400030714                          formtype('RistBolDPD') usrdta('BolleFedEx') +
+004500030714                          share(*yes)
+004600030714             ovrprtf    file(FNLSB0P2)  outq(&D90PRB) +
+004700030714                          formtype('RistBolFED') usrdta('BolleFedEx') +
+004800030714                          share(*yes) copies(2)
+004900030714
+005000030714 /* Richiamo pgm di stampa ------------------------------------------*/
+005100030714             call       pgm(FNLS17R) parm(&KPJBA)
+005200030714
+005300030714 /* Fine ------------------------------------------------------------*/
+005400030714             rclrsc     lvl(*caller)
+005500030714             dltovr     file(*all)
+005600030714
+005700030714             endpgm

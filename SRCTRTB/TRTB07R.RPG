@@ -1,0 +1,371 @@
+000100891030     H            Y                                                       CN0500
+000200891030     F*--------------------------------------------------------------*
+000300891109     F* GESTIONE TABELLA IMP.CONTABELE INCASSO DISTINTE C/ASS.       *
+000400891030     F*----------------------* USO DEGLI INDICATORI *----------------*
+000500891030     F*  01        INSERIMENTO                                       *
+000600891030     F*  02        VARIAZIONE                                        *
+000700891107     F*  79        COMANDO DI ANNULLAMENTO CONSENTITO SOLO DA EDP    *
+000800891030     F*--------------------------------------------------------------*
+000900891109     FTRTB07D CF  E                    WORKSTN
+001000891107     FCNACO00FIF  E           K        DISK
+001100891030     FTABEL00FUF  E           K        DISK                      A
+001200891107     E                    TCU        50  6               TAB FLAG CNT
+001300891107     E                    KCU        50  4 0             TAB CAPO CONTO
+001400891107     E                    DTU        12  6 0             DATE PARAM
+001500891030     I*--------------------------------------------------------------*
+001600891030     I*                        I N P U T                             *
+001700891030     I*--------------------------------------------------------------*
+001800891109     IDSCD      E DS
+001900891107     ITCUDS       DS
+002000891107     I                                        1   1 F1
+002100891107     I                                        3   3 F3
+002200891107     I                                        2   2 F2
+002300891107     I                                        4   4 F4
+002400891107     I                                        5   6 F56
+002500971210     ITRUL12    E DSTRUL12DS
+002600891030     IKPJBA     E DS
+002700891030     IUTEDSE    E DSUTEDSE0F
+002800891107     I                                      398 697 TCU
+002900891107     I                                    P 698 847 KCU
+003000891107     I                                    P 848 8950DTU
+003100891030     C******************************************************
+003200891030     C           *ENTRY    PLIST
+003300891030     C                     PARM           KPJBA
+003400891030     C                     Z-ADD1         CODUT
+003500891030     C                     CALL 'XPARUT'
+003600891030     C                     PARM           UTEDSE
+003700891030     C           CODUT     CABEQ-1        FINE
+003800891030     C                     MOVELRAGUT     RSUT
+003900891107     C*--- RICERCA CAPOCONTI------------------------------------------*
+004000891107     C                     DO   50        X       20
+004100891107     C                     MOVE TCU,X     TCUDS
+004200891107     C           F56       CABNE'CG'      END0
+004300891107     C           F4        COMP '1'                      21
+004400891107     C           F4        COMP '2'                      22
+004500891107     C           F4        COMP '3'                      23
+004600891107     C           F4        COMP '6'                      27
+004700891107     C** 1 CLIENTI   21
+004800891107     C** 2 FORNITORI 22
+004900891107     C** 3 AGENTI    23
+005000891107     C           F3        COMP '0'                  242425
+005100891107     C           F3        COMP 'I'                      26
+005200891107     C** 0 ITALIA   25
+005300891107     C** 1 ESTERO   24
+005400891107     ** I CAPO CONTO IVA
+005500891107     C   21 24             Z-ADDKCU,X     KCE     40
+005600891107     C   21 25             Z-ADDKCU,X     KCI     40
+005700891107     C   22 24             Z-ADDKCU,X     KFE     40
+005800891107     C   22 25             Z-ADDKCU,X     KFI     40
+005900891107     C   23 24             Z-ADDKCU,X     KAE     40
+006000891107     C   23 25             Z-ADDKCU,X     KAI     40
+006100891107     C   26                Z-ADDKCU,X     KIVA    40
+006200891107     C   27                Z-ADDKCU,X     KBNA    40
+006300891107     C           END0      TAG
+006400891107     C                     END
+006500891030     C******************************************************
+006600891030     C* POSIZIONAMENTO TABELLE                             *
+006700891107     C           KTAB      KLIST                           *
+006800891030     C                     KFLD           §KUT             *
+006900891030     C                     KFLD           §COD             *
+007000891030     C                     KFLD           §KEY             *
+007100891107     C           KACO      KLIST                           *
+007200891030     C                     KFLD           CODUT            *
+007300891107     C                     KFLD           KCC     40       *
+007400891107     C                     KFLD           KSC     70       *
+007500891030     C******************************************************
+007600891030     C           *LIKE     DEFN TBLKUT    §KUT
+007700891030     C           *LIKE     DEFN TBLCOD    §COD
+007800891030     C           *LIKE     DEFN TBLKEY    §KEY
+007900971210     C******************************************************
+008000971210     C* Richiamo pgm per controllo modificabilità tabella
+008100971210     C                     CLEARTRUL12
+008200971210     C                     MOVEL'L'       I12TLA
+008300971210     C                     MOVELKNSIF     I12NSI
+008400971210     C                     MOVEL'CD'      I12COD
+008500971210     C                     CALL 'TRUL12R'
+008600971210     C                     PARM           TRUL12
+008700971210     C           O12ERR    IFEQ '1'
+008800971210     C                     GOTO FINE
+008900971210     C                     END
+009000971210     C******************************************************
+009100891102     C           STAR      TAG
+009200891102     C                     SETOF                     79
+009300891102     C                     MOVELKNMUS     PROF    3
+009400891102     C           PROF      IFNE 'EDP'
+009500891102     C                     SETON                     79
+009600891102     C                     END
+009700891107     C                     MOVEL*BLANKS   VCOD
+009800891109     C                     MOVEL'0'       VCOD
+009900891030     C           INIZIO    TAG
+010000891109     C                     EXFMTTB07D1
+010100891030     C      KL             GOTO FINE
+010200891102     C                     MOVELCODUT     §KUT
+010300891109     C                     MOVEL'CD'      §COD
+010400891107     C                     MOVELVCOD      §KEY
+010500891030     C                     SETOF                     0102
+010600891107     C                     EXSR PULVID
+010700891107     C           KTAB      CHAINTABEL                80
+010800891030     C           *IN80     IFEQ '1'
+010900891030     C                     SETON                     01    *IMMISSIONE
+011000891030     C                     ELSE
+011100891109     C                     MOVELTBLUNI    DSCD
+011200891109     C                     EXSR RICDES
+011300900604     C           TBLFLG    IFEQ '*'
+011400900604     C                     SETON                     03    *ANNULLATO
+011500900604     C                     ELSE
+011600891030     C                     SETON                     02    *VARIAZIONE
+011700891030     C                     END
+011800900604     C                     END
+011900891030     C           SU        TAG
+012000891030     C                     SETOF                     99
+012100891109     C                     EXFMTTB07D2
+012200891030     C      KL             GOTO FINE
+012300891030     C      KD             GOTO INIZIO
+012400891030     C**--- ANNULLAMENTO
+012500900604     C      KQ             DO
+012600900604     C                     MOVEL'*'       TBLFLG
+012700900604     C                     UPDATTABEL
+012800891030     C                     GOTO INIZIO
+012900891030     C                     END
+013000900604     C** RIPRISTINO
+013100900604     C      KE             DO
+013200900604     C                     MOVEL*BLANKS   TBLFLG
+013300900604     C                     UPDATTABEL
+013400900604     C                     GOTO INIZIO
+013500900604     C                     END
+013600900604     C*
+013700891102     C                     EXSR CTRFMT
+013800891102     C      99             GOTO SU
+013900891030     C                     EXSR SCRIVI
+014000891102     C                     GOTO STAR
+014100891030     C           FINE      TAG
+014200891030     C                     SETON                     LR
+014300891030     C**------------------------
+014400891030     C** PULISCI CAMPI VIDEO
+014500891030     C**------------------------
+014600891030     C           PULVID    BEGSR
+014700891109     C                     Z-ADD0         §CDKC1
+014800891109     C                     Z-ADD0         §CDKS1
+014900891109     C                     Z-ADD0         §CDFT1
+015000891109     C                     Z-ADD0         §CDKC2
+015100891109     C                     Z-ADD0         §CDKS2
+015200891109     C                     Z-ADD0         §CDFT2
+015300891109     C                     Z-ADD0         §CDKC3
+015400891109     C                     Z-ADD0         §CDKS3
+015500891109     C                     Z-ADD0         §CDFT3
+015600891109     C                     Z-ADD0         §CDKC4
+015700891109     C                     Z-ADD0         §CDKS4
+015800891109     C                     Z-ADD0         §CDFT4
+015900891109     C                     Z-ADD0         §CDKC5
+016000891109     C                     Z-ADD0         §CDKS5
+016100891109     C                     Z-ADD0         §CDFT5
+016200891109     C                     MOVEL*BLANKS   DESC1
+016300891109     C                     MOVEL*BLANKS   DESC2
+016400891109     C                     MOVEL*BLANKS   DESC3
+016500891109     C                     MOVEL*BLANKS   DESC4
+016600891109     C                     MOVEL*BLANKS   DESC5
+016700891030     C                     ENDSR
+016800891030     C**------------------------
+016900891030     C** CONTROLLI 2 VIDEATA
+017000891030     C**------------------------
+017100891030     C           CTRFMT    BEGSR
+017200891109     C**--- CONTO 1
+017300900110     C           §CDKC1    IFGT 0
+017400900110     C           §CDKS1    ANDEQ0
+017500900110     C                     SETON                     3099
+017600900110     C                     GOTO END1
+017700900110     C                     END
+017800900110     C           §CDKS1    IFGT 0
+017900891109     C                     Z-ADD§CDKC1    KCC
+018000891109     C                     Z-ADD§CDKS1    KSC
+018100891109     C           KACO      CHAINCNACO000             30
+018200891109     C      30             DO
+018300891109     C                     SETON                     99
+018400891109     C                     GOTO END1
+018500891109     C                     END
+018600891110     C                     MOVELACORAG    DESC1
+018700891110     C                     END
+018800891110     C**--- FLAG COMBINAZ.
+018900891110     C           §CDFT1    IFNE 0
+019000891110     C           §CDFT1    ANDNE1
+019100891110     C                     SETON                     3199
+019200891110     C                     GOTO END1
+019300900110     C                     ELSE
+019400900110     C           §CDKS1    IFEQ 0
+019500900110     C           §CDFT1    ANDGT0
+019600900110     C                     SETON                     3199
+019700900110     C                     GOTO END1
+019800900110     C                     END
+019900891110     C                     END
+020000891110     C**--- CONTO 2
+020100900110     C           §CDKC2    IFGT 0
+020200900110     C           §CDKS2    ANDEQ0
+020300900110     C                     SETON                     3299
+020400900110     C                     GOTO END1
+020500900110     C                     END
+020600900110     C           §CDKS2    IFGT 0
+020700891110     C                     Z-ADD§CDKC2    KCC
+020800891110     C                     Z-ADD§CDKS2    KSC
+020900891110     C           KACO      CHAINCNACO000             32
+021000891110     C      32             DO
+021100891110     C                     SETON                     99
+021200891110     C                     GOTO END1
+021300891110     C                     END
+021400891110     C                     MOVELACORAG    DESC2
+021500891110     C                     END
+021600891110     C**--- FLAG COMBINAZ.
+021700891110     C           §CDFT2    IFNE 0
+021800891110     C           §CDFT2    ANDNE1
+021900891110     C                     SETON                     3399
+022000891110     C                     GOTO END1
+022100900110     C                     ELSE
+022200900110     C           §CDKS2    IFEQ 0
+022300900110     C           §CDFT2    ANDGT0
+022400900110     C                     SETON                     3399
+022500900110     C                     GOTO END1
+022600900110     C                     END
+022700900110     C                     END
+022800891110     C**--- CONTO 3
+022900900110     C           §CDKC3    IFGT 0
+023000900110     C           §CDKS3    ANDEQ0
+023100900110     C                     SETON                     3499
+023200900110     C                     GOTO END1
+023300900110     C                     END
+023400900110     C           §CDKS3    IFGT 0
+023500891110     C                     Z-ADD§CDKC3    KCC
+023600891110     C                     Z-ADD§CDKS3    KSC
+023700891110     C           KACO      CHAINCNACO000             34
+023800891110     C      34             DO
+023900891110     C                     SETON                     99
+024000891110     C                     GOTO END1
+024100891110     C                     END
+024200891110     C                     MOVELACORAG    DESC3
+024300891110     C                     END
+024400891110     C**--- FLAG COMBINAZ.
+024500891110     C           §CDFT3    IFNE 0
+024600891110     C           §CDFT3    ANDNE1
+024700891110     C                     SETON                     3599
+024800891110     C                     GOTO END1
+024900900110     C                     ELSE
+025000900110     C           §CDKS3    IFEQ 0
+025100900110     C           §CDFT3    ANDGT0
+025200900110     C                     SETON                     3599
+025300900110     C                     GOTO END1
+025400900110     C                     END
+025500891110     C                     END
+025600891110     C**--- CONTO 4
+025700900110     C           §CDKC4    IFGT 0
+025800900110     C           §CDKS4    ANDEQ0
+025900900110     C                     SETON                     3699
+026000900110     C                     GOTO END1
+026100900110     C                     END
+026200900110     C           §CDKS4    IFGT 0
+026300891110     C                     Z-ADD§CDKC4    KCC
+026400891110     C                     Z-ADD§CDKS4    KSC
+026500891110     C           KACO      CHAINCNACO000             36
+026600891110     C      36             DO
+026700891110     C                     SETON                     99
+026800891110     C                     GOTO END1
+026900891110     C                     END
+027000891110     C                     MOVELACORAG    DESC4
+027100891110     C                     END
+027200891110     C**--- FLAG COMBINAZ.
+027300891110     C           §CDFT4    IFNE 0
+027400891110     C           §CDFT4    ANDNE1
+027500891110     C                     SETON                     3799
+027600891110     C                     GOTO END1
+027700900110     C                     ELSE
+027800900110     C           §CDKS4    IFEQ 0
+027900900110     C           §CDFT4    ANDGT0
+028000900110     C                     SETON                     3799
+028100900110     C                     GOTO END1
+028200900110     C                     END
+028300900110     C                     END
+028400891110     C**--- CONTO 5
+028500900110     C           §CDKC5    IFGT 0
+028600900110     C           §CDKS5    ANDEQ0
+028700900110     C                     SETON                     3899
+028800900110     C                     GOTO END1
+028900900110     C                     END
+029000900110     C           §CDKS5    IFGT 0
+029100891110     C                     Z-ADD§CDKC5    KCC
+029200891110     C                     Z-ADD§CDKS5    KSC
+029300891110     C           KACO      CHAINCNACO000             38
+029400891110     C      38             DO
+029500891110     C                     SETON                     99
+029600891110     C                     GOTO END1
+029700891110     C                     END
+029800891110     C                     MOVELACORAG    DESC5
+029900891110     C                     END
+030000891110     C**--- FLAG COMBINAZ.
+030100891110     C           §CDFT5    IFNE 0
+030200891110     C           §CDFT5    ANDNE1
+030300891110     C                     SETON                     3999
+030400891110     C                     GOTO END1
+030500900110     C                     ELSE
+030600900110     C           §CDKS5    IFEQ 0
+030700900110     C           §CDFT5    ANDGT0
+030800900110     C                     SETON                     3999
+030900900110     C                     GOTO END1
+031000900110     C                     END
+031100900110     C                     END
+031200891030     C           END1      ENDSR
+031300891030     C**----------------------------
+031400891030     C** AGGIORNAMENTO / INSERIMENTO
+031500891030     C**----------------------------
+031600891030     C           SCRIVI    BEGSR
+031700891107     C           KTAB      CHAINTABEL                80
+031800891030     C                     MOVEL§KUT      TBLKUT
+031900891030     C                     MOVEL§COD      TBLCOD
+032000891030     C                     MOVEL§KEY      TBLKEY
+032100891110     C                     MOVELDSCD      TBLUNI
+032200900420     C*§
+032300900420     C                     MOVE *BLANK    TBLFTT            A NESSUNO
+032400900420     C                     MOVE *ZERO     TBLFLT            FILIALE
+032500900420     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+032600900420     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+032700900420     C*§
+032800891102     C   80                WRITETABEL                  98
+032900891102     C  N80                UPDATTABEL                  98
+033000891030     C                     ENDSR
+033100891109     C**----------------------------
+033200891109     C** RICERCA DESCRIZIONI CONTI SUL
+033300891109     C** PIANO DEI CONTI
+033400891109     C**----------------------------
+033500891109     C           RICDES    BEGSR
+033600891109     C**---- DESCRIZIONE CONTO 1
+033700900110     C           §CDKS1    IFGT 0
+033800891109     C                     Z-ADD§CDKC1    KCC
+033900891109     C                     Z-ADD§CDKS1    KSC
+034000891109     C           KACO      CHAINCNACO000             85
+034100891109     C  N85                MOVELACORAG    DESC1
+034200900110     C                     END
+034300891109     C**---- DESCRIZIONE CONTO 2
+034400900110     C           §CDKS2    IFGT 0
+034500891109     C                     Z-ADD§CDKC2    KCC
+034600891109     C                     Z-ADD§CDKS2    KSC
+034700891109     C           KACO      CHAINCNACO000             85
+034800891109     C  N85                MOVELACORAG    DESC2
+034900900110     C                     END
+035000891109     C**--- DESCRIZIONE CONTO 3
+035100900110     C           §CDKS3    IFGT 0
+035200891109     C                     Z-ADD§CDKC3    KCC
+035300891109     C                     Z-ADD§CDKS3    KSC
+035400891109     C           KACO      CHAINCNACO000             85
+035500891109     C  N85                MOVELACORAG    DESC3
+035600900110     C                     END
+035700891109     C**--- DESCRIZIONE CONTO 4
+035800900110     C           §CDKS4    IFGT 0
+035900891109     C                     Z-ADD§CDKC4    KCC
+036000891109     C                     Z-ADD§CDKS4    KSC
+036100891109     C           KACO      CHAINCNACO000             85
+036200891109     C  N85                MOVELACORAG    DESC4
+036300900110     C                     END
+036400891109     C**--- DESCRIZIONE CONTO 5
+036500900110     C           §CDKS5    IFGT 0
+036600891109     C                     Z-ADD§CDKC5    KCC
+036700891109     C                     Z-ADD§CDKS5    KSC
+036800891109     C           KACO      CHAINCNACO000             85
+036900891109     C  N85                MOVELACORAG    DESC5
+037000900110     C                     END
+037100891109     C                     ENDSR

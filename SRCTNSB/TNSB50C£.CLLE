@@ -1,0 +1,86 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200120301/* TNSB51C:  Interrogazione bolle di sede da filiale                          */
+000300000000/*----------------------------------------------------------------------------*/
+000400120302 TNSB51C:    PGM        PARM(&KPJBA &MOD)
+000500000000
+000600000000/* DICHIARAZIONE VARIABILI */
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800120301             DCL        VAR(&KPJBAS) TYPE(*CHAR) LEN(502)
+000900120302             DCL        VAR(&mod) TYPE(*CHAR) LEN(1)
+001000120302             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1) VALUE('0')
+001100120229             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001200120229             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+001300120229             DCL        VAR(&L275) TYPE(*CHAR) LEN(275)
+001400120229             DCL        VAR(&CMD) TYPE(*CHAR) LEN(350)
+001500120229             DCL        VAR(&LUNG) TYPE(*DEC) LEN(15 5) VALUE(350)
+001600120301             DCLF       FILE(TNSB51DW)
+001700120530
+001800120530/* Richiamo pgm x creare le dtaara dell'utente se non esistono */
+001900120530             CALL       PGM(TRUL02R) PARM(&KPJBA)
+002000120530
+002100120229             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+002200120301/* Salvataggio KPJBA  */
+002300120301             CHGVAR     VAR(&KPJBAS) VALUE(&KPJBA)
+002400120229/* Reperisco la lista librerie CORRENTE _________________________________________________________ */
+002500120229             RTVJOBA    USRLIBL(&L275)
+002600120301/* Copia aree dati dell'utente */
+002700120301             CRTDUPOBJ  OBJ(伶ATIUTE) FROMLIB(*LIBL) +
+002800120301                          OBJTYPE(*DTAARA) NEWOBJ(伶ATIUTES)
+002900120301             CRTDUPOBJ  OBJ(你ZUTE) FROMLIB(*LIBL) OBJTYPE(*DTAARA) +
+003000120301                          NEWOBJ(你ZUTES)
+003100120301/* Cambio SIMFEL azzerandolo rendendolo di sede*/
+003200120301             CHGDTAARA  DTAARA(伶ATIUTE (100 3)) VALUE('000')
+003300120301
+003400120229/* Se S.I. di prova imposto GAITRAPSP */
+003500120229             IF         COND(%SST(&KNSIF 7 1) = 'P') THEN(DO)
+003600120229             CHGVAR     VAR(&SIF) VALUE('GAITRAPSP ')
+003700120229             ENDDO
+003800120229             ELSE       CMD(DO)
+003900120229             CHGVAR     VAR(&SIF) VALUE('GAITRA201 ')
+004000120229             ENDDO
+004100120229/* Forzo S.I. di sede  __________________________________________________________________________ */
+004200120229
+004300120229             CALL       PGM(TRUL07C) PARM(&SIF)
+004400000000
+004500120302             IF         COND(&MOD *EQ '5') THEN(DO)
+004600120229/* Richiamo interrogazione bolle di sede   */
+004700120229             CALL       PGM(TNSB51R) PARM(&KPJBA)
+004800120229             MONMSG     MSGID(CPF0000)
+004900120302             ENDDO
+005000120302             IF         COND(&MOD *EQ '2') THEN(DO)
+005100120302/* Richiamo manutenzione bolle di sede   */
+005200120302             CALL       PGM(TNSB52R) PARM(&KPJBA)
+005300120302             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ERR) +
+005400120302                          VALUE('1'))
+005500120302             ENDDO
+005600120229
+005700120229/* Reimposto la lista librerie originale ________________________________________________________ */
+005800120229             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 +
+005900120229                          *CAT ' )')
+006000120229             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+006100120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+006200120301/*Ripristino aree dati iniziali */
+006300120301             DLTDTAARA  DTAARA(伶ATIUTE)
+006400120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+006500120301             DLTDTAARA  DTAARA(你ZUTE)
+006600120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+006700120301             RNMOBJ     OBJ(伶ATIUTES) OBJTYPE(*DTAARA) +
+006800120301                          NEWOBJ(伶ATIUTE)
+006900120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+007000120301             RNMOBJ     OBJ(你ZUTES) OBJTYPE(*DTAARA) NEWOBJ(你ZUTE)
+007100120301             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(WINDOW))
+007200120301/* Ripristino KPJBA */
+007300120309             CHGVAR     VAR(%SST(&KPJBA 1 246)) VALUE(%SST(&KPJBAS 1 +
+007400120309                          246))
+007500120302             IF         COND(&ERR *EQ '1') THEN(DSPJOBLOG +
+007600120302                          OUTPUT(*PRINT))
+007700120301             GOTO       CMDLBL(ENDPGM)
+007800120301
+007900120301WINDOW:
+008000120301             SNDRCVF    RCDFMT(SB51W01)
+008100120301             ROLLBACK
+008200120301             MONMSG     MSGID(CPF0000)
+008300120302             DSPJOBLOG  OUTPUT(*PRINT)
+008400120301             SIGNOFF
+008500120301
+008600120301ENDPGM:      ENDPGM

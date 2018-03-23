@@ -1,0 +1,42 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200160405/* TICFQRC - Ricalcola totali Confronto fatturazione                          */
+000300000000/*----------------------------------------------------------------------------*/
+000400140407 TICFQ9C:    PGM        PARM(&KPJBA)
+000500000000
+000600040416             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000800121217             DCL        VAR(&LIBRERIA) TYPE(*CHAR) LEN(10)
+000900130208             DCL        VAR(&WLIB) TYPE(*CHAR) LEN(10)
+001000121217
+001100121217/* Imposto le variabili */
+001300140408             CHGVAR     VAR(&LIBRERIA) VALUE(%SST(&KPJBA 279 10))
+001400140410             CHGVAR     VAR(&WLIB) VALUE(%SST(&KPJBA 289 10))
+001500121217
+001600050609/* pulizia Work-file                  */
+001800130123             CLRPFM     FILE(&LIBRERIA/WFCFT10F)
+001900130123             CLRPFM     FILE(&LIBRERIA/WFCFT20F)
+002000130123             CLRPFM     FILE(&LIBRERIA/WFCFT30F)
+002200060914
+002300060915    /* aggiungo libreria bolle + file work */
+002400140408             ADDLIBLE   LIB(&LIBRERIA)
+002500050608
+002900050608/* lancio pgm di scrittura file per memorizzazione totali */
+003000140407             CALL       PGM(TICFQ1R) PARM(&KPJBA)
+003100130123
+003200130123/* lancio pgm di scrittura file per memorizzazione totali per unificante */
+003300140407             CALL       PGM(TICFQ3R) PARM(&KPJBA)
+003400141218
+003800140410/* Copio file di WORK nella libreria EDP* per scarico su Excel */
+004100160405             CPYF       FROMFILE(&LIBRERIA/WFCFT10F) +
+004200160405                          TOFILE(&WLIB/WFCFT10F) MBROPT(*REPLACE) +
+004201160405                          CRTFILE(*NO)
+004300160405             CPYF       FROMFILE(&LIBRERIA/WFCFT20F) +
+004400160405                          TOFILE(&WLIB/WFCFT20F) MBROPT(*REPLACE) +
+004401160405                          CRTFILE(*NO)
+004500160405             CPYF       FROMFILE(&LIBRERIA/WFCFT30F) +
+004600160405                          TOFILE(&WLIB/WFCFT30F) MBROPT(*REPLACE) +
+004601160405                          CRTFILE(*NO)
+004900050608
+005000050607             DLTOVR     FILE(*ALL)
+005100160224
+005800160224
+005900050613             ENDPGM

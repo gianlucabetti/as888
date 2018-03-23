@@ -1,0 +1,368 @@
+000100931011     H              J
+000200931011?     *--------------------------------------------------------------*
+000300931011      * TRAS21R1                                                     *
+000400931011      *       *-----------------------------------------*            *
+000500931011      *          INTERROGAZIONE CONTRASSEGNI X FILIALE               *
+000600931011      *          SELEZIONE DATI DI PAGAMENTO: NR.DOCUM.              *
+000700931011      *       *-----------------------------------------*            *
+000800931011      *                                                              *
+000900931011?     *--------------------------------------------------------------*
+001000931012      * 31 -OFF VISUALIZZAZIONE  RECORD DI CONTROLLO                 *
+001100931012      * 30 -OFF VISUALIZZAZIONE SUBFILE                              *
+001200931011      * 70 -SFLNXTCHG                                                *
+001300931011      * 80 -INDICATORE X CHAIN                                       *
+001400931011      * 81 -SFLEND                                                   *
+001500931011      * 98 -ROLLUP                                                   *
+001600931011?     *--------------------------------------------------------------*
+001700931011      * KC -FINE LAVORO                                              *
+001800931011      * KG -INTERROGAZIONE BOLLE                                     *
+001900931011      * KL -RITORNO                                                  *
+002000931011?     *--------------------------------------------------------------*
+002100941102     FTABEL00FIF  E           K        DISK
+002200941102     FFNCSB04LIF  E           K        DISK
+002300941102     FTNSC21D CF  E                    WORKSTN
+002400941102     F                                        NRR   KSFILE SC21S01
+002500941102?     *--------------------------------------------------------------*
+002600941102      *  Schiere per caricamento dati valute
+002700941102     E                    CCV       100  3               CODICI DIVISA
+002800991231     E                    DVA       100  1               FLAG DIVISA ITALIA
+002900011001     E*****               CMB       100  9 3             CAMBIO DIVISA ITA.
+003000931011?     *--------------------------------------------------------------*
+003100931011?     *  DS                                                          *
+003200931011?     *--------------------------------------------------------------*
+003300941102     IDSCV      E DS
+003400931011     IKPJBA     E DS
+003500991231     IDSBS02    E DSTIBS02DS
+003600991231     IDGED      E DS
+003700010614     IYEURDS    E DSYEURCODS
+003800931011      *
+003900941102     IWLBDA8      DS
+004000941102     I                                        1   80G02DAT
+004100941102     I                                        9  160G02INV
+004200941102     I                                       17  17 G02ERR
+004300941102     I                                       18  220G02TGI
+004400941102     ITNSC20    E DSTNSC20DS
+004500931011      *
+004600931011     IUT§DSE    E DSUT§DSE0F
+004700931011     ICNCR80    E DS
+004800931011      *
+004900931011     I           SDS
+005000931011     I                                        1  10 NOMPG
+005100931011      *---------------------------------------------------------------*
+005200931011      *   C I C L O      P R I N C I P A L E                          *
+005300931011      *---------------------------------------------------------------*
+005400931011     C*  CARICAMENTO SUBFILE
+005500931011     C                     EXSR CARSFL
+005600931011     C*
+005700931011     C*  LOOP
+005800931011     C           £FINE     DOUEQ'S'
+005900931011     C*
+006000931011     C           TIPVID    CASEQ'1'       GESVD1            Sfl Vuoto
+006100931011     C           TIPVID    CASEQ'2'       GESVD2            Gest.Sfl
+006200931011     C                     END
+006300931011     C*
+006400931011     C                     END
+006500931011     C*
+006600941102     C                     MOVELTNSC20    KPJBU
+006700931011     C                     SETON                     LR
+006800931011      *---------------------------------------------------------------*
+006900931011      *  CARSFL: CARICAMENTO DATI DA SUBFILE                          *
+007000931011      *---------------------------------------------------------------*
+007100931011     C           CARSFL    BEGSR
+007200931011     C*
+007300931011     C*  Pulisco subfile
+007400931011     C                     SETON                     3031
+007500941102     C                     WRITESC21C01
+007600931012     C                     SETOF                     31
+007700931011     C*
+007800931011     C*  Caricamento subfile
+007900941102     C           KEYRMN    SETLLFNCSB04L
+008000941102     C           KEYRMN    READEFNCSB04L                 81
+008100931011     C*
+008200931011     C                     Z-ADD0         NRR     40
+008300931013     C                     MOVEL'1'       TIPVID  1
+008400931011     C*
+008500931011     C           *IN81     IFEQ '0'
+008600931012     C                     SETOF                     30
+008700931011     C                     EXSR ROLLUP
+008800931011     C                     END
+008900931011     C*
+009000931013     C           NRR       IFNE 0
+009100931013     C                     MOVEL'2'       TIPVID  1
+009200931013     C                     SETOF                     30
+009300931013     C                     END
+009400931013     C*
+009500931012     C                     MOVELNOMPG     NOMPGM
+009600931011     C*
+009700931011     C                     ENDSR
+009800931011     C*----------------------------------------------------*
+009900931011     C*   ROLLUP: Caricamento di una pagina                *
+010000931011     C*----------------------------------------------------*
+010100931011     C           ROLLUP    BEGSR
+010200931011     C*
+010300931011     C           *IN81     IFEQ '0'
+010400931014     C                     Z-ADDSAVRE1    NRR
+010500931011     C                     Z-ADD0         NRIG    40
+010600931011     C*
+010700931013     C           NRIG      DOWLT14
+010800931011     C           *IN81     ANDEQ'0'
+010900931012     C* Scrivo record
+011000931013     C*
+011100931013     C* SOLO CONTRASSEGNI INCASSATI NON PAGATI
+011200941102     C           D20TCR    IFEQ 'I'
+011300931013     C           CSBDDC    COMP 0                        20
+011400931013     C  N20      CSBDDP    COMP 0                    2020
+011500931013     C                     END
+011600931013     C* SOLO CONTRASSEGNI PAGATI
+011700941102     C           D20TCR    IFEQ 'P'
+011800931013     C           CSBNDP    COMP 0                        20
+011900931013     C                     END
+012000931013     C*  Test Tipo Contrassegni
+012100931013     C           *IN20     IFEQ '0'
+012200931012     C                     MOVEL*BLANKS   VSEL
+012300931012     C                     MOVELCSBAAS    ANNO
+012400941103     C                     MOVELCSBMGS    MM      20
+012500941102     C                     MOVE CSBMGS    GG      20
+012600931012     C                     MOVELGG        VDAT
+012700941102     C                     MOVE MM        VDAT
+012800931012     C                     MOVE CSBLNP    VLNP1
+012900931012     C                     MOVE CSBNRS    VSER1
+013000931012     C                     MOVE CSBNSP    VSPE1
+013100931012     C                     MOVELCSBRSM    VMIT
+013200931012     C                     MOVELCSBRSD    VDES
+013300931012     C                     MOVE CSBRMN    VRIF
+013400941102     C                     MOVE CSBVCA    VVCA
+013500011002     C           VVCA      IFEQ *BLANK
+013600011002     C                     MOVE 'ITL'     VVCA
+013700011002     C                     END
+013800941102     C                     Z-ADDCSBCAS    VIMP
+013900941102     C* Controllo la divisa
+014000941102     C           VVCA      IFNE *BLANKS
+014100941102     C                     Z-ADD1         XX
+014200941102     C           VVCA      LOKUPCCV,XX                   32
+014300941102     C                     END
+014400941102     C* Somma nel totale corretto
+014500941102     C           VVCA      IFEQ *BLANKS
+014600010928     C           VVCA      OREQ §GEDCN
+014700941102     C                     ADD  CSBCAS    TOT
+014800941102     C                     ELSE
+014900991231     C           DVA,XX    IFEQ 'S'
+015000991231     C           *IN32     ANDEQ'1'
+015100991231     C                     ADD  CSBCAS    TOTEUR
+015200991231     C  N08                SETON                     08
+015300991231     C                     ELSE
+015400010614     C***                  Z-ADDCMB,XX    CAMBIO  94
+015500010614     C***        CSBCMB    IFNE 0
+015600010614     C***                  Z-ADDCSBCMB    CAMBIO  94
+015700010614     C***                  END
+015800010614     C***        CSBCMP    IFNE 0
+015900010614     C***                  Z-ADDCSBCMP    CAMBIO
+016000010614     C***                  END
+016100010614     C***                  SELEC
+016200010614     C***        NRDEC     WHEQ 2
+016300010614     C***        CAMBIO    MULT CSBCAS    IMPV2  122H
+016400010614     C***                  Z-ADDIMPV2     IMPV
+016500010614     C***        NRDEC     WHEQ 1
+016600010614     C***        CAMBIO    MULT CSBCAS    IMPV1  111H
+016700010614     C***                  Z-ADDIMPV1     IMPV
+016800010614     C***        NRDEC     WHEQ 0
+016900010614     C***        CAMBIO    MULT CSBCAS    IMPV0  100H
+017000010614     C***                  Z-ADDIMPV0     IMPV
+017100010614     C***                  OTHER
+017200010614     C***        CAMBIO    MULT CSBCAS    IMPV   133
+017300010614     C***                  ENDSL
+017400010614     C* Per convertire gli importi in valute estere utilizzo
+017500010614     C* la routine YEURCO in quanto il cambio indicato sul
+017600010614     C* file dei C/assegni di filiale non è affidabile
+017700010614     C                     CLEARYEURDS
+017800010614     C                     MOVELVVCA      YECDVI
+017900010614     C                     Z-ADDCSBCAS    YECIMI
+018000010928     C                     MOVEL§GEDCN    YECDVO
+018100010614     C* passo al pgm io il nr. dei decimali della divisa corrente
+018200010614     C* in base a quanto memorizzato sulla tabella CV
+018300010614     C                     MOVE NRDEC     YECDCO
+018400010614     C                     MOVEL'H'       YECTAR
+018500010614     C                     CALL 'YEURCO'
+018600010614     C                     PARM           YEURDS
+018700010614     C                     Z-ADDYECIMO    IMPV   133
+018800000103     C*
+018900941102     C                     ADD  IMPV      TOTV
+019000941102     C  N07                SETON                     07
+019100941102     C                     END
+019200991231     C                     END
+019300931012     C                     ADD  1         NRR
+019400931012     C                     ADD  1         NRIG
+019500941102     C                     WRITESC21S01
+019600931013     C                     END
+019700931012     C*
+019800941102     C           KEYRMN    READEFNCSB04L                 81
+019900931011     C                     END
+020000931011     C*
+020100931011     C*
+020200931014     C           NRR       IFGT SAVRE1
+020300931014     C           SAVRE1    ADD  1         DSPNR1
+020400931014     C                     Z-ADDNRR       SAVRE1  40
+020500931014     C                     END
+020600931014     C*
+020700931011     C                     END
+020800931011     C*
+020900931011     C                     ENDSR
+021000931011     C*----------------------------------------------------*
+021100931011     C*  Routine gestione operazioni prima videata         *
+021200931011     C*----------------------------------------------------*
+021300931011     C           GESVD1    BEGSR                           *
+021400931011     C*-                                                   *
+021500931012     C                     SETON                     30    *
+021600941102     C                     WRITESC21Z02                    *
+021700941102     C                     WRITESC21D02                    *
+021800941102     C                     EXFMTSC21C01                    *
+021900931011     C*                                                    *
+022000931011     C* Fine Programma                                     *
+022100931011     C           *INKL     IFEQ '1'                        *
+022200931011     C                     MOVEL'S'       £FINE            *
+022300931011     C                     END                             *
+022400931011     C*-                                                   *
+022500931011     C                     ENDSR                           *
+022600931011     C*----------------------------------------------------*
+022700931011     C*  Routine gestione operazioni subfile               *
+022800931011     C*----------------------------------------------------*
+022900931011     C           GESVD2    BEGSR                           *
+023000931011     C*-                                                   *
+023100941102     C                     WRITESC21Z01                    *
+023200941102     C                     WRITESC21D01                    *
+023300941102     C                     EXFMTSC21C01                    *
+023400931011     C*                                                    *
+023500931011     C* Fine Programma                                     *
+023600931011     C           *INKC     IFEQ '1'                        *
+023700931011     C                     MOVEL'S'       £FINE            *
+023800941102     C                     MOVE 3         D20CMD           *
+023900931011     C                     GOTO FINVD2                     *
+024000931011     C                     END                             *
+024100931011     C* Ritorno                                            *
+024200931011     C           *INKL     IFEQ '1'                        *
+024300931011     C                     MOVEL'S'       £FINE            *
+024400941102     C                     MOVE 12        D20CMD           *
+024500931011     C                     GOTO FINVD2                     *
+024600931011     C                     END                             *
+024700931011     C* ROLLUP
+024800931011     C   98                EXSR ROLLUP
+024900931011     C* Interrogazione Bolle                               *
+025000931011     C           *INKG     IFEQ '1'                        *
+025100931011     C                     MOVEL*BLANKS   KPJBU            *
+025200941102     C                     CALL 'FNLS04R'                  *
+025300931011     C                     PARM           KPJBA            *
+025400931011     C                     END                             *
+025500931011     C*                                                    *
+025600931011     C                     EXSR CNTVD2                     *
+025700931011     C*                                                    *
+025800931012     C           FINVD2    ENDSR                           *
+025900931011     C*----------------------------------------------------*
+026000931011     C*   CNTVD2: Controlli subfile                        *
+026100931011     C*----------------------------------------------------*
+026200931011     C           CNTVD2    BEGSR                           *
+026300931011     C*                                                    *
+026400931011     C                     Z-ADD1         NRR              *
+026500941103     C                     MOVEL' '       VSEL             *
+026600941102     C                     READCSC21S01                  82*
+026700931011     C*                                                    *
+026800931011     C           *IN82     DOWEQ'0'                        *
+026900931011     C*                                                    *
+027000941103     C           VSEL      IFEQ '1'                        *B02
+027100931011     C                     MOVEL*BLANKS   KPJBU            *
+027200931012     C                     Z-ADDNRR       SAVREC  40
+027300941102     C                     MOVE ANNO      D20ANN           *
+027400941102     C                     MOVE VLNP1     D20LNP           *
+027500941102     C                     MOVE VSER1     D20NSR           *
+027600941102     C                     MOVE VSPE1     D20NSP           *
+027700941102     C                     MOVELTNSC20    KPJBU            *
+027800931012     C* Interrogazione                                     *
+027900941102     C                     CALL 'TNSC23R'                  *
+028000931012     C                     PARM           KPJBA            *
+028100931011     C*
+028200931012     C                     Z-ADDSAVREC    NRR
+028300931014     C                     Z-ADDSAVREC    DSPNR1
+028400941102     C           NRR       CHAINSC21S01              90
+028500931011     C                     SETON                     70
+028600931011     C                     MOVEL' '       VSEL
+028700941102     C  N90                UPDATSC21S01
+028800931011     C                     END
+028900931011     C*
+029000941102     C                     READCSC21S01                  82*
+029100931011     C                     END
+029200931012     C*
+029300931011     C                     ENDSR
+029400931011      *---------------------------------------------------------------*
+029500941102      *  *INZSR: OPERAZIONI INIZIALI                                  *
+029600931011      *---------------------------------------------------------------*
+029700941102     C           *INZSR    BEGSR
+029800931011      *---------------------------------------------------------------*
+029900931011     C           *ENTRY    PLIST
+030000931011     C                     PARM           KPJBA
+030100941102     C                     MOVELKPJBU     TNSC20
+030200931012     C*
+030300931011     C                     Z-ADD1         CODUT
+030400931011     C                     CALL 'X§PARUT'
+030500931011     C                     PARM           UT§DSE
+030600931011     C*          CODUT     CABEQ-1        FINE
+030700931011     C                     MOVELRAGUT     RSUT   20
+030800931011     C                     MOVELREC80     CNCR80
+030900931011     C                     MOVELKNMUS     §SEI    6
+031000931011     C*
+031100931012     C           KEYRMN    KLIST
+031200941102     C                     KFLD           D20NRM
+031300941102     C*
+031400941102     C           KTAB      KLIST
+031500941102     C                     KFLD           KKUT
+031600941102     C                     KFLD           KCOD
+031700941102     C                     Z-ADD1         KKUT
+031800931012     C*----------------------------------------------------*
+031900941102     C*  Definizione variabili
+032000941102     C           *LIKE     DEFN TBLKUT    KKUT
+032100941102     C           *LIKE     DEFN TBLCOD    KCOD
+032200941102     C*----------------------------------------------------*
+032300931012     C                     MOVEL'N'       £FINE   1
+032400931014     C                     SETON                     02
+032500941102     C                     MOVE D20NRM    NRMIT
+032600991231     C*----------------------------------------------------*
+032700010928     C*  RECUPERO DIVISA MONETA CONTO
+032800991231     C                     CLEARDGED
+032900991231     C                     CLEARDSBS02
+033000991231     C                     MOVEL'C'       T02MOD
+033100991231     C                     MOVELKNSIF     T02SIF
+033200991231     C                     MOVEL'GED'     T02COD
+033300991231     C                     MOVEL'1'       T02KE1
+033400991231     C                     CALL 'TIBS02R'
+033500991231     C                     PARM           KPJBA
+033600991231     C                     PARM           DSBS02
+033700991231     C*
+033800991231    3C           T02ERR    IFEQ ' '
+033900991231     C                     MOVELT02UNI    DGED
+034000010928     C                     MOVEL§GEDCN    DIVCOR
+034100991231    3C                     ENDIF
+034200991231     C*----------------------------------------------------*
+034300991231     C* Carico tabella cambi/divise
+034400991231     C                     Z-ADD0         XX      30
+034500991231     C                     MOVEL'CV'      KCOD
+034600991231     C           KTAB      CHAINTABEL                31
+034700991231     C           *IN31     DOWEQ'0'
+034800991231     C           XX        ANDLT100
+034900991231     C                     MOVELTBLKEY    WDIV    3
+035000991231     C           TBLFLG    IFEQ ' '
+035100991231     C                     ADD  1         XX
+035200991231     C                     MOVELTBLKEY    CCV,XX
+035300991231     C                     MOVELTBLUNI    DSCV
+035400991231     C                     MOVEL§CVDVA    DVA,XX
+035500011001     C*****                MOVEL§CVCMB    CMB,XX
+035600991231     C           §CVDVA    IFEQ 'S'
+035700010928     C           WDIV      ANDNE§GEDCN
+035800991231     C                     MOVELWDIV      DIVALT
+035900991231     C                     END
+036000010928     C* Memorizzo nr. decimali della divisa DI CONTO
+036100010928     C           WDIV      IFEQ §GEDCN
+036200000103     C                     Z-ADD§CVDEC    NRDEC   20
+036300000103     C                     END
+036400991231     C                     END
+036500991231     C           KTAB      READETABEL                    31
+036600991231     C                     END
+036700931012     C*----------------------------------------------------*
+036800931011     C                     ENDSR

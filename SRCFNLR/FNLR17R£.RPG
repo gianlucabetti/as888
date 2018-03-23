@@ -1,0 +1,126 @@
+000100000000     H              J
+000200951011     H* FNLR17R *----------------------------------------------------*
+000300951011     H*     - CALCOLO DATA DI ARRIVO PER COLLI LOCALI
+000400000000     H*--------------------------------------------------------------*
+000500951011     FFNFVV02LIF  E           K        DISK                           UC
+000600951011     I*
+000700951011     I* PARAMETRI PASSATI  --> DATA BORDERO'
+000800950919     IPARAM       DS
+000900951011     I* INPUT
+001000951011     I                                        1   80PARDBR
+001100951011     I* OUTPUT
+001200951011     I                                        9  160PARDAM
+001300951011     I***
+001400951011     I* PARAMETRI PER CONTROLLO DATA E TRASFORM IN GIORNI - XSRDA8 -
+001500951011     I***
+001600951011     IWLBDAT     IDS
+001700951011     I                                        1   80G02DAT
+001800951011     I                                        9  160G02INV
+001900951011     I                                       17  17 G02ERR
+002000951011     I                                       18  220G02TGI
+002100951011     I***
+002200951011     I* PARAMETRI PER TRASFORM GIORNI IN DATA             - XSRDGI -
+002300951011     I***
+002400951011     IWGIDAT     IDS
+002500951011     I                                        1   80GIODAT
+002600951011     I                                        9  160GIOINV
+002700951011     I                                       17  210GIOTGI
+002800951011     I            DS
+002900951011     I                                        1   20ORA
+003000951011     I                                        1   60UTIME
+003100951011     IKPJBA     E DS
+003200951011     ICNCR80    E DS
+003300951011     IUT§DSE    E DSUT§DSE0F
+003400911003     C*****************************************************************
+003500000000     C           *ENTRY    PLIST
+003600000000     C                     PARM           KPJBA
+003700950919     C                     MOVELKPJBU     PARAM
+003800951011     C*
+003900950119     C*---------------------------------------------------------------*
+004000951011     C** CONTROLLO LA DATA BORDERO' DELLA SPEDIZIONE
+004100951011     C*
+004200951011     C                     CLEARWDAM
+004300951011     C* IMPOSTO DATA ARRIVO UGUALE A:
+004400951011     C*       1)UDATE SE RICEVO LE BOLLE NEL GIORNO DALLE 00 ALLE 12
+004500951011     C           PARDBR    IFEQ DATEU
+004600951011     C           ORA       ANDGE00
+004700951011     C           ORA       ANDLE12
+004800951011     C                     MOVELDATEU     WDAM
+004900951011     C*
+005000951011     C                     ELSE
+005100951011     C*
+005200951011     C*         SE   NON RICEVO LE BOLLE NEL GIORNO DALLE 00 ALLE 12
+005300951011     C*       2)DATA FOGLIO ARRIVI SE > DATA BORDERO'
+005400951011     C*       3)UDATE + 1 SE DATA FOGLIO ARRIVI <= DATA BORDERO'
+005500951011     C*
+005600951011     C           SAVDFV    IFLE PARDBR
+005700951011     C*
+005800951011     C                     MOVE PARDBR    G02INV
+005900951011     C                     MOVEL'3'       G02ERR
+006000951011     C                     CALL 'XSRDA8'
+006100951011     C                     PARM           WLBDAT
+006200951011     C*
+006300951011     C*  DATA BORDERO' + 1
+006400951011     C           G02TGI    ADD  1         GIOTGI
+006500951011     C                     CALL 'XSRGI8'
+006600951011     C                     PARM           WGIDAT
+006700951011     C*
+006800951011     C                     Z-ADDGIOINV    WDAM
+006900951011     C*
+007000951011     C                     ELSE
+007100951011     C                     Z-ADDSAVDFV    WDAM
+007200951011     C                     ENDIF
+007300951011     C                     ENDIF
+007400951011     C*
+007500951011     C                     Z-ADDWDAM      PARDAM
+007600951011     C                     MOVELPARAM     KPJBU
+007700951011     C                     SETON                     RT
+007800910322     C*
+007900950918     C* OPERAZIONI INIZIALI ------------------------------------------*
+008000951011     C           *INZSR    BEGSR
+008100951011     C                     Z-ADD1         CODUT
+008200951011     C                     CALL 'X§PARUT'
+008300951011     C                     PARM           UT§DSE
+008400951011     C                     MOVELREC80     CNCR80
+008500951011     C* GIRO DATA DEL GIORNO
+008600951011     C                     TIME           W0140  140
+008700951011     C                     MOVE W0140     G02DAT
+008800951011     C                     MOVEL*BLANK    G02ERR
+008900951011     C                     CALL 'XSRDA8'
+009000951011     C                     PARM           WLBDAT
+009100951011     C                     Z-ADDG02INV    DATEU   80
+009200951011     C* ORA
+009300951011     C                     MOVELW0140     UTIME   60
+009400950918     C*
+009500950918     C* CERCO L'ULTIMO FOGLI ARRIVI PER VEDERE CHE DATA HA
+009600950918     C*  SE DATA < = ALLA DATA BORDERO' METTO DATA DEL GIORNO DOPO
+009700951011     C                     OPEN FNFVV02L
+009800950918     C                     Z-ADD2         WNPG
+009900950918     C           WNPG      SETGTFNFVV000
+010000950918     C*
+010100950918     C           LEGGI     TAG
+010200950918     C           WNPG      REDPEFNFVV000                 30
+010300950918     C*
+010400950918     C* SE CHIUSO  COME SE NON CI FOSSE
+010500950918     C        N30FVVFCF    IFNE ' '
+010600950918     C                     SETON                     30
+010700950918     C                     ENDIF
+010800950918     C*
+010900950918     C* SE ANNULLATO NE LEGGO UN ALTRO
+011000950918     C        N30FVVATB    IFNE ' '
+011100950918     C           FVVFLE    ORNE SIMFEL
+011200950918     C                     GOTO LEGGI
+011300950918     C                     ENDIF
+011400950918     C*
+011500950918     C* SAVDFV : DATA FOGLIO ARRIVI LETTA
+011600950918     C        N30          MOVELFVVDFV    SAVDFV
+011700950918     C*
+011800950918     C         30          Z-ADD0         SAVDFV
+011900951011     C                     CLOSEFNFVV02L
+012000950918     C**
+012100950918     C* DEFINIZIONE CAMPI
+012200950918     C**
+012300951011     C           *LIKE     DEFN FVVNPG    WNPG
+012400950918     C           *LIKE     DEFN FVVDFV    WDAM
+012500950918     C           *LIKE     DEFN FVVDFV    SAVDFV
+012600911107     C                     ENDSR

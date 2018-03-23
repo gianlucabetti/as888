@@ -1,0 +1,39 @@
+000100160609/*PARMS DFTACTGRP(*NO) ACTGRP('FIOR63')         */
+000200950524             PGM        PARM(&KPJBA)
+000300950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400030722             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000500030722             RTVJOBA    JOB(&DSP)
+000600950524
+000700070206        /* Apro in Share file per stampa anomalie */
+000800070720             OVRPRTF    FILE(FIOR63P) SHARE(*YES)
+000900070508
+001000950524
+001100030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001200030722/* procedura/programma fosse finita in maniera anomala occorre */
+001300030722/* parare il colpo riducendo il male al male minore ossia      */
+001400030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+001500030722/* metà piuttosto che confermarle. E ripartendo da una         */
+001600030722/* situazione pulita.                                          */
+001700071001             STRCMTCTL  LCKLVL(*CHG)
+001800030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+001900070306             rollback
+002000030722             ENDCMTCTL
+002100071001             STRCMTCTL  LCKLVL(*chg)
+002200030722             ENDDO
+002300030708
+002400070206        /*   Eseguo CALL a pgm preparazione distinta autom.    */
+002500070720             CALL       PGM(FIOR63R) PARM(&KPJBA)
+002600030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+002700030708             ROLLBACK
+002800070206             SNDBRKMSG  MSG('ERRORE La preparazione distinta +
+002900070720                          ORM automatica è +
+003000070206                          terminata in modo anomalo. +
+003100030722                          Segnalare il +
+003200030722                          problema alla persona responsabile della +
+003300030722                          manutenzione del programma.') TOMSGQ(&DSP)
+003400030728             RCLRSC     LVL(*CALLER)
+003500030708             ENDDO
+003600030722
+003700030722             ENDCMTCTL
+003800950911
+003900950524             ENDPGM

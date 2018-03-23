@@ -1,0 +1,31 @@
+000100921111/*----------------------------------------------------------*/
+000200070214 TRTCP8C:    PGM        PARM(&PARPO)
+000300930308
+000400070209             DCL        VAR(&PARPO) TYPE(*char) LEN(3)
+000500070209             DCL        VAR(&FLAG) TYPE(*char) LEN(1)
+000600070213             DCL        VAR(&PARSPU) TYPE(*CHAR) LEN(1) VALUE(' ')
+000700070209             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10) +
+000800070213                          VALUE('FIBAR00FP ')
+000900070213             DCL        VAR(&NOMEJOB) TYPE(*CHAR) LEN(10) +
+001000070214                          VALUE('PRxxx_P8  ')
+001100070213             DCL        VAR(&UTENT) TYPE(*CHAR) LEN(10) +
+001200070213                          VALUE('PRxxx     ')
+001300070209             CHGVAR     VAR(%SST(&FILE 6 3)) VALUE(&PARPO)
+001400070213             OVRDBF     FILE(FIPSP01L) TOFILE(GAIAUTTST/FIPSP01L)
+001500070209             OVRDBF     FILE(FIBAR00F) TOFILE(&FILE)
+001600021001/* Chiamata al pgm di cambio sistema informativo */
+001700070214 SOPRA:      CALL       PGM(TRTCP8R) PARM(&PARPO &FLAG &PARSPU)
+001800070213/* Sottomossione pgm caricamento spunte su AS/400                 */
+001900070213             CHGVAR     VAR(%SST(&UTENT 3 3)) VALUE(&parpo)
+002000070213             CHGVAR     VAR(%SST(&NOMEJOB 3 3)) VALUE(&parpo)
+002100070213             IF         COND(&PARSPU = 'S') THEN(SBMJOB CMD(CALL +
+002200070213                          PGM(FNLS45C5) PARM(&PARPO &FILE)) +
+002300070213                          JOB(&NOMEJOB) JOBQ(AGGPC) USER(&UTENT))
+002400070213
+002500070213/* Se richiesta ciusura del sottosistema vado a fine pgm          */
+002600070209             IF         COND(&FLAG = '1') THEN(GOTO CMDLBL(FINE))
+002700070213
+002800070209             DLYJOB     DLY(15)
+002900070209             GOTO       CMDLBL(SOPRA)
+003000070213
+003100070209 FINE:       ENDPGM

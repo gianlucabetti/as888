@@ -1,0 +1,96 @@
+000100111123             PGM        PARM(&DATADEC &AGGIORNA &ESITO)
+000200111123
+000300111123             DCL        VAR(&DATADEC) TYPE(*CHAR) LEN(8)
+000400081216             DCL        VAR(&AGGIORNA) TYPE(*CHAR) LEN(1)
+000500111123             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(9)
+000600111201             DCL        VAR(&ESITO65) TYPE(*CHAR) LEN(9)
+000700111201             DCL        VAR(&ESITO66) TYPE(*CHAR) LEN(9)
+000800111201             DCL        VAR(&ESITO67) TYPE(*CHAR) LEN(9)
+000900111205             DCL        VAR(&ESITO68) TYPE(*CHAR) LEN(9)
+001000111205             DCL        VAR(&ESITO69) TYPE(*CHAR) LEN(9)
+001100111205             DCL        VAR(&ESITO70) TYPE(*CHAR) LEN(9)
+001200111129
+001300111129             DCL        VAR(&NUMRIGHE) TYPE(*DEC) LEN(10 0)
+001400111201             RTVMBRD    FILE(WFADTXXF) NBRCURRCD(&NUMRIGHE)
+001500111129
+001600111201             CLRPFM     FILE(WXADT00S)
+001700111123
+001800111123/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001900111123/* procedura/programma fosse finita in maniera anomala occorre */
+002000111123/* parare il colpo riducendo il male al male minore ossia      */
+002100111123/* con un rollback chiudere le precedenti transazioni fatte a  */
+002200111123/* metà piuttosto che confermarle. E ripartendo da una         */
+002300111123/* situazione pulita.                                          */
+002400111123             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002500111123             MONMSG     MSGID(CPF8351) EXEC(DO)
+002600111123             ENDCMTCTL
+002700111123             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+002800111123             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002900111123             ENDDO
+003000111123
+003100111205/*  controlla se ci sono testate senza dettagli         */
+003200111201             CALL       PGM(TNVRA67R) PARM(&DATADEC &AGGIORNA &ESITO)
+003300111201             CHGVAR     VAR(&ESITO67) VALUE(&ESITO)
+003400111129
+003500111205
+003600111205/*  controlla se ci sono dettagli senza testate         */
+003700111205             CALL       PGM(TNVRA68R) PARM(&DATADEC &AGGIORNA &ESITO)
+003800111205             CHGVAR     VAR(&ESITO68) VALUE(&ESITO)
+003900111205
+004000111205
+004100111205/*  controlla se ci sono NON STAMPATI in sede           */
+004200111205             CALL       PGM(TNVRA69R) PARM(&DATADEC &AGGIORNA &ESITO)
+004300111205             CHGVAR     VAR(&ESITO69) VALUE(&ESITO)
+004400111205
+004500111205
+004600111205/*  controlla se ci sono Tariffe per il futuro          */
+004700111205             CALL       PGM(TNVRA70R) PARM(&DATADEC &AGGIORNA &ESITO)
+004800111205             CHGVAR     VAR(&ESITO70) VALUE(&ESITO)
+004900111205
+005000111129
+005100111205             IF         COND((&ESITO67 *NE ' ')      +
+005200111205                         *OR (&ESITO68 *NE ' ')      +
+005300111205                         *OR (&ESITO69 *NE ' ')      +
+005400111206                         *OR (&ESITO70 *NE ' ')      +
+005500111206                         ) THEN(DO)
+005600111123             CHGVAR     VAR(&AGGIORNA) VALUE(' ')
+005700111123             ENDDO
+005800111123
+005900111123
+006000111123/*  AGGIORNA e prima salva i files Tariffe              */
+006100111123             IF         COND(&AGGIORNA *EQ 'S') THEN(DO)
+006200111129             IF         COND(&NUMRIGHE *EQ 0) THEN(DO)
+006300111129
+006400111207             CPYF       FROMFILE(FIADT00F) TOFILE(EDPabtst/SVADT00F) +
+006500111129                          MBROPT(*ADD) CRTFILE(*YES)
+006600111123
+006700111207             CPYF       FROMFILE(FIADD00F) TOFILE(EDPabtst/SVADD00F) +
+006800111129                          MBROPT(*ADD) CRTFILE(*YES)
+006900111123             ENDDO
+007000111129             ENDDO
+007100111123
+007200111128
+007300111128
+007400111201             CALL       PGM(TNVRA66R) PARM(&DATADEC &AGGIORNA &ESITO)
+007500111128             MONMSG     MSGID(CPF0000) EXEC(DO)
+007600111128             ROLLBACK
+007700111128             GOTO       CMDLBL(FINEPGM)
+007800111128             ENDDO
+007900111128
+008000111123
+008100111201             CALL       PGM(TNVRA65R) PARM(&DATADEC &AGGIORNA &ESITO)
+008200111123             MONMSG     MSGID(CPF0000) EXEC(DO)
+008300111123             ROLLBACK
+008400111128             GOTO       CMDLBL(FINEPGM)
+008500111123             ENDDO
+008600111123
+008700111201             COMMIT
+008800111201
+008900111123 /* se per qualsiasi motivo il programma si è interrotto in modo */
+009000111123 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+009100111123 /* in modo pulito senza lasciare transazioni a metà.            */
+009200111128finepgm:
+009300111123             ENDCMTCTL
+009400111123             MONMSG     MSGID(CPF8350)
+009500111123
+009600050510             ENDPGM

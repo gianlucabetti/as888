@@ -1,0 +1,212 @@
+000100891011     H        1     J
+000200930721     F* CNC0M2R  *----------------------------------------------------*
+000300930721     F*------------------*                                            *
+000400930721     F*       - RICERCA LUOGHI DI DESTINAZIONE PER CLIENTE -          *
+000500930721     F*---------------------------------------------------------------*
+000600970804     FFNSPE01LIF  E           K        DISK
+000700891122     FCNC0M2D CF  E                    WORKSTN
+000800891122     F                                        REC1  KSFILE C0M2SF1
+000900961111     E*
+001000961111     E* SCHIERE PER CARICAMENTO L1
+001100961111     E                    L1         30  3 0             FIL.GESTITE
+001200961111     E                    LIN        30  3 0             SKI COMODO
+001300961111     I*
+001400961111     I* DS PER TRUL06R - CARICAMENTO £1
+001500961111     IDSUL06    E DSTRUL06DS
+001600961111     I                                        1  900LIN
+001700961111     I*
+001800961111     IKPJBA     E DS
+001900930721     I*------------------
+002000930721     I* DS RICERCA PARAMETRI UTENTE
+002100930721     I*------------------
+002200961111     ICNCR80    E DS
+002300930721     IUT§DSE    E DSUT§DSE0F
+002400930723     C*---------------------------------------------------------------*
+002500930723     C*                    MAIN                                       *
+002600930723     C* PROGRAMMA PRINCIPALE RICERCA LUOGHI DI DEST. PER CLIENTE      *
+002700930723     C*---------------------------------------------------------------*
+002800930721     C*
+002900930721     C* DEFINIZIONE VARIABILI, KSLIST E PLIST
+003000930721     C                     EXSR DEFVAR
+003100930721     C*
+003200930721     C* CARICAMENTO SFILE DATI LUOGHI
+003300930721     C                     EXSR CARSFL
+003400930721     C*
+003500930721     C* EMISSIONE SFILE
+003600930727     C           INIZIO    TAG
+003700930721     C                     WRITEC0M2D1
+003800930721     C                     EXFMTC0M2SC1
+003900930721     C*
+004000930727     C* CM12 - FINE LAVORO
+004100930727     C   KL                GOTO FINE
+004200930721     C*
+004300930721     C* LETTURA RECORD VARIATI PER RECOR SELEZIONATO
+004400930721     C                     Z-ADD1         REC1
+004500930721     C   61                READCC0M2SF1                  60
+004600930721DO  3C   61      *IN60     DOWEQ'0'
+004700930721     C*
+004800930721     C* RECORD SELEZIONATO
+004900930721     C                     MOVE CLILUO    CODCLI
+005000930721     C                     MOVE CODLUO    LUOCOD
+005100930721     C                     GOTO FINE
+005200930721     C                     READCC0M2SF1                  60
+005300930721E   3C                     ENDDO
+005400930721     C*
+005500930721     C* ENTER - RIMANE NELLA VIDEATA
+005600930727     C                     GOTO INIZIO
+005700930721     C*
+005800930721     C           FINE      TAG
+005900930721     C                     SETON                         LR
+006000930721     C*---------------------------------------------------------------*
+006100930721     C*                    CARSFL                                     *
+006200930721     C* ROUTINE DI CARICAMENTO SUBFIL                                 *
+006300930721     C*---------------------------------------------------------------*
+006400930721     C           CARSFL    BEGSR
+006500930721     C*
+006600930721     C* PULIZIA SFILE
+006700930721     C                     SETOF                     6162
+006800930721     C                     SETON                     63
+006900930721     C                     WRITEC0M2SC1
+007000930721     C                     SETOF                     63
+007100930721     C*
+007200930721     C* CARICAMENTO SFILE
+007300961112     C                     Z-ADD0         REC1    50
+007400961111     C*****
+007500961111     C** INTERROGAZ. X   C O D.   C L I E N T E
+007600961111     C*****
+007700961111    1C           CODCLI    IFNE *ZEROS
+007800961111     C*
+007900970804     C                     MOVEL'L'       KFLS
+008000970804     C                     MOVE CODCLI    KCLI
+008100970804     C           KSPE      SETLLFNSPE01L
+008200970804     C           KSPE      READEFNSPE000                 91
+008300961111    2C           *IN91     DOWEQ*OFF
+008400930721     C                     MOVE CODCLI    SPECLI
+008500961111     C* RIEMPIO I CAMPI DEL SFL
+008600961111     C                     EXSR RIESFL
+008700930721     C*
+008800970804     C           KSPE      READEFNSPE000                 91
+008900961111    2C                     ENDDO
+009000961111     C*
+009100961111   X1C                     ELSE
+009200961111     C*****
+009300961111     C** INTERROGAZ. X   C O D.   L U O G O
+009400961111     C*****
+009500961111     C*
+009600961112     C* PARFIL = 000 --> VISUALIZZO TUTTI I CLIENTI
+009700961112    2C           PARFIL    IFEQ 0
+009800961111     C*
+009900970804     C                     MOVEL'L'       KFLS
+010000970804     C           KFLS      SETLLFNSPE01L
+010100970804     C                     READ FNSPE000                 91
+010200961111    3C           *IN91     DOWEQ*OFF
+010300940412     C           SPECOD    IFEQ LUOCOD
+010400961111     C* RIEMPIO I CAMPI DEL SLF
+010500961111     C                     EXSR RIESFL
+010600940412     C                     ENDIF
+010700940412     C*
+010800970804     C                     READ FNSPE000                 91
+010900961111    3C                     ENDDO
+011000961111     C*
+011100961111   X2C                     ELSE
+011200961112     C* PARFIL = 999 --> VISUALIZZO SOLO I CLIENTI DELL'AREA
+011300961112     C* PARFIL = xxx --> VISUALIZZO I CLIENTI DI QUESTO SPECIFICO P.O.
+011400961111     C                     Z-ADD1         X       30
+011500961111     C*
+011600961111    3C           L1,X      DOWGT0
+011700961111     C                     CLEARWCLI
+011800961111     C                     MOVELL1,X      WCLI
+011900961111     C*
+012000970804     C                     MOVEL'L'       KFLS
+012100970804     C                     MOVE WCLI      KCLI
+012200970804     C           KSPE      SETLLFNSPE01L
+012300970804     C****       WCLI      SETLLANSPE04L
+012400970804     C                     READ FNSPE01L                 91
+012500961111     C*
+012600961111    4C           *IN91     DOWEQ*OFF
+012700961111     C                     MOVELSPECLI    W0030   30
+012800961111    5C           W0030     IFEQ L1,X
+012900961111     C           SPECOD    ANDEQLUOCOD
+013000961111     C* RIEMPIO I CAMPI DEL SLF
+013100961111     C                     EXSR RIESFL
+013200961111    5C                     ENDIF
+013300970804     C                     READ FNSPE01L                 91
+013400961111    4C                     ENDDO
+013500961111     C*
+013600961111     C                     ADD  1         X
+013700961111    3C                     ENDDO
+013800961111    2C                     ENDIF
+013900961111     C*
+014000961111    1C                     ENDIF
+014100930721     C*
+014200930721     C* EMISSIONE CTL
+014300930721     C                     SETON                     62
+014400930721     C* EMISSIONE SFL
+014500930721     C           REC1      COMP 0                    61
+014600930721     C*
+014700930721     C                     ENDSR
+014800961111     C*---------------------------------------------------------------*
+014900961111     C*                    RIESFL                                     *
+015000961111     C* RIEMPIO CAMPI DEL SFL                                         *
+015100961111     C*---------------------------------------------------------------*
+015200961111     C           RIESFL    BEGSR
+015300961111     C                     MOVE *BLANKS   SCELTA
+015400961111     C                     MOVE SPECLI    CLILUO
+015500970804     C                     MOVELSPECOD    CODLUO
+015600970804     C                     MOVELSPERAG    RAGLUO
+015700970804     C                     MOVELSPEIND    INDLUO
+015800970804     C                     MOVELSPECAP    CAPLUO
+015900970804     C                     MOVELSPELOC    LOCLUO
+016000970804     C                     MOVELSPEPRO    PROLUO
+016100970804     C                     MOVELSPENAZ    NAZLUO
+016200961111     C                     ADD  1         REC1
+016300961111     C                     WRITEC0M2SF1
+016400961111     C                     ENDSR
+016500930721     C*---------------------------------------------------------------*
+016600930721     C*                    DEFVAR                                     *
+016700930721     C* ROUTINE DI DEFINIZIONE VARIABILI, KLIST E PLIST               *
+016800930721     C*---------------------------------------------------------------*
+016900930721     C           DEFVAR    BEGSR
+017000930721     C*
+017100930721     C           *ENTRY    PLIST
+017200930727     C                     PARM           CODCLI  70
+017300930721     C                     PARM           LUOCOD  3
+017400961112     C* IL PARAMETRO PARFIL VIENE USATO SOLO NELLA VISUALIZZAZIONE DEI
+017500961112     C*   CLIENTI CHE HANNO IL CODICE LUOGO UGUALE A QUELLO PASSATO
+017600961112     C* PARFIL = 000 --> VISUALIZZO TUTTI I CLIENTI
+017700961112     C* PARFIL = 999 --> VISUALIZZO SOLO I CLIENTI DELL'AREA
+017800961112     C* PARFIL = xxx --> VISUALIZZO I CLIENTI DI QUESTO SPECIFICO P.O.
+017900961111     C                     PARM           PARFIL  30
+018000930721     C*
+018100930721     C* RICERCA FILIALE IN GESTIONE
+018200930721     C                     Z-ADD1         CODUT   10
+018300930721     C                     CALL 'X§PARUT'
+018400930721     C                     PARM           UT§DSE
+018500930721     C                     MOVELRAGUT     RSUT   20
+018600961111     C                     MOVELREC80     CNCR80
+018700930721     C*
+018800961111     C* SE DEVO VISUALIZZARE I CODICI DI TUTTA L'AREA CARICO LA £1
+018900961112    1C           PARFIL    IFEQ 999
+019000961111     C                     CLEARDSUL06
+019100961111     C                     MOVE '£1'      D06COD
+019200961111     C                     MOVELSIMFEL    D06KEY
+019300961111     C                     MOVELDSUL06    KPJBU
+019400961111     C                     CALL 'TRUL06R'
+019500961111     C                     PARM           KPJBA
+019600961111     C                     MOVELKPJBU     DSUL06
+019700961111     C                     MOVEALIN       L1
+019800961111   X1C                     ELSE
+019900961112    2C           PARFIL    IFNE 0
+020000961111     C                     MOVEAPARFIL    L1,1
+020100961111    2C                     ENDIF
+020200961111    1C                     ENDIF
+020300961111     C*
+020400961111     C* DEFINIZIONE CAMPI
+020500961111     C           *LIKE     DEFN SPECLI    WCLI
+020600970804     C           *LIKE     DEFN SPEFLS    KFLS
+020700970804     C           *LIKE     DEFN SPECLI    KCLI
+020800961111     C*
+020900970804     C           KSPE      KLIST
+021000970804     C                     KFLD           KFLS
+021100970804     C                     KFLD           KCLI
+021200930721     C                     ENDSR

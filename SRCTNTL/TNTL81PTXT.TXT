@@ -1,0 +1,53 @@
+000100090930------------------------------------------------------------------
+000200090930    La stampa dei Traini è con OVERLAY con la Firma di PEDINI.
+000300090930------------------------------------------------------------------
+000400090930CRTPRTF FILE(GAITRAFIL/TNTL81P)
+000500090511DEVTYPE(*AFPDS)
+000600090930TEXT('Allegato contratto traini.')
+000700090511PAGESIZE(70 120 *ROWCOL)
+000800090511CPI(15)
+000900090511OVRFLW(63)
+001000090511DUPLEX(*YES)
+001100090511FRONTOVL(*LIBL/TNTL81FF 0 0)
+001200090511BACKOVL(*LIBL/TNTL81BK 0 0 *NOCONSTANT)
+001300090512FORMTYPE(ALLEGTRAIN)
+001400090512USRDTA(ALLEGTRAIN)
+001500090930******
+001600090930   per arrivare a creare il PRTF bisogna fare precedentemente delle operazioni.
+001700090930
+001800090930Su PC in WORD si deve fare un documento .DOC per un foglio A4 con tutte le fincature necessarie
+001900090930le immagini e l'immagine della Firma.
+002000090930I DOC word devono essere 2 in quanto c'è il Fronte e Retro (retro solo con la firma)
+002100160419 Occorre portare su AS i 2 DOC word importandoli nell'\IFS\QDLS\AFPRSC\ per poterli manipolare
+002300090930   ========
+002400090930    SU PC:
+002500090930   ========
+0029001604191) COLLEGARSI \\AS888\QDLS\AFPRSC\
+0033000909302)  Occorre avere in stampa il driver AFP400 di IBM sul PC da selezionare come STAMPANTE (virtuale)
+003400090930installare tale Driver su PC.
+0035000909303)  Aprire il primo documento Word (Front) ed eseguirne la stampa con il driver AFP400 MODIFICANDO
+003600090930sulle PROPRIETA' della Stampa il <Tipo di Emissione[Sovrapposizione]> .
+003700090930La stampa produrrà un oggetto sulla cartella QDLS dell'IFS dell'AS400 che dovrà avere un nome rigoro
+003800090930samente di 8+3 caratteri la cui estensione dovrà essere <OLY>
+0039000909304)  Ripetere gli stessi passi anche per la pagina di Retro fatta con Word.
+004000090930   ===========
+004100090930    SU AS400:
+004200090930   ===========
+004300090930 Prima della creazione del PRTF finale su AS si devono eseguire 3 Comandi x entrambe i 2 <.DOC> A4.
+004400090930(Facciamo l'esempio di avere nella QDLS l'oggetto FIRMA.OLY).
+0045000909305)  CRTPF FILE(EDPXX/OVERFIRMA) RCDLEN(32766) TEXT('x provare la firma in OVERLAY') LVLCHK(*NO)
+004600090930 Si genera un File (Contenitore Vuoto) dove andare ad inserire le informazioni dell'Oggetto di
+004700090930 Overlay.
+0048000909306)  CPYFRMPCD FROMFLR(EDPXX) TOFILE(EDPXX/OVERFIRMA) FROMDOC(FIRMA.OLY) TRNTBL(*NONE)
+004900090930 Con questo comando si va a copiare il Documento di Word dentro il PF precedentemente creato.
+0050000909307)  CRTOVL OVL(EDPXX/FIRMA) FILE(EDPXX/OVERFIRMA) MBR(OVERFIRMA) TEXT('merge x stampare la Firma su
+005100090930    PRTF interno')
+005200090930 Con questo comando si crea l'OGGETTO OVERLAY [*OVL] su AS400
+005300090930-
+005400090930ripetere i passi 5-6-7 per la seconda pagina (retro) <FIRMA2>
+005500090930-
+0056000909308) in ultimo si crea il PRTF finale con gli Overlay di Fronte e Retro:
+005700090930  CRTPRTF FILE(EDPXX/FIRMA) DEVTYPE(*AFPDS) DUPLEX(*YES) FRONTOVL(EDPXX/FIRMA) BACKOVL(EDPXX/FIRMA2)
+0058000909309) ora il PRTF è pronto per essere OVERRIDEato
+005900090930     OVRPRTF FILE(QSYSPRT) TOFILE(EDPXX/FIRMA)
+006000090930******

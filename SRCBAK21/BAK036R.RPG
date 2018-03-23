@@ -1,0 +1,86 @@
+000100000000     F********************************************************************BRP20
+000200000000     F*                                                                  *BRP20
+000300000000     F*  BAK036R -  REPERISCE LA CODA BATCH DI INPUT DI UN LAVORO        *BRP20
+000400000000     F*                                                                  *BRP20
+000500000000     F*  CREATO DA  VANCIO  NEL  MARZO  1994
+000600000000     F*                                                                  *BRP20
+000700000000     I********************************************************************BRP20
+000800000000     I*                PARAMETRI DI INPUT
+000900000000     I*                                                                  *BRP20
+001000000000     I*  JNAM36  10A - NOME DEL LAVORO
+001100000000     I*  UNAM36  10A - NOME DELL' UTENTE
+001200000000     I*  JNBR36   6A - NUMERO DEL LAVORO
+001300000000     I*                                                                  *BRP20
+001400000000     I*                PARAMETRI DI OUTPUT
+001500000000     I*
+001600000000     I*  JOBQ36  10A - NOME DELLA CODA LAVORO
+001700000000     I*
+001800000000     IDS036       DS
+001900000000     I                                        1  10 JNAM36
+002000000000     I                                       11  20 UNAM36
+002100000000     I                                       21  26 JNBR36
+002200000000     I                                       27  36 JOBQ36
+002300000000     I                                       37  37 JOBP36
+002400000000     I                                       38  47 JSTS36
+002500000000     I********************************************************************BRP20
+002600000000     I*
+002700000000     I* DS X FORMATO 'JOBI0300'
+002800000000     ILIST        DS
+002900000000     I                                    B   1   40BYTRTN
+003000000000     I                                    B   5   80BYTVAL
+003100000000     I                                        9  34 QJOBNM
+003200000000     I                                        9  18 JOBNAM
+003300000000     I                                       19  28 USRNAM
+003400000000     I                                       29  34 JOBNBR
+003500000000     I                                       35  50 INTID
+003600000000     I                                       51  60 JOBSTS
+003700000000     I                                       61  61 JOBTYP
+003800000000     I                                       62  62 SUBTYP
+003900000000     I                                       63  72 JOBQ
+004000000000     I                                       73  82 JOBQLI
+004100000000     I                                       83  84 JOBQPR
+004200000000     I                                       85  94 OUTQ
+004300000000     I                                       95 104 OUTQLI
+004400000000     I                                      105 106 OUTQPR
+004500000000     I                                      107 116 PRTDEV
+004600000000     I                                      117 142 SBMJOB
+004700000000     I                                      117 126 SBMJO1
+004800000000     I                                      127 136 SBMUSR
+004900000000     I                                      137 142 SBMNBR
+005000000000     I                                      143 152 MSGQ
+005100000000     I                                      153 162 MSGQLI
+005200000000     I            DS
+005300000000     I                                        1  26 JOB
+005400000000     I                                        1  10 JOBN
+005500000000     I                                       11  20 USRN
+005600000000     I                                       21  26 JOBNU
+005700000000     ******************************************************************
+005800000000     C           *ENTRY    PLIST
+005900000000     C                     PARM           DS036
+006000000000     C           UNAM36    IFEQ '*ALL'
+006100000000     C                     CALL 'BAK037R'
+006200000000     C                     PARM           JNAM36
+006300000000     C                     PARM           UNAM36
+006400000000     C                     PARM           JNBR36
+006500000000     C                     ENDIF
+006600000000     C* PREPARAZIONE API
+006700000000     C                     MOVELJNAM36    JOBNAM
+006800000000     C                     MOVELUNAM36    USRNAM
+006900000000     C                     MOVELJNBR36    JOBNBR
+007000000000     C                     MOVELJNAM36    JOBN
+007100000000     C                     MOVELUNAM36    USRN
+007200000000     C                     MOVELJNBR36    JOBNU
+007300000000     C* REPERIMENTO INFORMAZIONI X JOBQ E OUTQ
+007400000000     C                     CALL 'QUSRJOBI'             21
+007500000000     C                     PARM           LIST
+007600000000     C                     PARM 162       LISLEN  40
+007700000000     C                     PARM 'JOBI0300'FORMAT  8
+007800000000     C                     PARM           JOB    26
+007900000000     C                     PARM           IDFJOB 16
+008000000000     C*
+008100000000     C  N21                MOVELJOBQ      JOBQ36
+008200000000     C  N21                MOVE JOBQPR    JOBP36
+008300000000     C  N21                MOVE JOBSTS    JSTS36
+008400000000X0210C   21                MOVEL'*ERROR  'JSTS36
+008500000000     C*
+008600000000     C                     SETON                     LR

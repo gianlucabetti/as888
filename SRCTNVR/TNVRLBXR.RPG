@@ -1,0 +1,63 @@
+000100000406     FFISGN00FUF  E                    DISK
+000101000406      *  SCHIERA PER COMPORRE BARCODE SU LETTERA VETTURA DPD IMPORT
+000102000406     E                    §11        11  1 0
+000103000406      * CALCOLO DEL CHCK DIGIT PER BARCODE DPD
+000104000406     I            DS
+000105000406     I                                        1  110§11
+000106000406     I                                       12  120DPDCHD
+000107000406     I                                        1  120DPDBRC
+001000990614     C*
+001100990614     C           *ENTRY    PLIST
+001200000406     C                     PARM           DAL    11
+001201000406     C                     PARM           AL     11
+001300990614      * DEFINISCO  CHIAVI DI ACCESSO
+002900000406     C                     MOVE DAL       DAL11  110
+002901000406     C                     MOVE AL        AL11   110
+003000000406     C**
+003100000406     C                     DO   *HIVAL
+003200000406     C                     READ FISGN000                 58
+003300000406     C  N58                DO
+003400000406     C                     EXSR NUMERA
+003401000406     C                     MOVE *ZERO     SGNST2
+003402000406     C                     MOVE *BLANK    SGNWHO
+003403000406     C                     MOVELDPDBRC    SGNWHO
+003500000406     C                     EXCPTFISGN
+003600000406     C                     ENDDO
+003601000406     C  N58                ENDDO
+005100990614     C*
+005200990614     C                     SETON                     LR
+005300000406     C           NUMERA    BEGSR
+005400000406     C                     ADD  1         DAL11
+005500000406     C           DAL11     COMP AL11                 58
+005501000406     C                     MOVE *ZERO     DPDBRC
+005502000406     C                     MOVELDAL11     DPDBRC
+005600000406     C                     EXSR CHKDGT
+005700000406     C                     ENDSR
+005800000406     C           CHKDGT    BEGSR
+005801000406      *
+005802000406     C                     MOVE *ZERO     §TT2    30
+005803000406     C                     CLEARW0030
+005804000406      *
+005805000406      * TOTALIZZO I VALORI, QUELLI NELLE POSIZIONI DISPARI PER 3
+005806000406     C                     DO   11        YY      20
+005807000406      *
+005808000406     C           YY        DIV  2         §CTR    30
+005809000406     C                     MVR            §RST    30 30
+005810000406      *
+005811000406     C           *IN30     IFEQ '1'
+005812000406     C           §11,YY    MULT 3         §CTR
+005813000406     C                     ELSE
+005814000406     C                     Z-ADD§11,YY    §CTR
+005815000406     C                     ENDIF
+005816000406      *
+005817000406     C                     ADD  §CTR      W0030   30
+005818000406     C                     ENDDO
+005819000406      *
+005820000406     C           W0030     ADD  9         §TT2
+005821000406     C                     MOVE 0         §TT2
+005822000406     C           §TT2      SUB  W0030     DPDCHD
+005823000406      *
+006200000406     C                     ENDSR
+006300000406     OFISGN000E                FISGN
+006400000406     O                         SGNWHO
+006500000406     O                         SGNST2

@@ -1,0 +1,3 @@
+000100110111     D Proj_CbiTrasmissioneRid...
+000200110111     D                 PR                  EXTPGM('PJCI1O3/NDCK79R')
+000300101203     D  kpjba                              LIKEDS(kpjba)

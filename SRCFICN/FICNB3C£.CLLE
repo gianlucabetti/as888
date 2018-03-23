@@ -1,0 +1,94 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400020523             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+000500040407             DCL        VAR(&NRAZ) TYPE(*CHAR) LEN(9)
+000600030428
+000700030428/*-------------------------------------------------------------------------*/
+000800030428/* Pgm di controllo se attive trasmissioni in sede                         */
+000900030428/*  Se le trasmissioni fossero attive il pgm va a fine dopo msg a video    */
+001000030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+001100030428                          VALUE('FICNB3R   ')
+001200030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 1)) VALUE(' ')
+001300030428             CALL       PGM(FICNB8R) PARM(&KPJBA)
+001400030428             IF         COND(%SUBSTRING(&KPJBA 257 1) = 'T') +
+001500030428                          THEN(GOTO CMDLBL(FINE))
+001600030428             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 11)) +
+001700030428                          VALUE('           ')
+001800030428/*-------------------------------------------------------------------------*/
+001900040406
+002000050223             CRTDUPOBJ  OBJ(FIFCEW0F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002100050223                          TOLIB(QTEMP)
+002200040407             MONMSG     MSGID(CPF0000)
+002300050223             CRTDUPOBJ  OBJ(FIFCEW1L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002400050223                          TOLIB(QTEMP)
+002500050223             MONMSG     MSGID(CPF0000)
+002600050223             CRTDUPOBJ  OBJ(FIFCEW2L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002700050223                          TOLIB(QTEMP)
+002800050223             MONMSG     MSGID(CPF0000)
+002900050223             CRTDUPOBJ  OBJ(FIFCEW3L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+003000050223                          TOLIB(QTEMP)
+003100050223             MONMSG     MSGID(CPF0000)
+003200040407
+003300040407             CHGVAR     VAR(&NRAZ) VALUE(%SUBSTRING(&KPJBA 11 9))
+003400040407             CHGVAR     VAR(&MBR) VALUE('M' *CAT &NRAZ)
+003500020523
+003600020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003700020408/* procedura/programma fosse finita in maniera anomala occorre */
+003800020408/* parare il colpo riducendo il male al male minore ossia      */
+003900020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+004000020408/* metà piuttosto che confermarle. E ripartendo da una         */
+004100020408/* situazione pulita.                                          */
+004200020322             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004300020409/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+004400020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+004500020409             ENDCMTCTL
+004600020409             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004700020409             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004800020409             ENDDO
+004900020409
+005000040406             ADDPFM     FILE(FIFCEW0F) MBR(&MBR)
+005100020523             MONMSG     MSGID(CPF0000)
+005200040406             ADDLFM     FILE(FIFCEW1L) MBR(&MBR) DTAMBRS((FIFCEW0F +
+005300040406                          (&MBR)))
+005400020523             MONMSG     MSGID(CPF0000)
+005500020523             ADDLFM     FILE(FIFCEW2L) MBR(&MBR) DTAMBRS((FIFCEW0F +
+005600020523                          (&MBR)))
+005700020523             MONMSG     MSGID(CPF0000)
+005800050208             ADDLFM     FILE(FIFCEW3L) MBR(&MBR) DTAMBRS((FIFCEW0F +
+005900050208                          (&MBR)))
+006000050208             MONMSG     MSGID(CPF0000)
+006100050208
+006200020523             OVRDBF     FILE(FIFCEW0F) TOFILE(FIFCEW0F) MBR(&MBR)
+006300020523             OVRDBF     FILE(FIFCEW1L) TOFILE(FIFCEW1L) MBR(&MBR)
+006400020523             OVRDBF     FILE(FIFCEW2L) TOFILE(FIFCEW2L) MBR(&MBR)
+006500050208             OVRDBF     FILE(FIFCEW3L) TOFILE(FIFCEW3L) MBR(&MBR)
+006600020521
+006700040310/* Pulizia file spia x spalmare le Tariffe a Prestazione     */
+006800040310             CALL       PGM(FICNB3R2)
+006900040310             MONMSG     MSGID(CPF0000)
+007000051125/*           RGZPFM     FILE(FIFCEW0S)            */
+007100051125/*           MONMSG     MSGID(CPF0000)            */
+007200040310
+007300020322/* richiamo programma di stampa                    */
+007400020408             CALL       PGM(FICNB3R) PARM(&KPJBA)
+007500020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+007600020417             ROLLBACK
+007700020417             ENDDO
+007800020521
+007900020417 /* se per qualsiasi motivo il programma si è interrotto in modo */
+008000020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+008100020408 /* in modo pulito senza lasciare transazioni a metà.            */
+008200020322             ENDCMTCTL
+008300030505             MONMSG     MSGID(CPF8350)
+008400020521
+008500020523             RMVM       FILE(FIFCEW1L) MBR(&MBR)
+008600020523             MONMSG     MSGID(CPF0000)
+008700020523             RMVM       FILE(FIFCEW2L) MBR(&MBR)
+008800020523             MONMSG     MSGID(CPF0000)
+008900050208             RMVM       FILE(FIFCEW3L) MBR(&MBR)
+009000050208             MONMSG     MSGID(CPF0000)
+009100020523             RMVM       FILE(FIFCEW0F) MBR(&MBR)
+009200020523             MONMSG     MSGID(CPF0000)
+009300030428fine:
+009400000000             ENDPGM

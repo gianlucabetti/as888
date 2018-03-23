@@ -1,0 +1,110 @@
+000100000308/*PARMS DFTACTGRP(*YES)                                              */
+000200000000  /*----------------------------------------------------------------*/
+000300000000  /* Utility: Edit File Field Description:                          */
+000400000000  /*          Edit Column Heading and Text of the field without     */
+000500000000  /*          recreating a database file.                           */
+000600000000  /* Author     :   Ira Shapiro                                     */
+000700000000  /* Prompt Override Program for EDTFFD command.                    */
+000800000000  /* Source file:   QCLSRC                                          */
+000900000000  /* Source member: EDTFFDPOP                                       */
+001000000000  /* Source type:   CLP                                             */
+001100000000  /* Creation command line:                                         */
+001200000000  /* CRTCLPGM   PGM(Library_Name/EDTFFDPOP) +                       */
+001300000000  /*            SRCFIL(Library_Name/QCLSRC) +                       */
+001400000000  /*            TEXT('Edit File Field Descript: COLHDG or/and TEXT')*/
+001500000000  /*================================================================*/
+001600000000
+001700000000    PGM PARM(&qualcmd   +
+001800000000             &keyval    +
+001900000000             &cmdstring +
+002000000000             &parms)
+002100000000  /*================================================================*/
+002200000000  /* Declare Variables                                              */
+002300000000  /*================================================================*/
+002400000000  /* Variables from passed parameters */
+002500000000    DCL VAR(&qualcmd)    TYPE(*CHAR) LEN(256)
+002600000000    DCL VAR(&keyval)     TYPE(*CHAR) LEN(30)
+002700000000    DCL VAR(&cmdstring)  TYPE(*CHAR) LEN(5700)
+002800000000    DCL VAR(&parms)      TYPE(*CHAR) LEN(1000)
+002900000000
+003000000000  /* Variables definded in this program */
+003100000000    DCL VAR(&file)      TYPE(*CHAR) LEN(21)
+003200000000    DCL VAR(&field)     TYPE(*CHAR) LEN(21)
+003300000000    DCL VAR(&filename)  TYPE(*CHAR) LEN(10)
+003400000000    DCL VAR(&filelib)   TYPE(*CHAR) LEN(10)
+003500000000    DCL VAR(&colhdg1)   TYPE(*CHAR) LEN(20)
+003600000000    DCL VAR(&colhdg2)   TYPE(*CHAR) LEN(20)
+003700000000    DCL VAR(&colhdg3)   TYPE(*CHAR) LEN(20)
+003800000000    DCL VAR(&text)      TYPE(*CHAR) LEN(50)
+003900000000    DCL VAR(&binlen)    TYPE(*CHAR) LEN(2)
+004000000000
+004100000000    DCLF QSYS/QADSPFFD
+004200000000
+004300000000  /*================================================================*/
+004400000000  /* Validity check                                                 */
+004500000000  /*================================================================*/
+004600000000    CHGVAR &filename  %SST(&keyval  1 10)
+004700000000    CHGVAR &filelib   %SST(&keyval 11 10)
+004800000000    CHGVAR &field     %SST(&keyval  21 10)
+004900000000
+005000000000  /*  Check &file existence and *ALL authority */
+005100000000    CHKOBJ  &filelib/&filename OBJTYPE(*FILE) AUT(*ALL)
+005200000000    MONMSG MSGID(CPF9800) EXEC(DO)    /* Not found/Not Authorized */
+005300000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('File' +
+005400000308                          *BCAT &FILENAME *BCAT 'in library' *BCAT +
+005500000308                          &FILELIB *BCAT ' not found or you are not +
+005600000308                          authorized to it') TOPGMQ(*PRV) +
+005700000308                          MSGTYPE(*DIAG)
+005800000000      SNDPGMMSG MSGID(CPF0011) MSGF(QCPFMSG) TOPGMQ(*PRV)       +
+005900000000                MSGTYPE(*ESCAPE)
+006000000000    ENDDO /* Not found */
+006100000000
+006200000000  /*================================================================*/
+006300000000  /* Retrieve Column heading and Text for the &field from a &file.  */
+006400000000  /*================================================================*/
+006500000000     DSPFFD  FILE(&filelib/&filename) OUTPUT(*OUTFILE) +
+006600000000             OUTFILE(QTEMP/QADSPFFD)
+006700000000     OVRDBF  FILE(QADSPFFD) TOFILE(QTEMP/QADSPFFD)
+006800000000
+006900000000READ:
+007000000000     RCVF /* Read a record from an output file */
+007100000000     MONMSG CPF0864  EXEC(GOTO NOTFOUND)
+007200000000           IF (&field = &WHFLDE)  DO   /* Found */
+007300000000             CHGVAR &colhdg1 &whchd1
+007400000000             CHGVAR &colhdg2 &whchd2
+007500000000             CHGVAR &colhdg3 &whchd3
+007600000000             CHGVAR &text    &whftxt
+007700000000         /* Build the string to be returted to the command  */
+007800000000             CHGVAR %BIN(&binlen) 1000
+007900000000             CHGVAR &parms (                            +
+008000000000                             &binlen        *TCAT       +
+008100000000                             'COLHDG1('''   *TCAT       +
+008200000000                             &colhdg1       *TCAT       +
+008300000000                             ''')'            *BCAT     +
+008400000000                             'COLHDG2('''   *TCAT       +
+008500000000                             &colhdg2       *TCAT       +
+008600000000                             ''')'            *BCAT     +
+008700000000                             'COLHDG3('''   *TCAT       +
+008800000000                             &colhdg3       *TCAT       +
+008900000000                             ''')'            *BCAT     +
+009000000000                             'TEXT('''      *TCAT       +
+009100000000                             &text          *TCAT       +
+009200000000                             ''')'                      +
+009300000000                           )
+009400000000            GOTO ENDPGM
+009500000000         ENDDO  /* Found */
+009600000000
+009700000000     GOTO  READ      /*  Loop back to read QADSPFFD file */
+009800000000
+009900000000  NOTFOUND:
+010000000308             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Field' +
+010100000308                          *BCAT &FIELD *BCAT 'is not in a' *BCAT +
+010200000308                          &FILELIB *TCAT '/' *TCAT &FILENAME *BCAT +
+010300000308                          'file') TOPGMQ(*PRV) MSGTYPE(*DIAG)
+010400000000      SNDPGMMSG MSGID(CPF0011) MSGF(QCPFMSG) TOPGMQ(*PRV)         +
+010500000000                MSGTYPE(*ESCAPE)
+010600000000
+010700000000/*=================================================================*/
+010800000000/*     End of the program.                                         */
+010900000000/*=================================================================*/
+011000000000ENDPGM: ENDPGM

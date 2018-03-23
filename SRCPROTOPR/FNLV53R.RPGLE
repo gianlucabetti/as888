@@ -1,0 +1,3 @@
+000100080317     D*Dati_foglio ...
+000200080317     D FNLV53R         pr                  extpgm('FNLV53R')
+000300080317     D  FNLV53DS                           likeds(FNLV53DS)

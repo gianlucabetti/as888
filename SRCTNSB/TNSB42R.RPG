@@ -1,0 +1,262 @@
+000100940912     H*------------------------------------------------------------------------*
+000200950310     H* SALVATAGGIO E PULIZIA VARIAZIONI BOLLE SEDE
+000300940912     H*------------------------------------------------------------------------*
+000400930128     H              J
+000500950310     F* T N T A S V
+000600990803     FTITASV1LUF  E           K        DISK
+000700990803     FTITASV0FO   E           K        DISK                      A
+000800990803     F            TITASV00                          KRENAMETITASVS0
+000900950310     F* T N T A S
+001000990803     FTITAS30CIF  E           K        DISK
+001100931105     FPRTF198 O   F     198     OF    LPRINTER
+001200940912     L*------------------------------------------------------------------------*
+001300931105     LPRTF198  66FL 60OL
+001400940912     E*------------------------------------------------------------------------*
+001500940912     E* SCHIERE
+001600940912     E*------------------------------------------------------------------------*
+001700931105     E                    TES     1  15 66
+001800940912     I*------------------------------------------------------------------------*
+001900940912     I* INPUT
+002000940912     I*------------------------------------------------------------------------*
+002100941123     I            DS
+002200941123     I                                        1   40DSAASI
+002300941123     I                                        5   80DSMGSI
+002400950309     I                                        1   80DSDATI
+002500941123     I            DS
+002600941123     I                                        1   40DSAASF
+002700941123     I                                        5   80DSMGSF
+002800950309     I                                        1   80DSDATF
+002900940912     I*-------------------
+003000931115     I* PARAMETRI LANCIO PGM
+003100940912     I*-------------------
+003200931115     IPARAM      IDS
+003300950309     I                                        1   80PARDTI                DT.INI
+003400950309     I                                        9  160PARDTF                DT.FIN
+003500940912     I*-------------------
+003600940912     I* ARCHITETTURA
+003700940912     I*-------------------
+003800931115     IKPJBA     E DS
+003900940912     C*------------------------------------------------------------------------*
+004000940912     C*?MAIN LINE
+004100940912     C*------------------------------------------------------------------------*
+004200000000     C*
+004300930129     C* ROUTINE INIZIALE
+004400930129     C                     EXSR RUTINZ
+004500931105     C*
+004600931105     C* STAMPA RIGA DI TESTATA
+004700931105     C                     EXCPTTESTA
+004800930601     C*
+004900930601     C* SE NON DEVE ESSERE ESEGUITO IL PGM VADO A FINE
+005000930601     C           FINL00    IFEQ '0'                        --- 1 -->
+005100000000     C*
+005200990803     C* POSIZIONAMENTO SUL FILE E PRIMA LETTURA SU TITASV
+005300950310     C                     EXSR SETTAV
+005400930128     C*
+005500990803     C* CICLO FINO A FINE FILE TITASV OPPURE
+005600950308     C* RICHIESTA CHIUSURA PGM OPPURE
+005700950308     C* FINE PGM PER ERRORE
+005800950308     C                     SETOF                     98
+005900950310     C           FINTAV    DOWEQ'0'                        --- 2 -->
+006000950308     C           *IN98     ANDEQ'0'
+006100950308     C           FINL00    ANDEQ'0'
+006200950307     C*
+006300990803     C                     WRITETITASVS0               99  *SCRIVO TITASVS
+006400950310     C   99                EXCPTERRTAV
+006500950308     C   99                MOVEL'1'       FINL00           *FINE PGM
+006600990803     C  N99                DELETTITASV00                   *CANCELLO TITASV
+006700990803     C  N99                ADD  1         NUMTAV           *REC TRASF TITASV
+006800000000     C*
+006900990803     C  N99                EXSR LETTAV                     *SUCCESSIVO TITASV
+007000950308     C                     SHTDN                     98    *CONTR.CHIUSURA PGM
+007100930128     C*
+007200950307     C                     ENDDO                           <-- 2 ---
+007300950307     C                     ENDIF                           <-- 1 ---
+007400931105     C*
+007500931105     C* STAMPA RIGA DI FINE STAMPA
+007600931115     C                     Z-ADDUDATE     DATA    60
+007700931115     C                     TIME           ORA     60
+007800931105     C                     EXCPTSTAFIN
+007900000000     C*
+008000000000     C                     SETON                     LR
+008100940912     C*------------------------------------------------------------------------*
+008200990803     C*? SETTAV - POSIZIONAMENTO E PRIMA LETTURA DEL FILE TITASV
+008300940912     C*------------------------------------------------------------------------*
+008400950310     C           SETTAV    BEGSR
+008500931115     C*
+008600931115     C* AZZERO CONTATORE RECORD LETTI
+008700950310     C                     MOVEL'0'       FINTAV  1
+008800930208     C*
+008900930316     C* POSIZIONAMENTO E PRIMA LETTURA
+009000941123     C                     Z-ADDPARDTI    DSDATI
+009100941123     C                     Z-ADDPARDTF    DSDATF
+009200950310     C                     Z-ADD*ZEROS    TASAAS
+009300990803     C           KEYTAV    SETLLTITASV1L             99    *FINE-ARCHIV
+009400930625     C*
+009500930625     C           *IN99     IFEQ '1'
+009600950310     C                     MOVEL'1'       FINTAV
+009700930625     C                     ELSE
+009800950310     C                     EXSR LETTAV
+009900930625     C                     END
+010000930208     C*
+010100930208     C                     ENDSR
+010200940912     C*------------------------------------------------------------------------*
+010300990803     C*? LETTAV   LETTURA PROSSIMO RECORD TITASV
+010400940912     C*------------------------------------------------------------------------*
+010500950310     C           LETTAV    BEGSR
+010600930625     C*
+010700930625     C* LEGGO FINO A:
+010800930625     C*     - FINE FILE O SUPERATO LIMITE FINALE
+010900930625     C*     - TROVATO RECORD VALIDO
+011000930625     C                     MOVEL'N'       WRECOK
+011100950310     C           FINTAV    DOWEQ'0'                        --- 1 -->
+011200930625     C           WRECOK    ANDEQ'N'
+011300930208     C*
+011400930316     C* LETTURE SUCCESSIVE ALLA PRIMA
+011500990803     C                     READ TITASV1L                 99
+011600930625     C*
+011700930625     C           *IN99     IFEQ '1'                        *FINE FILE
+011800950310     C           TASAAS    ORGT DSAASF                     *SUPERATO ANNO FINE
+011900950310     C                     MOVEL'1'       FINTAV
+012000930625     C                     ELSE
+012100950309     C                     EXSR CHKREC                     *CONTR.VALIDITA REC.
+012200930208     C                     END
+012300930625     C*
+012400930625     C                     END                             <-- 1 ---
+012500930208     C*
+012600930208     C                     ENDSR
+012700950307     C*------------------------------------------------------------------------*
+012800950309     C*? CHKREC - CONTROLLA VALIDITA' DEL RECORD
+012900950307     C*------------------------------------------------------------------------*
+013000950309     C           CHKREC    BEGSR
+013100950307     C*
+013200950307     C                     MOVEL'S'       WRECOK  1
+013300950309     C*
+013400950310     C* DEVE AVERE LA DATA INFERIORE ALLA DATA DI FINE CANC.
+013500950310     C           TASAAS    IFGT DSAASF
+013600950309     C                     MOVEL'N'       WRECOK
+013700950309     C                     ENDIF
+013800950309     C*
+013900950310     C* RECUPERA MESE/GIORNO DELLA BOLLA DA TNTAS
+014000950310     C           WRECOK    IFEQ 'S'                        --- 1 -->
+014100990803     C           KEYTAS    CHAINTITAS30C             99
+014200950310     C           *IN99     IFEQ *OFF                       --- 2 --> *TROVATO
+014300950310     C           TASAAS    IFEQ DSAASF
+014400950310     C           TASMGS    ANDGTDSMGSF
+014500950310     C                     MOVEL'N'       WRECOK
+014600950310     C                     ENDIF
+014700950310     C                     ELSE                            <-- 2 --> *NON TROVAT
+014800950310     C                     MOVEL'N'       WRECOK
+014900990803     C                     EXCPTERRTAS                     *TITAS NON TROVATO
+015000950310     C                     ENDIF                           <-- 2 ---
+015100950310     C                     ENDIF                           <-- 1 ---
+015200950307     C*
+015300950307     C                     ENDSR
+015400940912     C*------------------------------------------------------------------------*
+015500940912     C*? RUTINZ - ROUTINE INIZIALE
+015600940912     C*------------------------------------------------------------------------*
+015700000000     C           RUTINZ    BEGSR
+015800931115     C*
+015900931115     C* PARAMETRI IN INPUT AL PGM
+016000931115     C           *ENTRY    PLIST
+016100931115     C                     PARM           KPJBA
+016200931115     C                     MOVELKPJBU     PARAM
+016300930208     C*
+016400990803     C* CHIAVE LETTURA TITAS30C - COMPLETA
+016500930621     C           KEYTAS    KLIST
+016600941123     C                     KFLD           TASAAS
+016700950309     C                     KFLD           TASLNP
+016800950309     C                     KFLD           TASNRS
+016900950309     C                     KFLD           TASNSP
+017000950307     C*
+017100990803     C* CHIAVE LETTURA TITASV1L - COMPLETA
+017200950310     C           KEYTAV    KLIST
+017300950310     C                     KFLD           TASAAS
+017400950310     C                     KFLD           TASLNP
+017500950310     C                     KFLD           TASNRS
+017600950310     C                     KFLD           TASNSP
+017700950310     C                     KFLD           TASDTV
+017800950310     C                     KFLD           TASORV
+017900950310     C                     KFLD           TASPRU
+018000930208     C*
+018100930208     C* IMPOSTO A ZERO IL FINE PGM
+018200930208     C                     MOVEL'0'       FINL00  1
+018300931105     C                     MOVEL*BLANKS   RSUT   20
+018400950310     C                     Z-ADD*ZEROS    NUMTAV  90
+018500931115     C*
+018600931115     C* RECUPERO LA DATA E L'ORA
+018700931115     C                     Z-ADDUDATE     DATA    60
+018800931115     C                     TIME           ORA     60
+018900000000     C*
+019000000000     C                     ENDSR
+019100940912     O*------------------------------------------------------------------------*
+019200940905     OPRTF198 E   02           TESTA
+019300950310     O                                    8 'TNSB42R '
+019400931105     O                         RSUT      45
+019500990803     O                                   82 'SALVATAGGIO TITASV      '
+019600931115     O                                   90 'DAL:'
+019700950309     O                         PARDTI    99
+019800931115     O                                  110 'AL:'
+019900950309     O                         PARDTF   119
+020000931105     O                                  150 'Data:'
+020100931105     O                         DATA     159 '  /  /  '
+020200931105     O                                  167 'Ora:'
+020300931105     O                         ORA      178 '  .  .  '
+020400931105     O                                  190 'Pagina:'
+020500931105     O                         PAGE  Z  198
+020600931105     O        E 11             TESTA
+020700931105     O                         TES,2     66
+020800931105     O                         TES,3    132
+020900931105     O                         TES,4    198
+021000931105     O        E  1             TESTA
+021100931105     O                         TES,1     66
+021200931105     O                         TES,1    132
+021300931105     O                         TES,1    198
+021400931105     O*------------------------------------
+021500950310     O        E  1             ERRTAV
+021600951129     O                         TASAAS
+021700950310     O                         TASLNP  +  1
+021800950310     O                         TASNRS  +  1
+021900950310     O                         TASNSP  +  1
+022000951129     O                         TASTBL  +  1
+022100950310     O                         TASDTV  +  1
+022200950310     O                         TASORV  +  1
+022300950310     O                         TASPRU  +  1
+022400990803     O                                 +  1 'ERR. WRITE TITASV  '
+022500950310     O*------------------------------------
+022600950310     O        E  1             ERRTAS
+022700951129     O                         TASAAS
+022800950310     O                         TASLNP  +  1
+022900950310     O                         TASNRS  +  1
+023000950310     O                         TASNSP  +  1
+023100951129     O                         TASTBL  +  1
+023200950310     O                         TASDTV  +  1
+023300950310     O                         TASORV  +  1
+023400950310     O                         TASPRU  +  1
+023500990803     O                                 +  1 'NON TROVATO TITAS  '
+023600931105     O*------------------------------------
+023700950308     O        E  1             STAFIN
+023800990803     O                                   30 'N.REC.TRASF. TITASV'
+023900951129     O                         NUMTAVZ   44
+024000950308     O        E   60           STAFIN
+024100931115     O                                   76 '*** FINE STAMPA ***'
+024200931115     O                                  150 'Data:'
+024300931115     O                         DATA     159 '  /  /  '
+024400931115     O                                  167 'Ora:'
+024500940912     O                         ORA      178 '  :  :  '
+024600940912     O*------------------------------------------------------------------------*
+024700931105**
+024800931105------------------------------------------------------------------  1
+024900951129ANNO LNP SE N.SPED. TB DATA VAR ORA VA OPERAT ERRORE                2
+025000951129                                                                    3
+025100931105                                                                    4
+025200931105                                                                    5
+025300931105                                                                    6
+025400931105                                                                    7
+025500931105                                                                    8
+025600931105                                                                    9
+025700931105                                                                   10
+025800931105                                                                   11
+025900931105                                                                   12
+026000931105                                                                   13
+026100931105                                                                   14
+026200931105                                                                   15

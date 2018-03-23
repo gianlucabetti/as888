@@ -1,0 +1,382 @@
+000100891030     H            Y                                                       CN0500
+000200920131      * TRTB34R *-----------------------------------------------------*
+000300000512      *                   - GESTIONE TABELLA 7C - ANOMALIE IDD        *
+000400911216      *---------------------------------------------------------------*
+000500920131     FTRTB34D CF  E                    WORKSTN
+000600891030     FTABEL00FUF  E           K        DISK                      A
+000700920203     E                    KTA        20  1               TIPI ANOMALIA
+000800920203     E                    KSA        20  1               SOGGETTI ANOMALIA
+000900920203     E                    TDE        20  8               DESCRIZIONE TIPI
+001000920203     E                    SDE        20  8               DESCRIZIONE SOGG.
+001100920131     E                    SCHI        3  1               CODICE TABELLA
+001200911216      *
+001300920131     IDS7C      E DS
+001400900608      *
+001500891030     IKPJBA     E DS
+001600911118      *
+001700911118     IUTEDSE    E DSUTEDSE0F
+001800911216      *****************************************************************
+001900911216      *  RIEPILOGO INDICATORI
+002000911216      *****************************************************************
+002100911216      * 01    - INSERIMENTO
+002200911216      * 02    - VARIAZIONE
+002300920116      * 03    - ANNULLATO
+002400911216      * 79    - COMANDO DI ANNULLAMENTO CONSENTITO SOLO DA EDP
+002500911216      * 80/98 - DI COMODO,RIUTILIZZABILI
+002600911216      * 99    - ERRORE GENERICO
+002700911216      *****************************************************************
+002800891030     C           *ENTRY    PLIST
+002900891030     C                     PARM           KPJBA
+003000891030     C                     Z-ADD1         CODUT
+003100891030     C                     CALL 'XPARUT'
+003200891030     C                     PARM           UTEDSE
+003300891030     C                     MOVELRAGUT     RSUT
+003400911216      *---------------------------------------------------------------*
+003500911216      * CHIAVE X POSIZIONAMENTO TABELLE
+003600911216      *
+003700911216     C           KTAB      KLIST                           *
+003800911216     C                     KFLD           §KUT             *
+003900911216     C                     KFLD           §COD             *
+004000911216     C                     KFLD           §KEY             *
+004100911216      *
+004200920203     C           KTAB2     KLIST                           *
+004300920203     C                     KFLD           §KUT             *
+004400920203     C                     KFLD           §COD             *
+004500920204      *
+004600920131      *---------------------------------------------------------------*
+004700920131      *
+004800891030     C           *LIKE     DEFN TBLKUT    §KUT
+004900891030     C           *LIKE     DEFN TBLCOD    §COD
+005000891030     C           *LIKE     DEFN TBLKEY    §KEY
+005100920204     C* CARICO TABELLE TIPI E SOGGETTI ANOMALIA
+005200920204     C                     EXSR CARTAB
+005300920204     C*
+005400920204     C                     SETOF                     79
+005500891102     C                     MOVELKNMUS     PROF    3
+005600891102     C           PROF      IFNE 'EDP'
+005700891102     C                     SETON                     79
+005800891102     C                     END
+005900911216      *§
+006000920204     C           STAR      TAG
+006100920204     C                     MOVEL*BLANKS   §DES   25
+006200920204     C                     MOVEL'?  '     VCOD
+006300920204     C*
+006400891030     C           INIZIO    TAG
+006500920131     C                     EXFMTTB34D1
+006600000512     C* F3 - FINE LAVORO
+006700911115     C      KC             GOTO FINE
+006800920204     C* CODICE SEMPRE > 0
+006900891107     C           VCOD      IFEQ *BLANKS
+007000920204     C                     SETON                     29
+007100891030     C                     GOTO INIZIO
+007200891030     C                     END
+007300911216      **--- RICERCA IN TABEL00F
+007400920131     C                     MOVEAVCOD      SCHI
+007500920131     C           '?'       LOKUPSCHI                     20
+007600920131     C           *IN20     IFEQ '1'
+007700891030     C                     MOVELCODUT     §KUT
+007800920131     C                     MOVEL'7C'      §COD
+007900891107     C                     MOVE *ZEROS    VCOD
+008000000512     C                     CLEAR§KEY
+008100891030     C                     CALL 'X§TABER'
+008200891030     C                     PARM           §KUT
+008300891030     C                     PARM           §COD
+008400891030     C                     PARM           §KEY
+008500911115     C                     PARM           §DES
+008600891107     C                     MOVEL§KEY      VCOD
+008700891030     C                     GOTO INIZIO
+008800911216      *§
+008900891102     C                     ELSE
+009000891102     C                     MOVELCODUT     §KUT
+009100920131     C                     MOVEL'7C'      §COD
+009200891107     C                     MOVELVCOD      §KEY
+009300891030     C                     END
+009400911216      *§
+009500920116     C                     SETOF                     010203
+009600891107     C                     EXSR PULVID
+009700900604     C           KTAB      CHAINTABEL                80
+009800891030     C           *IN80     IFEQ '1'
+009900891030     C                     SETON                     01    *IMMISSIONE
+010000990114     C                     CLEARDS7C
+010100891030     C                     ELSE
+010200920131     C                     MOVELTBLUNI    DS7C
+010300891030     C                     SETON                     02    *VARIAZIONE
+010400891030     C                     END
+010500920116     C*
+010600920116     C      02   TBLFLG    IFEQ '*'
+010700920204     C                     SETON                     03     ANNULLATO
+010800920116     C                     END
+010900911216      *§
+011000000512     C           SU2       TAG
+011100920131     C                     EXFMTTB34D2
+011200000512     C* F 3 - FINE LAVORO
+011300911115     C      KC             GOTO FINE
+011400000512     C* F12 - RITORNO
+011500911213     C      KL             GOTO INIZIO
+011600000512      **F16 -  ANNULLAMENTO
+011700911115     C      KQ             DO
+011800920204     C                     MOVEL'*'       TBLFLG
+011900920204     C                     UPDATTABEL
+012000891030     C                     GOTO INIZIO
+012100891030     C                     END
+012200000512      **F5  - RIATTIVAZIONE
+012300920116     C      KE             DO
+012400920204     C                     MOVEL' '       TBLFLG
+012500920204     C                     UPDATTABEL
+012600920116     C                     GOTO INIZIO
+012700920116     C                     END
+012800911216      *§
+012900891102     C                     EXSR CTRFMT
+013000000512     C   99                GOTO SU2
+013100000512     C**
+013200000512     C**
+013300000512     C           SU3       TAG
+013400000512     C                     EXFMTTB34D3
+013500000512     C* F 3 - FINE LAVORO
+013600000512     C      KC             GOTO FINE
+013700000512     C* F12 - RITORNO
+013800000512     C      KL             GOTO SU2
+013900000512      **F16 -  ANNULLAMENTO
+014000000512     C      KQ             DO
+014100000512     C                     MOVEL'*'       TBLFLG
+014200000512     C                     UPDATTABEL
+014300000512     C                     GOTO INIZIO
+014400000512     C                     END
+014500000512      **F5  - RIATTIVAZIONE
+014600000512     C      KE             DO
+014700000512     C                     MOVEL' '       TBLFLG
+014800000512     C                     UPDATTABEL
+014900000512     C                     GOTO INIZIO
+015000000512     C                     END
+015100000512      *
+015200000512     C  NKF                GOTO SU3
+015300000512     C* F6 - AGGIORNA
+015400891030     C                     EXSR SCRIVI
+015500000512     C**
+015600891102     C                     GOTO STAR
+015700911216      *§
+015800891030     C           FINE      TAG
+015900891030     C                     SETON                     LR
+016000911216      **------------------------
+016100911216      ** PULIZIA CAMPI 2°VIDEATA
+016200911216      **------------------------
+016300891030     C           PULVID    BEGSR
+016400900608      *
+016500920131     C                     MOVEL*BLANKS   §7CDES
+016600920131     C                     MOVEL*BLANKS   §7CTAN
+016700920131     C                     MOVEL*BLANKS   §7CSAN
+016800920131     C                     MOVEL*BLANKS   §7CAIE
+016900920204     C                     MOVEL0         §7CLID
+017000920131     C                     MOVEL*BLANKS   §7CCHA
+017100920203     C                     MOVEL*BLANKS   §7CFFI
+017200000512     C                     MOVEL*BLANKS   §7CCPT
+017300000512     C                     MOVEL*BLANKS   §7CSPT
+017400900608      *
+017500891030     C                     ENDSR
+017600911216      **------------------------
+017700911216      ** CONTROLLI 2°VIDEATA
+017800911216      **------------------------
+017900891030     C           CTRFMT    BEGSR
+018000920204     C                     SETOF                     99
+018100920204      * DESCRIZIONE
+018200920131     C           §7CDES    IFEQ *BLANKS
+018300911216     C                     SETON                     9950
+018400920204     C                     GOTO END1
+018500911118     C                     END
+018600911218      *
+018700920204      * TIPO ANOMALIA
+018800920204     C           §7CTAN    IFEQ '?'
+018900920204     C                     MOVELCODUT     §KUT
+019000920204     C                     MOVEL'7F'      §COD
+019100920204     C                     MOVE ' '       §7CTAN
+019200000512     C                     CLEAR§KEY
+019300920204     C                     CALL 'X§TABER'
+019400920204     C                     PARM           §KUT
+019500920204     C                     PARM           §COD
+019600920204     C                     PARM           §KEY
+019700920204     C                     PARM           §DES
+019800920204     C                     MOVEL§KEY      §7CTAN
+019900920204     C                     SETON                     99
+020000920204     C                     GOTO END1
+020100920204     C                     END
+020200920204     C* CONTROLLO
+020300920204     C           §7CTAN    LOKUPKTA                      35
+020400920204     C  N35                SETON                     4399
+020500920204      *
+020600920131     C           §7CTAN    IFEQ *BLANKS
+020700920204     C                     SETON                     4499
+020800920131     C                     END
+020900920204     C   99                GOTO END1
+021000920131      *
+021100920204      * SOGGETTO ANOMALIA
+021200920131      *
+021300920204     C           §7CSAN    IFEQ '?'
+021400920204     C                     MOVELCODUT     §KUT
+021500920204     C                     MOVEL'7G'      §COD
+021600920204     C                     MOVE ' '       §7CSAN
+021700000512     C                     CLEAR§KEY
+021800920204     C                     CALL 'X§TABER'
+021900920204     C                     PARM           §KUT
+022000920204     C                     PARM           §COD
+022100920204     C                     PARM           §KEY
+022200920204     C                     PARM           §DES
+022300920204     C                     MOVEL§KEY      §7CSAN
+022400920204     C                     SETON                     99
+022500920204     C                     GOTO END1
+022600920204     C                     END
+022700920204      *
+022800920204     C           §7CSAN    LOKUPKSA                      36
+022900920204     C  N36                SETON                     4799
+023000920204      *
+023100000512     C**         §7CSAN    IFEQ *BLANKS
+023200000512     C**                   SETON                     4899
+023300000512     C**                   END
+023400920204     C   99                GOTO END1
+023500920203      *
+023600920131     C           §7CAIE    IFEQ 'I'
+023700920204     C           §7CFFI    ANDNE*BLANKS
+023800920204     C                     SETON                     5599
+023900920131     C                     END
+024000920204     C   99                GOTO END1
+024100920131      *
+024200920204     C           §7CAIE    IFEQ 'E'
+024300920204     C           §7CFFI    ANDEQ*BLANKS
+024400920204     C                     SETON                     5699
+024500920204     C                     END
+024600920204     C   99                GOTO END1
+024700920204      *
+024800891030     C           END1      ENDSR
+024900911216      **----------------------------
+025000911216      ** AGGIORNAMENTO / INSERIMENTO
+025100911216      **----------------------------
+025200891030     C           SCRIVI    BEGSR
+025300911216      *§
+025400891030     C                     MOVEL§KUT      TBLKUT
+025500920204     C                     MOVEL'7C'      TBLCOD
+025600920204     C                     MOVEL*BLANKS   TBLKEY
+025700920204     C                     MOVELVCOD      TBLKEY
+025800920131     C                     MOVELDS7C      TBLUNI
+025900911216      *§
+026000900420     C                     MOVE '1'       TBLFTT            A TUTTI
+026100900420     C                     MOVE *ZERO     TBLFLT            FILIALE
+026200900420     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+026300900420     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+026400911216      *§
+026500891102     C   80                WRITETABEL                  98
+026600891102     C  N80                UPDATTABEL                  98
+026700911216      *§
+026800891030     C                     ENDSR
+026900920204     C* CARICO TIPI E SOGGETTI ANOMALIA -----------------------------
+027000920204     C           CARTAB    BEGSR
+027100920204      **--- CARICAMENTO SCHIERA TIPI ANOMALIA E SCHIERA DESCRIZIONE TIPI
+027200920204      *
+027300920204     C                     MOVELCODUT     §KUT
+027400920204     C                     MOVEL'7F'      §COD
+027500920213     C                     Z-ADD1         X       30
+027600920204     C           KTAB2     SETLLTABEL
+027700920204     C           KTAB2     READETABEL                    30
+027800920204     C           *IN30     DOWEQ*ZEROS
+027900920204     C           TBLFLG    IFEQ *BLANKS
+028000920204     C                     MOVELTBLKEY    KTA,X
+028100920204     C                     MOVELTBLUNI    TDE,X
+028200920204     C                     ADD  1         X
+028300920204     C                     END
+028400920204     C           KTAB2     READETABEL                    30
+028500920204     C                     END
+028600920204      *
+028700920204      **--- CARICAMENTO SCHIERA SOGGETTI ANOMALIA E SCHIERA DESCRIZ. SOGGETTI
+028800920204      *
+028900920204     C                     MOVELCODUT     §KUT
+029000920204     C                     MOVEL'7G'      §COD
+029100920213     C                     Z-ADD1         X       30
+029200920204     C           KTAB2     SETLLTABEL
+029300920204     C           KTAB2     READETABEL                    30
+029400920204     C           *IN30     DOWEQ*ZEROS
+029500920204     C           TBLFLG    IFEQ *BLANKS
+029600920204     C                     MOVELTBLKEY    KSA,X
+029700920204     C                     MOVELTBLUNI    SDE,X
+029800920204     C                     ADD  1         X
+029900920204     C                     END
+030000920204     C           KTAB2     READETABEL                    30
+030100920204     C                     END
+030200920204     C* TIPI ANOMALIA
+030300920204     C           KTA,1     IFNE *BLANKS
+030400920204     C                     MOVELKTA,1     VIKTA1
+030500920204     C                     MOVEL'='       VITDE1
+030600920204     C                     MOVE TDE,1     VITDE1
+030700920204     C                     END
+030800920204      *
+030900920204     C           KTA,2     IFNE *BLANKS
+031000920204     C                     MOVELKTA,2     VIKTA2
+031100920204     C                     MOVEL'='       VITDE2
+031200920204     C                     MOVE TDE,2     VITDE2
+031300920204     C                     END
+031400920204      *
+031500920204     C           KTA,3     IFNE *BLANKS
+031600920204     C                     MOVELKTA,3     VIKTA3
+031700920204     C                     MOVEL'='       VITDE3
+031800920204     C                     MOVE TDE,3     VITDE3
+031900920204     C                     END
+032000920204      *
+032100920204     C           KTA,4     IFNE *BLANKS
+032200920204     C                     MOVELKTA,4     VIKTA4
+032300920204     C                     MOVEL'='       VITDE4
+032400920204     C                     MOVE TDE,4     VITDE4
+032500920204     C                     END
+032600920204      *
+032700920204     C           KTA,5     IFNE *BLANKS
+032800920204     C                     MOVELKTA,5     VIKTA5
+032900920204     C                     MOVEL'='       VITDE5
+033000920204     C                     MOVE TDE,5     VITDE5
+033100920204     C                     END
+033200920204      *
+033300920204     C           KTA,6     IFNE *BLANKS
+033400920204     C                     MOVELKTA,6     VIKTA6
+033500920204     C                     MOVEL'='       VITDE6
+033600920204     C                     MOVE TDE,6     VITDE6
+033700920204     C                     END
+033800920204      *
+033900920204     C           KTA,7     IFNE *BLANKS
+034000920204     C                     SETON                     70
+034100920204     C                     END
+034200920204     C* SOGGETTI ANOMALIA
+034300920204     C           KSA,1     IFNE *BLANKS
+034400920204     C                     MOVELKSA,1     VIKSA1
+034500920204     C                     MOVEL'='       VISDE1
+034600920204     C                     MOVE SDE,1     VISDE1
+034700920204     C                     END
+034800920204      *
+034900920204     C           KSA,2     IFNE *BLANKS
+035000920204     C                     MOVELKSA,2     VIKSA2
+035100920204     C                     MOVEL'='       VISDE2
+035200920204     C                     MOVE SDE,2     VISDE2
+035300920204     C                     END
+035400920204      *
+035500920204     C           KSA,3     IFNE *BLANKS
+035600920204     C                     MOVELKSA,3     VIKSA3
+035700920204     C                     MOVEL'='       VISDE3
+035800920204     C                     MOVE SDE,3     VISDE3
+035900920204     C                     END
+036000920204      *
+036100920204     C           KSA,4     IFNE *BLANKS
+036200920204     C                     MOVELKSA,4     VIKSA4
+036300920204     C                     MOVEL'='       VISDE4
+036400920204     C                     MOVE SDE,4     VISDE4
+036500920204     C                     END
+036600920204      *
+036700920204     C           KSA,5     IFNE *BLANKS
+036800920204     C                     MOVELKSA,5     VIKSA5
+036900920204     C                     MOVEL'='       VISDE5
+037000920204     C                     MOVE SDE,5     VISDE5
+037100920204     C                     END
+037200920204      *
+037300920204     C           KSA,6     IFNE *BLANKS
+037400920204     C                     MOVELKSA,6     VIKSA6
+037500920204     C                     MOVEL'='       VISDE6
+037600920204     C                     MOVE SDE,6     VISDE6
+037700920204     C                     END
+037800920204      *
+037900920204     C           KSA,7     IFNE *BLANKS
+038000920204     C                     SETON                     71
+038100920204     C                     END
+038200920204     C                     ENDSR

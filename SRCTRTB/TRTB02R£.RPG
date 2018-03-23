@@ -1,0 +1,180 @@
+000100891030     H            Y                                                       CN0500
+000200970514     F*--------------------------------------------------------------*
+000300900323     F* GESTIONE NUOVA TABELLA ORGANIGRAMMA                          *
+000400891030     F*----------------------* USO DEGLI INDICATORI *----------------*
+000500891030     F*  01        INSERIMENTO                                       *
+000600891030     F*  02        VARIAZIONE                                        *
+000700891103     F*  29        CODICE ORGANIGRAMMA OBBLIGATORIO
+000800900323     F*  40        MANCA AUTORIZZAZIONE X INSERIRE UN CODICE
+000900900323     F*            NUOVO SE NON SEI EDP
+001000891030     F*  30        DESCRIZIONE OBBLIGATORIA                          *
+001100891103     F*  79        DISABILITA IL COMANDO DI ANNULLAMENTO SE          *
+001200891103     F*            IL PROFILO NON INIZIA PER EDP                     *
+001300891030     F*--------------------------------------------------------------*
+001400910225     FTRTB02D CF  E                    WORKSTN
+001500891030     FTABEL00FUF  E           K        DISK                      A
+001600891030     I*--------------------------------------------------------------*
+001700891030     I*                        I N P U T                             *
+001800891030     I*--------------------------------------------------------------*
+001900900323     IDSOG      E DS
+002000891030     IKPJBA     E DS
+002100891030     IUTEDSE    E DSUTEDSE0F
+002200980130     I*------------------
+002300980130     I* DS CONTROLLA INDICE E MODIFICABILITA' DI UNA TABELLA
+002400980130     I*------------------
+002500980130     IUL12DS    E DSTRUL12DS
+002600980130     C*------------------------------------------------------------------------*
+002700891030     C           *ENTRY    PLIST
+002800891030     C                     PARM           KPJBA
+002900891030     C                     Z-ADD1         CODUT
+003000891030     C                     CALL 'XPARUT'
+003100891030     C                     PARM           UTEDSE
+003200891030     C           CODUT     CABEQ-1        FINE
+003300891030     C                     MOVELRAGUT     RSUT
+003400980130     C*
+003500980130     C* CONTROLLA INDICE E MODIFICABILITA' DI UNA TABELLA
+003600980130     C                     CLEARUL12DS
+003700980130     C                     MOVEL'L'       I12TLA           *TIPO LANCIO
+003800980130     C                     MOVEL'OR'      I12COD           *CODICE TABELLA
+003900980130     C                     MOVELKNSIF     I12NSI           *SISTEMA INFORMATIVO
+004000980130     C                     CALL 'TRUL12R'
+004100980130     C                     PARM           UL12DS
+004200980130     C           O12ERR    IFEQ '1'                        *TABELLA NON MODIFIC.
+004300980130     C                     GOTO FINE
+004400980130     C                     ENDIF
+004500891030     C******************************************************
+004600891030     C* POSIZIONAMENTO TABELLE                             *
+004700891103     C           KTAB      KLIST                           *
+004800891030     C                     KFLD           §KUT             *
+004900891030     C                     KFLD           §COD             *
+005000891030     C                     KFLD           §KEY             *
+005100891030     C******************************************************
+005200891030     C           *LIKE     DEFN TBLKUT    §KUT
+005300891030     C           *LIKE     DEFN TBLCOD    §COD
+005400891030     C           *LIKE     DEFN TBLKEY    §KEY
+005500891102     C           STAR      TAG
+005600891102     C                     SETOF                     79
+005700891102     C                     MOVELKNMUS     PROF    3
+005800891102     C           PROF      IFNE 'EDP'
+005900891102     C                     SETON                     79
+006000891102     C                     END
+006100910228     C                     SETOF                     79
+006200891102     C                     MOVEL*BLANKS   §DES   25
+006300900323     C                     MOVEL*BLANKS   VCOR
+006400891103     C                     MOVEL'?'       VCOR
+006500891030     C           INIZIO    TAG
+006600910225     C                     EXFMTTB02D1
+006700891030     C      KL             GOTO FINE
+006800891103     C           VCOR      IFEQ *BLANKS
+006900891030     C                     SETON                     29
+007000891030     C                     GOTO INIZIO
+007100891030     C                     END
+007200891030     C*§  RICERCA IN TABEL00F
+007300891103     C           VCOR      IFEQ '?'
+007400891030     C                     MOVELCODUT     §KUT
+007500910225     C                     MOVEL'OR'      §COD
+007600891103     C                     MOVE *ZEROS    VCOR
+007700891030     C                     CALL 'X§TABER'
+007800891030     C                     PARM           §KUT
+007900891030     C                     PARM           §COD
+008000891030     C                     PARM           §KEY
+008100891030     C                     PARM           §DES
+008200891103     C                     MOVEL§KEY      VCOR
+008300891030     C                     GOTO INIZIO
+008400891102     C                     ELSE
+008500891102     C                     MOVELCODUT     §KUT
+008600910225     C                     MOVEL'OR'      §COD
+008700891103     C                     MOVELVCOR      §KEY
+008800891030     C                     END
+008900891103     C                     TESTN          VCOR       10
+009000891030     C  N10                DO
+009100891030     C                     SETON                     29
+009200891030     C                     GOTO INIZIO
+009300891030     C                     END
+009400891030     C                     SETOF                     0102
+009500891103     C           KTAB      CHAINTABEL                80
+009600891030     C           *IN80     IFEQ '1'
+009700900323     C   79                DO
+009800900323     C                     SETON                     40
+009900900323     C                     GOTO INIZIO
+010000900323     C                     END
+010100900323     C  N79                DO
+010200891030     C                     SETON                     01    *IMMISSIONE
+010300891030     C                     EXSR PULVID
+010400900323     C                     END
+010500891030     C                     ELSE
+010600900323     C                     MOVELTBLUNI    DSOG
+010700900615     C           TBLFLG    IFEQ '*'
+010800900615     C                     SETON                     03    *ANNULLATO
+010900900615     C                     ELSE
+011000891030     C                     SETON                     02    *VARIAZIONE
+011100891030     C                     END
+011200900615     C                     END
+011300891030     C           SU        TAG
+011400891030     C                     SETOF                     99
+011500910225     C                     EXFMTTB02D2
+011600891030     C      KL             GOTO FINE
+011700891030     C      KD             GOTO INIZIO
+011800891030     C**--- ANNULLAMENTO
+011900900615     C      KQ             DO
+012000900615     C                     MOVEL'*'       TBLFLG
+012100981013     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+012200981013     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+012300900615     C                     UPDATTABEL
+012400900615     C                     GOTO INIZIO
+012500891030     C                     END
+012600900615     C** RIPRISTINO
+012700900615     C      KE             DO
+012800900615     C                     MOVEL*BLANKS   TBLFLG
+012900981013     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+013000981013     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+013100900615     C                     UPDATTABEL
+013200900615     C                     GOTO INIZIO
+013300900615     C                     END
+013400900615     C******
+013500891102     C                     EXSR CTRFMT
+013600891102     C      99             GOTO SU
+013700891030     C                     EXSR SCRIVI
+013800891102     C                     GOTO STAR
+013900891030     C           FINE      TAG
+014000891030     C                     SETON                     LR
+014100891030     C**------------------------
+014200891030     C** PULISCI CAMPI VIDEO
+014300891030     C**------------------------
+014400891030     C           PULVID    BEGSR
+014500900323     C                     MOVEL*BLANKS   §OGDES
+014600900323     C                     MOVEL*BLANKS   §OGFOB
+014700900323     C                     MOVEL*BLANKS   §OGFRI
+014800900323     C                     MOVEL*BLANKS   §OGFFI
+014900900409     C                     MOVEL*BLANKS   §OGFSF
+015000900409     C                     MOVEL*BLANKS   §OGFSC
+015100900409     C                     Z-ADD0         §OGEXC
+015200970514     C                     MOVEL*BLANKS   §OGSIG
+015300891030     C                     ENDSR
+015400891030     C**------------------------
+015500891030     C** CONTROLLI 2 VIDEATA
+015600891030     C**------------------------
+015700891030     C           CTRFMT    BEGSR
+015800891103     C**--- DESCRIZIONE
+015900900323     C           §OGDES    IFEQ *BLANKS
+016000891103     C                     SETON                     3099
+016100891030     C                     GOTO END1
+016200891030     C                     END
+016300891030     C           END1      ENDSR
+016400891030     C**----------------------------
+016500891030     C** AGGIORNAMENTO / INSERIMENTO
+016600891030     C**----------------------------
+016700891030     C           SCRIVI    BEGSR
+016800891030     C                     MOVEL§KUT      TBLKUT
+016900891030     C                     MOVEL§COD      TBLCOD
+017000891030     C                     MOVEL§KEY      TBLKEY
+017100900323     C                     MOVELDSOG      TBLUNI
+017200900420     C*§
+017300900420     C                     MOVE '1'       TBLFTT            A TUTTI
+017400900420     C                     MOVE *ZERO     TBLFLT            FILIALE
+017500900420     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+017600900420     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+017700900420     C*§
+017800891103     C   01                WRITETABEL                  98
+017900891103     C   02                UPDATTABEL                  98
+018000891030     C                     ENDSR

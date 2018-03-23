@@ -1,0 +1,42 @@
+000100060613
+000200060613             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000300060609
+000400060613             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+000500060613             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000600060613             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+000700060613             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+000800180208             DCL        VAR(&FOU) TYPE(*CHAR) LEN(10)
+000900060613
+001000180208    /* devo sapere quale sarà il file di arrivo tra EDIVABWR e FIVABWWR per chiamare pgm <> */
+001100180208             CHGVAR     VAR(&FOU) VALUE(%SST(&TIVLRDS 210 10))
+001200060613
+001300070919
+001400091013    /* Chiamo il *pgm pre-traduttore specifico                      */
+001500180208    /* questo pgm scrive il file TITV1S40F che contiene anche tutti i campi di EDIVAB */
+001600180208    /* compreso il CMR */
+001700180208    /* ma siccome EDIVAB è uguale a FIVAB + i dati del CMR */
+001800180208    /* e questo pgm valorizza il CMR ma non lo usa */
+001900180208    /* posso non toccarlo */
+002000091022             CALL       PGM(TITV1S5BR) PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+002100091013
+002200091013
+002300091013    /* Chiamo il *pgm traduttore specifico 1°                       */
+002400180208    /* questo pgm modifica il file TITV1S40F che contiene anche tutti i campi di EDIVAB */
+002500180208    /* ma non modifica il CMR */
+002600180208    /* e siccome EDIVAB è uguale a FIVAB + i dati del CMR */
+002700180208    /* posso non toccarlo */
+002800091022             CALL       PGM(TITV1S5R1)  PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+002900091013
+003000091013
+003100091013    /* Chiamo il *pgm traduttore specifico 2°                       */
+003200180208    /* chiamo pgm diversi per file da tradurre diverso              */
+003300180208             IF         COND(&FOU = 'EDIVABWR') THEN(DO)
+003400091022             CALL       PGM(TITV1S5R2)  PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+003500180208             ENDDO
+003600180208             IF         COND(&FOU = 'FIVABWWR') THEN(DO)
+003700180208             CALL       PGM(TITV1S5R3)  PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+003800180208             ENDDO
+003900060803
+004000060614
+004100050413FINE:
+004200020911             ENDPGM

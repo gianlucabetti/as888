@@ -1,0 +1,397 @@
+000100971219     H              J
+000200000223     H*--------------------------------------------------------------*
+000300010228     H* ATTENZIONE !!!                                               *
+000400000223     H*--------------------------------------------------------------*
+000500000223     H* Se vengono modificate le logiche del pagamento così come è   *
+000600000223     H* già stato fatto (sostituito il codice cliente nell'attribuz. *
+000700000223     H* del ramo aziendale di pagamento nel giugno 1999 per i C/Ass. *
+000800000223     H* intestati a Bartolini, gestita la lnp della bolla originale  *
+000900000223     H* per l'attribuzione della ramo della lnp nel febbraio 2000)   *
+001000000223     H* occorre completare per intero il giro dei pagamenti infragr. *
+001100000223     H* altrimenti la stampa dei C/Assegni incassati non pagati non  *
+001200000223     H* quadrerà mai con la contabilità. I pagamenti potrebbereo     *
+001300000223     H* non funzionare correttamente in quanto un C/Assegno prima    *
+001400000223     H* considerato infragrupoo (per cui è già stato scritto il TNCSG*
+001500000223     H* potrebbe non esserlo più se esaminato con nuove logiche o    *
+001600000223     H* viceversa)                                                   *
+001700971219?     *--------------------------------------------------------------*
+001800971219      * TRSC96R                                                      *
+001900971219      *          *-------------------------------------*             *
+002000971219      *            AGGANCIO DATI PAGAMENTI INFRAGRUPPO               *
+002100971219      *            E RESTITUISCO DATI DOCUMENTO PAGAM.               *
+002200971219      *          *-------------------------------------*             *
+002300971219      *                                                              *
+002400971219?     *--------------------------------------------------------------*
+002500971219     FTNCSG01LIF  E           K        DISK
+002600000223     F*-----------
+002700010228     F*FFNLBL01LIF  E           K        DISK
+002800990609?     *--------------------------------------------------------------*
+002900990609      *  SCHIERE
+003000990609?     *--------------------------------------------------------------*
+003100010226     E*F                  ERR     1   1 70
+003200971219?     *--------------------------------------------------------------*
+003300971219      *  DS
+003400971219?     *--------------------------------------------------------------*
+003500990609     IKPJBA     E DS
+003600080130     I*S4Q3     E DSANGY4QDS3
+003700010226     I*FTRUL15    E DSTRUL15DS
+003800990609     ITNSC96    E DSTNSC96DS
+003900971219     ITIBS69    E DSTIBS69DS
+004000010226     I*FANGY4Q    E DSANGY4QDS
+004100990609     IXATBDS    E DS
+004200971219     ICNACO     E DSCNACO00F
+004300971219     ICNIND     E DSCNIND00F
+004400971219     ICNCLP     E DSCNCLP00F
+004500971219     IFNCLS     E DSFNCLS00F
+004600971219     I*  Ds per ricezione dati di incasso
+004700010226     I*FCSBINC      DS
+004800010228     I*F                                      1  10 CSBNRA
+004900010228     I*F                                     11  180CSBDTE
+005000010228     I*F                                     19  230CSBABI
+005100010228     I*F                                     24  280CSBCAB
+005200010228     I*F                                     29  29 CSBTPA
+005300010228     I*F                                     30  30 CSBTPI
+005400010228     I*F                                     31  380CSBUDA
+005500010228     I*F                                     39  460CSBDTA
+005600010228     I*F                                     47  540CSBDDC
+005700010228     I*F                                     55  610CSBNDT
+005800010228     I*F                                     62  670CSBNRI
+005900010228     I*F                                     68  750CSBDRI
+006000971219     I*  Ds per ricezione dati di incasso
+006100010226     I*FCSBPAG      DS
+006200010228     I*F                                      1   1 CSBFPC
+006300010228     I*F                                      2   80CSBBNA
+006400010228     I*F                                      9  150CSBNDP
+006500010228     I*F                                     16  230CSBDDP
+006600010228     I*F                                     24  310CSBDRG
+006700010228     I*F                                     32  370CSBNRG
+006800010228     I*F                                     38  464CSBCMP
+006900971219     C*-------------------------------------------------------*
+007000971219     C*  CICLO PRINCIPALE
+007100971219     C*-------------------------------------------------------*
+007200971219     C           *ENTRY    PLIST
+007300990609     C                     PARM           KPJBA
+007400990609     C                     PARM           TNSC96           Num. sped.+ cdi
+007500010226     C*F                   PARM           CSBINC           Dati incasso
+007600010226     C*F                   PARM           CSBPAG           Dati pagamento
+007700971219     C*-------------------------------------------------------*
+007800971219     C* Se tipo lancio è 'C' vado a fine e non eseguo nulla
+007900990609     C           D96TLA    IFEQ 'C'
+008000010226     C*                    CLEARTRUL15
+008100010226     C*                    MOVEL'C'       I15TLA
+008200010226     C*                    CALL 'TRUL15R'
+008300010226     C*                    PARM           TRUL15
+008400990609     C                     GOTO FINE
+008500990609     C                     END
+008600971219     C*-------------------------------------------------------*
+008700010226     C*FSe non ho agganciato dal mio programma il TNCSB devo
+008800010226     C*Frestituire i rami aziendale ed eventualmente i dati
+008900010226     C*Fdi pagamento/Incasso agganciando anche il TNCSG
+009000010226     C*F         D96CSG    IFEQ ' '
+009100971222     C                     EXSR CHNCSG
+009200971219     C* Decodifico dati anagrafici cliente
+009300010227     C*F         D96CLI    IFEQ 'S'
+009400010227     C*F                   EXSR CHNTAB
+009500010227     C                     EXSR DECCLI
+009600010227     C*F                   END
+009700971219     C* controllo quali dati devo reimpostare
+009800971222     C           D96TRV    IFEQ 'S'
+009900010302     C*F         D96TPD    IFEQ 'I'
+010000971219     C* ritorno dati di incasso
+010100010227     C*F                   EXSR DATINC
+010200010302     C*F                   END
+010300971222     C* ritorno dati di pagamento
+010400010227     C*F         D96TPD    IFEQ 'P'
+010500010227     C*F                   EXSR DATPAG
+010600010227     C*F                   END
+010700971219     C*
+010800010227     C*F                   END
+010900990610     C*
+011000990610     C* ... se sto leggendo tncsg reperisco solo il ramo aziendale
+011100990610     C*     e la decodifica del cliente
+011200010227     C*F                   ELSE
+011300010227     C*F                   EXSR REPRAM
+011400990610     C* Decodifico dati anagrafici cliente
+011500010227     C*F         D96CLI    IFEQ 'S'
+011600010227     C*F                   EXSR CHNTAB
+011700990610     C                     EXSR DECCLI
+011800010227     C*F                   END
+011900990610     C*
+012000990610     C                     END
+012100971219     C*-------------------------------------------------------*
+012200971219     C           FINE      TAG
+012300971222     C*-------------------------------------------------------*
+012400971219     C           D96TLA    IFNE ' '
+012500971219     C                     CLEARTIBS69
+012600971219     C                     MOVEL'C'       I69TLA
+012700971219     C                     CALL 'TIBS69R'
+012800971219     C                     PARM           TIBS69
+012900971219     C                     PARM           CNACO
+013000971219     C                     PARM           CNIND
+013100971219     C                     PARM           CNCLP
+013200971219     C                     PARM           FNCLS
+013300971219     C                     SETON                     LR
+013400971219     C                     ELSE
+013500971219     C                     SETON                     RT
+013600971219     C                     END
+013700971222     C*-------------------------------------------------------*
+013800971222     C* Aggancio TNCSG
+013900971222     C*-------------------------------------------------------*
+014000971222     C           CHNCSG    BEGSR
+014100990609     C*
+014200971222     C* Eseguo posizionamento su TNCSG
+014300990609     C                     MOVEL'N'       D96TRV
+014400971222     C                     Z-ADDD96AAS    KAAS
+014500971222     C                     Z-ADDD96LNP    KLNP
+014600971222     C                     Z-ADDD96NRS    KNRS
+014700971222     C                     Z-ADDD96NSP    KNSP
+014800990609     C           KCSG      CHAINTNCSG01L             31    -- 01 --
+014900971222     C           *IN31     IFEQ '0'
+015000971222     C                     MOVEL'S'       D96TRV
+015100010226     C*Frichiamo TRUL15 x determinazione dei rami aziendali
+015200010226     C*F                   EXSR REPRAM
+015300971222     C* Trovato: imposto codice cliente
+015400971222     C                     Z-ADDCSGKSC    D96KSC
+015500010226     C*F                   ELSE                            -- 01 --
+015600010226     C*FSe non è ancora stato creato il record del pagamento
+015700010226     C*Finfragruppo e non c'è la data di pagamento su TNCSB
+015800010226     C*FcontrollO se infragruppo in base alle logiche cliente
+015900010226     C*F                   EXSR REPRAM
+016000990609     C                     END                             -- 01 --
+016100971222     C*
+016200971222     C                     ENDSR
+016300990609     C*-------------------------------------------------------*
+016400990609     C* Reperisco rami aziendali
+016500990609     C*-------------------------------------------------------*
+016600010226     C*F         REPRAM    BEGSR
+016700990609     C*
+016800990609     C* Imposto ramo aziendale lna
+016900010226     C*F                   CLEARTRUL15
+017000010226     C*F                   MOVEL' '       I15TLA
+017100010226     C*F                   MOVEL'M'       I15RIC
+017200010226     C*F                   MOVEL' '       I15TPC
+017300010226     C*F                   MOVELD96NSI    I15NSI
+017400010226     C*F                   MOVE D96LNA    I15LNA
+017500990615     C*--------------------------------------------------------*
+017600000223     c* Se la spedizione è una bolla figlia reperisco il ramo
+017700000223     c* della lnp in base alla bolla originale
+017800010227     C*F                   Z-ADDD96AAS    KAAS
+017900010227     C*F                   Z-ADDD96LNP    KLNP
+018000010227     C*F                   Z-ADDD96NRS    KNRS
+018100010227     C*F                   Z-ADDD96NSP    KNSP
+018200010227     C*F         KLBL      CHAINFNLBL01L             32
+018300010227     C*F         *IN32     IFEQ '0'
+018400010226     C*F                   MOVELLBLLPO    I15LNP
+018500010227     C*F                   Z-ADDLBLLPO    D96LPO
+018600000223     C* ... altrimenti
+018700010227     C*F                   ELSE
+018800000223     c* Reperisco ramo aziendale lnp
+018900010227     C*F                   Z-ADD0         D96LPO
+019000010226     C*F                   MOVELD96LNP    I15LNP
+019100010227     C*F                   END
+019200000223     C*
+019300010226     C*F                   CALL 'TRUL15R'
+019400010226     C*F                   PARM           TRUL15
+019500010226     C*FSe il C/assegno non ha la lna del mio ramo sostituisco i
+019600010226     C*Fdati di incasso di csb con quelli di CSG
+019700010226     C*F                   MOVE O15RAM    D96RSI
+019800010226     C*F                   MOVE O15RLP    D96RLP
+019900010226     C*F                   MOVE O15RLA    D96RLA
+020000990615     C*--------------------------------------------------------*
+020100010226     C*FVerifico se il cliente è un codificato (>< 9999 e 8888) procedo anche
+020200010226     C*Fal calcolo del ramo del cliente.
+020300010226     C*F                   MOVE D96CDI    W8899   40
+020400010226     C*F         W8899     IFNE 9999
+020401010226     C*F         W8899     ANDNE8888
+020500000828     C****           W8899     OREQ 8888
+020600010226     C*F.... se è così reperisco il ramo aziendale ad esso
+020700010226     C*F     inerente
+020800010226     C*F                   MOVELD96CDI    I15LNP
+020900010226     C*F                   CALL 'TRUL15R'
+021000010226     C*F                   PARM           TRUL15
+021100010226     C*FSe il C/assegno non ha la lna del mio ramo sostituisco i
+021200010226     C*Fdati di incasso di csb con quelli di CSG
+021300010226     C*F                   MOVE O15RAM    D96RSI
+021400010226     C*F                   MOVE O15RLP    D96RCL
+021500010226     C*F.... altrimenti imposto il ramo aziendale della lnp
+021600010226     C*F                   ELSE
+021700010226     C*F                   MOVE O15RLP    D96RCL
+021800010226     C*F                   END                             -- 02 --
+021900990615     C*--------------------------------------------------------*
+022000990615     C* Se il C/Assegno è intestato al mittente x testare i
+022100990615     C* dati incasso o di pagamneto controllo il ramo della lnp
+022200010226     C*F         CSBTPI    IFEQ 'M'
+022300010226     C*F                   MOVE D96RLP    O15RLP
+022400010226     C*F                   MOVE D96RLP    D96RMP
+022500010226     C*F                   ELSE
+022600010226     C*F                   MOVE D96RCL    D96RMP
+022700010226     C*F                   END
+022800010226     C*FControllo se devo decidere se restituire i dati di
+022900010226     C*Fincasso o di pagamneto
+023000010226     C*F         D96TPD    IFEQ 'E'                        -- 01 --
+023100010226     C*F         D96TRV    IFEQ 'S'                        -- 02 --
+023200010226     C*F         D96CSG    OREQ 'S'                        -- 02 --
+023300010226     C*F         O15RAM    IFNE O15RLA                     -- 03 --
+023400010226     C*F                   CLEARCSBINC
+023500010226     C*F                   MOVE O15RLA    D96RAM
+023600010226     C*F                   MOVEL'I'       D96TPD
+023700010227     C*F                   ELSE
+023800010226     C*F... altrimenti sostituisco quelli di pagamento
+023900010226     C*F                   CLEARCSBPAG
+024000010226     C*F                   MOVE O15RLP    D96RAM
+024100010226     C*F                   MOVEL'P'       D96TPD
+024200010226     C*F                   END                             -- 03 --
+024300010226     C*F
+024400010226     C*F                   ELSE
+024500010226     C*F
+024600010226     C*F         O15RAM    IFNE O15RLA                     -- 03 --
+024700010226     C*F                   MOVE O15RLA    D96RAM
+024800010226     C*F                   ELSE
+024900010226     C*F                   MOVE O15RLP    D96RAM
+025000010227     C*F                   END
+025100990618     C*
+025200010227     C*F                   END                             -- 02 --
+025300010227     C*F                   END                             -- 01 --
+025400990609     C*
+025500010227     C*F                   ENDSR
+025600971222     C*-------------------------------------------------------*
+025700971222     C* Aggancio tabella 4Q
+025800971222     C*-------------------------------------------------------*
+025900010227     C*F         CHNTAB    BEGSR
+026000010227     C*F
+026100010227     C*FSe non ho impostato il ramo aziendale
+026200010227     C*Fnon posso reperire il cliente
+026300010227     C*F         D96RAM    IFEQ *BLANKS
+026400010227     C*F                   MOVEL'N'       D96TRV
+026500010227     C*F                   MOVELERR,1     D96MSG
+026600010227     C*F                   ELSE
+026700010227     C*F                   CLEARXATBDS
+026800010227     C*F                   MOVEL'Y4Q'     XTBCOD
+026900010227     C*F                   MOVELD4QLIN    XTBLIN
+027000010227     C*F                   MOVELD4QSOC    XTBAZI
+027100010227     C*F                   MOVEL*ZEROS    XTBKEY
+027200010227     C*F                   MOVE D96RAM    XTBKEY
+027300010227     C*F                   MOVELD4QCUT    XTBUTE
+027400010227     C*F                   MOVEL'1'       XTBRIC
+027500010227     C*F                   MOVEL'0'       XTBALC
+027600010227     C*F                   MOVEL'0'       XTBERR
+027700010227     C*F                   CALL 'XATB'
+027800010227     C*F                   PARM           XATBDS
+027900010227     C*F                   MOVELXTBUNI    ANGY4Q
+028000010227     C*F                   MOVE §4QKSC    D96KSC
+028100010227     C*F                   MOVE §4QKSC    CSGKSC
+028200010227     C*F                   END
+028300010227     C*F
+028400010227     C*F                   ENDSR
+028500971222     C*-------------------------------------------------------*
+028600971222     C* Eseguo decodifica cliente
+028700971222     C*-------------------------------------------------------*
+028800971222     C           DECCLI    BEGSR
+028900971222     C*
+029000971222     C                     CLEARTIBS69
+029100971222     C                     CLEARCNACO
+029200971222     C                     CLEARCNIND
+029300971222     C                     CLEARCNCLP
+029400971222     C                     CLEARFNCLS
+029500971222     C                     MOVEL' '       I69TLA
+029600971222     C                     MOVELD96NSI    I69SIF
+029700971222     C                     Z-ADDCSGKSC    I69KAC
+029800971222     C                     Z-ADDCSGKSC    I69KIN
+029900990608     C                     CALL 'TIBS69R'
+030000971222     C                     PARM           TIBS69
+030100971222     C                     PARM           CNACO
+030200971222     C                     PARM           CNIND
+030300971222     C                     PARM           CNCLP
+030400971222     C                     PARM           FNCLS
+030500971222     C*
+030600971222     C           O69ERR    IFEQ *BLANK
+030700971222     C                     MOVELACORAG    D96RAG
+030800971222     C                     MOVELINDVIA    D96VIA
+030900971222     C                     MOVELINDSTA    D96NAZ
+031000971222     C                     MOVELINDPRV    D96PRV
+031100971222     C                     MOVELINDCIT    D96CIT
+031200971222     C                     MOVEL*BLANKS   D96CAP
+031300971222     C           INDCAP    IFNE *ZEROS
+031400971222     C                     MOVELINDCAP    D96CAP
+031500971222     C                     END
+031600971222     C           INDCAE    IFNE *ZEROS
+031700971222     C           INDCAE    ANDNE*BLANKS
+031800971222     C                     MOVELINDCAE    D96CAP
+031900971222     C                     END
+032000971222     C                     END
+032100971222     C*
+032200971222     C                     ENDSR
+032300971222     C*-------------------------------------------------------*
+032400971222     C* DATI DI INCASSO:
+032500971222     C*-------------------------------------------------------*
+032600010227     C*F         DATINC    BEGSR
+032700010227     C*F
+032800010227     C*F                   Z-ADDCSGDDT    CSBDRI
+032900010227     C*F                   Z-ADDCSGNDT    CSBNRI
+033000010227     C*F                   Z-ADDCSGDDT    CSBDDC
+033100010227     C*F                   Z-ADDCSGNDT    CSBNDT
+033200010227     C*F                   Z-ADDCSGDTV    CSBDTA
+033300010227     C*F                   Z-ADDCSGDTV    CSBUDA
+033400010227     C*F         CSGFPC    IFEQ 'L'
+033500010227     C*F                   MOVEL'M'       CSBTPI
+033600010227     C*F                   ELSE
+033700010227     C*F                   MOVEL' '       CSBTPI
+033800010227     C*F                   END
+033900010227     C*F
+034000010227     C*F                   ENDSR
+034100971222     C*-------------------------------------------------------*
+034200971222     C* DATI DI pagamento
+034300971222     C*-------------------------------------------------------*
+034400010227     C*F         DATPAG    BEGSR
+034500010227     C*F
+034600010227     C*F                   Z-ADDCSGDDT    CSBDRG
+034700010227     C*F                   Z-ADDCSGNDT    CSBNRG
+034800010227     C*F                   Z-ADDCSGDDT    CSBDDP
+034900010227     C*F                   Z-ADDCSGNDT    CSBNDP
+035000010227     C*F         CSGFPC    IFEQ 'L'
+035100010227     C*F                   MOVEL*BLANKS   CSBFPC
+035200010227     C*F                   Z-ADD9999999   CSBBNA
+035300010227     C*F                   MOVEL'M'       CSBTPI
+035400010227     C*F                   ELSE
+035500010227     C*F                   MOVELCSGFPC    CSBFPC
+035600010227     C*F                   END
+035700010227     C*F                   MOVE CSGBAP    CSBBNA
+035800010227     C*F
+035900010227     C*F                   ENDSR
+036000971222     C*-------------------------------------------------------*
+036100971222     C* OPERAZIONI INIZIALI:
+036200971222     C*-------------------------------------------------------*
+036300971222     C           *INZSR    BEGSR
+036400971222     C*
+036500971222     C* Definizione chiave di accesso ai file
+036600971222     C           KCSG      KLIST
+036700971222     C                     KFLD           KAAS
+036800971222     C                     KFLD           KLNP
+036900971222     C                     KFLD           KNRS
+037000971222     C                     KFLD           KNSP
+037100000223     C           KLBL      KLIST
+037200000223     C                     KFLD           KAAS
+037300000223     C                     KFLD           KLNP
+037400000223     C                     KFLD           KNRS
+037500000223     C                     KFLD           KNSP
+037600971222     C* Definizione variabili
+037700971222     C           *LIKE     DEFN CSGAAS    KAAS
+037800971222     C           *LIKE     DEFN CSGLNP    KLNP
+037900971222     C           *LIKE     DEFN CSGNRS    KNRS
+038000971222     C           *LIKE     DEFN CSGNSP    KNSP
+038100990615     C* Richiamo pgm x reperimento della data nuova procedura
+038200990615     C* attribuzione
+038300990615     C                     MOVE D96NSI    WCOMO4  4
+038400080130     C*                    MOVELWCOMO4    D4QSOC
+038500000224     C* Se sono in prova forzo 201
+038600080130     C*          D4QSOC    IFEQ 'PSP'
+038700080130     C*                    MOVEL'201'     D4QSOC
+038800080130     C*                    END
+038900080130     C*                    MOVELDS4Q3     KPJBU
+039000080130     C*                    CALL 'ANGY4QR3'
+039100080130     C*                    PARM           KPJBA
+039200080130     C*                    MOVELKPJBU     DS4Q3
+039300990609     C*
+039400971222     C                     ENDSR
+039500010228      *F
+039600010226      *FImpossibile reperire dati cliente senza conoscere il ramo aziendale

@@ -1,0 +1,66 @@
+000100100811/*PRM dftactgrp(*no) actgrp(*new)                                    */
+000200100811/*END                                                                */
+000300100811/*===================================================================*/
+000400100811/*?UBDDSC - Visualizzazione descrizione file                        ?*/
+000500100811/*===================================================================*/
+000600100811
+000700100811             Pgm        parm(&FulFil &FldNam)
+000800100811
+000900100811             dcl        var(&FulFil)   type(*char) len(20)
+001000100811             dcl        var(&FldNam)   type(*char) len(10)
+001100100811             dcl        var(&FilNam)   type(*char) len(10)
+001200100811             dcl        var(&FilLib)   type(*char) len(10)
+001300100811
+001400100811             dcl        var(&MsgId)    type(*char) len(7)
+001500100811             dcl        var(&MsgDta)   type(*char) len(150)
+001600100811
+001700100811             monmsg     msgid(CPF0000) exec(goto cmdlbl(Errore))
+001800100811
+001900100811             chgvar     var(&FilNam)   value(%sst(&FulFil  1 10))
+002000100811             chgvar     var(&FilLib)   value(%sst(&FulFil 11 10))
+002100100811
+002200100811             sndpgmmsg  msgid(CPDA0FF) msgf(QCPFMSG) +
+002300100811                          msgdta('Elaborazione in corso. Attendere, +
+002400100811                          prego...') +
+002500100811                          topgmq(*ext) msgtype(*status)
+002600100811
+002700110126/* -?Controllo esistenza file?-------------------------------------- */
+002800100811             chkobj     obj(&FilLib/&FilNam) objtype(*file)
+002900100811
+003000110126/* -?Creazione User space per display Field file description?------- */
+003100100811             chkobj     obj(QTEMP/DdsInfo)   objtype(*usrspc)
+003200100811
+003300100811             monmsg     msgid(CPF9801) exec(CRTUSRSPC +
+003400100811                          usrspc(QTEMP/DdsInfo) delete(*yes) +
+003500100811                          text('USRSPC for display Field file +
+003600100811                          description  CMD'))
+003700100811
+003800110126/* -?Creazione User space per Record format information?------------ */
+003900100811             chkobj     obj(QTEMP/FmtInfo)   objtype(*usrspc)
+004000100811
+004100100811             monmsg     msgid(CPF9801) exec(CRTUSRSPC +
+004200100811                          usrspc(QTEMP/FmtInfo) +
+004300100811                          delete(*yes) +
+004400100811                          text('USRSPC for record format information'))
+004500100811
+004600110126/* -?Richiamo *pgm di visualizzazione/stampa?----------------------- */
+004700100811             call       pgm(UBDDSR)    parm(&FulFil &FldNam)
+004800100811
+004900100811             goto       cmdlbl(Fine)
+005000100811
+005100110126/* -?Gestione errori NON monitorizzati?----------------------------- */
+005200100811    Errore:
+005300100811             rcvmsg     msgdta(&MsgDta)      msgid(&MsgId)
+005400100811
+005500100811             if         cond(&MsgId = '       ') +
+005600100811                          then(goto cmdlbl(Fine))
+005700100811
+005800100811             sndpgmmsg  msgid(&MsgId)  msgf(QSYS/QCPFMSG) +
+005900100811                          msgdta(&MsgDta)
+006000100811             goto       cmdlbl(Errore)
+006100100811
+006200110126/* -?Fine?---------------------------------------------------------- */
+006300100811    Fine:
+006400100811             rclrsc
+006500100811
+006600100811             EndPgm

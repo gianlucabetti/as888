@@ -1,0 +1,52 @@
+000100170321/*PARMS DFTACTGRP(*NO) ACTGRP(VASENTRY)                                       */
+000200170321/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600990907             PGM
+000700051108
+000800051110             DLYJOB     DLY(60)
+000900051108
+001000051108 GUFO:
+001100051108
+001200051108/* AVVIO IL CONTROLLO SINCRONIA ------------------------------------*/
+001300051108             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001400051108             MONMSG     MSGID(CPF8351)
+001500170321
+001600170321
+001700170321/* INIZIALIZZO TRANSAZIONE LOGICA ----------------------------------*/
+001800170321             COMMIT
+001900170321             MONMSG     MSGID(CPF0000)
+002000051108
+002100991111
+002200051108/* ELABORO I DATA-ENTRY DA INTERNET --------------------------------*/
+002300051108             CALL       PGM(TIS780R)
+002400051108             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500051108             ROLLBACK
+002600051108             GOTO       CMDLBL(ATTESA)
+002700051108             ENDDO
+002800051108
+002900051108
+003000051108/* SANCISCO IL COMMIT ----------------------------------------------*/
+003100051108             COMMIT
+003200170321             MONMSG     MSGID(CPF0000)
+003300051108
+003400051108
+003500051108 ATTESA:
+003600051108
+003700051108/* STOPPO IL CONTROLLO SINCRONIA -----------------------------------*/
+003800051108             ENDCMTCTL
+003900170321             MONMSG     MSGID(CPF8356 CPF8355)
+004000170321
+004100170321
+004200170321/* ESEGUO GARBAGE-COLLECTION ---------------------------------------*/
+004300170321             RCLACTGRP  ACTGRP(*ELIGIBLE)
+004400170321             RCLRSC
+004500991111
+004600051108
+004700051108/* ATTENDO X POI RI-CICLARE ----------------------------------------*/
+004800060105             DLYJOB     DLY(300)
+004900000621             GOTO       CMDLBL(GUFO)
+005000051108
+005100991111
+005200990907             ENDPGM

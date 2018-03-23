@@ -1,0 +1,111 @@
+000100880609/********************************************************************/
+000200880609/*                                                                  */
+000300020710/*   CONTROLLA SE RICEVUTI RECORD ED EVENTUALMENTE TRASCODIFICA     */
+000400020710/*             DATE DI CONSEGNA  BOLLE EXPORT  - ESTERO -           */
+000500930507/*                                                                  */
+000600880609/********************************************************************/
+000700020710             PGM        PARM(&KPJBA)
+000800020710             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900021009
+001000021009 /* Parametri per il TRULOUTQ */
+001100021009             DCL        VAR(&TYPCALL) TYPE(*CHAR) LEN(1) VALUE('L')
+001200021009             DCL        VAR(&FGS) TYPE(*CHAR) LEN(3)
+001300021009             DCL        VAR(&TYPCODA) TYPE(*CHAR) LEN(1) VALUE('0')
+001400021009             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001500021009             DCL        VAR(&LIBCODA) TYPE(*CHAR) LEN(10) VALUE(' ')
+001600021114             DCL        VAR(&LIBPRT) TYPE(*CHAR) LEN(10) VALUE(' ')
+001700021009             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1) VALUE('0')
+001800021031             DCL        VAR(&NRR) TYPE(*DEC) LEN(10 0) VALUE(0)
+001900021009
+002000021009 /* Parametri per il CNCR80 da UT§DES0F */
+002100021009             DCL        VAR(&SIMPOU) TYPE(*DEC) LEN(3 0) VALUE(0)
+002200021009             DCL        VAR(&PAR1591) TYPE(*CHAR) LEN(1591)
+002300970108
+002400020710/* Definisco file lettura membri FIFEST0F                      */
+002500970107             DCLF       FILE(QSYS/QAFDMBRL)
+002600021009
+002700021009 /* Ricerca del P.O.x OUTQ    */
+002800021009             CHGVAR     VAR(%SST(&PAR1591 1 1)) VALUE('0')
+002900021009             CALL       PGM(X§PARUT) PARM(&PAR1591)
+003000021009             CHGVAR     VAR(&SIMPOU) VALUE(%SST(&PAR1591 1509 3))
+003100021009
+003200021009 /* Ricerca la coda x OUTQ    */
+003300021009             CHGVAR     VAR(&FGS) VALUE(&SIMPOU)
+003400021009             CALL       PGM(TRULOUTQ) PARM(&TYPCALL &FGS &TYPCODA +
+003500021009                          &CODA &LIBCODA &ESITO)
+003600021009             IF         COND(&ESITO = '1') THEN(CHGVAR VAR(&CODA) +
+003700021009                          VALUE('EUROAS005 '))
+003800021009
+003900021009 /* Controlla esistenza della coda in filiale    */
+004000021009 /*  se non c'è --> allora imposta il default    */
+004100021018             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+004200021009             MONMSG     MSGID(CPF9801) EXEC(DO)
+004300021009             CHGVAR     VAR(&CODA) VALUE('EUROAS005 ')
+004400021017
+004500021017 /*  x la filiale trasferita su As Unico di sede */
+004600021017 /*  se non c'è --> allora imposta il default    */
+004700021017             CHKOBJ     OBJ(&CODA) OBJTYPE(*OUTQ)
+004800021017             MONMSG     MSGID(CPF9801) EXEC(DO)
+004900021017             CHGVAR     VAR(&CODA) VALUE('QDKT      ')
+005000021017             ENDDO
+005100021017
+005200021009             RTVOBJD    OBJ(&CODA) OBJTYPE(*OUTQ) RTNLIB(&LIBCODA)
+005300021009             ENDDO
+005400021114
+005500021114/*  Nuovo PRTF per riportare solo i codici tabella non codificati */
+005600021114             ADDLIBLE   LIB(QTEMP)
+005700021114             MONMSG     MSGID(CPF0000)
+005800021114             RTVOBJD    OBJ(QSYSPRT) OBJTYPE(*FILE) RTNLIB(&LIBPRT)
+005900021114             CRTDUPOBJ  OBJ(QSYSPRT) FROMLIB(&LIBPRT) OBJTYPE(*FILE) +
+006000021114                          TOLIB(QTEMP) NEWOBJ(FEDEXPRT)
+006100021114             MONMSG     MSGID(CPF0000)
+006200960528
+006300020710/* Imposto dati per lettura membri file                        */
+006400021016             DSPFD      FILE(FIFEST0F) TYPE(*MBRLIST) +
+006500021016                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§MBR)
+006600970108             OVRDBF     FILE(QAFDMBRL) TOFILE(QTEMP/§MBR)
+006700970108
+006800020710/* Reperisce membri del file                                   */
+006900970108READ:        RCVF
+007000970108             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+007100970108
+007200020710/*  Se il membro ha record copio in FIFES00F   e trascodifico  */
+007300970108             IF         COND(&MLNRCD *NE 0) THEN(DO)
+007400020710             CPYF       FROMFILE(FIFEST0F) TOFILE(FIFES00F) +
+007500020710                          FROMMBR(&MLNAME) MBROPT(*REPLACE) +
+007600020710                          CRTFILE(*YES)
+007700021114
+007800021016/*  Eseguo OVRDBF e richiamo pgm per trascodifica date consegna */
+007900040604             OVRPRTF    FILE(QSYSPRT) SAVE(*YES) USRDTA(FEDEX_ERR)
+008000040604             OVRPRTF    FILE(SYSPRT) SAVE(*YES) USRDTA(FEDEX_SCAN)
+008100040604             OVRPRTF    FILE(FEDEXPRT) TOFILE(QTEMP/FEDEXPRT) +
+008200040604                          SAVE(*YES) USRDTA(FEDEX_CODE)
+008300021009
+008400021017             CALL       PGM(TRTCF2R) PARM(&KPJBA)
+008500021018
+008600021018/*  Se non ha elaborato delle bolle, prima di eliminare il membro */
+008700021018/*  lo salva con ciò che non è riuscito ad elaborare              */
+008800021018/*  su FIFEST0E --> file contenente errori                        */
+008900021031/*   se ci sono rimasti dei records li storicizza nel file errori */
+009000021031             IF         COND(%SST(&KPJBA 502 1) *NE ' ') THEN(DO)
+009100021031
+009200021114             RTVMBRD    FILE(FIFES00F) NBRCURRCD(&NRR)
+009300021031
+009400021031             IF         COND(&NRR *GT 0) THEN(CPYF +
+009500021031                          FROMFILE(FIFES00F) TOFILE(FIFEST0E) +
+009600021031                          FROMMBR(*FIRST) TOMBR(&MLNAME) +
+009700021031                          MBROPT(*ADD) CRTFILE(*YES))
+009800021031             ENDDO
+009900020710
+010000021018/*  qiundi rimuove il membro originale                            */
+010100020710             RMVM       FILE(FIFEST0F) MBR(&MLNAME)
+010200020710
+010300020710             ENDDO
+010400020710
+010500970108             GOTO       CMDLBL(READ)
+010600970108
+010700970108ENDF:
+010800021114/*  Cancella il file PRTF che gli serviva per mettere a parte i codici in più */
+010900021114             DLTF       FILE(QTEMP/FEDEXPRT)
+011000021114
+011100970108             ENDPGM

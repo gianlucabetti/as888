@@ -1,0 +1,45 @@
+000100130325/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER) TGTRLS(*CURRENT)                       */
+000200950314/*-----------------------------------------------------------------*/
+000300950331/*  User exit del programma ANA301R                                */
+000400950314/*                                                                 */
+000500950314/*-----------------------------------------------------------------*/
+000600130325             PGM        &KPJBA
+000700130325
+000800130325             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900130325             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+001000130325             DCL        VAR(&SOC) TYPE(*CHAR) LEN(3) /* societa */
+001100130325             DCL        VAR(&UNITA) TYPE(*CHAR) LEN(8) /* unità */
+001200130325             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10) /* programma chiamante */
+001300950331             DCL        VAR(&KSC) TYPE(*CHAR) LEN(8)  /* chiave 1 */
+001400950331             DCL        VAR(&LDV) TYPE(*CHAR) LEN(3)  /* chiave 2 */
+001500950331             DCL        VAR(&FIL) TYPE(*DEC) LEN(3 0) /* chiave 3 */
+001600130325
+001700130325             CHGVAR     VAR(&KPJBU) VALUE(%SST(&KPJBA 247 256))
+001800130325             CHGVAR     VAR(&SOC) VALUE(%SST(&KPJBU 1 3))
+001900130325             CHGVAR     VAR(&UNITA) VALUE(%SST(&KPJBU 4 8))
+002000130325             CHGVAR     VAR(&PGM) VALUE(%SST(&KPJBU 12 10))
+002100130325             CHGVAR     VAR(&KSC) VALUE(%SST(&KPJBU 22 8))
+002200130325             CHGVAR     VAR(&LDV) VALUE(%SST(&KPJBU 37 3))
+002300130325             CHGVAR     VAR(&FIL) VALUE(%SST(&KPJBU 52 3))
+002400130325
+002500130325/* Richiamo pgm per aggiornamento dati su file contenzioso */
+002600130325
+002700130325             CHGVAR     VAR(&KPJBU) VALUE(' ')
+002800130325             CHGVAR     VAR(%SST(&KPJBU 1 3)) VALUE(&SOC)
+002900130325             CHGVAR     VAR(%SST(&KPJBU 37 6)) VALUE('000151')
+003000130325             CHGVAR     VAR(%SST(&KPJBU 52 8)) VALUE(&KSC)
+003100130325             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&KPJBU)
+003200130325
+003300130325             CALL       PGM(YCO111R) PARM(&KPJBA &PGM)
+003400130325             MONMSG     MSGID(CPF0000)
+003500130325
+003600130325/* Chiamo il programma di gestione dei dati commerciali BRT */
+003700130325
+003800130325             CHGVAR     VAR(&KPJBU) VALUE(' ')
+003900130325             CHGVAR     VAR(%SST(&KPJBU 17 8)) VALUE(&KSC)
+004000130325             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&KPJBU)
+004100130325
+004200980602             CALL       PGM(YCO100R) PARM(&KPJBA &PGM)
+004300990408             MONMSG     MSGID(CPF0000)
+004400130325
+004500130325             ENDPGM

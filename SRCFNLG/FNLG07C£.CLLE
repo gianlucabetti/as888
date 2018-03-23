@@ -1,0 +1,227 @@
+000100960202 FNLG07C:    PGM        PARM(&KPJBA)
+000200941007
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400941007             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+000500971203             DCL        VAR(&PRTFAX)   TYPE(*CHAR)  LEN(10)
+000600020717             DCL        VAR(&LIVPO)    TYPE(*CHAR)  LEN(1)
+000700020718             DCL        VAR(&UT§DSE) TYPE(*CHAR) LEN(1591)
+000800050401             DCL        VAR(&error)    TYPE(*CHAR)  LEN(1)
+000900020718             DCLF       FILE(FNLG07DS)
+001000020718
+001100020719             /* CHIAMO X§PARUT X REPERIRE IL LIVELLO DEL P.O.*/
+001200020718             CALL       PGM(X§PARUT) PARM(&UT§DSE)
+001300020719             CHGVAR     VAR(&LIVPO) VALUE(%SST(&UT§DSE 1512 1))
+001400941007
+001500960202/* Controllo il tipo di stampa richiesto                    */
+001600960212             CHGVAR     VAR(&D07RIS) VALUE(%SST(&KPJBA 247 1))
+001700960202             CHGVAR     VAR(&D07TIP) VALUE(%SST(&KPJBA 271 1))
+001800971202             CHGVAR     VAR(&PRTFAX) VALUE(%SST(&KPJBA 326 10))
+001900941007
+002000050321/* esegue start del commit                    */
+002100050321
+002200050321             STRCMTCTL  LCKLVL(*CHG)
+002300050321             MONMSG     MSGID(CPF8351)
+002400050321
+002500960202/* Se non sono in ristampa, sono una primo livello, e devo stampare  */
+002600960202/*              gli invii via FAX eseguo OVRPRTF                     */
+002700040701             IF         COND((&D07RIS *NE 'S') *AND (&LIVPO *NE '2') +
+002800040701                          *AND ((&D07TIP *EQ 'F') *OR (&D07TIP *EQ +
+002900040701                          'X'))) THEN(DO)
+003000971202                                   OVRPRTF    FILE(LETGIA) OUTQ(&PRTFAX)
+003100960202                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+003200050401
+003300050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+003400050401             CHGVAR     VAR(&error) VALUE('S')
+003500050401             GOTO       CMDLBL(ERRORE)
+003600050401             ENDDO
+003700050401
+003800960507                                   DLTOVR   FILE(LETGIA)
+003900960202                                   GOTO     CMDLBL(FINE)
+004000960202                                   ENDDO
+004100961203
+004200961203/* Se ho lanciato il Fax estero eseguo OVRDBF                        */
+004300020717             IF         COND((&D07RIS *NE 'S') *AND (&LIVPO *NE +
+004400020717                          '2') *AND (&D07TIP *EQ 'E')) THEN(DO)
+004500971202                                   OVRPRTF    FILE(LETEST) OUTQ(&PRTFAX)
+004600961203                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+004700050401
+004800050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+004900050401             CHGVAR     VAR(&error) VALUE('S')
+005000050401             GOTO       CMDLBL(ERRORE)
+005100050401             ENDDO
+005200050401
+005300961203                                   DLTOVR   FILE(LETEST)
+005400961203                                   GOTO     CMDLBL(FINE)
+005500961203                                   ENDDO
+005600960202
+005601120112/*              gli invii via FAX eseguo OVRPRTF                     */
+005602120112             IF         COND((&D07RIS *NE 'S') *AND (&LIVPO *NE '2') +
+005603120112                          *AND ((&D07TIP *EQ 'P') *OR (&D07TIP *EQ +
+005604120112                          'S'))) THEN(DO)
+005605120207             OVRPRTF    FILE(LETGIA) OUTQ(POSTASEDE) FORMTYPE(*STD)
+005608120112                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+005609120112
+005610120112             MONMSG     MSGID(CPF0000) EXEC(DO)
+005611120112             CHGVAR     VAR(&error) VALUE('S')
+005612120112             GOTO       CMDLBL(ERRORE)
+005613120112             ENDDO
+005614120112
+005615120112                                   DLTOVR   FILE(LETGIA)
+005616120112                                   GOTO     CMDLBL(FINE)
+005617120112                                   ENDDO
+005700960202/* Se non sono in ristampa, sono una primo livello, e devo stampare  */
+005800960202/*               tutti gli invii  eseguo OVRPRTF                     */
+005900020717             IF         COND((&D07RIS *NE 'S') *AND (&LIVPO *NE    +
+006000020717                        '2') *AND (&D07TIP *EQ ' ')) THEN(DO)
+006100971202                                   OVRPRTF    FILE(LETGIA) OUTQ(&PRTFAX)
+006200960202                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('F')
+006300960202                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+006400050401
+006500050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+006600050401             CHGVAR     VAR(&error) VALUE('S')
+006700050401             GOTO       CMDLBL(ERRORE)
+006800050401             ENDDO
+006900050401
+007000960202                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('X')
+007100960202                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+007200050401
+007300050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+007400050401             CHGVAR     VAR(&error) VALUE('S')
+007500050401             GOTO       CMDLBL(ERRORE)
+007600050401             ENDDO
+007700050401
+007800960507                                   DLTOVR     FILE(LETGIA)
+007900040623          /*  inserire la outq relativa alla mail  */
+008000040701                                   OVRPRTF    FILE(LETGIA) OUTQ(EMAILIN)
+008100040623                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('V')
+008200040623                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+008300050401
+008400050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+008500050401             CHGVAR     VAR(&error) VALUE('S')
+008600050401             GOTO       CMDLBL(ERRORE)
+008700050401             ENDDO
+008800050401
+008900040623                                   DLTOVR     FILE(LETGIA)
+009000040623
+009001120113          /*  inserire la outq relativa alla posta da inviare in sede */
+009002120207             OVRPRTF    FILE(LETGIA) OUTQ(POSTASEDE) FORMTYPE(*STD)
+009005120111                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('P')
+009006120111                                   CALL     PGM(FNLG07R) PARM(&kPJBA)
+009007120111
+009008120111             MONMSG     MSGID(CPF0000) EXEC(DO)
+009009120111             CHGVAR     VAR(&error) VALUE('S')
+009010120111             GOTO       CMDLBL(ERRORE)
+009011120111             ENDDO
+009012120111
+009013120111                                   DLTOVR     FILE(LETGIA)
+009014120111
+009015120207             OVRPRTF    FILE(LETGIA) OUTQ(POSTASEDE) FORMTYPE(*STD)
+009018120112                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('S')
+009019120112                                   CALL     PGM(FNLG07R) PARM(&kPJBA)
+009020120112
+009021120112             MONMSG     MSGID(CPF0000) EXEC(DO)
+009022120112             CHGVAR     VAR(&error) VALUE('S')
+009023120112             GOTO       CMDLBL(ERRORE)
+009024120112             ENDDO
+009025120112
+009026120112                                   DLTOVR     FILE(LETGIA)
+009027120112
+009028120112          /*                                               */
+009100971202                                   OVRPRTF    FILE(LETEST) OUTQ(&PRTFAX)
+009200961203                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('E')
+009300961203                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+009400050401
+009500050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+009600050401             CHGVAR     VAR(&error) VALUE('S')
+009700050401             GOTO       CMDLBL(ERRORE)
+009800050401             ENDDO
+009900050401
+010000961203                                   DLTOVR     FILE(LETEST)
+010100040907
+010200040907                                   OVRPRTF    FILE(LETEST) OUTQ(EMAILIN)
+010300040907                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('W')
+010400040907                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+010500050401
+010600050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+010700050401             CHGVAR     VAR(&error) VALUE('S')
+010800050401             GOTO       CMDLBL(ERRORE)
+010900050401             ENDDO
+011000050401
+011100040907                                   DLTOVR     FILE(LETEST)
+011200040907
+011300961203                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('I')
+011400961203                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+011500050401
+011600050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+011700050401             CHGVAR     VAR(&error) VALUE('S')
+011800050401             GOTO       CMDLBL(ERRORE)
+011900050401             ENDDO
+012000050401
+012100960202                                   CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE(' ')
+012200960202                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+012300050401
+012400050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+012500050401             CHGVAR     VAR(&error) VALUE('S')
+012600050401             GOTO       CMDLBL(ERRORE)
+012700050401             ENDDO
+012800050401
+012900960202                                   GOTO     CMDLBL(FINE)
+013000960202                                   ENDDO
+013100960202
+013200040827   /* in caso di lancio da secondo livello eseguo prima le mail */
+013300040827             IF         COND((&D07RIS *NE 'S') *AND (&LIVPO *EQ    +
+013400040827                        '2') *AND (&D07TIP *EQ ' ')) THEN(DO)
+013500040827          /*  inserire la outq relativa alla mail  */
+013600040907          /* ITALIA */
+013700040827                              OVRPRTF    FILE(LETGIA) OUTQ(EMAILIN     )
+013800040827                                 CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('V')
+013900040827                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+014000050401
+014100050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+014200050401             CHGVAR     VAR(&error) VALUE('S')
+014300050401             GOTO       CMDLBL(ERRORE)
+014400050401             ENDDO
+014500050401
+014600040827                                 DLTOVR     FILE(LETGIA)
+014700040907          /* ESTERO */
+014800040907                              OVRPRTF    FILE(LETEST) OUTQ(EMAILIN     )
+014900040907                                 CHGVAR   VAR(%SST(&KPJBA 271 1)) VALUE('W')
+015000040907                                   CALL     PGM(FNLG07R) PARM(&KPJBA)
+015100050401
+015200050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+015300050401             CHGVAR     VAR(&error) VALUE('S')
+015400050401             GOTO       CMDLBL(ERRORE)
+015500050401             ENDDO
+015600050401
+015700040907                                 DLTOVR     FILE(LETEST)
+015800040907          /* REIMPOSTO IL FLAG DI LANCIO ORIGINALE  */
+015900040827                         CHGVAR  VAR(%SST(&KPJBA 271 1)) VALUE(&D07TIP)
+016000040827                        enddo
+016100040827
+016200960202/* In tutti gli altri casi lancio pgm senza OVR                      */
+016300960202             CALL       PGM(FNLG07R) PARM(&KPJBA)
+016400050401
+016500050401             MONMSG     MSGID(CPF0000) EXEC(DO)
+016600050401             CHGVAR     VAR(&error) VALUE('S')
+016700050401             GOTO       CMDLBL(ERRORE)
+016800050401             ENDDO
+016900050401
+017000050401
+017100050401ERRORE:
+017200050401             IF         COND(&error *EQ 'S') then(do)
+017300050401             ROLLBACK
+017400050428             SNDPGMMSG  MSG('ERRORE il programma è terminato in modo +
+017500050428                          anomalo. Segnalare il problema alla +
+017600050428                          persona responsabile della manutenzione +
+017700050428                          del programma. Verificare che non ci sia +
+017800050428                          un lavoro bloccato in KPBATCH') +
+017900050428                          TOMSGQ(*SYSOPR) MSGTYPE(*INFO)
+018000050401             RCLRSC     LVL(*CALLER)
+018100050401             enddo
+018200050321
+018300050401FINE:
+018400050321/* fine controllo sincronia     */
+018500050321             ENDCMTCTL
+018600050321             MONMSG     MSGID(CPF8356)
+018700941007
+018800040826             ENDPGM

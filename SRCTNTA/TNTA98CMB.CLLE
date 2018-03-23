@@ -1,0 +1,41 @@
+000100100526             PGM        parm(&kpjba)
+000200100526
+000300100526
+000400100526             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000500100528             DCL        VAR(&AS400) TYPE(*CHAR) LEN(8)
+000600100528             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000700100526
+000800100526 /* Reprisco il sistema AS/400 corrente */
+000900100526             RTVNETA    SYSNAME(&AS400)
+001000100528
+001100100528 /* Reprisco il sistema informativo */
+001200100528             CHGVAR     VAR(&KNSIF) VALUE(%SST(&kpjba  92  10))
+001300100526
+001400100526
+001500100526 /* Se presente elimino dalla QTEMP il file WFRCT* già esistenti */
+001600100526             DLTF       FILE(QTEMP/WFRCT*)
+001700100526             MONMSG     MSGID(CPF0000)
+001800100526
+001900100526
+002000100526 /* Duplica in QTEMP dei file WFRCT* */
+002100110921             IF         COND(&AS400 *EQ 'AS888') THEN(CRTDUPOBJ +
+002200180220                          OBJ(WFRCT*) FROMLIB(gaitrafil) +
+002300100714                          OBJTYPE(*FILE) TOLIB(QTEMP))
+002400110921             IF         COND(&AS400 *EQ 'AS888') THEN(CLRPFM +
+002500180220                          FILE(gaitrafil/WFRCT00F))
+002600110921
+002700100528
+002800110921             IF         COND(&AS400 *EQ 'SETRAS') THEN(CRTDUPOBJ +
+002900110921                          OBJ(WFRCT*) FROMLIB(UNITRAGRU) +
+003000110921                          OBJTYPE(*FILE) TOLIB(QTEMP))
+003100110921             IF         COND(&AS400 *EQ 'SETRAS') THEN(CLRPFM +
+003200110921                          FILE(UNITRAGRU/WFRCT00F))
+003300100526
+003400100526
+003500100712/* Richiamo programma di creazione file work per elenco trattative*/
+003600100712             CALL       PGM(TNTA98R1) PARM(&KPJBA)
+003700100714
+003800100714/* Richiamo programma di stampe elenco trattative*/
+003900100714             CALL       PGM(TNTA98R) PARM(&KPJBA)
+004000100526
+004100100526ENDPGM:      ENDPGM

@@ -1,0 +1,51 @@
+000100950524             PGM        PARM(&KPJBA)
+000200950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000201110128             DCL        VAR(&Kcdaz)    TYPE(*CHAR)  LEN(4)
+000300101213             DCL        VAR(&STARTCMT) TYPE(*CHAR) LEN(1)
+000400030722             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000402110125             DCL        VAR(&azione) TYPE(*CHAR) LEN(4)
+000500030722             RTVJOBA    JOB(&DSP)
+000700101213/* STRCMTCTL condizionato:                                          */
+000800110124/* se NON deve fare STRCMTCTL riceve "N" nella posiz.20 della KPJBU */
+000900110124             CHGVAR     VAR(&STARTCMT) VALUE(%SST(&KPJBA 266 1))
+000901110128             CHGVAR     VAR(&kcdaz) VALUE(%SST(&KPJBA 60 1))
+001000950911
+001100030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001200030722/* procedura/programma fosse finita in maniera anomala occorre */
+001300030722/* parare il colpo riducendo il male al male minore ossia      */
+001400030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+001500030722/* metà piuttosto che confermarle. E ripartendo da una         */
+001600030722/* situazione pulita.                                          */
+001700110128             IF         COND(&STARTCMT *EQ ' ' *AND &KCdAZ *NE +
+001701110128                          'LR9A') THEN(DO)
+001800101213
+001900110125             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*ACTGRP)
+002000030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+002100030722             ENDCMTCTL
+002200030722             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+002300110125             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*ACTGRP)
+002400030722             ENDDO
+002500030708
+002600101213             ENDDO
+002700101213
+002800950524        /*   Eseguo CALL a pgm preparazione distinta da spunte   */
+002900030730             CALL       PGM(FNLR98R) PARM(&KPJBA)
+003000030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+003001110128             IF         COND(&STARTCMT *EQ ' ' *AND &KCdAZ *NE +
+003002110128                          'LR9A') THEN(DO)
+003100030708             ROLLBACK
+003101110125             ENDDO
+003200030730             SNDBRKMSG  MSG('ERRORE Il programma è +
+003300030730                          terminato in modo anomalo. +
+003400030722                          Segnalare il +
+003500030722                          problema alla persona responsabile della +
+003600030730                          sua manutenzione.') TOMSGQ(&DSP)
+003700030728             RCLRSC     LVL(*CALLER)
+003800030708             ENDDO
+003900030722
+004000110128             IF         COND(&STARTCMT *EQ ' ' *AND &KCdAZ *NE +
+004001110128                          'LR9A') THEN(DO)
+004100030722             ENDCMTCTL
+004200101213             ENDDO
+004300950911
+004400950524             ENDPGM

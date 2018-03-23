@@ -1,0 +1,128 @@
+000100000000     H              J
+000200910415     F* TRVR42R *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400910415     F* - CONTROLLO CDC IN CNCACO
+000500000000     F*--------------------------------------------------------------*
+000600910415     FCNMOV07LIP  E           K        DISK
+000700910415     FCNACO00FIF  E           K        DISK
+000800900530     FQSYSPRT O   F     132     OF     PRINTER
+000900000000     E                    TCU        50  6               TAB FLAG CNT
+001000000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001100910415     E                    AR5         4  4 0             *TAB CAPOCNT RAG
+001200000000     I/SPACE 3
+001300910415     I*---SCOMPOSIZIONE DI TCU PER FLG E TIPO CONTO
+001400910415     ICARCNT      DS
+001500910415     I                                        1   4 FLGCNT
+001600910415     I                                        1   1 FL1CNT
+001700910415     I                                        2   2 FL2CNT
+001800910415     I                                        3   3 FL3CNT
+001900910415     I                                        4   4 FL4CNT
+002000910415     I                                        5   6 TIPCNT
+002100910415     I                                        1   2 FL12§
+002200910415     IUTEDSE    E DSUT§DSE0F
+002300000000     I                                      398 697 TCU
+002400000000     I                                    P 698 847 KCU
+002500910419     IKPJBA     E DS
+002600900525     C  N99                EXSR DEFCAM
+002700910415     C           MOVCDC    IFNE PRECDC
+002800910415     C           KACO      CHAINCNACO00F             21
+002900910415     C  N21      ACOFLG    COMP '*'                      21
+003000910415     C   OF                EXCPTTESTA
+003100910415     C                     MOVE MOVCDC    PRECDC
+003200910415     C                     END
+003300910415     C   21                EXCPTDET
+003400930224     C* SE DATA REGISTR. > 010193 E CDC CON REPARTO  STAMPO
+003500930224     C                     MOVE MOVCDC    §REP    20
+003600930224     C           MOVDRG    IFGE 930101
+003700930224     C           §REP      ANDNE*ZEROS
+003800930224     C                     EXCPTDET
+003900930224     C                     END
+004000900530     C*
+004100900530     C/SPACE
+004200900530     C**-------------------------------------------
+004300900530     C**  D E F C A M
+004400900530     C**-------------------------------------------
+004500900530     C           DEFCAM    BEGSR
+004600910419     C           *ENTRY    PLIST
+004700910419     C                     PARM           KPJBA
+004800900530     C                     Z-ADD1         CODUT
+004900910415     C                     CALL 'X§PARUT'
+005000900530     C                     PARM           UTEDSE
+005100900530     C                     MOVELRAGUT     RSUT   20
+005200900530     C*-                                                   *
+005300910415     C                     Z-ADD1         X       20
+005400910415     C                     DO   50        Y       20
+005500910415     C                     MOVE TCU,Y     CARCNT
+005600910415     C           TIPCNT    IFEQ 'RI'
+005700910415     C                     Z-ADDKCU,Y     AR5,X              RAGGR. BIL.
+005800910415     C                     ADD  1         X
+005900910415     C                     END
+006000910415     C           FL4CNT    IFEQ '6'
+006100910415     C                     Z-ADDKCU,Y     CCNBNC  40         BANCA
+006200910415     C                     END
+006300910415     C           FL4CNT    IFEQ '1'
+006400910415     C           FL3CNT    IFEQ '0'
+006500910415     C                     Z-ADDKCU,Y     CLIITA  40         CLIENTI
+006600910415     C                     ELSE
+006700910415     C                     Z-ADDKCU,Y     CLIEST  40
+006800910415     C                     END
+006900910415     C                     END
+007000910415     C           FL4CNT    IFEQ '2'
+007100910415     C           FL3CNT    IFEQ '0'
+007200910415     C                     Z-ADDKCU,Y     FORITA  40         FORNIT.
+007300910415     C                     ELSE
+007400910415     C                     Z-ADDKCU,Y     FOREST  40
+007500910415     C                     END
+007600910415     C                     END
+007700910415     C           FL3CNT    IFEQ 'I'
+007800910415     C                     Z-ADDKCU,Y     CCNIVA  40       IVA
+007900910415     C                     END
+008000910415     C           TIPCNT    IFEQ 'CI'
+008100910415     C                     Z-ADDKCU,Y     CCNCDC  40       KCC C.D.C.
+008200910415     C                     END
+008300910415     C           FL12§     IFEQ '01'                       CONTENZIOSO
+008400910415     C                     Z-ADDKCU,Y     CCNC41  40       CONT. 41
+008500910415     C                     END
+008600910415     C           FL12§     IFEQ '02'                       CONTENZIOSO
+008700910415     C                     Z-ADDKCU,Y     CCNC42  40       CONT. 42
+008800910415     C                     END
+008900910415     C           FL12§     IFEQ '03'                       CONTENZIOSO
+009000910415     C                     Z-ADDKCU,Y     CCNC45  40       CONT. 45
+009100910415     C                     END
+009200910415     C           FL12§     IFEQ '04'                       CONTENZIOSO
+009300910415     C                     Z-ADDKCU,Y     CCNC43  40       CONT. 43
+009400910415     C                     END
+009500910415     C           FL12§     IFEQ '05'                       CONTENZIOSO
+009600910415     C                     Z-ADDKCU,Y     CCNC44  40       CONT. 44
+009700910415     C                     END
+009800910415     C                     END
+009900900530     C*
+010000910415     C           *LIKE     DEFN MOVCDC    PRECDC
+010100900530     C                     SETON                     99
+010200900530     C** ACCESSO X CONTO
+010300900530     C           KACO      KLIST
+010400900530     C                     KFLD           CODUT
+010500910415     C                     KFLD           CCNCDC
+010600910415     C                     KFLD           MOVCDC
+010700910415     C*
+010800910415     C*
+010900900530     C                     EXCPTTESTA
+011000910415     C*
+011100900530     C                     ENDSR
+011200900530     OQSYSPRT E  102           TESTA
+011300910415     O                                 +  1 '*TRVR42R*'
+011400900530     O                         RSUT    +  1
+011500910415     O                                 + 10 'LISTA CENTRI DI COSTO I'
+011600910415     O                                 +  0 'N CNMOV ERRATI'
+011700900530     O                         UDATE Y +  5
+011800900530     O                         PAGE  Z  132
+011900900530     O        E  1             TESTA
+012000900530     O                                   13 'KCC + KSC '
+012100910415     O                                   51 'D. + NR.REG.'
+012200910415     O                                   80 'C.D.C'
+012300900530     O        E  1             DET
+012400910415     O                         MOVKCCZ +  1
+012500910415     O                         MOVKSCZ +  1
+012600910415     O                         MOVDRGY +  1
+012700910415     O                         MOVNRGZ +  1
+012800910415     O                         MOVCDCZ +  1

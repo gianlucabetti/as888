@@ -1,0 +1,230 @@
+000100000000     H              J
+000200890809     F*--------------------------------------------------------------* H
+000300890809     F*        TRAS02R -  ANNULLAM. C/ASSEGNI DA GESTIONE -         **
+000400890809     F*--------------------------------------------------------------*
+000500941028     FTNCSB03LUF  E           K        DISK
+000600941028     FTNCSV00FO   E                    DISK                      A
+000700971218     F**** CNACO00FIF  E           K        DISK
+000800970408     FTABEL00FIF  E           K        DISK
+000900941028     FTNCSA01LIF  E           K        DISK
+001000941028     FTNSC02D CF  E                    WORKSTN
+001100941028     F*--------------------------------------------------------------*
+001200000000     E                    TCU        50  6               TAB FLAG CNT
+001300000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001400941028     E*--------------------------------------------------------------*
+001500000000     IKPJBA     E DS
+001600000000     I                                       92 100 LIBSYS
+001700000000     I                                      453 502 MSGERR
+001800941028     ICSBDS     E DSTNCSB00F
+001900941028     I          E DSTNCSV00F
+002000941028     I                                       16 229 CSVDS
+002100970408     IDS4S      E DS
+002200970408     IUTEDSE    E DSUTEDSE0F
+002300000000     I                                      398 697 TCU
+002400000000     I                                    P 698 847 KCU
+002500890717     ITCUDS       DS
+002600890717     I                                        3   3 F3
+002700890717     I                                        4   4 F4
+002800890717     I                                        5   6 F56
+002900941028     IWLBDA8      DS
+003000941028     I                                        1   80G02DAT
+003100941028     I                                        9  160G02INV
+003200941028     I                                       17  17 G02ERR
+003300941028     I                                       18  220G02TGI
+003400971218     ITRUL15    E DSTRUL15DS
+003500971218     ITIBS69    E DSTIBS69DS
+003600971218     ICNACO     E DSCNACO00F
+003700971218     ICNIND     E DSCNIND00F
+003800971218     ICNCLP     E DSCNCLP00F
+003900971218     IFNCLS     E DSFNCLS00F
+004000000000     C*---------------------------------------------------------------*
+004100000000     C           STARTX    TAG
+004200000000     C                     Z-ADD0         CONLNP
+004300000000     C                     Z-ADD0         CONNSP
+004400891113     C                     Z-ADD0         CONNRS
+004500000000     C           START     TAG
+004600941028     C                     EXFMTSC02D01
+004700941028     C           *INKC     IFEQ '1'
+004800941028     C                     Z-ADD0         CONLNP
+004900941028     C           KCON      CHAINTNCSB000             99
+005000941028     C           KCSA      CHAINTNCSA000             99
+005100941028     C                     GOTO FINE
+005200941028     C                     END
+005300941028     C*  CONTROLLO SE L'ANNO E'NEL FORMATO 2 CHR E SE SI LO CONVERTO
+005400941028     C                     MOVELCONAAS    WAA2    20
+005500941028     C           WAA2      IFEQ 0
+005600941028     C           CONAAS    IFGT 60
+005700941028     C                     ADD  1900      CONAAS
+005800941028     C                     ELSE
+005900941028     C                     ADD  2000      CONAAS
+006000941028     C                     END
+006100941028     C                     END
+006200891113     C* CONTROLLO ANNO SPEDIZIONE CHE SIA CORRETTO
+006300941028     C                     MOVE WHHDAT    UAAS    40
+006400891113     C           CONAAS    COMP UAAS                 98  83
+006500891113     C  N98N83             SUB  1         UAAS
+006600891113     C      98             GOTO START
+006700000000     C**
+006800941028     C                     CLEARWLBDA8
+006900941028     C                     MOVE WHHDAT    G02DAT
+007000941028     C                     CALL 'XSRDA8'
+007100941028     C                     PARM           WLBDA8
+007200941028     C                     Z-ADDG02INV    RUDATE  80
+007300000000     C** DATA SISTEMA AMG
+007400941028     C           KCON      CHAINTNCSB000             99
+007500000000     C   99                GOTO START
+007600971218      * CONTROLLO CHE LNA SIA DEL RAMO AZIENDALE CON CUI SI è COLLEGATI
+007700971218     C                     CLEARTRUL15
+007800971218     C                     MOVEL' '       I15TLA
+007900971218     C                     MOVEL'R'       I15TPC
+008000971218     C                     MOVELKNSIF     I15NSI
+008100971218     C                     Z-ADDCSBLNA    I15LNA
+008200971218     C                     CALL 'TRUL15R'
+008300971218     C                     PARM           TRUL15
+008400971218     C           O15ERR    IFNE *BLANK
+008500971218     C                     SETON                     90
+008600971218     C                     GOTO START
+008700971218     C                     ENDIF
+008800000000     C* SPEDIZIONE INESISTENTE
+008900910912     C           CSBDTA    IFGT 0
+009000000000     C                     SETON                     97
+009100000000     C   97                GOTO START
+009200900307     C** SPEDIZIONE GIA INCASSATA IMPOSSIBILE     ANNULLAMENTO
+009300000000     C                     END
+009400910912     C                     MOVE CSBKSC    KSC4    40
+009500891113     C           KSC4      IFEQ 8888
+009600941028     C           KCSA      CHAINTNCSA000             10
+009700910912     C  N10                MOVELCSARSD    RSD
+009800000000     C   10                MOVEL*BLANKS   RSD
+009900000000     C                     GOTO POI
+010000000000     C                     END
+010100891113     C           KSC4      IFEQ 9999
+010200941028     C           KCSA      CHAINTNCSA000             10
+010300910912     C  N10                MOVELCSARSD    RSD
+010400000000     C   10                MOVEL*BLANKS   RSD
+010500000000     C                     GOTO POI
+010600000000     C                     END
+010700000000     C** ACCESSO CNACO
+010800971218     C***        KCLI      CHAINCNACO000             11
+010900971218      * CHIAMO TIBS69 PER RICERCA CODICE CLIENTE
+011000971218     C                     CLEARTIBS69
+011100971218     C                     CLEARCNACO
+011200971218     C                     CLEARCNIND
+011300971218     C                     CLEARCNCLP
+011400971218     C                     CLEARFNCLS
+011500971218     C                     MOVEL' '       I69TLA
+011600971218     C                     MOVELKNSIF     I69SIF
+011700971218     C                     Z-ADDCSBCDI    I69KAC
+011800971218     C                     CALL 'TIBS69R'
+011900971218     C                     PARM           TIBS69
+012000971218     C                     PARM           CNACO
+012100971218     C                     PARM           CNIND
+012200971218     C                     PARM           CNCLP
+012300971218     C                     PARM           FNCLS
+012400971218     C           O69ERR    IFEQ *BLANK
+012500971218     C                     MOVELACORAG    RSD
+012600971218     C                     ELSE
+012700971218     C                     MOVEL*BLANKS   RSD
+012800971218     C                     ENDIF
+012900000000     C           POI       TAG
+013000000000     C           START1    TAG
+013100941028     C                     EXFMTSC02D02
+013200941031     C   KC                GOTO FINE
+013300941031     C   KL                GOTO START
+013400941028     C  NKF                GOTO START1
+013500970408     C* CONTROLLO SE DEVO TRASMETTERE VARIAZIONE STATO C/ASS IN FILIALE
+013600970408     C                     Z-ADD1         TBLKUT
+013700970408     C                     MOVEL*BLANKS   TBLUNI
+013800970408     C                     MOVEL'4S'      TBLCOD
+013900970408     C                     MOVEL*BLANKS   TBLKEY
+014000970408     C                     MOVE '9'       TBLKEY
+014100970408     C           KTAB      CHAINTABEL00F             31
+014200970408     C                     MOVELTBLUNI    DS4S
+014300000000     C* IMPOSSIBILE ANNULLARE C/ASS-BISOGNA AGIRE DA GESTIONE BOLLE
+014400910912     C                     MOVE '9'       CSBSTA
+014500970408     C           §4SFIL    IFEQ 'S'
+014600970408     C                     MOVEL*BLANKS   CSBFTR
+014700970408     C                     Z-ADD0         CSBDTR
+014800970408     C                     END
+014900910912     C                     EXCPTAGG
+015000910912     C* SCRIVO STORICO VARIAZ. C/A
+015100910912     C                     MOVEL'ANCA'    CSVCAV
+015200910912     C                     Z-ADDRUDATE    CSVDTV
+015300910912     C                     TIME           CSVORV
+015400910912     C                     MOVEL'046'     CSVFEV
+015500910912     C                     MOVELCSBDS     CSVDS
+015600941028     C                     WRITETNCSV000
+015700941028     C   KF                GOTO STARTX
+015800000000     C           FINE      TAG
+015900971218     C* RICHIAMO PGM X CHIUSURA IN LR
+016000971218     C                     CLEARTRUL15
+016100971218     C                     MOVEL'C'       I15TLA
+016200971218     C                     CALL 'TRUL15R'
+016300971218     C                     PARM           TRUL15
+016400971218     C                     CLEARTIBS69
+016500971218     C                     MOVEL'C'       I69TLA
+016600971218     C                     CALL 'TIBS69R'
+016700971218     C                     PARM           TIBS69
+016800971218     C                     PARM           CNACO
+016900971218     C                     PARM           CNIND
+017000971218     C                     PARM           CNCLP
+017100971218     C                     PARM           FNCLS
+017200910913     C                     SETON                     LR
+017300890717     C/SPACE 3
+017400941028     C*--------------------------------------------------------------*
+017500941028     C*  OPERAZIONI INIZIALI
+017600941028     C*--------------------------------------------------------------*
+017700941028     C           *INZSR    BEGSR
+017800941028     C*
+017900941028     C           *ENTRY    PLIST
+018000941028     C                     PARM           KPJBA
+018100941028     C                     Z-ADD1         CODUT
+018200941028     C                     CALL 'XPARUT'
+018300941028     C                     PARM           UTEDSE
+018400941028     C           CODUT     CABEQ-1        FINE
+018500941028     C                     MOVELRAGUT     RSUT   20
+018600941028     C                     MOVELRAGUT     RSUT2  25
+018700941028     C*--- RICERCA CAPOCONTI------------------------------------------*
+018800941028     C                     DO   50        X       20
+018900941028     C                     MOVE TCU,X     TCUDS
+019000941028     C           F56       IFEQ 'CG'
+019100941028     C           F4        ANDEQ'1'
+019200941031     C           F3        ANDEQ'0'
+019300941028     C                     Z-ADDKCU,X     KCI     40
+019400941028     C                     END
+019500941028     C                     END
+019600941028     C*---------------------------------------------------------------*
+019700941028     C*  CNACO
+019800971218     C****       KCLI      KLIST
+019900971218     C****                 KFLD           CODUT
+020000971218     C****                 KFLD           CCC     40
+020100971218     C****                 KFLD           CSBKSC
+020200941028     C*  TNCSB
+020300941028     C           KCON      KLIST
+020400941028     C                     KFLD           CONAAS
+020500941028     C                     KFLD           CONLNP
+020600941028     C                     KFLD           CONNRS
+020700941028     C                     KFLD           CONNSP
+020800941028     C*  TNCSA
+020900941028     C           KCSA      KLIST
+021000941028     C                     KFLD           CONAAS
+021100941028     C                     KFLD           CONLNP
+021200941028     C                     KFLD           CONNRS
+021300941028     C                     KFLD           CONNSP
+021400970408     C*  TABEL
+021500970408     C           KTAB      KLIST
+021600970408     C                     KFLD           TBLKUT
+021700970408     C                     KFLD           TBLCOD
+021800970408     C                     KFLD           TBLKEY
+021900941028     C*
+022000971218     C****                 Z-ADDKCI       CCC
+022100941028     C                     SETOF                     99
+022200941028     C                     TIME           WHHDAT 140
+022300941028     C                     MOVE WHHDAT    CONAAS
+022400941028     C*
+022500890717     C                     ENDSR
+022600890717     C*---------------------------------------------------------------*
+022700941028     OTNCSB000E                AGG
+022800910912     O                         CSBSTA
+022900970408     O                         CSBDTR
+023000970408     O                         CSBFTR

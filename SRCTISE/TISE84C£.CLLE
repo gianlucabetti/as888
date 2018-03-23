@@ -1,0 +1,38 @@
+000100050510             PGM        PARM(&KPJBA)
+000200050510
+000300050510             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400050510             DCL        VAR(&NOMEPGM) TYPE(*CHAR) LEN(10)
+000500050510             DCL        VAR(&NOMEWKF) TYPE(*CHAR) LEN(10)
+000600050511             DCL        VAR(&NOMEPRTF) TYPE(*CHAR) LEN(10)
+000700050517             DCL        VAR(&AFILE) TYPE(*CHAR) LEN(10)
+000800050510
+000900050510/* ?------------------------------------------------------------------ */
+001000050510/* ?PGM chiamato e FILE di WORK sono passati dal Lancio                */
+001100050510/* ?------------------------------------------------------------------ */
+001200050510             CHGVAR     VAR(&NOMEPGM) VALUE(%SST(&KPJBA 247 10))
+001300050510             CHGVAR     VAR(&NOMEWKF) VALUE(%SST(&KPJBA 257 10))
+001400050511             CHGVAR     VAR(&NOMEPRTF) VALUE(%SST(&KPJBA 267 10))
+001500050517             CHGVAR     VAR(&AFILE) VALUE(%SST(&KPJBA 277 10))
+001600050510
+001700050706             IF         COND(&NOMEWKF *NE ' ') THEN(CLRPFM +
+001800050706                          FILE(&NOMEWKF))
+001900050706
+002000050708             IF         COND(&AFILE *NE ' ') THEN(CLRPFM +
+002100050708                          FILE(&AFILE))
+002200050517
+002300050712             IF         COND(&NOMEPRTF *NE ' ') THEN(OVRPRTF +
+002400050712                          FILE(&NOMEPRTF) USRDTA(ST_EXPORT))
+002500050517
+002600050510             CALL       PGM(&NOMEPGM) PARM(&KPJBA)
+002700050510
+002800050708/* ?Troppo grande la base dati da riportare su foglio EXCEL            */
+002900050712             IF         COND((&NOMEWKF *NE ' ') *AND (&AFILE *NE ' +
+003000050708                          ')) THEN(CPYF FROMFILE(&NOMEWKF) +
+003100050708                          TOFILE(&AFILE) MBROPT(*REPLACE) +
+003200050712                          FMTOPT(*MAP *DROP))
+003300050517
+003400050708/* ?Da mandare come Foglio Excel su PC utilizzando IFS                 */
+003500050512/*           CPYTOIMPF  FROMFILE(&NOMEWKF) +
+003600050704                          TOSTMF('/wfcex00f.csv') +
+003700050512                          MBROPT(*REPLACE) RCDDLM(*CRLF)  */
+003800050510             ENDPGM

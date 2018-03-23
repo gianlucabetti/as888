@@ -1,0 +1,482 @@
+000100000421     H*------------------------------------------------------------------------*
+000200000421     H* CONTROLLA CAP/LOCALITA' POSTE - ESEGUE                                 *
+000300000421     H*------------------------------------------------------------------------*
+000400000421     H              J
+000500000421     F*------------------------------------------------------------------------*
+000600000421     F* DATA BASE
+000700000421     F*------------------------------------------------------------------------*
+000800000421     FAZPPC01LIF  E           K        DISK
+000900000421     FAZPPL01LIF  E           K        DISK
+001000000421     FAZPAE01LIF  E           K        DISK
+001100000606     FAZPPE01LIF  E           K        DISK
+001200000421     E*------------------------------------------------------------------------*
+001300000421     E* SCHIERE
+001400000421     E*------------------------------------------------------------------------*
+001500000421     E*---
+001600000421     E* MESSAGGI
+001700000421     E*---
+001800000421     E                    MSG     1  20 78
+001900000421     I*------------------------------------------------------------------------*
+002000000421     I* INPUT
+002100000421     I*------------------------------------------------------------------------*
+002200000421     I*---
+002300000421     I* DS PASSAGGIO PARAMETRI
+002400000421     I*---
+002500000421     ITISI98    E DSTISI98DS
+002600000421     I*---
+002700000421     I* ARCHITETTURA
+002800000421     I*---
+002900000421     IKPJBA     E DS
+003000000421     C*------------------------------------------------------------------------*
+003100000421     C* MAIN LINE
+003200000421     C*------------------------------------------------------------------------*
+003300000421     C*
+003400000421     C* OPERAZIONI INIZIALI
+003500000421     C                     EXSR RUTINZ
+003600000421     C*
+003700000421     C* SE LANCIATO CON TIPO LANCIO='C', CHIUDE I FILE E VA A FINE PGM
+003800000421IF  1C           I98TLA    IFNE 'C'                        *NO CHIUSURA
+003900000421     C*
+004000000421     C* SELEZIONI PER OGNI TIPO CONTROLLO
+004100000421SL  2C                     SELEC
+004200000421     C           I98TCN    WHEQ '3'
+004300000421     C                     EXSR TCN3                       *CONTROLLO CAP/LOC
+004400000421     C           I98TCN    WHEQ '4'
+004500000421     C                     EXSR TCN47                      *CONTROLLO LOC/CAP
+004600000421     C           I98TCN    WHEQ '7'
+004700000421     C                     EXSR TCN47                      *CONTROLLO BOLLETTAZIONE
+004800000421     C                     OTHER
+004900000421     C                     MOVELMSG,10    $MSG
+005000000421     C                     EXSR ERRORE
+005100000421E   2C                     ENDSL
+005200000421     C*
+005300000421     C* PORTA I CAMPI DI CAP/LOCALITA' NEGLI OUT GENERALI
+005400000421IF  2C           $ERR      IFEQ 'N'                        *NO ERRORI
+005500000421     C                     EXSR OUTGEN
+005600000421E   2C                     ENDIF
+005700000606     C*
+005800000612     C* SE RICHIESTO, RECUPERA ECCEZIONI LINEE/ZONE
+005900000606IF  2C           $ERR      IFEQ 'N'
+006000000612IF  3C           I98FRE    IFEQ 'S'                        *CONTROLLO ECCEZIONI
+006100000612     C           I98ESE    ANDEQ'S'                        *ESISTONO ECCEZIONI
+006200000612IF  4C           I98LID    IFEQ '1'                        *LIV DATI CAP FITTIZIO
+006300000612     C           I98LID    OREQ '2'                        *LIV DATI CAP
+006400000612     C           I98LID    OREQ '3'                        *LIV DATI LOC
+006500000612     C           I98LIV    ANDEQ'C'                        *LIV GESTIONE CAP
+006600000612     C           I98LID    OREQ '4'                        *LIV DATI SIN
+006700000612     C           I98LIV    ANDEQ'C'                        *LIV GESTIONE CAP
+006800000612     C                     EXSR CHKPPE
+006900000612E   4C                     ENDIF
+007000000612E   3C                     ENDIF
+007100000612E   2C                     ENDIF
+007200000421     C*
+007300000421     C* REPERISCE ALTRI DATI DALLA LINEA ARRIVO CALCOLATA
+007400000421IF  2C           $ERR      IFEQ 'N'                        *NO ERRORI
+007500000421     C                     EXSR REPPAE
+007600000421E   2C                     ENDIF
+007700000421E   1C                     ENDIF
+007800000421     C*
+007900000421     C* OPERAZIONI DI CHIUSURA
+008000000421IF  1C           I98TLA    IFEQ 'C'
+008100000421     C                     EXSR FINSR                      *OPERAZIONI FINALI
+008200000421     C                     SETON                     LR
+008300000421X   1C                     ELSE
+008400000421     C                     SETON                     RT
+008500000421E   1C                     ENDIF
+008600000421     C*------------------------------------------------------------------------*
+008700000421     C* GESTIONE TIPO CONTROLLO 3 -CONTROLLO CAP-
+008800000421     C*------------------------------------------------------------------------*
+008900000421     C           TCN3      BEGSR
+009000000421     C*
+009100000421     C* REPERISCE IL CAP POSTE
+009200000421     C                     MOVELI98CAP    WCAP
+009300000421     C                     EXSR LETPPC
+009400000421IF  1C           TROPPC    IFEQ 'S'                        *CAP TROVATO
+009500000421     C                     EXSR OUTPPC                     *DATI CAPPARIO IN OUT
+009600000421X   1C                     ELSE                            *CAP NON TROVATO
+009700000421     C                     MOVELMSG,8     $MSG
+009800000421     C                     EXSR ERRORE                     *ERRORE
+009900000421E   1C                     ENDIF
+010000000421     C*
+010100000421     C                     ENDSR
+010200000421     C*------------------------------------------------------------------------*
+010300000421     C* GESTIONE TIPO CONTROLLO 4 e 7 -CONTROLLO CAP/LOCALITA'-
+010400000421     C*------------------------------------------------------------------------*
+010500000421     C           TCN47     BEGSR
+010600000421     C*
+010700000421     C* DATI LOCALITA' <> DATI CAP, REPERISCE LA LOCALITA' POSTE
+010800000421IF  1C           I98LIV    IFEQ 'L'                        *DATI LOC <> DATI CAP
+010900000421     C                     MOVELI98CAP    WCAP
+011000000421     C                     MOVELI98LOC    WLOC
+011100000421     C                     EXSR LETPPL
+011200000421IF  2C           TROPPL    IFEQ 'S'                        *LOCALITA' TROVATA
+011300000421     C                     EXSR OUTPPL                     *DATI LOCALITA' IN OUT
+011400000421X   2C                     ELSE                            *LOCALITAÌ NON TROVATA
+011500000421     C                     MOVELMSG,11    $MSG
+011600000421     C                     EXSR ERRORE                     *ERRORE
+011700000421E   2C                     ENDIF
+011800000421     C*
+011900000421     C* DATI LOCALITA' = DATI CAP, REPERISCE IL CAP POSTE
+012000000421X   1C                     ELSE                            *DATI LOC = DATI CAP
+012100000421     C                     EXSR TCN3
+012200000421E   1C                     ENDIF
+012300000421     C*
+012400000421     C                     ENDSR
+012500000421     C*------------------------------------------------------------------------*
+012600000421     C* LETTURA CAP POSTE
+012700000421     C*  - INPUT : WCAP
+012800000421     C*  - OUTPUT: TROPPC (S/N)
+012900000421     C*------------------------------------------------------------------------*
+013000000421     C           LETPPC    BEGSR
+013100000421     C*
+013200000421     C* AZZERA LE VARIABILI DI LAVORO
+013300000421     C                     MOVEL'S'       TROPPC           *TROVATO
+013400000421     C                     MOVEL*OFF      *IN99
+013500000421     C*
+013600000421     C                     Z-ADDI98VER    KPCVER
+013700000421     C                     MOVELI98NAR    KPCNAR
+013800000421     C                     MOVELWCAP      KPCCAP
+013900000421     C           KEYPPC    CHAINAZPPC01L             99
+014000000421IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+014100000421     C           PPCATB    ORNE *BLANKS                    *ANNULLATO
+014200000421     C                     MOVEL'N'       TROPPC           *NON TROVATO
+014300000421E   1C                     ENDIF
+014400000421     C*
+014500000421     C                     ENDSR
+014600000421     C*------------------------------------------------------------------------*
+014700000421     C* IMPOSTA I CAMPI -CAP- IN QUELLI DI OUTPUT DELLA DS
+014800000421     C*------------------------------------------------------------------------*
+014900000421     C           OUTPPC    BEGSR
+015000000421     C*
+015100000421     C                     Z-ADDPPCLNA    O98CLA
+015200000421     C                     Z-ADDPPCZNC    O98CZC
+015300000421     C                     Z-ADDPPCZFD    O98CZF
+015400000421     C                     Z-ADDPPCUPI    O98CUP
+015500000612     C                     Z-ADDPPCUPI    O98CUP
+015600000421     C*
+015700000421     C                     ENDSR
+015800000421     C*------------------------------------------------------------------------*
+015900000421     C* LETTURA LOCALITA' POSTE
+016000000421     C*  - INPUT : WCAP, WLOC
+016100000421     C*  - OUTPUT: TROPPL (S/N)
+016200000421     C*------------------------------------------------------------------------*
+016300000421     C           LETPPL    BEGSR
+016400000421     C*
+016500000421     C* AZZERA LE VARIABILI DI LAVORO
+016600000421     C                     MOVEL'S'       TROPPL           *TROVATO
+016700000421     C                     MOVEL*OFF      *IN99
+016800000421     C*
+016900000421     C                     Z-ADDI98VER    KPLVER
+017000000421     C                     MOVELI98NAR    KPLNAR
+017100000421     C                     MOVELWCAP      KPLCAP
+017200000421     C                     MOVELWLOC      KPLLOC
+017300000421     C           KEYPPL    CHAINAZPPL01L             99
+017400000421IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+017500000421     C           PPLATB    ORNE *BLANKS                    *ANNULLATO
+017600000421     C                     MOVEL'N'       TROPPL           *NON TROVATO
+017700000421E   1C                     ENDIF
+017800000421     C*
+017900000421     C                     ENDSR
+018000000421     C*------------------------------------------------------------------------*
+018100000421     C* IMPOSTA I CAMPI -LOCALITA'- IN QUELLI DI OUTPUT DELLA DS
+018200000421     C*------------------------------------------------------------------------*
+018300000421     C           OUTPPL    BEGSR
+018400000421     C*
+018500000516     C                     Z-ADDPPLLNA    O98LLA
+018600000516     C                     Z-ADDPPLZNC    O98LZC
+018700000516     C                     Z-ADDPPLZFD    O98LZF
+018800000516     C                     Z-ADDPPLUPI    O98LUP
+018900000421     C*
+019000000421     C                     ENDSR
+019100000612     C*------------------------------------------------------------------------*
+019200000612     C* CONTROLLA ECCEZIONI LINEE/ZONE POSTE
+019300000612     C*------------------------------------------------------------------------*
+019400000612     C           CHKPPE    BEGSR
+019500000612     C*
+019600000612     C* REPERISCE L'ECCEZIONE POSTE
+019700000612     C                     MOVELI98CAP    WCAP
+019800000612     C                     MOVELI98TFP    WTFP
+019900000612     C                     EXSR LETPPE
+020000000612IF  1C           TROPPE    IFEQ 'S'                        *ECCEZIONE TROVATA
+020100000612     C                     EXSR OUTPPE                     *DATI ECCEZIONE IN OUT
+020200000612E   1C                     ENDIF
+020300000612     C*
+020400000612     C                     ENDSR
+020500000612     C*------------------------------------------------------------------------*
+020600000612     C* LETTURA ECCEZIONI LINEE/ZONE POSTE
+020700000612     C*  - INPUT : WCAP, WTFP
+020800000612     C*  - OUTPUT: TROPPE (S/N)
+020900000612     C*------------------------------------------------------------------------*
+021000000612     C           LETPPE    BEGSR
+021100000612     C*
+021200000612     C* AZZERA LE VARIABILI DI LAVORO
+021300000612     C                     MOVEL'S'       TROPPE           *TROVATO
+021400000612     C                     MOVEL*OFF      *IN99
+021500000612     C*
+021600000612     C                     Z-ADDI98VER    KPEVER
+021700000612     C                     MOVELI98NAR    KPENAR
+021800000612     C                     MOVELWCAP      KPECAP
+021900000612     C                     MOVELWTFP      KPETFP
+022000000612     C           KEYPPE    CHAINAZPPE01L             99
+022100000612IF  1C           *IN99     IFEQ *ON                        *NON TROVATO
+022200000612     C           PPEATB    ORNE *BLANKS                    *ANNULLATO
+022300000612     C                     MOVEL'N'       TROPPE           *NON TROVATO
+022400000612E   1C                     ENDIF
+022500000612     C*
+022600000612     C                     ENDSR
+022700000612     C*------------------------------------------------------------------------*
+022800000612     C* IMPOSTA I CAMPI -ECCEZIONI- IN QUELLI DI OUTPUT DELLA DS
+022900000612     C*------------------------------------------------------------------------*
+023000000612     C           OUTPPE    BEGSR
+023100000612     C*
+023200000612     C* ----GENERALI----
+023300000612IF  1C           I98LIL    IFNE 'F'                        *SE LIV LNA/ZNC <> FDEP
+023400000612     C                     Z-ADDPPELNA    O98LNA           *LINEA ARRIVO
+023500000612     C                     Z-ADDPPEZNC    O98ZNC           *ZONA CONSEGNA
+023600000612E   1C                     ENDIF
+023700000612     C* ---ECCEZIONI---
+023800000612     C                     Z-ADDPPELNA    O98ELA
+023900000612     C                     Z-ADDPPEZNC    O98EZC
+024000000612     C*
+024100000612     C                     ENDSR
+024200000421     C*------------------------------------------------------------------------*
+024300000421     C* PORTA I CAMPI DI CAP/LOCALITA' NEGLI OUT GENERALI
+024400000421     C*------------------------------------------------------------------------*
+024500000421     C           OUTGEN    BEGSR
+024600000421     C*
+024700000421     C* LOCALITA'
+024800000421IF  1C           I98TCN    IFEQ '4'                        *CONTROLLO LOCALITA'
+024900000421     C           I98TCN    OREQ '7'
+025000000421     C                     Z-ADDO98LLA    O98LNA           *LINEA ARRIVO
+025100000421     C                     Z-ADDO98LZC    O98ZNC           *ZONA CONSEGNA
+025200000421     C                     Z-ADDO98LUP    O98UPI           *UFFICIO POSTALE
+025300000421IF  2C           I98FFD    IFEQ 'S'                        *FERMO DEPOSITO
+025400000511     C                     Z-ADDO98LZF    O98ZFD           *Z.FDEPOSITO
+025500000511     C                     Z-ADDO98LZF    O98ZNC           *Z.CONSEGNA=Z.FDEPOSITO
+025600000421E   2C                     ENDIF
+025700000421E   1C                     ENDIF
+025800000421     C*
+025900000421     C* CAP
+026000000421IF  1C           I98TCN    IFEQ '3'                        *CONTROLLO CAP
+026100000421     C           I98LIV    ORNE 'L'                        *DATAO LOC = DATI CAP
+026200000421     C                     Z-ADDO98CLA    O98LNA           *LINEA ARRIVO
+026300000421     C                     Z-ADDO98CZC    O98ZNC           *ZONA CONSEGNA
+026400000421     C                     Z-ADDO98CUP    O98UPI           *UFFICIO POSTALE
+026500000421IF  2C           I98FFD    IFEQ 'S'                        *FERMO DEPOSITO
+026600000511     C                     Z-ADDO98CZF    O98ZFD           *Z.FERMO DEPOSITO
+026700000421     C                     Z-ADDO98CZF    O98ZNC           *Z.CONSEGNA=Z.FDEPOSITO
+026800000421E   2C                     ENDIF
+026900000421E   1C                     ENDIF
+027000000421     C*
+027100000421     C                     ENDSR
+027200000421     C*------------------------------------------------------------------------*
+027300000421     C* REPERISCE ALTRI DATI DALLA LINEA ARRIVO CALCOLATA
+027400000421     C*------------------------------------------------------------------------*
+027500000421     C           REPPAE    BEGSR
+027600000421     C*
+027700000421     C* REPERISCE LA LINEA ARRIVO POSTE
+027800000421     C                     MOVELO98LNA    WTFA
+027900000421     C                     EXSR LETPAE
+028000000421IF  1C           TROPAE    IFEQ 'S'                        *ARRIVO TROVATO
+028100000421     C                     EXSR OUTPAE                     *DATI ARRIVO IN OUT
+028200000421X   1C                     ELSE                            *ARRIVO NON TROVATO
+028300000421     C                     MOVELMSG,9     $MSG
+028400000421     C                     EXSR ERRORE                     *ERRORE
+028500000421E   1C                     ENDIF
+028600000421     C*
+028700000421     C                     ENDSR
+028800000421     C*------------------------------------------------------------------------*
+028900000421     C* LETTURA ARRIVO POSTE
+029000000421     C*  - INPUT : WTFA
+029100000421     C*  - OUTPUT: TROPAE (S/N)
+029200000421     C*------------------------------------------------------------------------*
+029300000421     C           LETPAE    BEGSR
+029400000421     C*
+029500000421     C* AZZERA LE VARIABILI DI LAVORO
+029600000421     C                     MOVEL'N'       TROPAE           *NON TROVATO
+029700000421     C                     MOVEL*OFF      *IN99
+029800000421     C*
+029900000421     C                     MOVEL'A'       KAEEPA
+030000000421     C                     Z-ADD*ZEROS    KAETFP
+030100000421     C                     Z-ADDWTFA      KAETFA
+030200000421     C           KEYPAE    SETLLAZPAE01L
+030300000421     C           KEYPAE    READEAZPAE01L                 99
+030400000421DO  1C           *IN99     DOWEQ*OFF
+030500000421IF  2C           PAEATB    IFEQ *BLANKS                    *NO ANNULLATO
+030600000421IF  3C           I98DAT    IFGE PAEDDE                     *VALIDO
+030700000421     C           I98DAT    ANDLEPAEDSC
+030800000511     C                     MOVEL'S'       TROPAE           *TROVATO
+030900000421     C                     LEAVE                           *USCITA CICLO
+031000000421E   3C                     ENDIF
+031100000421E   2C                     ENDIF
+031200000421     C           KEYPAE    READEAZPAE01L                 99
+031300000421E   1C                     ENDDO
+031400000421     C*
+031500000421     C                     ENDSR
+031600000421     C*------------------------------------------------------------------------*
+031700000421     C* IMPOSTA I CAMPI -ARRIVO-  IN QUELLI DI OUTPUT DELLA DS -GENERALE-
+031800000421     C*------------------------------------------------------------------------*
+031900000421     C           OUTPAE    BEGSR
+032000000421     C*
+032100000421     C                     Z-ADDPAERS2    O98RS2
+032200000421     C                     MOVELPAERS1    O98RS1
+032300000421     C*
+032400000421     C                     ENDSR
+032500000421     C*------------------------------------------------------------------------*
+032600000421     C* AZZERA TUTTI I CAMPI OUTPUT DELLA DS
+032700000421     C*------------------------------------------------------------------------*
+032800000421     C           AZZERA    BEGSR
+032900000421     C*
+033000000421     C                     EXSR AZZGEN                     *AZZERA OUT GENERALE
+033100000421     C                     EXSR AZZPPC                     *AZZERA OUT CAP
+033200000421     C                     EXSR AZZPPL                     *AZZERA OUT LOCALITA'
+033300000421     C*
+033400000421     C                     ENDSR
+033500000421     C*------------------------------------------------------------------------*
+033600000421     C* AZZERA TUTTI I CAMPI OUTPUT -GENERALI-
+033700000421     C*------------------------------------------------------------------------*
+033800000421     C           AZZGEN    BEGSR
+033900000421     C*
+034000000421     C                     CLEARO98LNA
+034100000421     C                     CLEARO98ZNC
+034200000421     C                     CLEARO98ZFD
+034300000421     C                     CLEARO98UPI
+034400000421     C                     CLEARO98RS2
+034500000421     C                     CLEARO98RS1
+034600000421     C*
+034700000421     C                     ENDSR
+034800000421     C*------------------------------------------------------------------------*
+034900000421     C* AZZERA TUTTI I CAMPI OUTPUT -CAP-
+035000000421     C*------------------------------------------------------------------------*
+035100000421     C           AZZPPC    BEGSR
+035200000421     C*
+035300000421     C                     CLEARO98CLA
+035400000421     C                     CLEARO98CZC
+035500000421     C                     CLEARO98CZF
+035600000421     C                     CLEARO98CUP
+035700000421     C*
+035800000421     C                     ENDSR
+035900000421     C*------------------------------------------------------------------------*
+036000000421     C* AZZERA TUTTI I CAMPI OUTPUT -LOCALITA'-
+036100000421     C*------------------------------------------------------------------------*
+036200000421     C           AZZPPL    BEGSR
+036300000421     C*
+036400000421     C                     CLEARO98LLA
+036500000421     C                     CLEARO98LZC
+036600000421     C                     CLEARO98LZF
+036700000421     C                     CLEARO98LUP
+036800000421     C*
+036900000421     C                     ENDSR
+037000000421     C*------------------------------------------------------------------------*
+037100000421     C* GESTIONE ERRORI
+037200000421     C*------------------------------------------------------------------------*
+037300000421     C           ERRORE    BEGSR
+037400000421     C*
+037500000421     C                     EXSR AZZERA                     *AZZERA CAMPI OUT
+037600000421     C                     MOVEL'S'       $ERR             *ERRORE GENERICO
+037700000421     C                     MOVEL$MSG      O98MSG           *MESSAGGIO
+037800000421     C                     MOVE $MSG      O98ERR           *ERRORE
+037900000421     C*
+038000000421     C                     ENDSR
+038100000421     C*------------------------------------------------------------------------*
+038200000421     C* ROUTINE INIZIALE
+038300000421     C*------------------------------------------------------------------------*
+038400000421     C           RUTINZ    BEGSR
+038500000421     C*
+038600000421     C* AZZERA VARIABILI DI LAVORO
+038700000421     C                     MOVEL*BLANKS   TROPPC  1
+038800000421     C                     MOVEL*BLANKS   TROPPL  1
+038900000421     C                     MOVEL*BLANKS   TROPAE  1
+039000000612     C                     MOVEL*BLANKS   TROPPE  1
+039100000511     C                     MOVEL'N'       $ERR    1
+039200000421     C                     MOVEL*BLANKS   $MSG   78
+039300000421     C                     MOVEL*BLANKS   WCAP
+039400000421     C                     MOVEL*BLANKS   WLOC
+039500000421     C                     MOVEL*BLANKS   WTFA
+039600000612     C                     MOVEL*BLANKS   WTFP
+039700000421     C*
+039800000421     C* AZZERA TUTTI I CAMPI OUTPUT DELLA DS
+039900000421     C                     EXSR AZZERA
+040000000421     C*
+040100000421     C                     ENDSR
+040200000421     C*------------------------------------------------------------------------*
+040300000421     C* OPERAZIONI FINALI
+040400000421     C*------------------------------------------------------------------------*
+040500000421     C           FINSR     BEGSR
+040600000421     C*
+040700000421     C                     ENDSR
+040800000421     C*------------------------------------------------------------------------*
+040900000421     C* OPERAZIONI INIZIALI
+041000000421     C*------------------------------------------------------------------------*
+041100000421     C           *INZSR    BEGSR
+041200000421     C*---
+041300000421     C* RICEVIMENTO PARAMETRI
+041400000421     C*---
+041500000421     C           *ENTRY    PLIST
+041600000421     C                     PARM           TISI98
+041700000421     C*---
+041800000421     C* VARIABILI RIFERITE AL DATABASE
+041900000421     C*---
+042000000421     C           *LIKE     DEFN PPCVER    KPCVER           *AZPPC00F
+042100000421     C           *LIKE     DEFN PPCNAR    KPCNAR
+042200000421     C           *LIKE     DEFN PPCCAP    KPCCAP
+042300000421     C           *LIKE     DEFN PPLVER    KPLVER           *AZPPL00F
+042400000421     C           *LIKE     DEFN PPLNAR    KPLNAR
+042500000421     C           *LIKE     DEFN PPLCAP    KPLCAP
+042600000421     C           *LIKE     DEFN PPLLOC    KPLLOC
+042700000421     C           *LIKE     DEFN PAEEPA    KAEEPA           *AZPAE00F
+042800000612     C           *LIKE     DEFN PAETFP    KAETFP
+042900000421     C           *LIKE     DEFN PAETFA    KAETFA
+043000000612     C           *LIKE     DEFN PPEVER    KPEVER           *AZPPE00F
+043100000612     C           *LIKE     DEFN PPENAR    KPENAR
+043200000612     C           *LIKE     DEFN PPECAP    KPECAP
+043300000612     C           *LIKE     DEFN PPETFP    KPETFP
+043400000612     C           *LIKE     DEFN PPCCAP    WCAP             *DI LAVORO
+043500000421     C           *LIKE     DEFN PPLLOC    WLOC
+043600000421     C           *LIKE     DEFN PAETFA    WTFA
+043700000612     C           *LIKE     DEFN PPETFP    WTFP
+043800000421     C*---
+043900000421     C* CHIAVI DI LETTURA
+044000000421     C*---
+044100000421     C           KEYPPC    KLIST                           *AZPPC01L
+044200000421     C                     KFLD           KPCVER            -VERSIONE
+044300000421     C                     KFLD           KPCNAR            -NAZIONE
+044400000421     C                     KFLD           KPCCAP            -CAP
+044500000421     C           KEYPPL    KLIST                           *AZPPL01L
+044600000421     C                     KFLD           KPLVER            -VERSIONE
+044700000421     C                     KFLD           KPLNAR            -NAZIONE
+044800000421     C                     KFLD           KPLCAP            -CAP
+044900000421     C                     KFLD           KPLLOC            -LOCALITA'
+045000000421     C           KEYPAE    KLIST                           *AZPAE01L
+045100000421     C                     KFLD           KAEEPA            -PARTENZA/ARRIVO
+045200000421     C                     KFLD           KAETFP            -LINEA PARTENZA
+045300000421     C                     KFLD           KAETFA            -LINEA ARRIVO
+045400000612     C           KEYPPE    KLIST                           *AZPPE01L
+045500000612     C                     KFLD           KPEVER            -VERSIONE
+045600000612     C                     KFLD           KPENAR            -NAZIONE
+045700000612     C                     KFLD           KPECAP            -CAP
+045800000612     C                     KFLD           KPETFP            -TERMINAL PARTENZA
+045900000421     C*
+046000000421     C                     ENDSR
+046100000421     O*------------------------------------------------------------------------*
+046200000421** MSG - MESSAGGI
+046300000421TISI98R-                                                                     1 1
+046400000421TISI98R-                                                                     2 2
+046500000421TISI98R-                                                                     3 3
+046600000421TISI98R-                                                                     4 4
+046700000421TISI98R-                                                                     5 5
+046800000421TISI98R-                                                                     6 6
+046900000421TISI98R-                                                                     7 7
+047000000421TISI98R- CAP inesistente.                                                    8 8
+047100000421TISI98R- Linea arrivo non trovata.                                           9 9
+047200000421TISI98R- Tipo controllo errato                                               A10
+047300000421TISI98R- Località inesistente.                                               B11
+047400000421TISI98R-                                                                     C12
+047500000421TISI98R-                                                                     D13
+047600000421TISI98R-                                                                     E14
+047700000421TISI98R-                                                                     F15
+047800000421TISI98R-                                                                     G16
+047900000421TISI98R-                                                                     H17
+048000000421TISI98R-                                                                     I18
+048100000421TISI98R- 19                                                                  L19
+048200000421TISI98R- Errore generico.                                                    M20

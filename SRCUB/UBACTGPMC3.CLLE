@@ -1,0 +1,73 @@
+000100141111/* per compilare questo pgm bisogna creare il file QTEMP/WFSRCTMP mediante: */
+000200140120/*           DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE)         */
+000300141111/*                        OUTFILE(QTEMP/WFSRCTMP)                           */
+000400140120/* dando una libreria/file qualunque (non interessano i dati ma la struttura  */
+000500140120/* e poi cancellare il file */
+000600141111             PGM        PARM(&L &F &M &ESITO)
+000700941110
+000800980324/* Parametri in ingresso:                                                                         */
+000900141111/*              &L - Libreria (fissa GAITRASRC da chiamante)                                      */
+001000141111/*              &F - File sorgente (vuoto perché deve fare tutti)                                 */
+001100140625/*              &M - Membro sorgente                                                              */
+001200140116/*              &ESITO - esito */
+001300980326
+001400141111             DCLF       FILE(QTEMP/WFSRCTMP)
+001500140116             DCL        VAR(&L) TYPE(*CHAR) LEN(10)
+001600941110             DCL        VAR(&F) TYPE(*CHAR) LEN(10)
+001700140625             DCL        VAR(&M) TYPE(*CHAR) LEN(10)
+001800140116             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+001900140312
+002000140312/* Creo il file con tutti i membri presenti nel source file in input  */
+002100141111             IF         COND(&F = ' ') THEN(DO)
+002200141111             DSPFD      FILE(&L/*ALL) TYPE(*MBRLIST) +
+002300141111                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/WFSRCTMP)
+002400141113
+002500141113             MONMSG     MSGID(CPF0000) EXEC(DO)
+002600141113             CHGVAR     VAR(&Esito) VALUE(1)
+002700141113             GOTO       CMDLBL(FINE)
+002800141113             ENDDO
+002900141113
+003000141111             ENDDO
+003100141111             ELSE       CMD(DO)
+003200140312             DSPFD      FILE(&L/&F) TYPE(*MBRLIST) OUTPUT(*OUTFILE) +
+003300141111                          OUTFILE(QTEMP/WFSRCTMP)
+003400141113
+003500141113             MONMSG     MSGID(CPF0000) EXEC(DO)
+003600141113             CHGVAR     VAR(&Esito) VALUE(1)
+003700141113             GOTO       CMDLBL(FINE)
+003800141113             ENDDO
+003900141113
+004000141111             ENDDO
+004100140116
+004200141111/* leggo il file appena creato con la lista dei sorgenti per scandire i singoli membri */
+004300140116 RCVF:       RCVF       RCDFMT(QWHFDML)
+004400140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+004500140117/* non c'è un esito particolare perché dà errore anche a fine file */
+004600140116             GOTO       CMDLBL(FINE)
+004700140116             ENDDO
+004800140116
+004900140116/* la diagnostica deve essere fatta girare solo per RPGLE e/o SQLRPGLE */
+005000140116/* gli altri test li faccio nel pgm chiamato */
+005100160302  /*         IF         COND((&MLSEU2 *EQ 'RPGLE') *OR (&MLSEU2 *EQ +   */
+005200160302  /*                      'SQLRPGLE')) THEN(DO)                         */
+005300160302/* dal 2016/03/02 anche per i CLLE */
+005400160302             IF         COND((&MLSEU2 *EQ 'RPGLE') *OR (&MLSEU2 *EQ +
+005500160302                          'SQLRPGLE') *OR (&MLSEU2 *EQ 'CLLE')) THEN(DO)
+005600140116
+005700140116/* OVRDBF per programma RPG                                                                       */
+005800141113             OVRDBF     FILE(INPUTBND) TOFILE(&MLLIB/&MLFILE) MBR(&MLNAME) +
+005900140116                          OVRSCOPE(*JOB)
+006000140116
+006100140116/* Richiamo programma diagnostico                                                                 */
+006200141111             CALL       PGM(UBACTGPMR3) PARM(&MLLIB &MLFILE &MLNAME +
+006300141111                          &MLSEU2 &ESITO)
+006400140116
+006500140116/* Elimino le sostituzioni file attive e il membro dal file in QTEMP                              */
+006600140117             DLTOVR     FILE(INPUTBND) LVL(*JOB)
+006700140116
+006800140116             ENDDO
+006900140116
+007000140116             GOTO       CMDLBL(RCVF)
+007100140116ENDRCVF:
+007200980325
+007300140116 FINE:       ENDPGM

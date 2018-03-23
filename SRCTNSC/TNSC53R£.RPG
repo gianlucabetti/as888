@@ -1,0 +1,332 @@
+000100960910     H              J
+000200960910?     *--------------------------------------------------------------*
+000300960910      * TNSC53R                                                      *
+000400960910      *       *-----------------------------------------*            *
+000500960910      *        STAMPA CONTRASSEGNI X STATO ELABORAZIONE              *
+000600960910      *       *-----------------------------------------*            *
+000700960910      *                                                              *
+000800960910?     *--------------------------------------------------------------*
+000900960910     FTNCSB10LIF  E           K        DISK
+001000960910     F*---------
+001100960910     FTNCSA01LIF  E           K        DISK
+001200960910     F*---------
+001300960910     FTNCSBSWKO   E                    DISK
+001400960910?     *--------------------------------------------------------------*
+001500960910?     *  SCHIERE                                                     *
+001600960910?     *--------------------------------------------------------------*
+001700960910     E                    TCU        50  6               TAB FLAG CNT
+001800960910     E                    KCU        50  4 0             TAB CAPO CONTO
+001900960910?     *--------------------------------------------------------------*
+002000960910?     *  DS                                                          *
+002100960910?     *--------------------------------------------------------------*
+002200981007     ITIBS69    E DSTIBS69DS
+002300981007     ICNACO     E DSCNACO00F
+002400981007     ICNIND     E DSCNIND00F
+002500981007     ICNCLP     E DSCNCLP00F
+002600981007     IFNCLS     E DSFNCLS00F
+002700960910     IKPJBA     E DS
+002800960910      *
+002900960910     ITNSC52    E DSTNSC52DS
+003000010302     I*FTNSC96    E DSTNSC96DS
+003100980105     I*  Ds per ricezione dati di incasso
+003200010302     I*FCSBINC      DS
+003300010302     I*F                                      1  10 CSBNRA
+003400010302     I*F                                     11  180CSBDTE
+003500010302     I*F                                     19  230CSBABI
+003600010302     I*F                                     24  280CSBCAB
+003700010302     I*F                                     29  29 CSBTPA
+003800010302     I*F                                     30  30 CSBTPI
+003900010302     I*F                                     31  380CSBUDA
+004000010302     I*F                                     39  460CSBDTA
+004100010302     I*F                                     47  540CSBDDC
+004200010302     I*F                                     55  610CSBNDT
+004300010302     I*F                                     62  670CSBNRI
+004400010302     I*F                                     68  750CSBDRI
+004500980105     I*  Ds per ricezione dati di incasso
+004600010302     I*FCSBPAG      DS
+004700010302     I*F                                      1   1 CSBFPC
+004800010302     I*F                                      2   80CSBBNA
+004900010302     I*F                                      9  150CSBNDP
+005000010302     I*F                                     16  230CSBDDP
+005100010302     I*F                                     24  310CSBDRG
+005200010302     I*F                                     32  370CSBNRG
+005300010302     I*F                                     38  464CSBCMP
+005400960910      *
+005500960910     IUT§DSE    E DSUT§DSE0F
+005600960910     I                                      398 697 TCU
+005700960910     I                                    P 698 847 KCU
+005800960910     ICNCR80    E DS
+005900960910     I            DS
+006000960910     I                                        1   40CSBAAS
+006100960910     I                                        5   80CSBMGS
+006200960910     I                                        1   80CSBDSP
+006300960910     ITCUDS       DS
+006400960910     I                                        5   6 F56
+006500960910     I                                        3   4 F34
+006600960910     I           SDS
+006700960910     I                                        1  10 NOMPGM
+006800960910      *---------------------------------------------------------------*
+006900960910      *   C I C L O      P R I N C I P A L E                          *
+007000960910      *---------------------------------------------------------------*
+007100960910      *  Posizionamento iniziale
+007200960910     C                     EXSR POSINI
+007300960910      *  Loop letture
+007400960911     C           *IN30     DOWEQ'0'
+007500960910     C                     EXSR REDCSB
+007600960910     C                     END
+007700980105     C* RICHIAMO PGM X CHIUSURA IN LR
+007800010302     C*F                   CLEARTNSC96
+007900010302     C*F                   MOVEL'C'       D96TLA
+008000010302     C*F                   CALL 'TNSC96R'
+008100010302     C*F                   PARM           KPJBA
+008200010302     C*F                   PARM           TNSC96
+008300010302     C*F                   PARM           CSBINC
+008400010302     C*F                   PARM           CSBPAG
+008500980105      *  Fine
+008600990617     C                     MOVELTNSC52    KPJBU
+008700960910     C                     SETON                     LR
+008800960910      *---------------------------------------------------------------*
+008900960910      *  POSINI: Posizionamento iniziale
+009000960910      *---------------------------------------------------------------*
+009100960910     C           POSINI    BEGSR
+009200960910      *
+009300960910      *  Eseguo lettura per stato Contrassegno
+009400960910     C                     SELEC
+009500960910     C           D52SCE    WHEQ '1'                        Giacenti
+009600960910     C                     MOVEL'2'       KSTA
+009700010109     C           D52SCE    WHEQ '7'                        OMESSI
+009800010109     C                     MOVEL'3'       KSTA
+009900960910     C           D52SCE    WHEQ '2'                        Sospesi
+010000960910     C                     MOVEL'5'       KSTA
+010100960910     C           D52SCE    WHEQ '3'                        Storno Asse.
+010200960910     C                     MOVEL'6'       KSTA
+010300960910     C           D52SCE    WHEQ '4'                        Errata inte.
+010400960910     C                     MOVEL'7'       KSTA
+010500960910     C           D52SCE    WHEQ '5'                        Inc.in sede
+010600960910     C                     MOVEL'8'       KSTA
+010700960910     C           D52SCE    WHEQ '6'                        Annullati
+010800960910     C                     MOVEL'9'       KSTA
+010900960910     C                     SETON                     09
+011000960910     C                     ENDSL
+011100960910     C*  Primo posizionamento
+011200960910     C           KSTA      CHAINTNCSB10L             30
+011300960910     C*
+011400960910     C                     ENDSR
+011500960910      *---------------------------------------------------------------*
+011600960910      *  REDCSB: Lettura file
+011700960910      *---------------------------------------------------------------*
+011800960910     C           REDCSB    BEGSR
+011900010305      *
+012000960910      *  Verifico se record letto rientra nei limiti data spedizione
+012100960910     C           CSBDSP    IFGE D52DDS
+012200960910     C           CSBDSP    ANDLED52ADS
+012300980105     C* Controllo se C/Assegno infragruppo
+012400980105     C* devo richiamare il pgm per riconoscere i dati infragruppo
+012500010302     C*F                   CLEARTNSC96
+012600010302     C*F                   MOVEL*BLANKS   D96TLA
+012700010302     C*F                   MOVEL'E'       D96TPD
+012800010302     C*F                   MOVELKNSIF     D96NSI
+012900010302     C*F                   Z-ADDCSBAAS    D96AAS
+013000010302     C*F                   Z-ADDCSBLNP    D96LNP
+013100010302     C*F                   Z-ADDCSBLNA    D96LNA
+013200010302     C*F                   Z-ADDCSBNRS    D96NRS
+013300010302     C*F                   Z-ADDCSBNSP    D96NSP
+013400990611     C* Controllo il codice cliente da passare
+013500010302     C*F         CSBCDI    IFNE 0
+013600010302     C*F                   MOVELCSBCDI    D96CDI
+013700010302     C*F                   ELSE
+013800010302     C*F                   MOVELCSBKSC    D96CDI
+013900010302     C*F                   END
+014000980105     C* Richiamo pgm
+014100010302     C*F                   CALL 'TNSC96R'
+014200010302     C*F                   PARM           KPJBA
+014300010302     C*F                   PARM           TNSC96
+014400010302     C*F                   PARM           CSBINC
+014500010302     C*F                   PARM           CSBPAG
+014600000223     C*----------------------------------------------------*
+014700000223     C* Per gli stati 6, 7 e 8 ...
+014800000223     C*----------------------------------------------------*
+014900000223     C* QUESTO TEST E' VALIDO SOLO SE CI SONO SOLO 2 RAMI AZIENDALI
+015000000223     C*----------------------------------------------------*
+015100000223     C                     MOVEL'N'       WOK     1
+015200000223     C           CSBSTA    IFEQ 6
+015300000223     C           CSBSTA    OREQ 7
+015400000223     C           CSBSTA    OREQ 8
+015500000224     C* Se richiesta stampa per lna esamino C/Assegno solo se
+015600000224     C* quest'ultima è del mio ramo aziendale ....
+015700010305     C*F         D52ORD    IFEQ 'A'
+015800010305     C*F         D96RSI    ANDEQD96RLA
+015900000224     C* Se richiesta stampa per lnp esamino C/Assegno solo se
+016000000224     C* il ramo di pagamento è il mio ............
+016100000224     C* spedizione valida se non c'è TNCSG e la lna è del mio ramo
+016200000224     C* (no infragruppo)  ....
+016300010305     C*F         D96TRV    ORNE 'S'
+016400010305     C*F         D96RSI    ANDEQD96RLA
+016500010305     C*F         D52ORD    ANDEQ'P'
+016600000224     C* ....... oppure se c'è TNCSG (e la lna non è del mio ramo)
+016700010305     C*F         D96TRV    OREQ 'S'
+016800010305     C*F         D96RSI    ANDNED96RLA
+016900010305     C*F         D52ORD    ANDEQ'P'
+017000000223     C                     MOVEL'S'       WOK
+017100010305     C*F                   END
+017200010109      * . per gli stati 2, 5, 9 ragiono in base ai rami di lna ANCHE 3
+017300010305     C                     ELSE
+017400000223      *  e di LNP
+017500010305     C*F         D96RSI    IFEQ D96RLP
+017600010305     C*F         D52ORD    ANDEQ'P'
+017700010305     C*F         D96RSI    OREQ D96RLA
+017800010305     C*F         D52ORD    ANDEQ'A'
+017900000223     C                     MOVEL'S'       WOK
+018000010305     C*F                   END
+018100010305     C                     END
+018200000223     C* C/Assegno valido in base ragionamenti infragruppo
+018300010305     C*          WOK       IFEQ 'S'
+018400000223     C*
+018500010305     C           D52ORD    IFEQ 'P'
+018600010305     C           CSBLNP    ANDGED52LN1
+018700010305     C           CSBLNP    ANDLED52LN2
+018800010305     C                     Z-ADDCSBLNP    CSBKE1
+018900960910     C                     Z-ADD0         CSBKE3
+019000960910     C                     EXSR WRTREC
+019100960910     C                     END
+019200960910      *  verifico se record letto rientra nei limiti lna se richiesto
+019300960910      *  ordinamento x lna
+019400960910     C           D52ORD    IFEQ 'A'
+019500960911     C           CSBLNA    ANDGED52LN1
+019600960911     C           CSBLNA    ANDLED52LN2
+019700960910     C                     Z-ADDCSBLNA    CSBKE1
+019800960910     C                     Z-ADDCSBLNP    CSBKE3
+019900960910     C                     EXSR WRTREC
+020000960910     C                     END
+020100960910     C*
+020200010305     C                     END
+020300010305     C*F                   END
+020400960910     C*  Lettura successiva
+020500960910     C           KSTA      READETNCSB10L                 30
+020600010305     C*
+020700960910     C                     ENDSR
+020800960910      *---------------------------------------------------------------*
+020900960910      *  WRTREC: Scrittura file di work
+021000960910      *---------------------------------------------------------------*
+021100960910     C           WRTREC    BEGSR
+021200960910      *
+021300960910      *  Campi chiave
+021400960910     C                     Z-ADDCSBDSP    CSBKE2
+021500960910     C                     MOVELCSBNRS    CSBKE4
+021600960910     C                     MOVE CSBNSP    CSBKE4
+021700960910      *  provincia destinatario
+021800960910     C                     MOVELCSBPRO    CSBPRD
+021900960910      *  decodifica mittente
+022000960910     C           CSBCDI    IFNE 0
+022100960910     C                     Z-ADDCSBCDI    KKSC
+022200960910     C                     ELSE
+022300960910     C                     Z-ADDCSBKSC    KKSC
+022400960910     C                     END
+022500960910     C*
+022600980105     C* Se lnp no del mio ramo imposto dati cliente infragr. (mitt.)
+022700010305     C*F         D96RSI    IFNE D96RLP
+022800010305     C*F                   MOVELD96RAG    CSBRSM
+022900010305     C*F                   MOVELD96PRV    CSBPRM
+023000010305     C*F                   ELSE
+023100960910     C*  Controllo se devo cercare decodifica su CNACO O TNCSA
+023200960910     C                     MOVE KKSC      W8899   40
+023300960910     C           W8899     IFEQ 8888
+023400960910     C           W8899     OREQ 9999
+023500960910     C*  Se cliente vario decodfico sempre
+023600960910     C                     Z-ADDCSBAAS    KAAS
+023700960910     C                     Z-ADDCSBLNP    KLNP
+023800960910     C                     Z-ADDCSBNRS    KNRS
+023900960910     C                     Z-ADDCSBNSP    KNSP
+024000960910     C           KCSA      CHAINTNCSA01L             31
+024100960910     C           *IN31     IFEQ '0'
+024200960910     C                     MOVELCSARSD    CSBRSM
+024300960910     C                     MOVELCSAPRM    CSBPRM
+024400960910     C                     ELSE
+024500960910     C                     MOVEL*ALL'?'   CSBRSM
+024600960910     C                     MOVEL*BLANKS   CSBPRM
+024700960910     C                     END
+024800960910     C*
+024900960910     C                     ELSE
+025000960910     C*  Se cliente codificato decodico solo se cambia
+025100960910     C           KKSC      IFNE SAVCDI
+025200981007     C                     CLEARTIBS69
+025300981007     C                     CLEARCNACO
+025400981007     C                     CLEARCNIND
+025500981007     C                     CLEARCNCLP
+025600981007     C                     CLEARFNCLS
+025700981007     C                     MOVEL' '       I69TLA
+025800981007     C                     MOVELKNSIF     I69SIF
+025900981007     C                     Z-ADD0         I69KCC
+026000981007     C                     Z-ADDKKSC      I69KAC
+026100981007     C                     Z-ADDKKSC      I69KIN
+026200981007     C                     CALL 'TIBS69R'
+026300981007     C                     PARM           TIBS69
+026400981007     C                     PARM           CNACO
+026500981007     C                     PARM           CNIND
+026600981007     C                     PARM           CNCLP
+026700981007     C                     PARM           FNCLS
+026800981007     C                     Z-ADDKKSC      SAVCDI
+026900981007     C           O69ERR    IFNE *BLANK
+027000960910     C                     MOVELACORAG    CSBRSM
+027100960910     C                     MOVELINDPRV    CSBPRM
+027200960910     C                     ELSE
+027300960910     C                     MOVEL*ALL'?'   CSBRSM
+027400960910     C                     MOVEL*BLANKS   CSBPRM
+027500960910     C                     END
+027600960910     C                     END
+027700960910     C*
+027800010305     C*F                   END
+027900010305     C                     END
+028000960910     C*  Scrittura  work file
+028100960910     C                     WRITETNCSBS00
+028200960910     C*
+028300960910     C                     ENDSR
+028400960910      *---------------------------------------------------------------*
+028500960910      *  *INZSR: Operazioni iniziali
+028600960910      *---------------------------------------------------------------*
+028700960910     C           *INZSR    BEGSR
+028800960910     C*
+028900960910     C           *ENTRY    PLIST
+029000960910     C                     PARM           KPJBA
+029100960910     C                     MOVELKPJBU     TNSC52
+029200960910     C* Richiamo XPARUT
+029300960910     C                     Z-ADD1         CODUT
+029400960910     C                     CALL 'X§PARUT'
+029500960910     C                     PARM           UT§DSE
+029600960910     C* Ricerca capoconti
+029700960910     C                     Z-ADD1         X       30
+029800960910     C                     DO   50        X
+029900960910     C                     MOVE TCU,X     TCUDS
+030000960910     C*  Capoconto Clienti
+030100960910     C           F56       IFEQ 'CG'
+030200960910     C           F34       ANDEQ'01'
+030300960910     C                     Z-ADDKCU,X     KCI     40
+030400960910     C                     END
+030500960910     C                     END
+030600960910     C*
+030700960910     C* Definisco chiavi di accesso ai file
+030800960910     C           KACO      KLIST
+030900960910     C                     KFLD           KKUT
+031000960910     C                     KFLD           KKCC
+031100960910     C                     KFLD           KKSC
+031200960910     C           KIND      KLIST
+031300960910     C                     KFLD           KKUT
+031400960910     C                     KFLD           KKCC
+031500960910     C                     KFLD           KKSC
+031600960910     C           KCSA      KLIST
+031700960910     C                     KFLD           KAAS
+031800960910     C                     KFLD           KLNP
+031900960910     C                     KFLD           KNRS
+032000960910     C                     KFLD           KNSP
+032100960910     C* Definisco variabili
+032200960910     C           *LIKE     DEFN ACOKUT    KKUT
+032300960910     C           *LIKE     DEFN ACOKCC    KKCC
+032400960910     C           *LIKE     DEFN ACOKSC    KKSC
+032500960910     C           *LIKE     DEFN CSBAAS    KAAS
+032600960910     C           *LIKE     DEFN CSBLNP    KLNP
+032700960910     C           *LIKE     DEFN CSBNRS    KNRS
+032800960910     C           *LIKE     DEFN CSBNSP    KNSP
+032900960910     C           *LIKE     DEFN CSBSTA    KSTA
+033000960910     C           *LIKE     DEFN CSBCDI    SAVCDI
+033100980105     C*
+033200960910     C                     ENDSR

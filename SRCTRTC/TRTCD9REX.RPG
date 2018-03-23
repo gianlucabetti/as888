@@ -1,0 +1,553 @@
+000100970722     H*------------------------------------------------------------------------*
+000200971113     H* SALVATAGGIO BARTVAS/SDIVAS + INTERSCAMBIO SU CASSETTA - PARAMETRI      *
+000300970722     H*------------------------------------------------------------------------*
+000400970722     H              J
+000500970722     F*------------------------------------------------------------------------*
+000600970722     F* DATA BASE
+000700970722     F*------------------------------------------------------------------------*
+000800971113     FTRTCD9D CF  E                    WORKSTN      KINFDS DEVDS1
+000900971113     F                                        MSGULTKSFILE TCD9DVM
+001000970722     E*------------------------------------------------------------------------*
+001100970722     E* SCHIERE
+001200970722     E*------------------------------------------------------------------------*
+001300970722     E*-------------------
+001400970722     E* SCHIERE A TEMPO DI COMPILAZIONE
+001500970722     E*-------------------
+001600970722     E                    MSG     1  20 78               *MESSAGGI
+001700970722     E                    FUN     1  31 40               *FUNZ.VIDEO
+001800970722     E*-------------------
+001900970722     E* SINGOLE SCHIERE ALL'INTERNO DELLA RIGA FUNZIONI
+002000970722     E*-------------------
+002100970722     E                    FFU        31  6               *FUNZIONE
+002200970722     E                    FDE        31 19               *DESCRIZIONE FUNZIONE
+002300970722     E                    FAT        31  1               *FUNZIONE ATTIVA S/N
+002400970722     E*-------------------
+002500970722     E* TABELLA DESCRIZIONI A VIDEO
+002600970722     E*-------------------
+002700970722     E                    FUV         8 19               *FUNZIONI A VIDEO
+002800970722     E*-------------------
+002900970722     E* TABELLA TASTI FUNZIONALI PREMUTI
+003000970722     E*-------------------
+003100970722     E                    KEYS       40  1
+003200970722     I*------------------------------------------------------------------------*
+003300970722     I* INPUT
+003400970722     I*------------------------------------------------------------------------*
+003500970722     I*-------------------
+003600970722     I* RIDEFINIZIONE SCHIERA -FUD- (FUNZIONI)
+003700970722     I*-------------------
+003800970722     IDSFUN     E DS
+003900970722     I                                        1  40 FUNRIG
+004000970722     I*-------------------
+004100970722     I* PARAMETRI CHIAMATA CL XMSG (GESTIONE MESSAGGI AL PGM)
+004200970722     I*-------------------
+004300970722     IDSMSG     E DS
+004400970722     I*-------------------
+004500970722     I* DS PER GESTIONE TASTI FUNZIONALI
+004600970722     I*-------------------
+004700970722     IDSKEYS    E DS
+004800970722     I                                        1  40 KEYRIG
+004900970722     I*-------------------
+005000970722     I* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+005100970722     I*-------------------
+005200970722     I           SDS
+005300970722     I                                      254 263 USER                  UTENTE
+005400970722     I*-------------------
+005500970722     I* RIDEFINIZIONE INFDS DEL FILE VIDEO
+005600970722     I*-------------------
+005700970722     IDEVDS1      DS
+005800970722     I                                      369 369 KEY
+005900970722     I                                      370 371 CURSOR
+006000970722     I*-------------------
+006100970722     I* DS "XFIL" - REPERIMENTO DATI UTENTE
+006200970722     I*-------------------
+006300970722     IDSFIL     E DS
+006400971113     I*------------------
+006500971113     I* DS PARAMETRI LANCIO
+006600971113     I*------------------
+006700971113     IPARAM      IDS
+006800980121     I                                        1  10 PARLIB
+006900980121     I                                       11  20 PARDEV
+007000970723     I*-------------------
+007100970722     I* ARCHITETTURA
+007200970722     I*-------------------
+007300970722     IKPJBA     E DS
+007400970722     C*------------------------------------------------------------------------*
+007500970722     C* MAIN LINE
+007600970722     C*------------------------------------------------------------------------*
+007700970722     C*
+007800970722     C* CICLO FINO A CHE:
+007900970722DO  1C           $FINE     DOUEQ'1'
+008000970722     C*
+008100970722     C                     MOVEL'0'       $ERR             *FLAG ERRORE
+008200970722     C*
+008300970722     C* CONTROLLA GESTIONE VIDEO
+008400970722IF  2C           $GES      IFEQ 'V1'
+008500970722     C                     EXSR GESV1                      *PARAMETRI
+008600970722E   2C                     ENDIF
+008700970722     C*
+008800970722E   1C                     ENDDO
+008900970722     C*
+009000970722     C                     SETON                     LR
+009100970722     C*------------------------------------------------------------------------*
+009200970722     C* GESV1 - GESIONE PRIMO VIDEO
+009300970722     C*------------------------------------------------------------------------*
+009400970722     C           GESV1     BEGSR
+009500970722     C*
+009600970722IF  1C           $TESVD    IFEQ '1'                        TESTATA DA RIEMETTERE
+009700970722     C                     EXSR CARV1                      *CARICA VIDEO
+009800970722E   1C                     ENDIF
+009900970722     C*
+010000970722IF  1C           MSGULT    IFEQ *ZEROS                     *SE CI SONO MESSAGGGI
+010100970722     C                     MOVEL*BLANKS   $MSG
+010200970722     C                     EXSR CARMSG                     *CARICA MESSAGGIO
+010300970722E   1C                     ENDIF
+010400970722     C                     EXSR OUTMSG                     *EMETTE MESSAGGI
+010500970722     C*
+010600971113     C                     EXFMTTCD9DV1                    *PARAMETRI
+010700970722     C*
+010800970722     C                     EXSR CONFUN                     *CONTROLLA TASTI FUNZ
+010900970722     C*
+011000970722IF  1C           $ERR      IFEQ '0'                        *TASTO ABILITATO
+011100970722SL  2C                     SELEC
+011200970722     C           KEY       WHEQ ENTER
+011300970722     C                     EXSR ENTV1                      *ENTER--> DECODIFICA
+011400970722     C           KEY       WHEQ F6
+011500970722     C                     EXSR F06GES                     *F06 --> LANCIO
+011600970722     C                     OTHER
+011700970722     C                     EXSR FUNSTD                     *GEST.TASTI STANDARD
+011800970722E   2C                     ENDSL
+011900970722E   1C                     ENDIF
+012000970722     C*
+012100970722     C                     ENDSR
+012200970722     C*------------------------------------------------------------------------*
+012300970722     C* CARV1 - CARICAMENTO PRIMO VIDEO
+012400970722     C*------------------------------------------------------------------------*
+012500970722     C           CARV1     BEGSR
+012600970722     C*
+012700970722     C                     MOVEL'V1'      $GES             *GESTIONE ATTUALE
+012800970722     C*
+012900970722     C                     EXSR CARFUN                     *CARICA FUNZIONI
+013000970722     C                     EXSR OUTFUN                     *EMETTE FUNZIONI
+013100970722     C*
+013200971113     C                     WRITETCD9DVT                    *TESTATA
+013300971113     C                     WRITETCD9DVF                    *FUNZIONI
+013400970722     C*
+013500970722     C                     ENDSR
+013600970722     C*------------------------------------------------------------------------*
+013700970722     C* ENTV1 - GESTIONE TASTO "ENTER" PRIMO VIDEO
+013800970722     C*------------------------------------------------------------------------*
+013900970722     C           ENTV1     BEGSR
+014000970722     C*
+014100970722     C* CONTROLLA I CAMPI IMMESSI
+014200970722     C                     EXSR DECODI
+014300970722     C*
+014400970722     C                     ENDSR
+014500970722     C*------------------------------------------------------------------------*
+014600970722     C* F06GES - GESTIONE TASTO F06 ==> CONFERMA LANCIO
+014700970722     C*------------------------------------------------------------------------*
+014800970722     C           F06GES    BEGSR
+014900970722     C*
+015000970722     C* CONTROLLA I CAMPI IMMESSI
+015100970722     C                     EXSR DECODI
+015200970722     C*
+015300970722     C* LANCIA PROGRAMMA DI GUIDA
+015400970722IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+015500971113     C                     MOVELV1CLIB    PARLIB           *LIBRERIA
+015600980121     C                     MOVELV1CDEV    PARDEV           *UNITA' NAST
+015700980121     C                     MOVEL'TCD8'    KCOAZ
+015800970722     C                     MOVELPARAM     KPJBU
+015900970722     C                     CALL 'BCH10'
+016000970722     C                     PARM           KPJBA
+016100970722     C                     MOVEL'1'       $FINE            *FINE PROGRAMMA
+016200970722E   1C                     ENDIF
+016300970722     C*
+016400970722     C                     ENDSR
+016500970722     C*------------------------------------------------------------------------*
+016600970722     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+016700970722     C*------------------------------------------------------------------------*
+016800970722     C           DECODI    BEGSR
+016900970722     C*
+017000970723     C* REIMPOSTA INDICATORI DI ERRORE SUI CAMPI
+017100980121     C                     SETOF                     6061
+017200970723     C*--------------------
+017300971113     C* LIBRERIA
+017400970723     C*--------------------
+017500970724IF  1C           $ERR      IFEQ '0'
+017600971113IF  2C           V1CLIB    IFEQ *BLANKS
+017700970723     C                     MOVEL'1'       $ERR
+017800970723     C                     MOVELMSG,7     $MSG
+017900970723     C                     EXSR CARMSG
+018000971113     C                     SETON                     60
+018100970723E   2C                     ENDIF
+018200980121IF  2C           V1CDEV    IFEQ *BLANKS
+018300980121     C                     MOVEL'1'       $ERR
+018400980121     C                     MOVELMSG,8     $MSG
+018500980121     C                     EXSR CARMSG
+018600980121     C                     SETON                     61
+018700980121E   2C                     ENDIF
+018800970723E   1C                     ENDIF
+018900970723     C*
+019000970722     C                     ENDSR
+019100970724     C*------------------------------------------------------------------------*
+019200970724     C* CARTAB - CARICA LE TABELLE OCCORRENTI
+019300970724     C*------------------------------------------------------------------------*
+019400970724     C           CARTAB    BEGSR
+019500970724     C*
+019600970724     C                     ENDSR
+019700970722     C*------------------------------------------------------------------------*
+019800970722     C* *INZSR - ROUTINE INIZIALE
+019900970722     C*------------------------------------------------------------------------*
+020000970722     C           *INZSR    BEGSR
+020100970722     C*--------------------
+020200970722     C* RICEVIMENTO PARAMETRI
+020300970722     C*--------------------
+020400970722     C           *ENTRY    PLIST
+020500970722     C                     PARM           KPJBA
+020600970724     C*--------------------
+020700971113     C* VARIABILI RIFERITE AL DATABASE
+020800970724     C*--------------------
+020900970724     C*--------------------
+021000971113     C* CHIAVI DI LETTURA
+021100970724     C*--------------------
+021200970722     C*
+021300970722     C* ESEGUE OPERAZIONI INIZIALI STANDARD
+021400970722     C                     EXSR INZSTD
+021500970724     C*
+021600970724     C* CARICA LE TABELLE OCCORRENTI
+021700970724     C                     EXSR CARTAB
+021800970722     C*
+021900970723     C* IMPOSTAZIONI INIZIALI VIDEO
+022000970722     C                     EXSR IMPVID
+022100970722     C*
+022200970722     C* EMETTE PRIMO FORMATO VIDEO
+022300970722     C                     EXSR CARV1
+022400970722     C*
+022500970722     C                     ENDSR
+022600970723     C*------------------------------------------------------------------------*
+022700970723     C* IMPVID - IMPOSTAZIONI INIZIALI VIDEO
+022800970723     C*------------------------------------------------------------------------*
+022900970723     C           IMPVID    BEGSR
+023000971113     C*
+023100980121     C                     MOVEL'TAP01   'V1CDEV
+023200971113     C                     MOVELKNSIF     A3      3
+023300971113IF  1C           A3        IFEQ 'GAI'
+023400971113     C                     MOVEL'BARTVAS' V1CLIB
+023500971113X   1C                     ELSE
+023600971113     C                     MOVEL'SDIVAS'  V1CLIB
+023700971113E   1C                     ENDIF
+023800970723     C*
+023900970723     C                     ENDSR
+024000970722     C*------------------------------------------------------------------------*
+024100970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024200970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024300970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024400970722     C*      LA PARTE DI SPECIFICHE 'C' SOTTOSTANTE SI RIFA' A PARTICOLARI
+024500970722     C*      STANDARDS  DI  PROGRAMMAZIONE  E NELLA MAGGIOR PARTE DEI CASI
+024600970722     C*      NON  E'  NECESSARIO  MODIFICARLA, NEL CASO  FARE  ATTENZIONE.
+024700970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024800970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+024900970722     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+025000970722     C*------------------------------------------------------------------------*
+025100970722     C* INZSTD - ROUTINE INIZIALE STANDARD
+025200970722     C*------------------------------------------------------------------------*
+025300970722     C           INZSTD    BEGSR
+025400970722     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+025500970722     C                     CALL 'XKEYS'
+025600970722     C                     PARM           DSKEYS
+025700970722     C                     MOVEAKEYRIG    KEYS             *CARICA SCHIERA FUNZ.
+025800970722     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+025900970722     C           XMSGPA    PLIST
+026000970722     C                     PARM           DSMSMS
+026100970722     C                     PARM           DSMSPG
+026200970722     C                     PARM           DSMSKE
+026300970722     C                     PARM           DSMSER
+026400970722     C* IMPOSTA PER CL=XMSG (MESSAGGI ALLA CODA PGM), FISSI IN TUTTO IL PGM
+026500971113     C                     MOVEL'TRTCD9R' DSMSPG           *NOME PGM CHIAMANTE
+026600971113     C                     MOVEL'TRTCD9R' VMCQUE           *CODA MESSAGGI DESTIN
+026700970722     C                     MOVEL*BLANKS   VMCKEY           *CHIAVE MESSAGGIO
+026800970722     C                     MOVEL*BLANKS   DSMSMS           *MESSAGGIO
+026900970722     C* INIZIALIZZO FLAG CONTROLLO PGM
+027000970722     C                     MOVEL'0'       $ERR    1        *ERRORE
+027100970722     C                     MOVEL'0'       $F03    1        *PREMUTO TASTO F03
+027200970722     C                     MOVEL*BLANKS   $GES    2        *GESTIONE VIDEO
+027300970722     C                     MOVEL*BLANKS   $MSG   80        *MESSAGGI
+027400970722     C                     MOVEL'0'       $FINE   1        *FINE PGM
+027500970722     C                     MOVEL'1'       $TESVD  1        *1=RIEMETT.TEST.VIDEO
+027600970722     C                     MOVEL'I'       $TGES   1        *I=INTER. G=GESTIONE
+027700970722     C* LANCIO ROUTINE PER VERIFICARE SE
+027800970722     C* SONO IN SEDE, IN FILIALE DI 1° LIVELLO O IN FILIALE DI 2° LIVELLO
+027900970722     C* E PER RECUPERARE LA RAGIONE SOCIALE DELL'UTENTE
+028000970722     C                     CALL 'XFIL'
+028100970722     C                     PARM           DSFIL
+028200970722     C* POSIZIONE MINIMA E MASSIMA DEL CURSORE PER GESTIONE MESSAGGI
+028300970722     C                     BITOF'01234567'POSMI1  1
+028400970722     C                     BITOF'01234567'POSMI2  1
+028500970722     C                     BITOF'01234567'POSMA1  1
+028600970722     C                     BITOF'01234567'POSMA2  1
+028700970722     C                     BITON'34'      POSMI1  1        *18
+028800970722     C                     BITON'7'       POSMI2  1        *01
+028900970722     C                     BITON'34'      POSMA1  1        *18
+029000970722     C                     BITON'0'       POSMA2  1        *80
+029100970722     C                     MOVE POSMI2    POSMIN  2
+029200970722     C                     MOVELPOSMI1    POSMIN
+029300970722     C                     MOVE POSMA2    POSMAX  2
+029400970722     C                     MOVELPOSMA1    POSMAX
+029500970722     C                     ENDSR
+029600970722     C*------------------------------------------------------------------------*
+029700970722     C* FUNSTD - LANCIA SUBROUTINE STANDARD
+029800970722     C*------------------------------------------------------------------------*
+029900970722     C           FUNSTD    BEGSR
+030000970722     C                     SELEC
+030100970722     C           KEY       WHEQ F3
+030200970722     C                     EXSR F03STD
+030300970722     C           KEY       WHEQ F12
+030400970722     C                     EXSR F12STD
+030500970722     C           KEY       WHEQ F24
+030600970722     C                     EXSR F24STD
+030700970722     C                     OTHER
+030800970722     C                     MOVELMSG,2     $MSG
+030900970722     C                     EXSR CARMSG
+031000970722     C                     ENDSL
+031100970722     C                     ENDSR
+031200970722     C*------------------------------------------------------------------------*
+031300970722     C* F03STD - GEST. TASTO FUNZ. F03 STANDARD ==> FINE
+031400970722     C*------------------------------------------------------------------------*
+031500970722     C           F03STD    BEGSR
+031600970722     C*
+031700970722     C* IMPOSTO FLAG DI FINE PROGRAMMA
+031800970722     C                     MOVEL'1'       $FINE
+031900970722     C*
+032000970722     C                     ENDSR
+032100970722     C*------------------------------------------------------------------------*
+032200970722     C* F12STD - GEST. TASTO FUNZ. F12 STANDARD ==> FINE
+032300970722     C*------------------------------------------------------------------------*
+032400970722     C           F12STD    BEGSR
+032500970722     C*
+032600970722     C* IMPOSTO FLAG DI FINE PROGRAMMA
+032700970722     C                     MOVEL'1'       $FINE
+032800970722     C*
+032900970722     C                     ENDSR
+033000970722     C*------------------------------------------------------------------------*
+033100970722     C* F24STD - GEST. TASTO FUNZ. F24 STANDARD ==> ALTRI TASTI
+033200970722     C*------------------------------------------------------------------------*
+033300970722     C           F24STD    BEGSR
+033400970722     C*
+033500970722     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+033600970722     C                     EXSR OUTFUN
+033700970722     C*
+033800970722     C                     ENDSR
+033900970722     C*------------------------------------------------------------------------*
+034000970722     C* CARMSG - CARICA MESSAGGIO NEL SUBFILE MESSAGGI E LO INVIA ALLA
+034100970722     C*          CODA MESSAGGI DEL PGM
+034200970722     C*------------------------------------------------------------------------*
+034300970722     C           CARMSG    BEGSR
+034400970722     C* SE QUELLO CHE STO PER CARICARE E' IL PRIMO MESSAGGIO
+034500970722     C* PULISCO SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+034600970722     C           MSGULT    IFEQ 0
+034700970722     C                     MOVEL'1'       *IN40
+034800971113     C                     WRITETCD9DVK
+034900970722     C                     MOVEL'0'       *IN40
+035000970722     C                     ENDIF
+035100970722     C* INVIA MESSAGGIO ALLA CODA DEL PGM
+035200970722     C                     MOVEL$MSG      DSMSMS
+035300970722     C                     CALL 'XMSG'    XMSGPA
+035400970722     C           DSMSER    IFEQ 0
+035500970722     C                     MOVELDSMSKE    VMCKEY           *CHIAVE DEL MESSAGGIO
+035600970722     C                     ENDIF
+035700970722     C* CARICA IL MESSAGGIO NEL SUBFILE MESSAGGI
+035800970722     C                     ADD  1         MSGULT  40       *CHIAVE SFL MESS
+035900971113     C                     WRITETCD9DVM                    *SFL MESS
+036000970722     C* PULISCO CAMPO MESSAGGIO APPENA CARICATO
+036100970722     C                     MOVEL*BLANKS   $MSG
+036200970722     C                     ENDSR
+036300970722     C*------------------------------------------------------------------------*
+036400970722     C* OUTMSG - EMETTE A VIDEO IL SUBFILE MESSAGGI
+036500970722     C*------------------------------------------------------------------------*
+036600970722     C           OUTMSG    BEGSR
+036700970722     C* VISUALIZZAZIONE MESSAGGIO
+036800970722     C                     MOVEL'1'       *IN44            *SFLEND (+)
+036900971113     C                     WRITETCD9DVK                    *CONTR MESS
+037000970722     C* AZZERO LA CHIAVE DEL SUBFILE MESSAGGI
+037100970722     C                     Z-ADD*ZEROS    MSGULT
+037200970722     C                     ENDSR
+037300970722     C*------------------------------------------------------------------------*
+037400970722     C* CARFUN - CARICA LE SCHIERE PER LA GESTIONE DEI TASTI FUNZIONALI
+037500970722     C*          INPUT:  - FUN    (SCHIERA TASTI ABILITATI PER IL VIDEO ATTUALE)
+037600970722     C*          OUTPUT: - FFU    (SCHIERA FUNZIONI)
+037700970722     C*                  - FDE    (SCHIERA DESCRIZIONI FUNZIONI)
+037800970722     C*                  - FAT    (SCHIERA FLAG DI FUNZIONE ATTIVA S/N)
+037900970722     C*------------------------------------------------------------------------*
+038000970722     C           CARFUN    BEGSR
+038100970722     C                     Z-ADD*ZEROS    FUNULT  50       *ULTIMA FUNZ. VISUAL.
+038200970722     C           1         DO   31        I       50       --- 1 -->
+038300970722     C                     MOVELFUN,I     FUNRIG           *DS RIGA FUNZIONI
+038400970722     C                     MOVELFUNFUN    FFU,I            *FUNZIONE
+038500970722     C                     MOVELFUNDES    FDE,I            *DESCRIZIONE
+038600970722     C           DSFITI    IFEQ 'S'                        --- 2 --> *SEDE
+038700970722     C           $TGES     IFEQ 'G'                        *GESTIONE
+038800970722     C                     MOVELFUNASG    FAT,I            *FUNZIONE ATTIVA S/N
+038900970722     C                     ELSE                            *INTERROG.
+039000970722     C                     MOVELFUNASI    FAT,I
+039100970722     C                     ENDIF
+039200970722     C                     ELSE                            <-- 2 --> *FILIALE
+039300970722     C           $TGES     IFEQ 'G'                        *GESTIONE
+039400970722     C                     MOVELFUNAFG    FAT,I
+039500970722     C                     ELSE                            *INTERROG.
+039600970722     C                     MOVELFUNAFI    FAT,I
+039700970722     C                     ENDIF
+039800970722     C                     ENDIF                           <-- 2 ---
+039900970722     C           FAT,I     IFEQ 'E'                        *FLAG 'E'->SOLO EDP
+040000970722     C                     MOVELUSER      WEDP    3        *PROFILO
+040100970722     C           WEDP      IFEQ 'EDP'                      *SE PROFILO EDPXX
+040200970722     C                     MOVEL'S'       FAT,I            *ABILITO
+040300970722     C                     ELSE
+040400970722     C                     MOVEL'N'       FAT,I            *NON ABILITO
+040500970722     C                     ENDIF
+040600970722     C                     ENDIF
+040700970722     C                     ENDDO                           <-- 1 ---
+040800970722     C                     ENDSR
+040900970722     C*------------------------------------------------------------------------*
+041000970722     C* OUTFUN - EMETTE A VIDEO LE FUNZIONI ABILITATE
+041100970722     C*          INPUT:  - FUNULT (ULTIMA FUNZIONE EMESSA NEL VIDEO PRECEDENTE)
+041200970722     C*          OUTPUT: - VFD001-008 (CAMPI FUNZIONI A VIDEO)
+041300970722     C*                  - FUNULT (ULTIMA FUNZIONE EMESSA A VIDEO)
+041400970722     C*------------------------------------------------------------------------*
+041500970722     C           OUTFUN    BEGSR
+041600970722     C           1         DO   8         I                *PULIZIA FUNZIONI A
+041700970722     C                     MOVEL*BLANKS   FUV,I            *VIDEO
+041800970722     C                     ENDDO
+041900970722     C* CONTROLLO QUANTE FUNZIONI ATTIVE DA EMETTERE A VIDEO CI SONO
+042000970722     C                     Z-ADD*ZEROS    FUNNAT  20       *N.FUNZIONI ATTIVE
+042100970722     C           1         DO   31        I
+042200970722     C           FAT,I     IFEQ 'S'                        *FUNZIONE ATTIVA
+042300970722     C           FDE,I     ANDNE*BLANKS                    *DESCRIZIONE FUNZIONE
+042400970722     C                     ADD  1         FUNNAT
+042500970722     C                     ENDIF
+042600970722     C                     ENDDO
+042700970722     C* SE VI SONO PIU' DI 8 FUNZIONI ATTIVO IL TASTO F24
+042800970722     C           FUNNAT    IFGT 8
+042900970722     C                     MOVEL'S'       FAT,24           *FLAG ATTIVITA' FUNZ
+043000970722     C                     ENDIF
+043100970722     C* IMPOSTO IL N.DI FUNZIONI VISUALIZZABILI A 8, E SE SONO ATTIVE F23 E F24
+043200970722     C* (SE ATTIVE DA VISUALIZZARE SEMPRE) DIVENTANO 6
+043300971113     C                     Z-ADD9         FUNVIS  50
+043400970722     C           FAT,23    IFEQ 'S'
+043500970722     C                     SUB  1         FUNVIS
+043600970722     C                     ENDIF
+043700970722     C           FAT,24    IFEQ 'S'
+043800970722     C                     SUB  1         FUNVIS
+043900970722     C                     ENDIF
+044000970722     C* AGGIUNGO UNO ALL'ULTIMA FUNZIONE VISUALIZZATA PER AVERE LA 1A DA VISUALI
+044100970722     C                     Z-ADD*ZEROS    W       50
+044200970722     C                     ADD  1         FUNULT
+044300970722     C           FUNULT    IFGT 31
+044400970722     C                     Z-ADD1         FUNULT
+044500970722     C                     ENDIF
+044600970722     C* RICERCO LE OPZIONI ATTIVE E LE EMETTO A VIDEO
+044700970722     C           FUNULT    DO   31        I                --- 1 -->
+044800970722     C* SE HO GIA' RAGGIUNTO IL NUMERO DI FUNZIONI VISUALIZZABILI VADO A FINE
+044900970722     C           W         IFLT FUNVIS                     --- 2 -->
+045000970722     C* SE OPZIONE ATTIVA ED ESISTE LA DESCRIZIONE EMETTO A VIDEO
+045100970722     C           FAT,I     IFEQ 'S'                        --- 3 -->
+045200970722     C           FDE,I     ANDNE*BLANKS
+045300970722     C           I         IFEQ 23                         *TOLGO F23
+045400970722     C           I         OREQ 24                         *E F24
+045500970722     C                     ELSE
+045600970722     C                     ADD  1         W
+045700970722     C                     MOVELFDE,I     FUV,W
+045800970722     C                     ENDIF
+045900970722     C                     ENDIF                           <-- 3 ---
+046000970722     C* MEMORIZZO L'ULTIMO INDICE TRATTATO
+046100970722     C                     Z-ADDI         FUNULT
+046200970722     C                     ENDIF                           <-- 2 ---
+046300970722     C                     ENDDO                           <-- 1 ---
+046400970722     C* TRASFERISCO LE OPZIONI DALLA SCHIERA AI CAMPI VIDEO
+046500970722     C                     MOVELFUV,1     VFD001
+046600970722     C                     MOVELFUV,2     VFD002
+046700970722     C                     MOVELFUV,3     VFD003
+046800970722     C                     MOVELFUV,4     VFD004
+046900970722     C                     MOVELFUV,5     VFD005
+047000970722     C                     MOVELFUV,6     VFD006
+047100970722     C           FAT,23    IFEQ 'N'                        --- 1 -->
+047200970722     C           FAT,24    ANDEQ'N'
+047300970722     C                     MOVELFUV,7     VFD007
+047400970722     C                     MOVELFUV,8     VFD008
+047500970722     C                     ELSE                            <-- 1 -->
+047600970722     C           FAT,23    IFEQ 'S'                        --- 2 -->
+047700970722     C           FAT,24    ANDEQ'S'
+047800970722     C                     MOVELFDE,23    VFD007
+047900970722     C                     MOVELFDE,24    VFD008
+048000970722     C                     ELSE                            <-- 2 -->
+048100970722     C                     MOVELFUV,7     VFD007
+048200970722     C           FAT,23    IFEQ 'S'
+048300970722     C                     MOVELFDE,23    VFD008
+048400970722     C                     ELSE
+048500970722     C                     MOVELFDE,24    VFD008
+048600970722     C                     ENDIF
+048700970722     C                     ENDIF                           <-- 2 ---
+048800970722     C                     ENDIF                           <-- 1 ---
+048900970722     C                     MOVEL'0'       $TESVD           *REIMPOSTA EMIS TESTA
+049000970722     C                     ENDSR
+049100970722     C*------------------------------------------------------------------------*
+049200970722     C* CONFUN - CONTROLLA SE LA FUNZIONE SCELTA E' ATTIVA
+049300970722     C*           INPUT:  - KEY    (FUNZIONE PREMUTA - DA INFDS)
+049400970722     C*           OUTPUT: - FUNOK  (OPZIONE OK S/N)
+049500970722     C*                   - ERRORE SE FUNZIONE NON ATTIVA
+049600970722     C*------------------------------------------------------------------------*
+049700970722     C           CONFUN    BEGSR
+049800970722     C* RICERCA FUNZIONE SCELTA IN TABELLA FUNZIONI
+049900970722     C           1         DO   31        I                --- 1 -->
+050000970722     C           KEY       IFEQ KEYS,I                     --- 2 -->
+050100970722     C* CONTROLLO SE IL TASTO E' ATTIVO
+050200970722     C           FAT,I     IFNE 'S'                        --- 3 -->
+050300970722     C                     MOVELMSG,1     $MSG             *FUNZ.NON ACCETTABILE
+050400970722     C                     EXSR CARMSG
+050500970722     C                     MOVEL'1'       $ERR
+050600970722     C                     ENDIF                           <-- 3 ---
+050700970722     C                     ENDIF                           <-- 2 ---
+050800970722     C                     ENDDO                           <-- 1 ---
+050900970722     C                     ENDSR
+051000970722     C*------------------------------------------------------------------------*
+051100970722**   SCHIERA: MSG  (MESSAGGI)
+051200971113TRTCD9R- Tasto funzionale non valido.                                          1
+051300971113TRTCD9R- Tasto funzionale abilitato ma non gestito. Avvertire CED.             2
+051400971113TRTCD9R- Opzione non valida.                                                   3
+051500971113TRTCD9R- Opzione abilitata ma non gestita. Avvertire CED.                      4
+051600971113TRTCD9R- Inizio elenco.                                                        5
+051700971113TRTCD9R- Fine elenco.                                                          6
+051800971113TRTCD9R- Nome libreria errato                                                  7
+051900980121TRTCD9R- Nome Unità Errato
+052000971113TRTCD9R- 9
+052100971113TRTCD9R- 10
+052200970722** FUN  (PARAMETRI)       SEDE:GI FIL:GI   (G=GESTIONE,I=INTERROG.)
+052300970722F1    -                   -    NN     NN
+052400970722F2    -                   -    NN     NN
+052500970722F3    -F3=Fine            -    SS     SS
+052600970722F4    -                   -    NN     NN
+052700970722F5    -                   -    NN     NN
+052800970724F6    -F6=Conferma        -    SS     SS
+052900970722F7    -                   -    NN     NN
+053000970722F8    -                   -    NN     NN
+053100970722F9    -                   -    NN     NN
+053200970722F10   -                   -    NN     NN
+053300970722F11   -                   -    NN     NN
+053400970722F12   -F12=Ritorno        -    SS     SS
+053500970722F13   -                   -    NN     NN
+053600970722F14   -                   -    NN     NN
+053700970722F15   -                   -    NN     NN
+053800970722F16   -                   -    NN     NN
+053900970722F17   -                   -    NN     NN
+054000970722F18   -                   -    NN     NN
+054100970722F19   -                   -    NN     NN
+054200970722F20   -                   -    NN     NN
+054300970722F21   -                   -    NN     NN
+054400970722F22   -                   -    NN     NN
+054500970722F23   -                   -    NN     NN
+054600970722F24   -F24=Altri tasti    -    NN     NN
+054700970722ENTER -                   -    SS     SS
+054800970722ROLLUP-                   -    NN     NN
+054900970722ROLLDN-                   -    NN     NN
+055000970722HELP  -                   -    NN     NN
+055100970722PRINT -                   -    NN     NN
+055200970722BSPACE-                   -    NN     NN
+055300970722CLEAR -                   -    NN     NN

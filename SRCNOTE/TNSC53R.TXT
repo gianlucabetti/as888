@@ -1,0 +1,68 @@
+000100980105 =====================================================================
+000200980105 |Aut.|Data Mod.| Descrizione Modifica                               |
+000300980105 =====================================================================
+000400980105 : RE :05/01/98 : Devo esaminare i C/Assegni aventi o lnp o lna del mio
+000500980105 :    :         : ramo aziendale. Se la lna non è del mio ramo aziend.
+000600980105 :    :         : devo sostituire i dati di incasso con quelli di TNCSG
+000700980105 :    :         : (richiamo apposito pgm). Se la lnp non è del mio ramo
+000800980105 :    :         : devo sostituire i dati di pagam. e i dati del cliente
+000900980105 :    :         : con quelli infragruppo
+001000990611 : RE :11/06/99 : Eliminata call a TRUL15R (gestisce tutto TNSC96R)
+001100990611 :    :         : e modificata call a pgm Tnsc96R in quanto ad esso
+001200990611 :    :         : è delegata la scelta del calcolo del ramo aziendale
+001300990611 :    :         : del pagamento C/Assegno (se da cliente o lnp)
+001400990615 : RE :15/06/99 : Imposto flag tipo di ritorno dati documento a 'E'
+001500990615 :    :         : Sarà poi il programma chiamato a decidere se tornarmi
+001600990615 :    :         : i dati di incasso o quelli di pagamento
+001700000223 : RE :23/02/00 : Per considerare valido il C/Assegno in caso di C/Ass.
+001800000223 :    :         : in stato 2, 5, 9 in base alle logiche degli scoperti
+001900000223 :    :         : considero il C/Assegno valido se la lnp o la lna sono
+002000000223 :    :         : del mio ramo aziendale.
+002100000223 :    :         : Per quanto riguarda gli stati 6, 7, 8 che prevedono
+002200000223 :    :         : il pagamento devo escludere i C/Assegni che hanno sia
+002300000223 :    :         : la lna che il ramo aziendale di pagamento diverso dal
+002400000223 :    :         : mio. Non posso testare però direttamente il campo
+002500000223 :    :         : D96RMP in quanto sono cambiate più volte le logiche
+002600000223 :    :         : di attribuzione di quest'ultimo (prima si ragionava
+002700000223 :    :         : per lnp, poi x lnp/cod. cliente, poi per lnp origin/
+002800000223 :    :         : codice cliente) ed io potrei aver modificato un C/Ass.
+002900000223 :    :         : che è stato pagato in base a logiche diverse da quelle
+003000000223 :    :         : attuali, escludo i C/Assegni che non hanno infragruppo
+003100000223 :    :         : e hanno lna non del mio ramo (anche il ramo di pagam.
+003200000223 :    :         : sarà l'altro)
+003300000224 : RE :24/02/00 : Al fine di evitare confusioni e far si che il C/Ass.
+003400000224 :    :         : non compaia sia nel tabulato Bartolini che nel
+003500000224 :    :         : tabulato SDI per lo stesso tipo di stampa (stesso
+003600000224 :    :         : stato e stesso ordinamento) ho modificato le logiche
+003700000224 :    :         : di selezione del C/Assegno nel seguente modo:
+003800000224 :    :         : - per stato 2, 5, 9 ordinamento per lnp stampo il
+003900000224 :    :         :   C/Assegno se la lnp della spedizione originale
+004000000224 :    :         :   (se la bolla non è legata vale la lnp della
+004100000224 :    :         :   stessa) è del mio ramo aziendale
+004200000224 :    :         : - per tutti gli stati ordinamento per lna stampo il
+004300000224 :    :         :   C/Assegno se la lna della spedizione figlia
+004400000224 :    :         :   è del mio ramo aziendale
+004500000224 :    :         : - per stato 6, 7, 8 ordinamento per lnp stampo il
+004600000224 :    :         :   C/Assegno se il ramo di pagamento è del mio ramo
+004700000224 :    :         :   aziendale
+004800000224 :    :         :   Attenzione: per ramo aziendale di pagamento non
+004900000224 :    :         :           posso considerare quello che mi ritorna
+005000000224 :    :         :           dal richiamo del TNSC96R in qunato il
+005100000224 :    :         :           pagamento può essere avvenuto con una
+005200000224 :    :         :           logica diversa da quella attualmente
+005300000224 :    :         :           utilizzata. Il programma verifica se
+005400000224 :    :         :           il C/Assegno è o non è infragruppo:
+005500000224 :    :         :           nel primo caso lo conidsera valido
+005600000224 :    :         :           solo se la lna non è del mio ramo
+005700000224 :    :         :           (avendo solo 2 rami a questo punto
+005800000224 :    :         :           deve esserlo per forza quello di
+005900000224 :    :         :           pagamento). Nel secondo caso la lna
+006000000224 :    :         :           deve essere del mio ramo: se il C/Ass
+006100000224 :    :         :           non è infragruppo il ramo aziendale
+006200000224 :    :         :           della lna deve essere lo stesso di
+006300000224 :    :         :           quello di pagamento
+006400010109 : MM :09/01/01 : Inserita gestione stato 3 per C/A omessi
+006500010305 : MO :05/03/01 : Eliminati i ragionamenti tramite il TNSC96R & C.
+006600020806 : DC :06/08/02 : Il test su O69ERR era invertito e questo causava
+006700020806 :    :         : dei punti interrogativi nella ragione sociale del
+006800020806 :    :         : mittente.

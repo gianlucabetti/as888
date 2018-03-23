@@ -1,0 +1,3 @@
+000100080530     D CancellaPrimaNotaBatchProj...
+000200080530     D                 PR                  EXTPGM('YCODEL1R')
+000300080530     D  kpjba                              LIKEDS(kpjba)

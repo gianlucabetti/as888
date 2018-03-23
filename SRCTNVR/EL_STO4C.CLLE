@@ -1,0 +1,44 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200140404/* TISTO24 - STATISTICA controllo orari servizi                               */
+000300000000/*----------------------------------------------------------------------------*/
+000400051117 TISTO2C:    PGM        PARM(&KPJBA)
+000500000000
+000600051117             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700140423             DCL        VAR(&sif) TYPE(*CHAR) LEN(6)
+000800140423             DCL        VAR(&AS400)   TYPE(*CHAR) LEN(8)
+000900140423 /* Reprisco il sistema AS/400 corrente */
+001000140423             RTVNETA    SYSNAME(&AS400)
+001100140423
+001200140423/* Cancella e crea il file di lavoro commerciali */
+001300140423 /* Se presenti elimino dalla QTEMP l'eventuale file  già esistente */
+001400140423             DLTF       FILE(QTEMP/WFCCOS*)
+001500140423             MONMSG     MSGID(CPF0000)
+001600140423
+001700140423 /* Duplica in QTEMP del file WFCCOS* */
+001800140423             IF         COND(&AS400 *EQ 'AS888') THEN(DO)
+001900140423             CRTDUPOBJ  OBJ(WFCCOS*) FROMLIB(GAITRAAZP) +
+002000140423                          OBJTYPE(*FILE) TOLIB(QTEMP)
+002100140423             ENDDO
+002200140423             IF         COND(&AS400 *EQ 'SETRAS') THEN(DO)
+002300140423             CRTDUPOBJ  OBJ(WFCCOS*) FROMLIB(GAITRAAZM) OBJTYPE(*FILE) +
+002400140423                          TOLIB(QTEMP)
+002500140423             ENDDO
+002600051117
+002700140514             CALL       PGM(el_sto4R) PARM(&KPJBA)
+002800140423
+002900140423 /* In GAITRA copio i dati nel file                                 */
+003000140423             CHGVAR     VAR(&SIF) VALUE(%SUBSTRING(&KPJBA 92 6))
+003100140423             IF         COND(&sif *EQ 'GAITRA') THEN(DO)
+003200140423
+003300140423             IF         COND(&AS400 *EQ 'SETRAS') THEN(DO)
+003400140423             CPYF       FROMFILE(QTEMP/WFCCOS0F) +
+003500140423                          TOFILE(GAITRAAZM/WFCCOS0F) MBROPT(*REPLACE)
+003600140423             ENDDO
+003700140423             IF         COND(&AS400 *EQ 'AS888') THEN(DO)
+003800140423             CPYF       FROMFILE(QTEMP/WFCCOS0F) +
+003900140423                          TOFILE(GAITRAAZP/WFCCOS0F) MBROPT(*REPLACE)
+004000140423             ENDDO
+004100140423
+004200140423             ENDDO
+004300140423
+004400000000             ENDPGM

@@ -1,0 +1,202 @@
+000100961002/********************************************************************/
+000200961002/*       R I T O R N O    D A T E    D I     A R  R I V O           */
+000300961002/*                                                                  */
+000400961002/*      - RICHIAMO PGM CREAZIONE FILE DI WORK                       */
+000500041222/*      - RICHIAMO PGM CREAZIONE SNDIFTSTA                          */
+000600961002/*                                                                  */
+000700961002/********************************************************************/
+000800961002             PGM        PARM(&KPJBA)
+000900961002
+001000961002     /*    Dichiaro variabili utilizzate dal programma    */
+001100961002             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+001200050826             DCL        VAR(&SAVKPJBA) TYPE(*CHAR) LEN(502)
+001300050826             DCL        VAR(&KNMUS) TYPE(*CHAR) LEN(10)
+001400120831             DCL        VAR(&FTT) TYPE(*CHAR) LEN(1)
+001500110630             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001600041222             DCL        VAR(&CODFILE) TYPE(*CHAR) LEN(3) VALUE('781')
+001700050207             DCL        VAR(&DAPROGR) TYPE(*CHAR) LEN(5) VALUE('     ')
+001800041222             DCL        VAR(&FILSTA) TYPE(*CHAR) LEN(10) +
+001900041222                          VALUE('IFTSTA')
+002000041222             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+002100041222             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1) VALUE(' ')
+002200110330             DCL        VAR(&RIGHE_DET) TYPE(*CHAR) LEN(1) VALUE(' ')
+002300120831
+002400120831             DCL        VAR(&INDIRIZZI) TYPE(*CHAR) LEN(253)
+002500120831             DCL        VAR(&OGGETTO) TYPE(*CHAR) LEN(44)
+002600120831             DCL        VAR(&MESSAGGIO) TYPE(*CHAR) LEN(5000)
+002700120831             DCL        VAR(&CLIENTE) TYPE(*CHAR) LEN(8)
+002800120831
+002900110330
+003000050826             CHGVAR     VAR(&KNMUS) VALUE(%SST(&KPJBA 1 10))
+003100110617
+003200110617/*-----------------------------------------------------------------------*/
+003300110617/*? serve per i file del progressivo TIVIR                              ?*/
+003400110617/*-----------------------------------------------------------------------*/
+003500120831             ADDLIBLE   LIB(GAITRAGRPS) POSITION(*LAST)
+003600120831             MONMSG     MSGID(CPF0000)
+003700120831
+003800110617             ADDLIBLE   LIB(GAITRAGRU) POSITION(*LAST)
+003900110617             MONMSG     MSGID(CPF0000)
+004000110617
+004100961010
+004200041222/*?-----------------------------------------------------------------------*/
+004300041222/*? X assurdo cancella da QTEMP il file che andrà a creare         -------*/
+004400041222/*?-----------------------------------------------------------------------*/
+004500041222             DLTF       FILE(QTEMP/EDIFTSTA)
+004600041222             MONMSG     MSGID(CPF0000)
+004700110407
+004800110407             DLTF       FILE(QTEMP/EDSTA00F)
+004900110407             MONMSG     MSGID(CPF0000)
+005000041222
+005100041222/*?-----------------------------------------------------------------------*/
+005200041222/*? Crea in Qtemp il file per la trascodifica dei dati in formato FLAT   -*/
+005300041222/*? prendendo l'immagine dal EDIFTSTA                                    -*/
+005400041222/*?-----------------------------------------------------------------------*/
+005500041222             CRTDUPOBJ  OBJ(EDIFTSTA) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+005600041222                          TOLIB(QTEMP)
+005700110407
+005800110407             CRTDUPOBJ  OBJ(EDIFTSTA) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+005900110407                          TOLIB(QTEMP) NEWOBJ(EDSTA00F)
+006000110330
+006100041222/*?-----------------------------------------------------------------------*/
+006200041222/*?  Scrive il file x le date ARRIVAL TRIP REPORT                      ---*/
+006300041222/*?-----------------------------------------------------------------------*/
+006400041222             OVRDBF     FILE(EDIFTSTA) TOFILE(QTEMP/EDIFTSTA)
+006500110407             OVRDBF     FILE(EDSTA00F) TOFILE(QTEMP/EDSTA00F)
+006600110407
+006700110330     /*****************************************************************************/
+006800110330     /*  aggiunto nuovo parametro per capire quale tipo di traduzione fare        */
+006900110330     /*****************************************************************************/
+007000110419             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+007100110419             MONMSG     MSGID(CPF8351)
+007200110630             CALL       PGM(TRTCT88R) PARM(&KPJBA &RIGHE_DET &ESITO)
+007300120831             MONMSG     MSGID(CPF0000)
+007400120831     /*****************************************************************************/
+007500120831     /*? all'uscita del pgm sull'estrama destra della KPJBU vengono impostati ?   */
+007600120831     /* il nome del membro dato dal Codice Partner e in 502 il tipo trasmissione  */
+007700120831     /* quindi negli ultimi 11 bytes a fine KPJBU                                 */
+007800120831     /*****************************************************************************/
+007900120831
+008000120831  /*?  Al ritorno del TRTCT88R l'ultimo byte della KPJBU  --> FTT           ?*/
+008100120831  /*?  quindi se si tratta di un flag che identifica un NON formato EDI     ?*/
+008200120831  /*?  come il caso di GEL. occorre NON eseguire in seguito il TRTC102C     ?*/
+008300120831             CHGVAR     VAR(&FTT) VALUE(%SST(&KPJBA 502 1))
+008400120831
+008500110419             ENDCMTCTL
+008600110330
+008700110330
+008800120831     /* REIMPOSTA la KPJBA INIZIALE per i programmi seguenti                      */
+008900110330             CHGVAR     VAR(&SAVKPJBA) VALUE(&KPJBA)
+009000110330
+009100110330     /*****************************************************************************/
+009200110330     /* SE esce dal programma di traduzione al vecchio modo segnalerà le righe    */
+009300110330     /*  di dettaglio....e quindi invio tramite SNDIFTSTA altrimenti DOWNLOAD     */
+009400110330     /*  diretto.                                                                 */
+009500110330     /*****************************************************************************/
+009600110330
+009700110330             IF         COND(&RIGHE_DET *EQ 'S') THEN(DO)
+009800120831
+009900120831/*?-----------------------------------------------------------------------*/
+010000120831/*?    Se NON traduce EDIFACT - Formato NetExpress (GEL), NON fare       ?*/
+010100120831/*?      il passaggio su questo programma TRTC102C.                      ?*/
+010200120831/*?-----------------------------------------------------------------------*/
+010300120831             IF         COND(&FTT *NE 'N') THEN(DO)
+010400110330
+010500041222/*?-----------------------------------------------------------------------*/
+010600041222/*?    Esegue poi in SEDE la traduzione e trasmissione del DOWLOAD        */
+010700041222/*?    prima genera il SNDIFTSTA su cui memorizza il Flat File            */
+010800041222/*?-----------------------------------------------------------------------*/
+010900041222/*  Prende il FLAT file e lo prepara per la traduzione                              */
+011000110407             CPYF       FROMFILE(QTEMP/EDSTA00F) TOFILE(SNDIFTSTA) +
+011100041222                          MBROPT(*ADD) FMTOPT(*NOCHK)
+011200041222
+011300041222/*?-----------------------------------------------------------------------*/
+011400120831/*?    Aggiorna i campi del Flat File x la traduzione in SEDE ed il       */
+011500041222/*?    DOWNLOAD del SNDIFTSTA                                             */
+011600120831/*?    Solo se si tratta di formato EDIFACT e NON GEL                     */
+011700041222/*?-----------------------------------------------------------------------*/
+011800120831
+011900041222             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+012000041223             MONMSG     MSGID(CPF8351)
+012100041222             CHGVAR     VAR(&CODFILE) VALUE('781')
+012200050221             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSTA +
+012300050221                          &CODFILE &DAPROGR)
+012400041222             ENDCMTCTL
+012500120831
+012800120831             ENDDO
+012900120831             ENDDO
+013000120831
+013001120921
+013002120921/* ?Non deve portarsi dietro la precedente testata poichè la ricrea  */
+013003120921             CLRPFM     FILE(EDIFTSTA) /* pulisce la testata +
+013004120921                          precedentemente scritta */
+013005120921
+013100120831/* ?Reimposta KPJBA poichè aveva sporcato la KPJBU                   */
+013200120831             CHGVAR     VAR(&KPJBA) VALUE(&SAVKPJBA)
+013300040708
+013400041222/*?--------------------------------------------------------------------------*/
+013500041222/*? pezzo aggiunto per trasmissione eventuali STATUS supermercato 20/210     */
+013600041222/*? come IFTSTA normali 784 e non come ATR anche se generate da ATR          */
+013700110407/*? nel momento in cui riceviamo la merce. Legge sempre l'EDSTA00F in QTEMP  */
+013800041222/*?--------------------------------------------------------------------------*/
+013900110407/*  Rilegge QTEMP/EDSTA00F x invio status 20/210 supermercato da IFTSTA 784  */
+014000041222/*  (non ATR) Se presenti delle spedizioni relative a supermercati           */
+014100041222/*?--------------------------------------------------------------------------*/
+014200041222/*?     RICHIAMO PGM CHE SCRIVE STATI 20/210 x SUPERMERCATO                  */
+014300041222/*?--------------------------------------------------------------------------*/
+014400120831
+014500110407             OVRDBF     FILE(EDSTA00F) TOFILE(QTEMP/EDSTA00F)
+014600120831
+014700110419             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+014800110419             MONMSG     MSGID(CPF8351)
+014900120831
+015000110630             CALL       PGM(TRTCT89R) PARM(&KPJBA &ESITO)
+015100120831             MONMSG     MSGID(CPF0000)
+015200110419             ENDCMTCTL
+015300110419
+015400040708             MONMSG     MSGID(CPF0000)
+015500041222
+015600110330
+015700110330     /*****************************************************************************/
+015800110330     /* SE esce dal programma di traduzione al vecchio modo segnalerà le righe    */
+015900110330     /*  di dettaglio....e quindi invio tramite SNDIFTSTA altrimenti DOWNLOAD     */
+016000110330     /*  diretto.                                                                 */
+016100110330     /*****************************************************************************/
+016200110330
+016300110330             IF         COND(&RIGHE_DET *EQ 'S') THEN(DO)
+016400120831
+016500120831/*?-----------------------------------------------------------------------*/
+016600120831/*?    Se NON traduce EDIFACT - Formato NetExpress (GEL), NON fare       ?*/
+016700120831/*?      il passaggio su questo programma TRTC102C.                      ?*/
+016800120831/*?-----------------------------------------------------------------------*/
+016900120831             IF         COND(&FTT *NE 'N') THEN(DO)
+017000110330
+017100050902
+017200041222/*?-----------------------------------------------------------------------*/
+017300041222/*?    Esegue poi in SEDE la traduzione e trasmissione del DOWLOAD        */
+017400041222/*?    prima genera il SNDIFTSTA su cui memorizza il Flat File            */
+017500041222/*?-----------------------------------------------------------------------*/
+017600041222/*  Prende il FLAT file e lo prepara per la traduzione                              */
+017700110407             CPYF       FROMFILE(QTEMP/EDSTA00F) TOFILE(SNDIFTSTA) +
+017800041222                          MBROPT(*ADD) FMTOPT(*NOCHK)
+017900041222
+018000041222/*?-----------------------------------------------------------------------*/
+018100041222/*?    Aggiorna i campi del Flat File x la trduzione in SEDE ed il        */
+018200041222/*?    DOWNLOAD del SNDIFTSTA                                             */
+018300041222/*?-----------------------------------------------------------------------*/
+018400041222
+018500041222             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+018600041223             MONMSG     MSGID(CPF8351)
+018700041222             CHGVAR     VAR(&CODFILE) VALUE('784')
+018800050221             CALL       PGM(TRTC102C) PARM(&TEST &USRMSG &FILSTA +
+018900050221                          &CODFILE &DAPROGR)
+019000041222             ENDCMTCTL
+019100041222
+019200110330
+019300110330             ENDDO
+019400110330
+019500120831             ENDDO
+019600110330
+019700041222             DLTOVR     FILE(*ALL)
+019800040525FINE:
+019900040525             ENDPGM

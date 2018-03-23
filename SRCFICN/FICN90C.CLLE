@@ -1,0 +1,77 @@
+000100000000     /****************************************************************/
+000200000000     /*                                                              */
+000300011031     /*  Nome programma:  FICN90C                                    */
+000400000000     /*  Descrizione   :  Riorganizzazione tariffe padroncini        */
+000500000000     /*                   Programma di esecuzione                    */
+000600000000     /*                                                              */
+000700000000     /****************************************************************/
+000800000000             PGM        PARM(&KPJBA)
+000900000000
+001000000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001003090211
+001004090211             STRCMTCTL  LCKLVL(*CHG)
+001005090211             MONMSG     MSGID(CPF8351) EXEC(DO)
+001006090211             ROLLBACK
+001007090211             ENDCMTCTL
+001008090211             STRCMTCTL  LCKLVL(*CHG)
+001009090211             ENDDO
+001100000000
+001200000000     /*-------------          F A S E    U N O          -------------*/
+001300000000
+001400000000             OVRPRTF    FILE(QSYSPRT) USRDTA('Riorg.tar.')
+001500000000
+001600000000     /* Eseguo la chiamata al primo programma che annulla logicamente */
+001700000000     /* i record dagli archivi                                       */
+001800011031             CALL       PGM(FICN90R) PARM(&KPJBA)
+001900090211             MONMSG     MSGID(CPF0000) EXEC(DO)
+001901090211             ROLLBACK
+001902090211             SNDBRKMSG  MSG('ERRORE La riorganizzazione delle +
+001903090211                          tariffe è terminata in modo anomalo. +
+001904090211                          Segnalare il problema alla persona +
+001905090211                          responsabile della manutenzione del +
+001906090211                          programma.') TOMSGQ(QSYSOPR)
+001907090211             RCLRSC     LVL(*CALLER)
+001908090211             GOTO       CMDLBL(FINE)
+001909090211             enddo
+002000000000
+002100000000     /*-------------          F A S E    D U E          -------------*/
+002200000000
+002300000000     /* Seleziono solo gli annullati                                 */
+002400011031             OPNQRYF    FILE((FIFGT01L)) OPTION(*ALL) +
+002500000000                          QRYSLT('FGTATB=''A''') KEYFLD((FGTPDR) +
+002600940926                          (FGTSML) (FGTTSR) (FGTCTR) (FGTPRG))
+002700011031             OVRDBF     FILE(FIFGT01L) SHARE(*YES)
+002800000000
+002900000000     /* Eseguo la chiamata al secondo programma che cancella fisica-  */
+003000000000     /* mente i record dagli archivi                                 */
+003100011031             CALL       PGM(FICN91R) PARM(&KPJBA)
+003201090211             MONMSG     MSGID(CPF0000) EXEC(DO)
+003202090211             ROLLBACK
+003203090211             SNDBRKMSG  MSG('ERRORE La riorganizzazione delle +
+003204090211                          tariffe è terminata in modo anomalo. +
+003205090211                          Segnalare il problema alla persona +
+003206090211                          responsabile della manutenzione del +
+003207090211                          programma.') TOMSGQ(QSYSOPR)
+003208090211             RCLRSC     LVL(*CALLER)
+003210090211             enddo
+003211090211
+003212090211     /*-------------          F A S E    T R E          -------------*/
+003213090211
+003214090211     /* Eseguo la chiamata al terzo programma che fa scadere le      */
+003215090211     /* tariffe non più utilizzate, verranno pulite nel prossimo giro*/
+003216090708     /*      CALL       PGM(FICN91R1) PARM(&KPJBA)                   */
+003217090708     /*      MONMSG     MSGID(CPF0000) EXEC(DO)                      */
+003218090708     /*      ROLLBACK                                                */
+003219090708     /*      SNDBRKMSG  MSG('ERRORE La riorganizzazione delle +      */
+003220090708     /*                   tariffe è terminata in modo anomalo. +     */
+003221090708     /*                   Segnalare il problema alla persona +       */
+003222090708     /*                   responsabile della manutenzione del +      */
+003223090708     /*                   programma.') TOMSGQ(QSYSOPR)               */
+003224090708     /*      RCLRSC     LVL(*CALLER)                                 */
+003225090708     /*      enddo                                                   */
+003226090211
+003227090211             ENDCMTCTL
+003300000000
+003400011031             CLOF       OPNID(FIFGT01L)
+003500000000
+003600090211 FINE:       ENDPGM

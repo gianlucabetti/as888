@@ -1,0 +1,235 @@
+000100000000     H             Y
+000200871026     F*-----------------------------------------------------------*
+000300871026     F*- Inibito il tasto Richiesta Aiuto (per visualizzare modi- *
+000400871026     F*- fiche ricercare in scansione "MV").                      *
+000500871026     F*-----------------------------------------------------------*
+000600930823      *  DAGR=Modifiche per gestione come programma richiamato da *
+000700930823      *  CNC032R nuovo programma manutenzione causali operative.  *
+000800930823      *  Modifiche per mome programma da esporre a video preso    *
+000900930823      *  da DS a programma.                                       *
+001000930823      *-----------------------------------------------------------*
+001100871023     FCNC030D CF  E                    WORKSTN
+001200000000     FCNOPE00FUF  E           K        DISK                      A
+001300930823PRO  FCNOPE01LIF  E           K        DISK
+001400930823PRO  F            CNOPE000                          KRENAMECNOPE001
+001500000000     E                    ARP         8 10
+001600000000     IKPJBA     E DS
+001700930823DAGR ICNC034    E DS
+001800890605     IPARAM       DS
+001900890605     I                                        1   2 CD1
+002000890605     I                                        3   6 COD
+002100000000     IPARUT     E DSUTEDSE0F
+002200000000     IOPEDS     E DSCNOPE00F
+002300000000     I                                       44 123 ARP
+002400000000     IPRMHLP      DS
+002500000000     I                                        1  10 TESTO
+002600000000     I                                       11  20 FILE
+002700000000     I                                       21  30 LIBRER
+002800000000     I                                       31  32 CAP1
+002900000000     I                                       33  34 CAP2
+003000000000     I                                       35  35 FLG
+003100000000     ICOMOD       DS
+003200000000     I                                        1   1 BYT1
+003300000000     I                                        2   2 BYT2
+003400000000     I                                        3   3 BYT3
+003500000000     I                                        4   4 BYT4
+003600000000     I                                        5   5 BYT5
+003700000000     I                                        6   6 BYT6
+003800000000     I                                        7   7 BYT7
+003900000000     I                                        8   8 BYT8
+004000000000     I                                        9   9 BYT9
+004100000000     I                                       10  10 BYT10
+004200930823DAGR  *-- DS x Nome programma
+004300930823DAGR I           SDS
+004400930823DAGR I                                        1   8 NOMPG
+004500930823DAGR I            DS
+004600930823DAGR I                                        1  11 NOMPGM
+004700930823DAGR I I            '*'                       1   1 AST1
+004800930823DAGR I                                        3  10 NOMPG1
+004900930823DAGR I I            '*'                      11  11 AST2
+005000000000     C/EJECT
+005100000000     C*--------- CHIAVI DI RICERCA ----------------------------------*
+005200000000     C           KEY       KLIST
+005300000000     C                     KFLD           OPEKUT
+005400000000     C                     KFLD           OPECD1
+005500000000     C                     KFLD           OPECOD
+005600930823     C           KCOD      KLIST
+005700930823     C                     KFLD           OPECOD
+005800000000     C*--------------------------------------------------------------*
+005900000000     C/SPACE 5
+006000000000     C           *ENTRY    PLIST
+006100000000     C                     PARM           KPJBA
+006200930823DAGR C                     MOVELKPJBU     CNC034
+006300930823DAGR  *-- Solo visualizzazione
+006400930823DAGR C           P34VIS    IFEQ 'S'
+006500930823DAGR C                     SETON                     77
+006600930823DAGR C                     END
+006700930823      *--
+006800930823DAGR C                     MOVELNOMPG     NOMPG1           Nome Pgm
+006900000000     C                     MOVE *BLANK    RSUT
+007000840418     C                     MOVEL'LIBDOC'  LIBRER
+007100840418     C                     MOVEL'DOCCNT'  FILE
+007200840418     C                     MOVEL'CAP02'   TESTO
+007300840418     C                     MOVE '02'      CAP1
+007400840418     C                     MOVE '02'      CAP2
+007500880714     C                     Z-ADD1         CDUT
+007600000000     C                     WRITEC030D1                     *SCRIVI TESTATA
+007700000000     C*-------- CHIEDI CODICE UTENTE
+007800000000     C           AAA0      TAG
+007900880714     C*                    EXFMTC030D5
+008000930823     C*  KC                GOTO FINE
+008100000000     C                     Z-ADDCDUT      CODUT
+008200000000     C                     CALL 'XPARUT'
+008300000000     C                     PARM           PARUT
+008400000000     C           CODUT     CABEQ-1        AAA0           09
+008500000000     C                     Z-ADDCODUT     OPEKUT
+008600000000     C                     MOVELRAGUT     RSUT
+008700000000     C                     WRITEC030D1
+008800000000     C/SPACE 5
+008900000000     C*---------- PULISCI CAMPI  CHIEDI CODICE E TIPO AGGIORNAMENTO
+009000000000     C           INIZIO    TAG
+009100000000     C           60        DO   70        X
+009200000000     C                     MOVE '0'       *IN,X
+009300000000     C                     END
+009400000000     C                     MOVE *BLANK    OPEDS
+009500000000     C                     Z-ADD0         OPENRJ
+009600000000     C                     Z-ADDCODUT     OPEKUT
+009700890605     C                     MOVE *BLANK    OPECD1
+009800890605     C                     MOVE *BLANK    OPECOD
+009900891012     C                     MOVE *BLANK    OPEFTT
+010000930823      *-- P34COD <> blanks = pgm richiamato da pgm manutenzione caus.
+010100930823      *-- operative. Attivo 83 per condizionare il programma ad agire
+010200930823      *-- sul ritorno alla prima mappa in modo diverso. Invece di
+010300930823      *-- tornare a prima mappa chiudo il programma.
+010400930823DAGR C           P34COD    IFNE *BLANKS
+010500930823DAGR C                     SETON                     83
+010600930823DAGR C                     MOVE P34COD    OPECOD
+010700930823DAGR C           P34TIP    IFEQ '0'
+010800930823DAGR C                     MOVEL'PG'      OPECD1
+010900930823DAGR C                     ELSE
+011000930823DAGR C                     MOVEL'PF'      OPECD1
+011100930823DAGR C                     END
+011200930823DAGR C                     GOTO GES2
+011300930823DAGR C                     END
+011400000000     C           INIZ1     TAG
+011500880714     C                     EXFMTC030D2
+011600930823     C   KC                GOTO FINE
+011700880714     C* RICERCA ANAGRAFICO OPERAZIONI
+011800890605     C           OPECD1    IFEQ *BLANK
+011900890605     C           OPECD1    OREQ '?'
+012000890605     C           OPECOD    OREQ *BLANK
+012100890605     C           OPECOD    OREQ '?'
+012200890605     C           OPECD1    IFEQ '?'
+012300890605     C                     MOVE *BLANK    OPECD1
+012400890605     C                     END
+012500890605     C                     MOVELOPECD1    CD1
+012600890605     C                     MOVEL*BLANK    COD
+012700890605     C                     CALL 'CNC031R'
+012800890605     C                     PARM           CD1
+012900890605     C                     PARM           COD
+013000890605     C                     MOVE CD1       OPECD1
+013100890605     C                     MOVE COD       OPECOD
+013200830228     C                     WRITEC030D1
+013300890605     C                     GOTO INIZ1
+013400890605     C                     END
+013500930823      *--
+013600930823     C           GES2      TAG
+013700000000     C           KEY       CHAINCNOPE000             70
+013800000000     C  N70      OPEFLG    COMP '*'                      07
+013900930823PRO  C   70      KCOD      SETLLCNOPE01L                 50
+014000930823PRO  C   50                GOTO INIZ1
+014100930823      *--
+014200000000     C   70                SETON                     01
+014300000000     C  N70                SETON                     02
+014400000000     C*************************************************************
+014500000000     C***** DISPLAY VIDEO PER DIGITAZIONE CAMPI                      *
+014600000000     C****************************************************************
+014700000000     C           GIRO      TAG
+014800890605     C           OPECD1    IFNE *BLANK
+014900890605     C           OPECOD    ANDNE*BLANK
+015000000000     C                     EXFMTC030D3
+015100930823     C*  KL                GOTO INIZIO                     *NESSUN. AGGIOR
+015200930823DAGR C   KLN83             GOTO INIZIO                     *NESSUN. AGGIOR
+015300930823DAGR C   KL 83             GOTO FINE                       *NESSUN. AGGIOR
+015400000000     C   05                MOVE ' '       OPEFLG
+015500930823     C   KQ                MOVE '*'       OPEFLG
+015600930823     C                     SETOF                     KQ0507
+015700890605     C                     END
+015800000000     C****************************************************************
+015900000000     C***** ESEGUI CONTROLLI PULISCI INDICATORI DI ERRORE            *
+016000000000     C****************************************************************
+016100000000     C           60        DO   70        X       20
+016200000000     C                     MOVE '0'       *IN,X
+016300000000     C                     END
+016400000000     C                     MOVE OPEP0     COMOD
+016500000000     C                     EXSR CNTR0
+016600000000     C   82                SETON                     6069
+016700000000     C                     Z-ADD60        Y       20
+016800000000     C                     DO   8         X
+016900000000     C                     MOVEAARP,X     COMOD
+017000000000     C                     ADD  1         Y
+017100000000     C                     EXSR CNTR18
+017200000000     C   82                MOVE '1'       *IN,Y
+017300000000     C   82                SETON                     69
+017400000000     C                     END
+017500000000     C   69                GOTO GIRO
+017600000000     C****************************************************************
+017700000000     C***** ESEGUI AGGIORNAMENTO                                     *
+017800000000     C****************************************************************
+017900000000     C           AGGIOR    TAG
+018000000000     C                     Z-ADDKNRAZ     OPENRJ
+018100891012     C                     MOVE *BLANK    OPEFTR
+018200891012     C                     Z-ADD0         OPEDTR
+018300000000     C   01                WRITECNOPE000               99  * ERR. DISCO
+018400930823     C*
+018500000000     C   02                UPDATCNOPE000               99  *ERR. DISCO
+018600930823     C           *IN01     IFEQ '1'
+018700930823     C           *IN02     OREQ '1'
+018800930823     C  N83                GOTO INIZIO
+018900930823     C   83                GOTO FINE
+019000930823     C                     END
+019100000000     C****************************************************************
+019200000000     C***** CHIUDI PROGRAMMA                                         *
+019300000000     C****************************************************************
+019400000000     C           FINE      TAG
+019500000000     C                     SETON                     LR
+019600000000     C****************************************************************
+019700000000     C***** SUBROUTINE CONTROLLO CAMPI P_0                           *
+019800000000     C****************************************************************
+019900000000     C           CNTR0     BEGSR
+020000000000     C                     SETOF                     82
+020100000000     C                     GOTO OK09
+020200000000     C           BYT1      CABEQ'1'       OK02
+020300000000     C           BYT1      CABEQ'2'       OK02
+020400000000     C                     GOTO ERR0
+020500000000     C           OK02      TAG
+020600000000     C           BYT2      CABEQ'A'       OK03
+020700000000     C           BYT2      CABEQ'D'       OK03
+020800000000     C                     GOTO ERR0
+020900000000     C           OK03      TAG
+021000000000     C           BYT3      CABEQ'X'       OK04
+021100000000     C                     GOTO ERR0
+021200000000     C*   $$$$$$$$$$$$$$$$$$$$$$$$$$
+021300000000     C*     INSERIRE ALTRI CONTROLLI
+021400000000     C*   $$$$$$$$$$$$$$$$$$$$$$$$$$
+021500000000     C           OK04      TAG
+021600000000     C           BYT4      CABEQ'1'       OK09
+021700000000     C           BYT4      CABEQ'2'       OK09
+021800000000     C           BYT4      CABEQ'3'       OK09
+021900000000     C           ERR0      TAG
+022000000000     C                     SETON                     82
+022100000000     C           OK09      ENDSR
+022200000000     C****************************************************************
+022300000000     C***** SUBROUTINE CONTROLLO CAMPI P_1  P_8                      *
+022400000000     C****************************************************************
+022500000000     C           CNTR18    BEGSR
+022600000000     C                     SETOF                     82
+022700000000     C                     GOTO OK9
+022800000000     C           BYT1      CABEQ'E'       OK9
+022900000000     C           BYT1      CABEQ'A'       OK9
+023000000000     C           BYT1      CABEQ'D'       OK9
+023100000000     C           BYT1      CABEQ' '       OK9
+023200000000     C           ERR       TAG
+023300000000     C                     SETON                     82
+023400000000     C           OK9       ENDSR
+023500880714     C****************************************************************

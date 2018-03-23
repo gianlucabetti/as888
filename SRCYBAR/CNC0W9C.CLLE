@@ -1,0 +1,62 @@
+000100991103             PGM        PARM(&KPJBA)
+000200000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000300991103             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10)
+000400991103             DCL        VAR(&LIBL)  TYPE(*CHAR) LEN(10)
+000500991103             DCL        VAR(&VIDEO) TYPE(*CHAR) LEN(10)
+000600991103             DCL        VAR(&MSGER) TYPE(*CHAR) LEN(200)
+000700991104             DCL        VAR(&OKPGM) TYPE(*CHAR) LEN(2)
+000800910417
+000900991103  /*  Reperisco il video a cui mandare il msg di errore                 */
+001000991103             CHGVAR     VAR(&VIDEO) VALUE(%SST(&KPJBA 20 10))
+001100991103             CHGVAR     VAR(&LIBL) VALUE('*LIBL     ')
+001200991104             CHGVAR     VAR(&MSGER) VALUE('Qualcuno sta utilizzando +
+001300991104                          :           .                        +
+001400991104                          Premere ENTER per controllare chi sta +
+001500991104                          lavorando con vincolo ---> *SHRUPD.       +
+001600991104                          Farlo sospendere poi riprovare la +
+001700991104                          Distinta di versamento')
+002000020417
+002100020417/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+002200020417/* procedura/programma fosse finita in maniera anomala occorre */
+002300020417/* parare il colpo riducendo il male al male minore ossia      */
+002400020417/* con un rollback chiudere le precedenti transazioni fatte a  */
+002500020417/* metà piuttosto che confermarle. E ripartendo da una         */
+002600020417/* situazione pulita.                                          */
+002700020417             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002800020417             MONMSG     MSGID(CPF8351) EXEC(DO)
+002900020417             ENDCMTCTL
+003000020417             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+003100020417             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003200020417             ENDDO
+003300020417
+003400991103             CALL       PGM(CNC0W9R) PARM(&KPJBA)
+003500020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+003600020417             ROLLBACK
+003700020417             SNDBRKMSG  MSG('ERRORE Il versamento è terminato in +
+003800020417                          modo anomalo e potrebbe non essere stato +
+003900020417                          registrato. Segnalare il problema alla +
+004000020417                          persona responsabile della manutenzione +
+004100020417                          del programma.') TOMSGQ(&VIDEO)
+004200020417             ENDDO
+004300020417
+004400020417             ENDCMTCTL
+004500991104
+004600991104  /*  Se pgm non è finito  correttamente gestisco errore x allocazione  */
+004700991104             CHGVAR     VAR(&OKPGM) VALUE(%SST(&KPJBA 247 2))
+004800000612
+004900000612             IF         COND(&OKPGM *EQ 'NO') THEN(DO)
+005100000612             CHGVAR     VAR(&FILE) VALUE('FNMOV00T  ')
+005200000612             GOTO       CMDLBL(MSGERR)
+005300000612             ENDDO
+005600991103
+005700991103 /* A fine pgm disalloco i file */
+005800991103             DLCOBJ     OBJ((FNMOV00T *FILE *EXCL))
+005900991208             MONMSG     MSGID(CPF1005)
+006000991103
+006100991104             GOTO       CMDLBL(FINE)
+006200991103 /* Mando messaggio  */
+006300991103 MSGERR:
+006400991103             CHGVAR     VAR(%SST(&MSGER 30 10)) VALUE(&FILE)
+006500991103             CALL       PGM(TRUL89C) PARM(&FILE &LIBL &VIDEO &MSGER)
+006600910417
+006700991103 FINE:       ENDPGM

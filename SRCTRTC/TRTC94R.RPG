@@ -1,0 +1,483 @@
+000100960605      ***********************************************************************
+000200960605      *   IMPORTA BOLLE DA PARTNER ESTERI            - E.D.I.   ESTERO -    *
+000300960605      ***********************************************************************
+000400960605     H              J
+000500960605     F*---------------------------------------------------------------------*
+000600960605     F*  DATA BASE                                                          *
+000700960605     F*---------------------------------------------------------------------*
+000800960607     FEDTAB01LUF  E           K        DISK                      A
+000900960611     F*---------
+001000960611     FTABEL00FIF  E           K        DISK
+001100960612     F*---------
+001200960612     FAZORG01LIF  F    5000  2PI     4 DISK
+001300960605     F*---------
+001400960612     FTRTC94D CF  E                    WORKSTN
+001500960607     E*---------------------------------------------------------------*
+001600960607     E*  SCHIERE
+001700960607     E*---------------------------------------------------------------*
+001800960612     E                    C2A       200  3               Cod.EVENTO BART
+001900960612     E                    D2A       200 75               Cod.EVENTO BART
+002000961115     E                    C7O       200  1               Cod.CONSE. ANOM
+002100961115     E                    D7O       200 75               Dec.CONSE. ANOM
+002200980420     E                    ERR     1   8 70               Errori
+002300960612     I*----------------------------------------------------------------
+002400960612     I*  FILE
+002500960612     I*---------------------------------------------------------------*
+002600960612     IAZORG01LAA
+002700960612     I                                    P   4   50ORGFIL
+002800960612     I                                        6   6 ORGFVA
+002900960612     I                                       14  33 ORGDES
+003000960605     I*---------------------------------------------------------------*
+003100960605     I*  DS
+003200960605     I*---------------------------------------------------------------*
+003300960605     IKPJBA     E DS
+003400960605     IUT§DSE    E DSUT§DSE0F
+003500960612     ICNCR80    E DS
+003600960612     IDS2A      E DS
+003700960612     IDSCE      E DSEDIDSCE
+003800960611     ITRTC91    E DSTRTC91DS
+003900960605     I           SDS
+004000960605     I                                        1  10 NOMPGM
+004100960605     C*---------------------------------------------------------------*
+004200960605     C*  CICLO PRINCIPALE
+004300960605     C*---------------------------------------------------------------*
+004400960611      * Inizializzo prima videata
+004500960605     C                     EXSR INZ01
+004600960605      * Loop gestione videate
+004700960605     C           WFINE     DOWEQ'N'
+004800960605     C           WTPVID    CASEQ'1'       GESD01           Sce.tabella
+004900960607     C           WTPVID    CASEQ'2'       GESD02           cod.tabella
+005000960605     C                     END
+005100960605     C                     END
+005200960605      * Fine Lavoro
+005300960605     C           FINE      TAG
+005400960605     C                     SETON                     LR
+005500960605     C*---------------------------------------------------------------*
+005600960605     C*  INZ01: Inizializzo prima videata
+005700960605     C*---------------------------------------------------------------*
+005800960606     C           INZ01     BEGSR
+005900960606     C*
+006000960612     C                     SETOF                     404128
+006100960612     C                     MOVEL*BLANKS   V1CSTS
+006200960612     C                     MOVEL*BLANKS   V1CCEV
+006300960612     C                     MOVE ' ?'      V1CSTS
+006400960606     C                     MOVELNOMPGM    V1CPGM
+006500960606     C                     MOVEL'1'       WTPVID  1
+006600960606     C*
+006700960606     C                     ENDSR
+006800960607     C*---------------------------------------------------------------*
+006900960607     C*  INZ02: Inizializzo seconda videata
+007000960607     C*---------------------------------------------------------------*
+007100960607     C           INZ02     BEGSR
+007200960607     C*
+007300980420     C                     SETOF                     010228
+007400961115     C                     SETOF                     404142
+007500980420     C                     SETOF                     43
+007600960607     C                     MOVEL*BLANKS   $MSG
+007700960607     C                     MOVELNOMPGM    V2CPGM
+007800960607     C                     MOVEL'2'       WTPVID  1
+007900960611     C*  Eseguo posizionamento
+008000960612     C                     MOVEL'CE'      KCOD
+008100960612     C                     MOVELV1CSTS    V2CSTS
+008200960612     C                     MOVELV1CCEV    V2CCEV
+008300960612     C                     MOVELV1CSTS    WSEI
+008400960612     C                     MOVE V1CCEV    WSEI
+008500960612     C                     MOVELWSEI      KKEY
+008600960607     C           KTAB      CHAINEDTAB01L             30
+008700960607     C           *IN30     IFEQ '0'
+008800960607     C                     SETON                     02
+008900960612     C                     MOVELTABUNI    DSCE
+009000960612     C                     MOVEL§CECEV    V2CC2A
+009100961112     C                     MOVEL§CEDEC    V2CDEC
+009200961115     C                     MOVEL§CECCA    V2CCCA
+009300961125     C                     MOVEL§CETPE    V2CTPE
+009400961125     C                     MOVEL§CEMEM    V2CMEM
+009500961115     C                     MOVEL§CEERR    V2CERR
+009600970221     C                     MOVEL§CECAR    V2CCAR
+009700980420     C                     MOVEL§CETEA    V2CTEA
+009800961112     C           V2CC2A    IFNE *BLANKS
+009900960612     C                     Z-ADD1         X
+010000960612     C           V2CC2A    LOKUPC2A,X                    30
+010100960612     C                     MOVELD2A,X     V2D2A1
+010200960612     C                     MOVE D2A,X     V2D2A2
+010300961112     C                     ELSE
+010400961112     C                     MOVEL*BLANKS   V2D2A1
+010500961112     C                     MOVEL*BLANKS   V2D2A2
+010600961112     C                     END
+010700961115     C*  Decodifico eventuale consegna anomala
+010800961115     C           V2CCCA    IFNE *BLANKS
+010900961115     C                     Z-ADD1         X
+011000961115     C           V2CCCA    LOKUPC7O,X                    30
+011100961115     C                     MOVELD7O,X     V2DCCA
+011200961115     C                     ELSE
+011300961115     C                     MOVEL*BLANKS   V2DCCA
+011400961115     C                     END
+011500960607     C                     MOVELTABFTT    V2CFTT
+011600960607     C                     MOVELTABFLT    V2CFLT
+011700960607     C           TABFLG    COMP ' '                  0404
+011800960607     C                     ELSE
+011900960607     C                     SETON                     01
+012000970221     C                     SETOF                     04
+012100960612     C                     MOVEL*BLANKS   V2CC2A
+012200960612     C                     MOVEL*BLANKS   V2D2A1
+012300960612     C                     MOVEL*BLANKS   V2D2A2
+012400961112     C                     MOVEL*BLANKS   V2CDEC
+012500961115     C                     MOVEL*BLANKS   V2CCCA
+012600961115     C                     MOVEL*BLANKS   V2CERR
+012700970221     C                     MOVEL*BLANKS   V2CCAR
+012800961115     C                     MOVEL*BLANKS   V2DCCA
+012900961125     C                     MOVEL*BLANKS   V2CMEM
+013000961125     C                     MOVEL*BLANKS   V2CTPE
+013100960607     C                     MOVEL*BLANKS   V2CFTT
+013200960607     C                     MOVEL*BLANKS   V2CFLT
+013300980420     C                     MOVEL*BLANKS   V2CTEA
+013400960607     C                     END
+013500960607     C*
+013600960607     C                     ENDSR
+013700960606     C*---------------------------------------------------------------*
+013800960606     C*  GESD01: Gestione prima videata
+013900960606     C*---------------------------------------------------------------*
+014000960606     C           GESD01    BEGSR
+014100960606     C*
+014200960612     C                     EXFMTTC94D01
+014300960612     C                     SETOF                     404128
+014400960606     C*  Fine Lavoro
+014500960606     C           *INKC     IFEQ '1'
+014600960606     C                     MOVEL'S'       WFINE
+014700960606     C                     GOTO FINVD1
+014800960606     C                     END
+014900960612     C*  Controlli prima videata
+015000960612     C                     EXSR CTR01
+015100960607     C*
+015200960612     C           *IN28     IFEQ '1'
+015300960612     C           *IN32     OREQ '1'
+015400960612     C                     GOTO FINVD1
+015500960612     C                     END
+015600960612     C*
+015700960606     C                     EXSR INZ02
+015800960606     C*
+015900960606     C           FINVD1    ENDSR
+016000960607     C*---------------------------------------------------------------*
+016100960607     C*  GESD02: Gestione seconda videata
+016200960607     C*---------------------------------------------------------------*
+016300960607     C           GESD02    BEGSR
+016400960607     C*
+016500960612     C                     EXFMTTC94D02
+016600961115     C                     SETOF                     404142
+016700980420     C                     SETOF                     4328
+016800960607     C*  Fine Lavoro
+016900960607     C           *INKC     IFEQ '1'
+017000960607     C                     MOVEL'S'       WFINE
+017100960611     C                     GOTO FINVD2
+017200960607     C                     END
+017300960607     C*  Ritorno
+017400960607     C           *INKL     IFEQ '1'
+017500960607     C                     MOVEL'1'       WTPVID
+017600960607     C                     GOTO FINVD2
+017700960607     C                     END
+017800960607     C*  Annullamento
+017900960607     C           *INKQ     IFEQ '1'
+018000960607     C                     EXSR ANNUL
+018100960607     C                     GOTO FINVD2
+018200960607     C                     END
+018300960607     C*  Controlli
+018400960607     C                     EXSR CTR02
+018500960607     C   28                GOTO FINVD2
+018600960607     C*  Ripristino
+018700960607     C           *INKE     IFEQ '1'
+018800960607     C                     EXSR RIPRIS
+018900960607     C                     GOTO FINVD2
+019000960607     C                     END
+019100960607     C*  Conferma
+019200960607     C           *INKF     IFEQ '1'
+019300960607     C                     EXSR CONFER
+019400960612     C                     EXSR INZ01
+019500960607     C                     END
+019600960607     C*
+019700960607     C           FINVD2    ENDSR
+019800960612     C*---------------------------------------------------------------*
+019900960612     C*  CTR01: Controlli prima videata
+020000960612     C*---------------------------------------------------------------*
+020100960612     C           CTR01     BEGSR
+020200960612     C*
+020300960612     C*  Controllo se devo richiamare interrogazione
+020400960612     C           '?'       SCAN V1CSTS                   32
+020500960612     C           *IN32     IFEQ '1'
+020600960612     C                     CLEARTRTC91
+020700960612     C                     MOVEL'CE'      D91COD
+020800960612     C                     MOVELTRTC91    KPJBU
+020900960612     C                     CALL 'TRTC91R1'
+021000960612     C                     PARM           KPJBA
+021100960612     C                     MOVELKPJBU     TRTC91
+021200960612     C                     MOVELD91KEY    WSEI    6
+021300960612     C                     MOVELWSEI      V1CSTS
+021400960612     C                     MOVE WSEI      V1CCEV
+021500960612     C                     END
+021600960612     C*  Codice Stato evento
+021700960612     C           V1CSTS    IFEQ *BLANKS
+021800960612     C                     SETON                     4028
+021900960612     C                     MOVELERR,1     $MSG
+022000960612     C                     GOTO FINCT1
+022100960612     C                     END
+022200960612     C*  Codice evento
+022300960612     C           V1CCEV    IFEQ *BLANKS
+022400961021     C***                  SETON                     4128
+022500961021     C***                  MOVELERR,2     $MSG
+022600961021     C***                  GOTO FINCT1
+022700960612     C                     END
+022800960612     C*
+022900960612     C           FINCT1    ENDSR
+023000960607     C*---------------------------------------------------------------*
+023100960607     C*  CTR02: Controlli seconda videata
+023200960607     C*---------------------------------------------------------------*
+023300960607     C           CTR02     BEGSR
+023400960607     C*
+023500960612     C*  Ricerca Codice Evento 2A
+023600960612     C           '?'       SCAN V2CC2A                   32
+023700960611     C           *IN32     IFEQ '1'
+023800960612     C                     Z-ADD1         §KUT
+023900960612     C                     MOVEL'2A'      §COD
+024000960611     C                     CALL 'X§TABER'
+024100960611     C                     PARM           §KUT
+024200960611     C                     PARM           §COD
+024300960611     C                     PARM           §KEY
+024400960611     C                     PARM           §DES   25
+024500960612     C                     MOVEL§KEY      V2CC2A
+024600960611     C                     END
+024700960612     C*  Codice evento obbligatorio
+024800960612     C           V2CC2A    IFEQ *BLANKS
+024900961112     C           V2CDEC    ANDEQ*BLANKS
+025000960612     C                     SETON                     4028
+025100960612     C                     MOVELERR,3     $MSG
+025200960611     C                     GOTO FINCT2
+025300960611     C                     END
+025400960612     C*  Controllo validità codice evento
+025500961112     C           V2CC2A    IFNE *BLANKS
+025600960611     C                     Z-ADD1         X
+025700960612     C           V2CC2A    LOKUPC2A,X                    30
+025800960611     C           *IN30     IFEQ '0'
+025900960729     C***                  SETON                     4028
+026000960729     C***                  MOVELERR,4     $MSG
+026100960729     C***                  GOTO FINCT2
+026200960612     C                     ELSE
+026300960612     C                     MOVELD2A,X     V2D2A1
+026400960612     C                     MOVE D2A,X     V2D2A2
+026500960611     C                     END
+026600961112     C                     END
+026700961115     C*  Ricerca Codice Evento 7O
+026800961115     C           '?'       SCAN V2CCCA                   32
+026900961115     C           *IN32     IFEQ '1'
+027000961115     C                     Z-ADD1         §KUT
+027100961115     C                     MOVEL'7O'      §COD
+027200961115     C                     CALL 'X§TABER'
+027300961115     C                     PARM           §KUT
+027400961115     C                     PARM           §COD
+027500961115     C                     PARM           §KEY
+027600961115     C                     PARM           §DES   25
+027700961115     C                     MOVEL§KEY      V2CCCA
+027800961115     C                     END
+027900961115     C*  Controllo validità consegna anomala
+028000961115     C           V2CCCA    IFNE *BLANKS
+028100961115     C                     Z-ADD1         X
+028200961115     C           V2CCCA    LOKUPC7O,X                    30
+028300961115     C           *IN30     IFEQ '0'
+028400961115     C                     SETON                     4228
+028500961115     C                     MOVELERR,4     $MSG
+028600961115     C                     GOTO FINCT2
+028700961115     C                     ELSE
+028800961115     C                     MOVE D7O,X     V2DCCA
+028900961115     C                     END
+029000961115     C                     END
+029100980420      *  Controllo Tipologia evento arrivo
+029200980420      *   (scelta obbligatoria se Tipologia evento = "V")
+029300980420     C           V2CTPE    IFEQ 'V'
+029400980420     C           V2CTEA    ANDEQ*BLANKS
+029500980420     C           V2CTPE    ORNE 'V'
+029600980420     C           V2CTEA    ANDGT*BLANKS
+029700980420     C                     SETON                     4328
+029800980420     C                     MOVELERR,8     $MSG
+029900980420     C                     GOTO FINCT2
+030000980420     C                     END
+030100960607     C*  Controllo se filale da indicare
+030200960607     C           V2CFTT    IFEQ '2'
+030300960607     C*  Trasmissione solo a  una filiale
+030400960607     C           V2CFLT    IFEQ 0
+030500960612     C                     SETON                     4128
+030600960612     C                     MOVELERR,5     $MSG
+030700960607     C                     GOTO FINCT2
+030800960607     C                     ELSE
+030900960607     C                     Z-ADDV2CFLT    ORGFIL
+031000960607     C           ORGFIL    CHAINAZORG01L             30
+031100960607     C           *IN30     IFEQ '1'
+031200960612     C                     SETON                     4128
+031300960612     C                     MOVELERR,6     $MSG
+031400960607     C                     GOTO FINCT2
+031500960607     C                     END
+031600960607     C                     END
+031700960607     C*  Trasmissione a tutti o a nessuno
+031800960607     C                     ELSE
+031900960607     C           V2CFLT    IFNE 0
+032000960612     C                     SETON                     4128
+032100960612     C                     MOVELERR,7     $MSG
+032200960607     C                     GOTO FINCT2
+032300960607     C                     END
+032400960607     C                     END
+032500960607     C*
+032600960607     C           FINCT2    ENDSR
+032700960607     C*---------------------------------------------------------------*
+032800960607     C*  ANNUL: Eseguo annullamento tabella                           *
+032900960607     C*---------------------------------------------------------------*
+033000960607     C           ANNUL     BEGSR
+033100960607     C*
+033200960607     C                     MOVEL*BLANKS   KKEY
+033300960612     C                     MOVELV2CSTS    WSEI
+033400960612     C                     MOVE V2CCEV    WSEI
+033500960612     C                     MOVELWSEI      KKEY
+033600960612     C                     MOVEL'CE'      KCOD
+033700960607     C           KTAB      CHAINEDTAB01L             30
+033800960607     C           *IN30     IFEQ '0'
+033900960607     C                     MOVEL'*'       TABFLG
+034000960607     C           V2CFTT    IFNE ' '
+034100960607     C                     MOVEL' '       TABFTR
+034200960607     C                     Z-ADD0         TABDTR
+034300960607     C                     END
+034400960607     C                     EXCPTTABANN
+034500960607     C                     END
+034600960611     C*
+034700960607     C                     MOVEL'1'       WTPVID
+034800960607     C*
+034900960607     C                     ENDSR
+035000960607     C*---------------------------------------------------------------*
+035100960607     C*  RIPRIS: Ripristino tabella annullata                         *
+035200960607     C*---------------------------------------------------------------*
+035300960607     C           RIPRIS    BEGSR
+035400960607     C*
+035500960607     C                     MOVEL*BLANKS   KKEY
+035600960612     C                     MOVELV2CSTS    WSEI
+035700960612     C                     MOVE V2CCEV    WSEI
+035800960612     C                     MOVELWSEI      KKEY
+035900960612     C                     MOVEL'CE'      KCOD
+036000960607     C           KTAB      CHAINEDTAB01L             30
+036100960607     C           *IN30     IFEQ '0'
+036200960607     C                     MOVEL' '       TABFLG
+036300960607     C           V2CFTT    IFNE ' '
+036400960607     C                     MOVEL' '       TABFTR
+036500960607     C                     Z-ADD0         TABDTR
+036600960607     C                     END
+036700960607     C                     EXCPTTABANN
+036800960607     C                     END
+036900960607     C                     MOVEL'1'       WTPVID
+037000960607     C*
+037100960607     C                     ENDSR
+037200960607     C*---------------------------------------------------------------*
+037300960607     C*  CONFER: Confermo inserimento/variazione                      *
+037400960607     C*---------------------------------------------------------------*
+037500960607     C           CONFER    BEGSR
+037600960607     C*
+037700960607     C*  Gestisco scrittura/aggiornamento key
+037800960607     C                     MOVEL*BLANKS   KKEY
+037900960612     C                     MOVE V2CCEV    WSEI
+038000960612     C                     MOVELV2CSTS    WSEI
+038100960612     C                     MOVELWSEI      KKEY
+038200960612     C                     MOVEL'CE'      KCOD
+038300960607     C           KTAB      CHAINEDTAB01L             30
+038400960612     C                     MOVELV2CC2A    §CECEV
+038500961112     C                     MOVELV2CDEC    §CEDEC
+038600961115     C                     MOVELV2CCCA    §CECCA
+038700961125     C                     MOVELV2CMEM    §CEMEM
+038800961125     C                     MOVELV2CTPE    §CETPE
+038900961115     C                     MOVELV2CERR    §CEERR
+039000970221     C                     MOVELV2CCAR    §CECAR
+039100980420     C                     MOVELV2CTEA    §CETEA
+039200960612     C                     MOVELDSCE      TABUNI
+039300960607     C                     MOVELV2CFTT    TABFTT
+039400960607     C                     Z-ADDV2CFLT    TABFLT
+039500960607     C           V2CFTT    IFNE ' '
+039600960607     C                     MOVEL' '       TABFTR
+039700960607     C                     Z-ADD0         TABDTR
+039800960607     C                     END
+039900960607     C           *IN30     IFEQ '0'
+040000960607     C                     UPDATEDTAB000
+040100960607     C                     ELSE
+040200960612     C                     MOVELWSEI      TABKEY
+040300960612     C                     MOVEL'CE'      TABCOD
+040400960607     C                     WRITEEDTAB000
+040500960607     C                     END
+040600960607     C                     MOVEL'1'       WTPVID
+040700960607     C*
+040800960607     C                     ENDSR
+040900960606     C*---------------------------------------------------------------*
+041000960606     C*  *INZSR: Operazioni iniziali                                  *
+041100960606     C*---------------------------------------------------------------*
+041200960606     C           *INZSR    BEGSR
+041300960606     C*
+041400960606     C           *ENTRY    PLIST
+041500960606     C                     PARM           KPJBA
+041600960606      *  Call a XPARUT
+041700960606     C                     Z-ADD1         CODUT
+041800960606     C                     CALL 'X§PARUT'
+041900960606     C                     PARM           UT§DSE
+042000960606     C                     MOVELREC80     CNCR80
+042100960606     C                     MOVELRAGUT     RSUT
+042200960606      * Definizione chiavi
+042300960606     C           KTAB      KLIST
+042400960606     C                     KFLD           KCOD
+042500960606     C                     KFLD           KKEY
+042600960611     C           KTAB1     KLIST
+042700960611     C                     KFLD           KKUT
+042800960611     C                     KFLD           KCOD1
+042900960606      * Definizione varibili
+043000960612     C           *LIKE     DEFN TBLKUT    KKUT
+043100960612     C           *LIKE     DEFN TABCOD    KCOD
+043200960606     C           *LIKE     DEFN TABKEY    KKEY
+043300960606     C           *LIKE     DEFN TABKEY    WINKEY
+043400960611     C           *LIKE     DEFN TBLCOD    KCOD1
+043500960611     C           *LIKE     DEFN TBLKUT    §KUT
+043600960611     C           *LIKE     DEFN TBLCOD    §COD
+043700960611     C           *LIKE     DEFN TBLKEY    §KEY
+043800960606     C* Inizializzo variabili
+043900960606     C                     MOVEL'N'       WFINE   1
+044000960612     C* Caricamento dati tabella 2A
+044100960611     C                     Z-ADD1         X       30
+044200960611     C                     Z-ADD1         KKUT
+044300960612     C                     MOVEL'2A'      KCOD1
+044400960611     C           KTAB1     CHAINTABEL00F             30
+044500960611     C           *IN30     DOWEQ'0'
+044600960611     C           TBLFLG    IFEQ *BLANKS
+044700960611     C                     ADD  1         X
+044800960612     C                     MOVELTBLKEY    C2A,X
+044900960612     C                     MOVELTBLUNI    D2A,X
+045000960611     C                     END
+045100960611     C           KTAB1     READETABEL00F                 30
+045200960611     C                     END
+045300961115     C* Caricamento dati tabella 7O
+045400961115     C                     Z-ADD1         X       30
+045500961115     C                     Z-ADD1         KKUT
+045600961115     C                     MOVEL'7O'      KCOD1
+045700961115     C           KTAB1     CHAINTABEL00F             30
+045800961115     C           *IN30     DOWEQ'0'
+045900961115     C           TBLFLG    IFEQ *BLANKS
+046000961115     C                     ADD  1         X
+046100961115     C                     MOVELTBLKEY    C7O,X
+046200961115     C                     MOVELTBLUNI    D7O,X
+046300961115     C                     END
+046400961115     C           KTAB1     READETABEL00F                 30
+046500961115     C                     END
+046600960606     C*
+046700960606     C                     ENDSR
+046800960607     O*-----------------------------------------------------*
+046900960607     OEDTAB000E                TABANN
+047000960607     O                         TABFLG
+047100960607     O                         TABFLT
+047200960607     O                         TABFTT
+047300080709     O                         TABFTR
+047400080709     O                         TABDTR
+047500960607**         ERR
+047600960612Codice Evento E.D.I. obbligatorio                                      01
+047700960612Stato Evento E.D.I. obbligatorio                                       02
+047800971204Ns.codice Evento obbligatorio se non inserito testo di decodifica      03
+047900961115Consegna anomala inesistente                                           04
+048000960612Immettere filiale a cui trasmettere                                    05
+048100960612Se trasmissione a tutti o a nessuno impossibile immettere filiale      06
+048200960612Filale a cui tramettere inesistente                                    07
+048300980420Scelta tipologie evento non congruenti                                 08

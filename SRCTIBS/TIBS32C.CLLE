@@ -1,0 +1,219 @@
+000100040726/*********************************************************************/
+000200040726/*  COMPILARE CON PROFILO QSECOFR ED OPZIONE USRPRF(*OWNER)          */
+000300040726/*********************************************************************/
+000400040729             pgm        parm(&TELA &MOBA &PROFILO &TEXT &CURLIB +
+000500040728                          &ATNPGM &ATNPGMLIB &PVDEXP &PASSWORD +
+000600040728                          &STATUS &ERR)
+000700040723
+000800040729    /* Tipo elaborazione */
+000900040729             dcl        var(&TELA)       type(*char) len(3)
+001000040729    /* S = Iscritto a Modulo Base */
+001100040729             dcl        var(&MOBA)       type(*char) len(1)
+001200040729    /* USRPRF */
+001300040729             dcl        var(&PROFILO)    type(*char) len(10)
+001400040729             dcl        var(&TEXT)       type(*char) len(50)
+001500040729             dcl        var(&CURLIB)     type(*char) len(10)
+001600040729             dcl        var(&ATNPGM)     type(*char) len(10)
+001700040729             dcl        var(&ATNPGMLIB)  type(*char) len(10)
+001800040729             dcl        var(&PVDEXP)     type(*char) len(4)
+001900040729             dcl        var(&PASSWORD)   type(*char) len(10)
+002000040729             dcl        var(&STATUS)     type(*char) len(9)
+002100040729             dcl        var(&ERR)        type(*char) len(1)
+002200040729
+002300040729             dcl        var(&STATUSW)    type(*char) len(10)
+002400040723
+002500040729             chgvar     var(&ERR)        value(' ')
+002600040723
+002700040729/* CHK verifica esistenza profilo ---------------------------------- */
+002800040729             IF         cond(&TELA = 'CHK') then(do)
+002900040726
+003000040729             RTVUSRPRF  usrprf(&PROFILO) text(&TEXT) curlib(&CURLIB) +
+003100040729                          atnpgm(&ATNPGM) atnpgmlib(&ATNPGMLIB) +
+003200040729                          pwdexp(&PVDEXP) status(&STATUSW)
+003300040726
+003400040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+003500040729                          value('E'))
+003600040729
+003700040729             if         cond(&ERR = ' ') then(chgvar var(&STATUS) +
+003800040729                          value(%sst(&STATUSW 1 9)))
+003900040729             goto       cmdlbl(FINE)
+004000040729             ENDDO
+004100040726
+004200040729/* CHG modifica profilo -------------------------------------------- */
+004300040727  /* con modulo base */
+004400040729             IF         cond(&TELA = 'CHG' *and &MOBA = 'S') then(DO)
+004500040726
+004600040729    /* con programma ATTN *none o generico */
+004700040729             if         cond(&ATNPGMLIB = '          ') then(do)
+004800040729
+004900040729             CHGUSRPRF  usrprf(&PROFILO) password(&PASSWORD) +
+005000040729                          pwdexp(&PVDEXP) status(&STATUS) +
+005100040729                          curlib(&CURLIB) inlpgm(PROBAS/BAK010C) +
+005200040907                          text(&TEXT)     atnpgm(&ATNPGM)
+005300040727
+005400040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+005500040729                          value('E'))
+005600080507
+005700080507               if         cond(&ERR *eq ' ') then(do)
+005800080507                 CHGMSGQ    msgq(&PROFILO) text(&TEXT)
+005900080507                 monmsg     msgid(CPF0000)
+006000080507               enddo
+006100080507
+006200040729             enddo
+006300040729
+006400040729    /* con programma ATTN definito */
+006500040729             else       cmd(do)
+006600040729
+006700040729             CHGUSRPRF  usrprf(&PROFILO) password(&PASSWORD) +
+006800040729                          pwdexp(&PVDEXP) status(&STATUS) +
+006900040907                          curlib(&CURLIB) inlpgm(PROBAS/BAK010C) +
+007000040907                          text(&TEXT)     atnpgm(&ATNPGMLIB/&ATNPGM)
+007100040729
+007200040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+007300040729                          value('E'))
+007400080507
+007500080507               if         cond(&ERR *eq ' ') then(do)
+007600080507                 CHGMSGQ    msgq(&PROFILO) text(&TEXT)
+007700080507                 monmsg     msgid(CPF0000)
+007800080507               enddo
+007900080507
+008000040729             enddo
+008100040727
+008200040729             goto       cmdlbl(FINE)
+008300040729             ENDDO
+008400040726
+008500040727/* CHG modifica profilo */
+008600040726  /* senza modulo base */
+008700040729             IF         cond(&TELA = 'CHG') then(DO)
+008800040729
+008900040729    /* con programma ATTN *none o generico */
+009000040729             if         cond(&ATNPGMLIB = '          ') then(do)
+009100040727
+009200040729             CHGUSRPRF  usrprf(&PROFILO) password(&PASSWORD) +
+009300040729                          pwdexp(&PVDEXP) status(&STATUS) +
+009400040907                          curlib(&CURLIB) +
+009500040907                          text(&TEXT)     atnpgm(&ATNPGM)
+009600040726
+009700040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+009800040729                          value('E'))
+009900080507
+010000080507               if         cond(&ERR *eq ' ') then(do)
+010100080507                 CHGMSGQ    msgq(&PROFILO) text(&TEXT)
+010200080507                 monmsg     msgid(CPF0000)
+010300080507               enddo
+010400080507
+010500040729             enddo
+010600040729
+010700040729    /* con programma ATTN definito */
+010800040729             else       cmd(do)
+010900040729
+011000040729             CHGUSRPRF  usrprf(&PROFILO) password(&PASSWORD) +
+011100040729                          pwdexp(&PVDEXP) status(&STATUS) +
+011200040907                          curlib(&CURLIB) +
+011300040907                          text(&TEXT)     atnpgm(&ATNPGMLIB/&ATNPGM)
+011400040729
+011500040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+011600040729                          value('E'))
+011700080507
+011800080507               if         cond(&ERR *eq ' ') then(do)
+011900080507                 CHGMSGQ    msgq(&PROFILO) text(&TEXT)
+012000080507                 monmsg     msgid(CPF0000)
+012100080507               enddo
+012200080507
+012300040729             enddo
+012400040726
+012500040729             goto       cmdlbl(FINE)
+012600040729             ENDDO
+012700040726
+012800040729/* CRT creazione profilo ------------------------------------------- */
+012900040727  /* con modulo base */
+013000040729             IF         cond(&TELA = 'CRT' *and &MOBA = 'S') then(do)
+013100040729
+013200040729    /* con programma ATTN *none o generico */
+013300040729             if         cond(&ATNPGMLIB = '          ') then(do)
+013400040727
+013500041007             CRTUSRPRF  USRPRF(&PROFILO) PASSWORD(&PASSWORD) +
+013600041007                          PWDEXP(&PVDEXP) STATUS(&STATUS) +
+013700041007                          CURLIB(&CURLIB) INLPGM(PROBAS/BAK010C) +
+013800041007                          LMTCPB(*YES) TEXT(&TEXT) SPCAUT(*ALLOBJ +
+013900041007                          *SAVSYS) GRPPRF(QPGMR) OWNER(*GRPPRF) +
+014000041007                          OUTQ(*WRKSTN) ATNPGM(&ATNPGM) +
+014100041007                          SETJOBATR(*DATFMT *DECFMT) LOCALE(*SYSVAL)
+014200040727
+014300040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+014400040729                          value('E'))
+014500040729             enddo
+014600040729
+014700040729    /* con programma ATTN definito */
+014800040729             else       cmd(do)
+014900040729
+015000041007             CRTUSRPRF  USRPRF(&PROFILO) PASSWORD(&PASSWORD) +
+015100041007                          PWDEXP(&PVDEXP) STATUS(&STATUS) +
+015200041007                          CURLIB(&CURLIB) INLPGM(PROBAS/BAK010C) +
+015300041007                          LMTCPB(*YES) TEXT(&TEXT) SPCAUT(*ALLOBJ +
+015400041007                          *SAVSYS) GRPPRF(QPGMR) OWNER(*GRPPRF) +
+015500041007                          OUTQ(*WRKSTN) ATNPGM(&ATNPGMLIB/&ATNPGM) +
+015600041007                          SETJOBATR(*DATFMT *DECFMT) LOCALE(*SYSVAL)
+015700040729
+015800040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+015900040729                          value('E'))
+016000040729             enddo
+016100040727
+016200040729             goto       cmdlbl(FINE)
+016300040729             ENDDO
+016400040726
+016500040727/* CRT creazione profilo */
+016600040726  /* senza modulo base */
+016700040729             IF         cond(&TELA = 'CRT') then(DO)
+016800040729
+016900040729    /* con programma ATTN *none o generico */
+017000040729             if         cond(&ATNPGMLIB = '          ') then(do)
+017100040727
+017200041007             CRTUSRPRF  USRPRF(&PROFILO) PASSWORD(&PASSWORD) +
+017300041007                          PWDEXP(&PVDEXP) STATUS(&STATUS) +
+017400041007                          CURLIB(&CURLIB) LMTCPB(*YES) TEXT(&TEXT) +
+017500041007                          SPCAUT(*ALLOBJ *SAVSYS) GRPPRF(QPGMR) +
+017600041007                          OWNER(*GRPPRF) OUTQ(*WRKSTN) +
+017700041007                          ATNPGM(&ATNPGM) SETJOBATR(*DATFMT +
+017800041007                          *DECFMT) LOCALE(*SYSVAL)
+017900040726
+018000040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+018100040729                          value('E'))
+018200040729             enddo
+018300040729
+018400040729    /* con programma ATTN definito */
+018500040729             else       cmd(do)
+018600040729
+018700041007             CRTUSRPRF  USRPRF(&PROFILO) PASSWORD(&PASSWORD) +
+018800041007                          PWDEXP(&PVDEXP) STATUS(&STATUS) +
+018900041007                          CURLIB(&CURLIB) LMTCPB(*YES) TEXT(&TEXT) +
+019000041007                          SPCAUT(*ALLOBJ *SAVSYS) GRPPRF(QPGMR) +
+019100041007                          OWNER(*GRPPRF) OUTQ(*WRKSTN) +
+019200041007                          ATNPGM(&ATNPGMLIB/&ATNPGM) +
+019300041007                          SETJOBATR(*DATFMT *DECFMT) LOCALE(*SYSVAL)
+019400040729
+019500040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+019600040729                          value('E'))
+019700040729             enddo
+019800040726
+019900040729             goto       cmdlbl(FINE)
+020000040726             ENDDO
+020100040729
+020200040729/* DLT cancellazione profilo --------------------------------------- */
+020300040729             IF         cond(&TELA = 'DLT') then(DO)
+020400040729
+020500040729             DLTUSRPRF  usrprf(&PROFILO) ownobjopt(*NODLT) +
+020600040729                          pgpopt(*NOCHG)
+020700040729
+020800040729             monmsg     msgid(CPF0000)   exec(chgvar var(&ERR) +
+020900040729                          value('E'))
+021000040729
+021100040729             goto       cmdlbl(FINE)
+021200040729             ENDDO
+021300040726
+021400040729/* Se tipo elaborazione non valido errore -------------------------- */
+021500040729             chgvar     var(&ERR)        value('E')
+021600021010
+021700040729/* Fine ------------------------------------------------------------ */
+021800040729    FINE:
+021900040729             endpgm

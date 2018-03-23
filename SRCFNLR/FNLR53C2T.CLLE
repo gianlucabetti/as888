@@ -1,0 +1,83 @@
+000100080723/*          ?   - provvisorio lanciato da azione xt53 serve per     */
+000200080723/*          ?   - mettere libreria WRKPDA001 Ddavanti con oggetti   */
+000300080723/*          ?   - di test per procedura pda                         */
+000400080723/*          ?   - Nel PGM buono FNLR53C2 È STATO INSERITO IL RMVLIBLE WRKPDA001 */
+000500080723/*          ?   - A MODO VECCHIO DEVE FUNZIONARE CON OGGETTI IN GAITRAOBJ  */
+000600080723 FNLR53C2:   PGM        PARM(&KPJBA)
+000700911021             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000800071026             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000900990526             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+001000990526             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+001100990526             DCL        VAR(&TUTE) TYPE(*CHAR) LEN(3)
+001200030718             DCL        VAR(&TRUL90DS) TYPE(*CHAR) LEN(186) +
+001300030718                          VALUE(' S') /* Imposto richiesta +
+001400030718                          stampante LDV */
+001500030718             DCLF       FILE(TRUL90DS)
+001600080723
+001700080723/*          ?   - specifica da rimuovere finiti i test trucco azione di lancio da XT53 a XR53 */
+001800080723             CHGVAR     VAR(%SST(&KPJBA 60  4)) VALUE('XR53')
+001900990526
+002000030718 /* APERTURA CON STESSO PROFILO */
+002100030718
+002200030718             RTVJOBA    JOB(&DSP) USER(&USER)
+002300990526
+002400990526             CHGVAR     VAR(&TUTE) VALUE(%SST(&USER 1 3))
+002500990526
+002600990526             IF         COND((&TUTE *NE 'EDP')) THEN(DO)
+002700990526             ALCOBJ     OBJ((&USER *MSGQ *EXCL)) WAIT(5)
+002800990526             MONMSG     MSGID(CPF1002) EXEC(DO)
+002900990526             SNDBRKMSG  MSG('Non è possibile lavorare con QUESTO +
+003000990526                          profilo in quanto già utilizzato su altro +
+003100990526                          video: dopo aver +
+003200990526                          risposto ok + invio al presente +
+003300990526                          messaggio si ritorna a menù.') TOMSGQ(&DSP) +
+003400990526                          MSGTYPE(*INQ) RPYMSGQ(&DSP)
+003500990526             GOTO       CMDLBL(FINE)
+003600990526             ENDDO
+003700990526             ENDDO
+003800990526
+003900030718/* RICHIAMO PGM SCELTA STAMPANTI                */
+004000030718             CALL       PGM(TRUL90R) PARM(&KPJBA &TRUL90DS)
+004100030718             CHGVAR     VAR(&D90F3)   VALUE(%SST(&TRUL90DS 85  1))
+004200030718/* CMD3 - FINE LAVORO                           */
+004300030718             IF         COND(&D90F3 *EQ '1') THEN(GOTO CMDLBL(FINE))
+004400030718             CHGVAR     VAR(&D90MDB4) VALUE(%SST(&TRUL90DS 127 10))
+004500030718             CHGVAR     VAR(&D90MDB5) VALUE(%SST(&TRUL90DS 137 10))
+004600030718             CHGVAR     VAR(&D90BSL) VALUE(%SST(&TRUL90DS 147 1))
+004700030718             CHGVAR     VAR(&D90PSL) VALUE(%SST(&TRUL90DS 148 10))
+004800030718             CHGVAR     VAR(&D90PRB4) VALUE(%SST(&TRUL90DS 158 10))
+004900030718             CHGVAR     VAR(&D90PRB5) VALUE(%SST(&TRUL90DS 168 10))
+005000951205/* FILE DI STAMPA                   */
+005100030718             OVRPRTF    FILE(FNLSB5PA4) OUTQ(&D90PRB4) +
+005200030718                          FORMTYPE(&D90MDB4) USRDTA('LASC.AVV.') +
+005300030718                          HOLD(*YES)
+005400030718
+005500030718             OVRPRTF    FILE(FNLSB5PA5) OUTQ(&D90PRB5) +
+005600030718                          FORMTYPE(&D90MDB5) USRDTA('LASC.AVV.') +
+005700030718                          HOLD(*YES)
+005800071026 /* creo in qtemp il file spia variazioni bolle in caso di f12 */
+005900071026             RTVOBJD    OBJ(*LIBL/WFVARB0F) OBJTYPE(*FILE) RTNLIB(&LIB)
+006000071026             IF         COND(&LIB *EQ 'QTEMP ') THEN(CLRPFM +
+006100071026                          FILE(WFVARB0F))
+006200071026             ELSE       CMD(CRTDUPOBJ OBJ(WFVARB*) FROMLIB(&LIB) +
+006300071026                          OBJTYPE(*FILE) TOLIB(QTEMP))
+006400030718
+006500951205/* RICHIAMO PGM CHIUSURA DISTINTA               */
+006600951205             STRCMTCTL  LCKLVL(*CHG)
+006700080723             MONMSG     MSGID(CPF8351)
+006800080723/*          ?   - specifiche da rimuovere finiti i test             */
+006900080723/* aggiungo  libreria con pgm in test per PDA  */
+007000080723             addLIBLE   LIB(WRKPDA001)
+007100080723             MONMSG     MSGID(CPF0000)
+007200080723     /*     ?                                                      */
+007300941124             OVRDBF     FILE(FNLR53D) SHARE(*YES)
+007400060419             OVRDBF     FILE(FIDCI01L) TOFILE(QTEMP/FIDCI01L)
+007500030718             CALL       PGM(FNLR53R2) PARM(&KPJBA &TRUL90DS)
+007600930507             MONMSG     MSGID(CPF0000 RPG9001)
+007700941124             DLTOVR     FILE(*ALL)
+007800071026             DLTF       FILE(QTEMP/WFVARB1L)
+007900071026             DLTF       FILE(QTEMP/WFVARB0F)
+008000060403 /*          ENDCMTCTL                    */
+008100060403 /*          MONMSG     MSGID(CPF8356)    */
+008200930402
+008300951205 FINE:       ENDPGM

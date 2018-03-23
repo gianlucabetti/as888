@@ -1,0 +1,30 @@
+000100050529/* Testo : INVIO SMS   TEST                                        */
+000200050310 TNSYESMC:   PGM        PARM(&ESMS)
+000300050310             DCL        VAR(&ESMS) TYPE(*CHAR) LEN(150)
+000400920201             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+000500021113             DCL        VAR(&SYS5) TYPE(*CHAR) LEN(5)
+000501080922             DCL        VAR(&TSMSNCEL1) TYPE(*CHAR) LEN(10) +
+000502080922                          VALUE('3472318943') /* Reperib. scorta */
+000503080922             DCL        VAR(&TSMSNCEL2) TYPE(*CHAR) LEN(10) +
+000504171229                          VALUE('3355758292') /* EX Luciano */
+000505080922             DCL        VAR(&TSMSNCEL3) TYPE(*CHAR) LEN(10) +
+000506080922                          VALUE('3471487911') /* Reperib.master */
+001000920201
+001100920201             RTVNETA    SYSNAME(&SYSNAM)
+001200021113             CHGVAR     VAR(&SYS5) VALUE(%SST(&SYSNAM 1 5))
+001300040327
+001400040327/* SOLO SU SETRAS (BO)                         */
+001500040327             IF         COND(&SYSNAM *EQ 'SETRAS  ') THEN(DO)
+001600040327/* GESTIONE SMS                                */
+001700040615             ADDLIBLE   LIB(TSMS) POSITION(*LAST)
+001800040615             MONMSG CPF0000
+001900171229/*           CALL       PGM(TSMS/TSMSCL) PARM(&TSMSNCEL1 &ESMS) */
+002000171229/*           MONMSG CPF0000                                     */
+002001171229/*           DLYJOB     DLY(15)                                 */
+002002171229/*           CALL       PGM(TSMS/TSMSCL) PARM(&TSMSNCEL2 &ESMS) */
+002003171229/*           MONMSG CPF0000                                     */
+002004171229             DLYJOB     DLY(15)
+002005080922             CALL       PGM(TSMS/TSMSCL) PARM(&TSMSNCEL3 &ESMS)
+002006080922             MONMSG CPF0000
+002100040327             ENDDO
+002200050304             ENDPGM

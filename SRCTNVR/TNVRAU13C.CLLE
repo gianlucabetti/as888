@@ -1,0 +1,131 @@
+000100040130             pgm
+000200040130/* DA FAR GIRARE SOLO IN SETRAS      */
+000300021008             DCLF       FILE(QSYS/QAFDMBR)
+000400040130
+000500040130             DCL        VAR(&inizio) TYPE(*CHAR) LEN(4)
+000600040130             DCL        VAR(&fine) TYPE(*CHAR) LEN(6)
+000700040130             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+000800040130             DCL        VAR(&TRASMI) TYPE(*CHAR) LEN(1)
+000900040202
+001000040202             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+001100040202             DCL        VAR(&POSTADET) TYPE(*CHAR) LEN(198)
+001200040202             DCL        VAR(&FIL6) TYPE(*DEC) LEN(3 0) VALUE(046)
+001300040202             DCL        VAR(&UTI6) TYPE(*CHAR) LEN(10) +
+001400040202                          VALUE('EDP       ')
+001500040202
+001600021008
+001700040130             DSPFD      FILE(FILTRA201/FNARBV0T) TYPE(*MBR) +
+001800021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+001900021008                          OUTMBR(*FIRST *ADD)
+002000040130             DSPFD      FILE(FILTRA201/FNARBP0T) TYPE(*MBR) +
+002100021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+002200021008                          OUTMBR(*FIRST *ADD)
+002300040130             DSPFD      FILE(FILTRA201/FNARBD0T) TYPE(*MBR) +
+002400021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+002500021008                          OUTMBR(*FIRST *ADD)
+002600040130             DSPFD      FILE(FILTRA201/FNARBG0T) TYPE(*MBR) +
+002700021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+002800021008                          OUTMBR(*FIRST *ADD)
+002900040130             DSPFD      FILE(FILTRA201/FNARBK0T) TYPE(*MBR) +
+003000021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+003100021008                          OUTMBR(*FIRST *ADD)
+003200040130             DSPFD      FILE(FILTRA201/FNARBM0T) TYPE(*MBR) +
+003300021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+003400021008                          OUTMBR(*FIRST *ADD)
+003500040130             DSPFD      FILE(FILTRA201/FIARBT0T) TYPE(*MBR) +
+003600021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+003700021008                          OUTMBR(*FIRST *ADD)
+003800040130             DSPFD      FILE(FILTRA201/FIARBU0T) TYPE(*MBR) +
+003900021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+004000021008                          OUTMBR(*FIRST *ADD)
+004100040130             DSPFD      FILE(FILTRA201/FNANM00T) TYPE(*MBR) +
+004200021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+004300021008                          OUTMBR(*FIRST *ADD)
+004400040130             DSPFD      FILE(FILTRAGRU/FNLBL00T) TYPE(*MBR) +
+004500021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+004600021008                          OUTMBR(*FIRST *ADD)
+004700040130             DSPFD      FILE(FILTRA201/FNARBC0T) TYPE(*MBR) +
+004800021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+004900021008                          OUTMBR(*FIRST *ADD)
+005000040130             DSPFD      FILE(FILTRA201/FIARBC46) TYPE(*MBR) +
+005100021008                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+005200021008                          OUTMBR(*FIRST *ADD)
+005300040130
+005400040130             DSPFD      FILE(FILTRA201/FISPP00R) TYPE(*MBR) +
+005500040130                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/§FILE) +
+005600040130                          OUTMBR(*FIRST *ADD)
+005700021008
+005800021008             OVRDBF     FILE(QAfdmbr) TOFILE(QTEMP/§file)
+005900021008READ:
+006000021008             RCVF
+006100021008             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDP))
+006200021008
+006300040130/* elaboro solo se ha record         */
+006400040130
+006500040130             CHGVAR     VAR(&INIZIO) VALUE(%SST(&MBname 1 4))
+006600040130             CHGVAR     VAR(&fine) VALUE(%SST(&MBname 5 6))
+006700040130             CHGVAR     VAR(&TRASMI) VALUE(%SST(&MBFILE 8 1))
+006800040130
+006900040130/* FILE TRASMISSIONE                 */
+007000040130             IF         COND(&TRASMI *NE 'R') THEN(DO)
+007100040203
+007200040203             IF         COND(&MBNRCD *GT 0) THEN(DO)
+007300040130
+007400040503             IF         COND(&MBNAME *eq 'M280067   ') THEN(DO)
+007500040130          /* SEGNALARE   */
+007600040503             CHGVAR     VAR(&POSTATES) VALUE('Membri M280067 +
+007700040202                          pieni in file Trasmiss.')
+007800040202
+007900040202             CHGVAR     VAR(&POSTADET) VALUE('File:')
+008000040202             CHGVAR     VAR(%SST(&POSTADET 7 10)) VALUE(&mbfile)
+008100040202
+008200040202             CALL       PGM(GAITRAOBJ/TNSYM2C) PARM(&POSTATES +
+008300040202                          &POSTADET &FIL6 &UTI6)
+008400040130                          enddo
+008500040202             ELSE       CMD(DO)
+008600040503             IF         COND(&inizio *eq 'M280') THEN(DO)
+008700040130
+008800040503             CHGVAR     VAR(&MBR) VALUE('M067' *CAT &fine)
+008900040130
+009000021009             CPYF       FROMFILE(&MBLIB/&MBFILE) +
+009100021009                          TOFILE(*LIBL/&MBFILE) FROMMBR(&MBNAME) +
+009200040130                          TOMBR(&MBR) MBROPT(*ADD) CRTFILE(*YES)
+009300040202             RMVM       FILE(*Libl/&mbFile) MBR(&Mbname)
+009400040130                          enddo
+009500040202                          enddo
+009600040130                          enddo
+009700040203
+009800040203             IF         COND(&MBNRCD *eq 0) THEN(DO)
+009900040503             IF         COND(&inizio *eq 'M280') THEN(+
+010000040203             RMVM       FILE(*Libl/&mbFile) MBR(&Mbname))
+010100040203                          enddo
+010200040203                          enddo
+010300040130/* FILE ricezione                    */
+010400040130             IF         COND(&TRASMI *eq 'R') THEN(DO)
+010500040203
+010600040203             IF         COND(&MBNRCD *GT 0) THEN(DO)
+010700040503             IF         COND(&MBNAME *EQ 'M067280   ') THEN(RMVM +
+010800040202                          FILE(*libl/&mbFile) MBR(&Mbname))
+010900040202             ELSE       CMD(DO)
+011000040503             IF         COND(&FINE   *eq '280   ') THEN(DO)
+011100040503             CHGVAR     VAR(&MBR) VALUE(&INIZIO *CAT '067   ')
+011200040130             CPYF       FROMFILE(&MBLIB/&MBFILE) +
+011300040130                          TOFILE(*LIBL/&MBFILE) FROMMBR(&MBNAME) +
+011400040130                          TOMBR(&MBR) MBROPT(*ADD) CRTFILE(*YES)
+011500040202             RMVM       FILE(*Libl/&mbFile) MBR(&Mbname)
+011600040130                          enddo
+011700040202                          enddo
+011800040130                          enddo
+011900040130
+012000040203             IF         COND(&MBNRCD *eq 0) THEN(DO)
+012100040503             IF         COND(&FINE   *eq '280   ') THEN(+
+012200040203             RMVM       FILE(*Libl/&mbFile) MBR(&Mbname))
+012300040203                          enddo
+012400040130                          enddo
+012500040203
+012600021008             goto read
+012700971127
+012800031111endp:
+012900040202dltf qtemp/§file
+013000021008
+013100031111             ENDPGM

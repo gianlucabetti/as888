@@ -1,0 +1,73 @@
+000100920512     H            D
+000200990909     F* TRMK60R *-----------------------------------------------------*
+000300920504     F*                                                               *
+000400990909     F* FILTRO - ELABORAZIONE ACQUISIZIONE CLIENTI POTENZIALI SEAT    *
+000500920504     F*                                                               *
+000600920507     F*---------------------------------------------------------------*
+000700920511     F* USO DEGLI INDICATORI
+000800920525      *IN99 : Immettere la data di elaborazione
+000900920528      *IN98 : Formato data errato
+001000920507     F*---------------------------------------------------------------*
+001100990909     FTRMK60D CF  E                    WORKSTN
+001200920512     F*---------------------------------------------------------------*
+001300920525     IDSDATE      DS
+001400990909     I                                        1   80DATA1
+001500030903     I                                        9  10 ELAB2
+001600920525     I*
+001700990909     IWLBDA8     IDS
+001800990909     I                                        1   80G08DAT
+001900990909     I                                        9  160G08INV
+002000990909     I                                       17  17 G08ERR
+002100990909     I                                       18  220G08TGI
+002200920507      *
+002300000000     IKPJBA     E DS
+002400900831     IUT§DSE    E DSUT§DSE0F
+002500900831     ICNCR80    E DS
+002600000000     C*---------------------------------------------------------------*
+002700000000     C           *ENTRY    PLIST
+002800000000     C                     PARM           KPJBA
+002900000000     C                     Z-ADD1         CODUT
+003000900901     C                     CALL 'X§PARUT'
+003100900831     C                     PARM           UT§DSE
+003200000000     C           CODUT     CABEQ-1        FINE
+003300000000     C                     MOVELRAGUT     RSUT   20
+003400900831     C                     MOVELREC80     CNCR80
+003500030903     C                     MOVEL'SI'      ELAB2
+003600000000     C*---------------------------------------------------------------*
+003700000000     C* -- EMISSIONE DISPLAY
+003800920512      *
+003900000000     C           VIDEO     TAG
+004000920504     C*
+004100990909     C                     EXFMTMK60D01
+004200900831     C   KC                GOTO FINE
+004300000000     C*
+004400920525     C           ELAB1     IFEQ *ZEROS
+004500920525     C                     SETON                     99    DATE obbligatorie
+004600920504     C                     GOTO VIDEO
+004700920504     C                     END
+004800920525      *
+004900920528      *Trasformo la data dal formato GG/MM/AA al formato AA/GG/MM
+005000920525      *
+005100990909     C                     MOVE ELAB1     G08DAT
+005200990909     C                     MOVEL*BLANK    G08ERR
+005300990909     C                     CALL 'XSRDA8'
+005400990909     C                     PARM           WLBDA8
+005500990909     C           G08ERR    IFEQ '1'
+005600920528     C                     SETON                     98    Formato data errato
+005700920528     C                     GOTO VIDEO
+005800920528     C                     END
+005900990910     C                     Z-ADDG08DAT    ELAB1
+006000990909     C                     Z-ADDG08INV    DATA1
+006100920528      *
+006200920511     C           *INKF     CABEQ'0'       VIDEO
+006300920511      *
+006400920511      *
+006500920515     C* CHIAMATA A CL PER PULIZIA FILE DI LAVORO ED ELABORAZIONE STATISTICHE
+006600920525     C                     MOVELDSDATE    KPJBU
+006700990909     C                     MOVE 'MK61'    KCOAZ            CALL TRMK17C
+006800000000     C                     CALL 'BCH10'
+006900000000     C                     PARM           KPJBA
+007000920504      *
+007100000000     C           FINE      TAG
+007200000000     C                     SETON                     LR
+007300920511      *

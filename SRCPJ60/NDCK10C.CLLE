@@ -1,0 +1,112 @@
+000100960819/*PARMS DFTACTGRP(*NO) ACTGRP(QILE)                                       */
+000200960819/*-------------------------------------------------------------------*/
+000300960819/* RICEZIONE MOVIMENTI PER E/C (INTESA)                              */
+000400960819/*-------------------------------------------------------------------*/
+000500930122
+000600960819             PGM        PARM(&KPJBA)
+000700960819
+000800930122             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900960819             DCL        VAR(&LIBIN) TYPE(*CHAR) LEN(10)
+001000910906             DCL        VAR(&RC) TYPE(*CHAR) LEN(4)
+001100930331             DCL        VAR(&VIDEO) TYPE(*CHAR) LEN(10)
+001200960819             DCL        VAR(&RETCOD) TYPE(*CHAR) LEN(4)
+001300961009             DCL        VAR(&DATA) TYPE(*CHAR) LEN(6)
+001400961009             DCL        VAR(&GG) TYPE(*CHAR) LEN(2)
+001500961009             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+001600970408             DCL        VAR(&BATCH) TYPE(*CHAR) LEN(1)
+001700080613             DCL        VAR(&INDIFS) TYPE(*CHAR) LEN(135)   /* C1935 */
+001800080613             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)      /* C1935 */
+001900080613
+002000080613             DCL        VAR(&PATH02) TYPE(*CHAR) LEN(2000)  /* C1935 */
+002100080613             DCL        VAR(&LIB02) TYPE(*CHAR) LEN(10)     /* C1935 */
+002200080613             DCL        VAR(&FILE02) TYPE(*CHAR) LEN(10)    /* C1935 */
+002300080613             DCL        VAR(&DESFILE02) TYPE(*CHAR) LEN(50) /* C1935 */
+002400080613             DCL        VAR(&DOWNL02) TYPE(*CHAR) LEN(1)    /* C1935 */
+002500080613             DCL        VAR(&ERR02) TYPE(*CHAR) LEN(1)      /* C1935 */
+002600080613
+002700080613             CHGVAR     VAR(&FILE) VALUE('FLAT1')           /* C1935 */
+002800930507
+002900970408/* PROMPT DI CONFERMA E REPERIMENTO PARAMETRI (SE NON AZIONE NOTTE) */
+003000081117             CHGVAR     VAR(&BATCH) VALUE(%SST(&KPJBA 64 1))
+003100060526/*           IF         COND(&BATCH *NE 'B') THEN(DO)        C1935  */
+003200060526/*           CALL       PGM(NDCK15R) PARM(&KPJBA)            C1935  */
+003300060526/*           ENDDO                                           C1935  */
+003400970408
+003500961004/* AGGIUNGO LIBRERIA DATI INTESA */
+003600970408             CHGVAR     VAR(&LIBIN) VALUE(%SST(&KPJBA 250 10))
+003700970408             IF         COND(&LIBIN = '          ') THEN(GOTO +
+003800970408                          CMDLBL(FINE))
+003900930507             ADDLIBLE   LIB(&LIBIN) POSITION(*LAST)
+004000930211             MONMSG     MSGID(CPF0000)
+004100080529
+004200080529/* Copio i dati ricevuti su file piatto                       C1935 */
+004300080529             CHGVAR     VAR(&INDIFS) VALUE(%SST(&KPJBA 271 135))   +
+004400080529                                                           /* C1935 */
+004500080613             IF         COND(&INDIFS *NE ' ') THEN(DO)      /* C1935 */
+004600080613             CHGVAR     VAR(&PATH02) VALUE(&INDIFS)         /* C1935 */
+004700080613             CHGVAR     VAR(&LIB02) VALUE(&LIBIN)           /* C1935 */
+004800080613             CHGVAR     VAR(&FILE02) VALUE(&FILE)           /* C1935 */
+004900080613             CHGVAR     VAR(&DESFILE02) VALUE(' ')          /* C1935 */
+005000080613             CHGVAR     VAR(&DOWNL02) VALUE('S')            /* C1935 */
+005100080613             CHGVAR     VAR(&ERR02) VALUE('0')              /* C1935 */
+005200080613             CALL       PGM(NDCK19R2) PARM(&PATH02 &LIB02 &FILE02 +
+005300080613                          &DESFILE02 &DOWNL02 &ERR02)       /* C1935 */
+005400081117             IF         COND(&ERR02 *NE '0') THEN(DO)       /* C1935 */
+005500081117             IF         COND(&BATCH *NE 'B') THEN(DO)       /* C1935 */
+005600081117             CHGVAR     VAR(&VIDEO) VALUE(%SST(&KPJBA 20 10)) +
+005700081117                                                            /* C1935 */
+005800081117             SNDBRKMSG  MSG('Errore durante la copia dei dati dal +
+005900081117                          file IFS. Ricezione annullata.') +
+006000081117                          TOMSGQ(&VIDEO)                    /* C1935 */
+006100081117             ENDDO
+006200081117             GOTO       CMDLBL(LIBR)                        /* C1935 */
+006300081117             ENDDO                                          /* C1935 */
+006400080613             ENDDO                                          /* C1935 */
+006500930122
+006600930122/* REPERISCE CODICE IN DATA AREA (?) */
+006700930204 SUDTA:      RTVDTAARA  DTAARA(RC) RTNVAR(&RC)
+006800910906             MONMSG     MSGID(CPF1063) EXEC(GOTO CMDLBL(SUDTA))
+006900910906             CHGVAR     VAR(&RETCOD) VALUE(%SST(&RC 1 4))
+007000950713             IF         COND(&RETCOD *GT '0004') THEN(DO)
+007100970408             IF         COND(&BATCH *NE 'B') THEN(DO)
+007200930331             CHGVAR     VAR(&VIDEO) VALUE(%SST(&KPJBA 20 10))
+007300960819             SNDBRKMSG  MSG('Non sono disponibili dati dagli archivi +
+007400960819                          di Intesa o comunque non è possibile +
+007500960819                          ripristinarli: telefonare ad Intesa +
+007600960819                          richiedendo il ripristino dei dati ed +
+007700960819                          avvisando che l"area dati RC è impostata +
+007800960819                          ad un valore maggiore di 0004') +
+007900960819                          TOMSGQ(&VIDEO)
+008000970408             ENDDO
+008100970127             GOTO       CMDLBL(LIBR)
+008200930331             ENDDO
+008300930413
+008400961009/* SALVATAGGIO FILE INTESA (UNO PER OGNI GIORNO) */
+008500961009             RTVJOBA    DATE(&DATA)
+008600961009             CHGVAR     VAR(&GG) VALUE(%SST(&DATA 1 2))
+008700961009             CHGVAR     VAR(&SAVF) VALUE('FLATSAV' *CAT &GG)
+008800961009             CHKOBJ     OBJ(&LIBIN/&SAVF) OBJTYPE(*FILE)
+008900930413             MONMSG     MSGID(CPF9801) EXEC(DO)
+009000961009             CRTSAVF    FILE(&LIBIN/&SAVF) TEXT('Salvataggio FLAT1')
+009100930413             ENDDO
+009200961009             CLRSAVF    FILE(&LIBIN/&SAVF)
+009300961003             SAVOBJ     OBJ(FLAT1) LIB(&LIBIN) DEV(*SAVF) +
+009400961009                          SAVF(&LIBIN/&SAVF) UPDHST(*NO)
+009500930122
+009600130618/* Cancellazione movimenti di banche che spediscono in formato CBI.                               */
+009700130618             CALL       PGM(YK040001R)
+009800130618
+009900930122/* TRANSCODIFICA FLAT FILE PER E/C BANCA */
+010000960819             CALL       PGM(NDCK10R) PARM(&KPJBA)
+010100961004
+010200980715/* "SPUNTA" DI NDRI1 */
+010300961004             CALL       PGM(NDCK14R) PARM(&KPJBA)
+010400930122
+010500970116/* SCRITTURA FILE COSTI E STAMPA RIEPILOGO */
+010600960819             CALL       PGM(NDCK11R) PARM(&KPJBA)
+010700930211
+010800961004/* ELIMINO LIBRERIA DATI INTESA */
+010900970127 LIBR:       RMVLIBLE   LIB(&LIBIN)
+011000930211             MONMSG     MSGID(CPF0000)
+011100930122
+011200910906 FINE:       ENDPGM

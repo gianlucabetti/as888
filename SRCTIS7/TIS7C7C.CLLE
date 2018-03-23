@@ -1,0 +1,38 @@
+000100990908/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600000928
+000700000928
+000800060130             PGM        PARM(&KPJBA)
+000900991027
+001000060130             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502) /* Architettura */
+001100060130             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+001200060130             DCL        VAR(&DSBS55) TYPE(*CHAR) LEN(214)
+001300060130             DCL        VAR(&O50ALG) TYPE(*CHAR) LEN(10)
+001400000928
+001500060130             CHGVAR     VAR(&KNSIF) VALUE(%SUBSTRING(&KPJBA 92 10))
+001600060130
+001700060130/* Chiama il pgm di reperimento librerie oggetti */
+001800060130             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+001900060130             CHGVAR     VAR(%SST(&DSBS55 2 10)) VALUE(&KNSIF)
+002000060130             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('000')
+002100060130             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('046')
+002200060130             CALL       PGM(TIBS55R) PARM(&DSBS55)
+002300060130             CHGVAR     VAR(&O50ALG) VALUE(%SST(&DSBS55 106 10))
+002400060130
+002500060130/* Effettuo override al file tabelle nuove di Sede GAITRAGRU/TNTBE01L */
+002600060130             OVRDBF     FILE(TNTBE01L) TOFILE(&O50ALG/TNTBE01L) +
+002700060130                          OVRSCOPE(*JOB)
+002800000928
+002900060130
+003000060130/* Effettuo chiamata al *pgm d elaborazione */
+003100060130             CALL       PGM(TIS7C7R) PARM(&KPJBA)
+003200060130
+003300060130
+003400060130/* Effettuo chiamata al *pgm d elaborazione */
+003500060130             DLTOVR     FILE(TNTBE01L) LVL(*JOB)
+003600991027
+003700991026
+003800990907             ENDPGM

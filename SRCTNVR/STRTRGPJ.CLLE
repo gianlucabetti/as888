@@ -1,0 +1,106 @@
+000100030619             PGM
+000200030619
+000300030619             DCL        VAR(&ALCOBJ) TYPE(*CHAR) LEN(1) VALUE('1')
+000400030619             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000500030619             DCL        VAR(&FASE) TYPE(*CHAR) LEN(1) VALUE('1')
+000600030619             DCL        VAR(&MSGSTOP) TYPE(*CHAR) LEN(256)
+000700030619             DCL        VAR(&NBRLOCK) TYPE(*CHAR) LEN(4)
+000800030619
+000900030619             CHGJOB     LOG(4 0 *MSG) LOGCLPGM(*YES)
+001000030619
+001100030619/* Congelo la coda lavori di ricezione anagrafiche clienti ----------*/
+001200030619/*                                                                   */
+001300030619             HLDJOBQ    JOBQ(KGIORNO3)
+001400030619             DLYJOB     DLY(10)
+001500030619/*                                                                   */
+001600030619/*-------------------------------------------------------------------*/
+001700030619
+001800030619/* Termino il sottosistema di Interceptor che sicuramente alloca i --*/
+001900030619/* file                                                              */
+002000030619             ENDSBS     SBS(INTERCEP) DELAY(10)
+002100030619             MONMSG     MSGID(CPF1054)
+002200030619             DLYJOB     DLY(10)
+002300030619/*                                                                   */
+002400030619/*-------------------------------------------------------------------*/
+002500030619
+002600030619/* Guardo se ANRCO00F è libero --------------------------------------*/
+002700030619/*                                                                   */
+002800030619             CALL       PGM(TRULMLOCK) PARM(&FASE 'ANRCO00F  ' +
+002900030619                          '*LIBL     ' '*FILE     ' '*FIRST    ' +
+003000030619                          &MSGSTOP &NBRLOCK &ESITO)
+003100030619             IF         COND(&ESITO = '0' *AND %BIN(&NBRLOCK) > 0) +
+003200030619                          THEN(DO)
+003300030619             GOTO       CMDLBL(STRSBSINT)
+003400030619             ENDDO
+003500030619/*                                                                   */
+003600030619/*-------------------------------------------------------------------*/
+003700030619
+003800030619/* Guardo se NDPAS00F è libero --------------------------------------*/
+003900030619/*                                                                   */
+004000030619             CALL       PGM(TRULMLOCK) PARM(&FASE 'NDPAS00F  ' +
+004100030619                          '*LIBL     ' '*FILE     ' '*FIRST    ' +
+004200030619                          &MSGSTOP &NBRLOCK &ESITO)
+004300030619             IF         COND(&ESITO = '0' *AND %BIN(&NBRLOCK) > 0) +
+004400030619                          THEN(DO)
+004500030619             GOTO       CMDLBL(STRSBSINT)
+004600030619             ENDDO
+004700030619/*                                                                   */
+004800030619/*-------------------------------------------------------------------*/
+004900030619
+005000030619/* Guardo se NDBMV00F è libero --------------------------------------*/
+005100030619/*                                                                   */
+005200030619             CALL       PGM(TRULMLOCK) PARM(&FASE 'NDBMV00F  ' +
+005300030619                          '*LIBL     ' '*FILE     ' '*FIRST    ' +
+005400030619                          &MSGSTOP &NBRLOCK &ESITO)
+005500030619             IF         COND(&ESITO = '0' *AND %BIN(&NBRLOCK) > 0) +
+005600030619                          THEN(DO)
+005700030619             GOTO       CMDLBL(STRSBSINT)
+005800030619             ENDDO
+005900030619/*                                                                   */
+006000030619/*-------------------------------------------------------------------*/
+006100030619
+006200030619/* Rimuovo eventuali trigger già esistenti. -------------------------*/
+006300030619/*                                                                   */
+006400030619             CALL       PGM(YTRGRMV01) PARM(&ALCOBJ &ESITO)
+006500030619             IF         COND(&ESITO = '1') THEN(GOTO CMDLBL(STRSBSINT))
+006600030619
+006700030619             CALL       PGM(YTRGRMV02) PARM(&ALCOBJ &ESITO)
+006800030619             IF         COND(&ESITO = '1') THEN(GOTO CMDLBL(STRSBSINT))
+006900030619
+007000030619             CALL       PGM(YTRGRMV03) PARM(&ALCOBJ &ESITO)
+007100030619             IF         COND(&ESITO = '1') THEN(GOTO CMDLBL(STRSBSINT))
+007200030619/*                                                                   */
+007300030619/*-------------------------------------------------------------------*/
+007400030619
+007500030619/* Aggiungo i trigger. ----------------------------------------------*/
+007600030619/*                                                                   */
+007700030619             CALL       PGM(YTRGADD01) PARM(&ALCOBJ &ESITO)
+007800030619             CALL       PGM(YTRGADD02) PARM(&ALCOBJ &ESITO)
+007900030619             CALL       PGM(YTRGADD03) PARM(&ALCOBJ &ESITO)
+008000030619/*                                                                   */
+008100030619/*-------------------------------------------------------------------*/
+008200030619
+008300030619/* Sospendo Interceptor così stà fermo anche se parte il sottosistema*/
+008400030619/*                                                                   */
+008500030619             RUNSQL     SQL('UPDATE SYJRN00F SET JRNATT = ''S'' +
+008600030619                          WHERE JRNJRN = ''PJJRN''')
+008700030619/*                                                                   */
+008800030619/*-------------------------------------------------------------------*/
+008900030619
+009000030619/* Se sono arrivato qui vuol dire che è andato tutto bene. ----------*/
+009100030619/*                                                                   */
+009200030619             GOTO       CMDLBL(RLSJOBQ)
+009300030619/*                                                                   */
+009400030619/*-------------------------------------------------------------------*/
+009500030619
+009600030619 STRSBSINT:  STRSBS     SBSD(INTERCEP)
+009700030619 RLSJOBQ:    RLSJOBQ    JOBQ(KGIORNO3)
+009800030619
+009900030619/* Stampo la situazione ---------------------------------------------*/
+010000030619/*                                                                   */
+010100030619             PRTTRGPGM  LIB(PJBARGRU)
+010200030619             PRTTRGPGM  LIB(PJBARSOC)
+010300030619/*                                                                   */
+010400030619/*-------------------------------------------------------------------*/
+010500030619
+010600030619 ENDPGM:     ENDPGM

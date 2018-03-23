@@ -1,0 +1,34 @@
+000100990514/*PARMS DFTACTGRP(*YES)                                                       */
+000200990514/*PARMS                                                                       */
+000300990514/*PARMS                                                                       */
+000400990514/*PARMS                                                                       */
+000500990514/*PARMS                                                                       */
+000600990525             PGM        PARM(&XRFLIB &XRFCTFILE &XRFCTPGM)
+000700990525
+000800990514             DCL        VAR(&XRFLIB) TYPE(*CHAR) LEN(10)
+000900990525             DCL        VAR(&XRFCTFILE) TYPE(*CHAR) LEN(1)
+001000990525             DCL        VAR(&XRFCTPGM) TYPE(*CHAR) LEN(1)
+001100990514
+001200990525             IF         COND(&XRFCTPGM *EQ '1') THEN(DO)
+001300990514             SNDPGMMSG  MSGID(CPA2401) MSGF(QCPFMSG) +
+001400990514                          MSGDTA('Creazione riferimenti programmi +
+001500990514                          libreria' *BCAT &XRFLIB *TCAT ' . . .') +
+001600990514                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+001700990519             DSPPGMREF  PGM(&XRFLIB/*ALL) OUTPUT(*OUTFILE) +
+001800990519                          OBJTYPE(*ALL) OUTFILE(XRPGM00F) +
+001900990519                          OUTMBR(*FIRST *ADD)
+002000990514             MONMSG     MSGID(CPF0000)
+002100990616             CALL       PGM(XREF13) PARM(&XRFLIB)
+002200990525             ENDDO
+002300990514
+002400990525             IF         COND(&XRFCTFILE *EQ '1') THEN(DO)
+002500990514             SNDPGMMSG  MSGID(CPA2401) MSGF(QCPFMSG) +
+002600990514                          MSGDTA('Creazione relazioni data base +
+002700990514                          libreria' *BCAT &XRFLIB *TCAT ' . . .') +
+002800990514                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+002900990519             DSPDBR     FILE(&XRFLIB/*ALL) OUTPUT(*OUTFILE) +
+003000990519                          OUTFILE(XRDBR00F) OUTMBR(*FIRST *ADD)
+003100990514             MONMSG     MSGID(CPF0000)
+003200990525             ENDDO
+003300990514
+003400990514             ENDPGM

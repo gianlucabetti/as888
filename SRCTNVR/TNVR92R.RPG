@@ -1,0 +1,811 @@
+000100980612     H*------------------------------------------------------------------------*
+000200980612     H* ALLINEA CAPPARIO - RICHIESTA PARAMETRI                                 *
+000300980612     H*------------------------------------------------------------------------*
+000400980612     H              J
+000500980612     F*------------------------------------------------------------------------*
+000600980612     F* DATA BASE
+000700980612     F*------------------------------------------------------------------------*
+000800980612     FTNVR92D CF  E                    WORKSTN      KINFDS DEVDS1
+000900980612     F                                        MSGULTKSFILE VR92DVM
+001000980612     FAZORG01LIF  E           K        DISK
+001100980612     FTABEL00FIF  E           K        DISK
+001200980612     E*------------------------------------------------------------------------*
+001300980612     E* SCHIERE
+001400980612     E*------------------------------------------------------------------------*
+001500980612     E*-------------------
+001600980612     E* MESSAGGI, COMANDI E FUNZIONI
+001700980612     E*-------------------
+001800980612     E                    MSG     1  20 78               *MESSAGGI
+001900980612     E                    FUN     1  31 40               *FUNZ.VIDEO
+002000980612     E*-------------------
+002100980612     E* SINGOLE SCHIERE ALL'INTERNO DELLA RIGA FUNZIONI
+002200980612     E*-------------------
+002300980612     E                    FFU        31  6               *FUNZIONE
+002400980612     E                    FDE        31 19               *DESCRIZIONE FUNZIONE
+002500980612     E                    FAT        31  1               *FUNZIONE ATTIVA S/N
+002600980612     E*-------------------
+002700980612     E* TABELLA DESCRIZIONI A VIDEO
+002800980612     E*-------------------
+002900980612     E                    FUV         8 19               *FUNZIONI A VIDEO
+003000980612     E*-------------------
+003100980612     E* TABELLA TASTI FUNZIONALI PREMUTI
+003200980612     E*-------------------
+003300980612     E                    KEYS       40  1
+003400980612     I*------------------------------------------------------------------------*
+003500980612     I* INPUT
+003600980612     I*------------------------------------------------------------------------*
+003700980612     I*---------------------
+003800980612     I* RIDEFINIZIONE SCHIERA -FUD- (FUNZIONI)
+003900980612     I*---------------------
+004000980612     IDSFUN     E DS
+004100980612     I                                        1  40 FUNRIG
+004200980612     I*---------------------
+004300980612     I* DS PER GESTIONE TASTI FUNZIONALI
+004400980612     I*---------------------
+004500980612     IDSKEYS    E DS
+004600980612     I                                        1  40 KEYRIG
+004700980612     I*---------------------
+004800980612     I* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+004900980612     I*---------------------
+005000980612     I           SDS
+005100980612     I                                      254 263 USER
+005200980612     I*---------------------
+005300980612     I* RIDEFINIZIONE INFDS DEL FILE VIDEO
+005400980612     I*---------------------
+005500980612     IDEVDS1      DS
+005600980612     I                                      369 369 KEY
+005700980612     I                                      370 371 CURSOR
+005800980612     I*---------------------
+005900980612     I* DS GESTIONE MESSAGGI AL PGM
+006000980612     I*---------------------
+006100980612     IDSMSG     E DS
+006200980612     I*---------------------
+006300980612     I* DS REPERIMENTO DATI UTENTE
+006400980612     I*---------------------
+006500980612     IDSFIL     E DS
+006600980612     I*---------------------
+006700980612     I* DS NAZIONI
+006800980612     I*---------------------
+006900980612     IDS15      E DS
+007000980612     I*---------------------
+007100980612     I* DS PARAMETRI DI LANCIO
+007200980612     I*------------------
+007300980612     IPARAM      IDS
+007400980612     I                                        1   1 PARSEN
+007500980612     I                                        2   2 PARSIM
+007600980612     I                                        3   70PARVER
+007700980612     I                                        8  10 PARNAR
+007800980612     I                                       11  130PARLNA
+007900980612     I                                       14  22 PARCAD
+008000980612     I                                       23  31 PARCAA
+008100980612     I                                       32  32 PARSOC
+008200980612     I                                       33  33 PARSTC
+008300980612     I                                       34  34 PAROLC
+008400980612     I                                       35  35 PARO2C
+008500980612     I                                       36  36 PARSOL
+008600980612     I                                       37  37 PARSTL
+008700980612     I                                       38  38 PAROLL
+008800980612     I                                       39  39 PARO2L
+008900980612     I*---------------------
+009000980612     I* ARCHITETTURA
+009100980612     I*---------------------
+009200980612     IKPJBA     E DS
+009300980612     I                                       98  98 SIFPRV
+009400980612     C*------------------------------------------------------------------------*
+009500980612     C* MAIN LINE
+009600980612     C*------------------------------------------------------------------------*
+009700980612     C*
+009800980612     C* CICLO FINO A CHE:
+009900980612DO  1C           $FINE     DOUEQ'1'
+010000980612     C*
+010100980612     C* CONTROLLA GESTIONE VIDEO
+010200980612     C                     MOVEL'0'       $ERR             *FLAG ERRORE
+010300980612IF  2C           $GES      IFEQ 'V1'
+010400980612     C                     EXSR GESV1                      *PARAMETRI
+010500980612E   2C                     ENDIF
+010600980612E   1C                     ENDDO
+010700980612     C*
+010800980612     C                     SETON                     LR
+010900980612     C*------------------------------------------------------------------------*
+011000980612     C* GESV1 - GESTIONE VIDEO UNO
+011100980612     C*------------------------------------------------------------------------*
+011200980612     C           GESV1     BEGSR
+011300980612     C*
+011400980612IF  1C           $TESVD    IFEQ '1'                        *TESTATA DA RIEMETTER
+011500980612     C                     EXSR CARV1                      *CARICA VIDEO
+011600980612E   1C                     ENDIF
+011700980612     C*
+011800980612IF  1C           MSGULT    IFEQ *ZEROS                     *SE CI SONO MESSAGGGI
+011900980612     C                     MOVEL*BLANKS   $MSG             *EMETTE BLANK
+012000980612     C                     EXSR CARMSG                     *CARICA MESSAGGIO
+012100980612E   1C                     ENDIF
+012200980612     C                     EXSR OUTMSG                     *EMETTE MESSAGGI
+012300980612     C                     EXFMTVR92DV1                    *PARAMETRI
+012400980612     C*
+012500980612     C                     EXSR CONFUN                     *CONTROLLA TASTI FUNZ
+012600980612     C*
+012700980612IF  1C           $ERR      IFEQ '0'                        *TASTO ABILITATO
+012800980612SL  2C                     SELEC
+012900980612     C           KEY       WHEQ ENTER
+013000980612     C                     EXSR ENTV1                      *GEST.ENTER VIDEO V1
+013100980612     C           KEY       WHEQ F6
+013200980612     C                     EXSR F06GES                     *CONFERMA
+013300980612     C                     OTHER
+013400980612     C                     EXSR FUNSTD                     *GEST.TASTI STANDARD
+013500980612E   2C                     ENDSL
+013600980612E   1C                     ENDIF
+013700980612     C*
+013800980612     C                     ENDSR
+013900980612     C*------------------------------------------------------------------------*
+014000980612     C* CARV1 - CARICA VIDEO UNO
+014100980612     C*------------------------------------------------------------------------*
+014200980612     C           CARV1     BEGSR
+014300980612     C*
+014400980612     C                     MOVEL'V1'      $GES             *GESTIONE ATTUALE
+014500980612     C*
+014600980612     C                     EXSR CARFUN                     *CARICA FUNZIONI
+014700980612     C                     EXSR OUTFUN                     *EMETTE FUNZIONI
+014800980612     C*
+014900980612     C                     WRITEVR92DVT                    *TESTATA
+015000980612     C                     WRITEVR92DVF                    *FUNZIONI
+015100980612     C*
+015200980612     C                     ENDSR
+015300980612     C*------------------------------------------------------------------------*
+015400980612     C* ENTV1 - GESTIONE TASTO ENTER VIDEO UNO
+015500980612     C*------------------------------------------------------------------------*
+015600980612     C           ENTV1     BEGSR
+015700980612     C*
+015800980612     C* CONTROLLA I CAMPI IMMESSI
+015900980612     C                     EXSR DECODI                     *CONTROLLO CAMPI
+016000980612     C*
+016100980612     C                     ENDSR
+016200980612     C*------------------------------------------------------------------------*
+016300980612     C* F06GES - GESTIONE TASTO FUNZIONALE F06 ==> CONFERMA LANCIO
+016400980612     C*------------------------------------------------------------------------*
+016500980612     C           F06GES    BEGSR
+016600980612     C*
+016700980612     C* CONTROLLA I CAMPI IMMESSI
+016800980612     C                     EXSR DECODI
+016900980612     C*
+017000980612     C* LANCIA IL PROGRAMMA DI DUPLICA
+017100980612IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+017200980612     C                     MOVELV1CSEN    PARSEN           *SENSO
+017300980612     C                     MOVELV1CSIM    PARSIM           *SIMULAZIONE
+017400980612     C                     Z-ADDV1CVER    PARVER           *VERSIONE
+017500980612     C                     MOVELV1CNAR    PARNAR           *NAZIONE
+017600980612     C                     Z-ADDV1CLNA    PARLNA           *LINEA ARRIVO
+017700980612     C                     MOVELV1CCAD    PARCAD           *CAP DA
+017800980612     C                     MOVELV1CCAA    PARCAA           *CAP A
+017900980612     C                     MOVELV1CSOC    PARSOC           *FLAG CAP
+018000980612     C                     MOVELV1CSTC    PARSTC
+018100980612     C                     MOVELV1COLC    PAROLC
+018200980612     C                     MOVELV1CO2C    PARO2C
+018300980612     C                     MOVELV1CSOL    PARSOL           *FLAG LOCALITA'
+018400980612     C                     MOVELV1CSTL    PARSTL
+018500980612     C                     MOVELV1COLL    PAROLL
+018600980612     C                     MOVELV1CO2L    PARO2L
+018700980612     C*
+018800980612     C                     MOVEL'VR93'    KCOAZ
+018900980612     C                     MOVELPARAM     KPJBU
+019000980612     C                     CALL 'BCH10'
+019100980612     C                     PARM           KPJBA
+019200980612E   1C                     ENDIF
+019300980612     C*
+019400980612     C                     ENDSR
+019500980612     C*------------------------------------------------------------------------*
+019600980612     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+019700980612     C*------------------------------------------------------------------------*
+019800980612     C           DECODI    BEGSR
+019900980612     C*
+020000980612     C* REIMPOSTA INDICATORI DI ERRORE
+020100980612     C                     SETOF                     606162
+020200980612     C                     SETOF                     636465
+020300980612     C                     SETOF                     666768
+020400980612     C                     SETOF                     697071
+020500980612     C                     SETOF                     727374
+020600980612     C***
+020700980612     C* NON LANCIABILE DA PROVA
+020800980612     C***
+020900980612IF  1C           $ERR      IFEQ '0'
+021000980612IF  2C           SIFPRV    IFEQ 'P'
+021100980612     C                     MOVEL'1'       $ERR
+021200980612     C                     MOVELMSG,13    $MSG
+021300980612     C                     EXSR CARMSG
+021400980612E   2C                     ENDIF
+021500980612E   1C                     ENDIF
+021600980612     C*--------------------
+021700980612     C* SENSO
+021800980612     C*--------------------
+021900980612IF  1C           $ERR      IFEQ '0'
+022000980612IF  2C           V1CSEN    IFEQ '1'
+022100980612     C           V1CSEN    OREQ '2'
+022200980612X   2C                     ELSE
+022300980612     C                     SETON                     60
+022400980612     C                     MOVEL'1'       $ERR
+022500980612     C                     MOVELMSG,11    $MSG
+022600980612     C                     EXSR CARMSG
+022700980612E   2C                     ENDIF
+022800980612E   1C                     ENDIF
+022900980612     C*--------------------
+023000980612     C* SIMULAZIONE LANCIO
+023100980612     C*--------------------
+023200980612IF  1C           $ERR      IFEQ '0'
+023300980612IF  2C           V1CSIM    IFEQ 'S'
+023400980612     C           V1CSIM    OREQ 'N'
+023500980612X   2C                     ELSE
+023600980612     C                     SETON                     61
+023700980612     C                     MOVEL'1'       $ERR
+023800980612     C                     MOVELMSG,11    $MSG
+023900980612     C                     EXSR CARMSG
+024000980612E   2C                     ENDIF
+024100980612E   1C                     ENDIF
+024200980612     C*--------------------
+024300980612     C* VERSIONE CAPPARIO
+024400980612     C*--------------------
+024500980612IF  1C           $ERR      IFEQ '0'
+024600980612IF  2C           V1CVER    IFEQ *ZEROS
+024700980612     C                     SETON                     62
+024800980612     C                     MOVEL'1'       $ERR
+024900980612     C                     MOVELMSG,12    $MSG
+025000980612     C                     EXSR CARMSG
+025100980612E   2C                     ENDIF
+025200980612E   1C                     ENDIF
+025300980612     C*--------------------
+025400980612     C* NAZIONE
+025500980612     C*--------------------
+025600980612     C                     MOVEL*BLANKS   V1DNAR
+025700980612IF  1C           $ERR      IFEQ '0'
+025800980612     C                     MOVELV1CNAR    WNAR
+025900980612     C                     MOVEL*BLANKS   WDNAR
+026000980612     C                     EXSR CHKNAR
+026100980612     C                     MOVELWDNAR     V1DNAR
+026200980612IF  2C           $ERR      IFEQ '1'
+026300980612     C                     SETON                     71
+026400980612     C                     MOVELMSG,14    $MSG
+026500980612     C                     EXSR CARMSG
+026600980612E   2C                     ENDIF
+026700980612E   1C                     ENDIF
+026800980612     C*--------------------
+026900980612     C* LINEA ARRIVO STANDARD
+027000980612     C*--------------------
+027100980612     C                     MOVEL*BLANKS   V1DLNA
+027200980612IF  1C           $ERR      IFEQ '0'
+027300980612IF  2C           V1CLNA    IFNE *ZEROS
+027400980612     C                     MOVELV1CLNA    WLIN
+027500980612     C                     MOVEL*BLANKS   WDLIN
+027600980612     C                     EXSR CHKLIN
+027700980612     C                     MOVELWDLIN     V1DLNA
+027800980612IF  3C           $ERR      IFEQ '1'
+027900980612     C                     SETON                     72
+028000980612     C                     MOVELMSG,15    $MSG
+028100980612     C                     EXSR CARMSG
+028200980612E   3C                     ENDIF
+028300980612E   2C                     ENDIF
+028400980612E   1C                     ENDIF
+028500980612     C*--------------------
+028600980612     C* CAP DA / A
+028700980612     C*--------------------
+028800980612IF  1C           $ERR      IFEQ '0'
+028900980612IF  2C           V1CCAD    IFNE *BLANKS
+029000980612     C           V1CCAA    ORNE *BLANKS
+029100980612IF  3C           V1CCAA    IFLT V1CCAD
+029200980612     C                     MOVEL'1'       $ERR
+029300980612     C                     SETON                     74
+029400980612     C                     MOVELMSG,16    $MSG
+029500980612     C                     EXSR CARMSG
+029600980612E   3C                     ENDIF
+029700980612E   2C                     ENDIF
+029800980612E   1C                     ENDIF
+029900980612     C*--------------------
+030000980612     C* AGGIORNAMENTO CAP
+030100980612     C*--------------------
+030200980612     C* SOTTO
+030300980612IF  1C           $ERR      IFEQ '0'
+030400980612IF  2C           V1CSOC    IFEQ 'S'
+030500980612     C           V1CSOC    OREQ 'X'
+030600980612     C           V1CSOC    OREQ *BLANKS
+030700980612X   2C                     ELSE
+030800980612     C                     SETON                     63
+030900980612     C                     MOVEL'1'       $ERR
+031000980612     C                     MOVELMSG,11    $MSG
+031100980612     C                     EXSR CARMSG
+031200980612E   2C                     ENDIF
+031300980612E   1C                     ENDIF
+031400980612     C* STANDARD
+031500980612IF  1C           $ERR      IFEQ '0'
+031600980612IF  2C           V1CSTC    IFEQ 'S'
+031700980612     C           V1CSTC    OREQ 'X'
+031800980612     C           V1CSTC    OREQ *BLANKS
+031900980612X   2C                     ELSE
+032000980612     C                     SETON                     64
+032100980612     C                     MOVEL'1'       $ERR
+032200980612     C                     MOVELMSG,11    $MSG
+032300980612     C                     EXSR CARMSG
+032400980612E   2C                     ENDIF
+032500980612E   1C                     ENDIF
+032600980612     C* OLTRE
+032700980612IF  1C           $ERR      IFEQ '0'
+032800980612IF  2C           V1COLC    IFEQ 'S'
+032900980612     C           V1COLC    OREQ 'X'
+033000980612     C           V1COLC    OREQ *BLANKS
+033100980612X   2C                     ELSE
+033200980612     C                     SETON                     65
+033300980612     C                     MOVEL'1'       $ERR
+033400980612     C                     MOVELMSG,11    $MSG
+033500980612     C                     EXSR CARMSG
+033600980612E   2C                     ENDIF
+033700980612E   1C                     ENDIF
+033800980612     C* OLTRE 2
+033900980612IF  1C           $ERR      IFEQ '0'
+034000980612IF  2C           V1CO2C    IFEQ 'S'
+034100980612     C           V1CO2C    OREQ 'X'
+034200980612     C           V1CO2C    OREQ *BLANKS
+034300980612X   2C                     ELSE
+034400980612     C                     SETON                     66
+034500980612     C                     MOVEL'1'       $ERR
+034600980612     C                     MOVELMSG,11    $MSG
+034700980612     C                     EXSR CARMSG
+034800980612E   2C                     ENDIF
+034900980612E   1C                     ENDIF
+035000980612     C*--------------------
+035100980612     C* AGGIORNAMENTO LOCALITA'
+035200980612     C*--------------------
+035300980612     C* SOTTO
+035400980612IF  1C           $ERR      IFEQ '0'
+035500980612IF  2C           V1CSOL    IFEQ 'S'
+035600980612     C           V1CSOL    OREQ 'X'
+035700980612     C           V1CSOL    OREQ *BLANKS
+035800980612X   2C                     ELSE
+035900980612     C                     SETON                     67
+036000980612     C                     MOVEL'1'       $ERR
+036100980612     C                     MOVELMSG,11    $MSG
+036200980612     C                     EXSR CARMSG
+036300980612E   2C                     ENDIF
+036400980612E   1C                     ENDIF
+036500980612     C* STANDARD
+036600980612IF  1C           $ERR      IFEQ '0'
+036700980612IF  2C           V1CSTL    IFEQ 'S'
+036800980612     C           V1CSTL    OREQ 'X'
+036900980612     C           V1CSTL    OREQ *BLANKS
+037000980612X   2C                     ELSE
+037100980612     C                     SETON                     68
+037200980612     C                     MOVEL'1'       $ERR
+037300980612     C                     MOVELMSG,11    $MSG
+037400980612     C                     EXSR CARMSG
+037500980612E   2C                     ENDIF
+037600980612E   1C                     ENDIF
+037700980612     C* OLTRE
+037800980612IF  1C           $ERR      IFEQ '0'
+037900980612IF  2C           V1COLL    IFEQ 'S'
+038000980612     C           V1COLL    OREQ 'X'
+038100980612     C           V1COLL    OREQ *BLANKS
+038200980612X   2C                     ELSE
+038300980612     C                     SETON                     69
+038400980612     C                     MOVEL'1'       $ERR
+038500980612     C                     MOVELMSG,11    $MSG
+038600980612     C                     EXSR CARMSG
+038700980612E   2C                     ENDIF
+038800980612E   1C                     ENDIF
+038900980612     C* OLTRE 2
+039000980612IF  1C           $ERR      IFEQ '0'
+039100980612IF  2C           V1CO2L    IFEQ 'S'
+039200980612     C           V1CO2L    OREQ 'X'
+039300980612     C           V1CO2L    OREQ *BLANKS
+039400980612X   2C                     ELSE
+039500980612     C                     SETON                     70
+039600980612     C                     MOVEL'1'       $ERR
+039700980612     C                     MOVELMSG,11    $MSG
+039800980612     C                     EXSR CARMSG
+039900980612E   2C                     ENDIF
+040000980612E   1C                     ENDIF
+040100980612     C*
+040200980612     C                     ENDSR
+040300980612     C*------------------------------------------------------------------------*
+040400980612     C* CHKNAR - CONTROLLA LA NAZIONE
+040500980612     C*------------------------------------------------------------------------*
+040600980612     C           CHKNAR    BEGSR
+040700980612     C*
+040800980612     C           *LIKE     DEFN V1CNAR    WNAR
+040900980612     C           *LIKE     DEFN V1DNAR    WDNAR
+041000980612     C*
+041100980612     C* CONTROLLA ESISTENZA CODICE
+041200980612     C                     Z-ADDDSFICD    KBLKUT
+041300980612     C                     MOVEL'15'      KBLCOD
+041400980612     C                     MOVELWNAR      KBLKEY    P
+041500980612     C           KEYTAB    CHAINTABEL00F             99
+041600980612IF  1C           *IN99     IFEQ *OFF
+041700980612     C           TBLFLG    ANDEQ*BLANKS
+041800980612     C                     MOVELTBLUNI    DS15
+041900980612     C                     MOVEL§15DES    WDNAR
+042000980612X   1C                     ELSE
+042100980612     C                     MOVEL'1'       $ERR
+042200980612E   1C                     ENDIF
+042300980612     C*
+042400980612     C                     ENDSR
+042500980612     C*------------------------------------------------------------------------*
+042600980612     C* CHKLIN - CONTROLLA LA LINEA
+042700980612     C*------------------------------------------------------------------------*
+042800980612     C           CHKLIN    BEGSR
+042900980612     C*
+043000980612     C           *LIKE     DEFN V1CLNA    WLIN
+043100980612     C           *LIKE     DEFN V1DLNA    WDLIN
+043200980612     C*
+043300980612     C* CONTROLLA ESISTENZA CODICE
+043400980612     C                     MOVELWLIN      KRGFIL
+043500980612     C           KEYORG    CHAINAZORG01L             99
+043600980612IF  1C           *IN99     IFEQ *OFF
+043700980612     C           ORGFVA    ANDEQ*BLANKS
+043800980612     C           ORGFAG    ANDNE'V'
+043900980612     C                     MOVELORGDES    WDLIN
+044000980612X   1C                     ELSE
+044100980612     C                     MOVEL'1'       $ERR
+044200980612E   1C                     ENDIF
+044300980612     C*
+044400980612     C                     ENDSR
+044500980612     C*------------------------------------------------------------------------*
+044600980612     C* IMPVID - IMPOSTAZIONI VIDEO
+044700980612     C*------------------------------------------------------------------------*
+044800980612     C           IMPVID    BEGSR
+044900980612     C*
+045000980612     C                     MOVEL'1'       V1CSEN           *SENSO
+045100980612     C                     MOVEL'S'       V1CSIM           *SIMULAZIONE
+045200980612     C*
+045300980612     C                     ENDSR
+045400980612     C*------------------------------------------------------------------------*
+045500980612     C* *INZSR - ROUTINE INIZIALE
+045600980612     C*------------------------------------------------------------------------*
+045700980612     C           *INZSR    BEGSR
+045800980612     C*
+045900980612     C* RICEVIMENTO PARAMETRI
+046000980612     C           *ENTRY    PLIST
+046100980612     C                     PARM           KPJBA
+046200980612     C*
+046300980612     C* VARIABILI RIFERITE AL DATA BASE
+046400980612     C           *LIKE     DEFN ORGFIL    KRGFIL           *AZORG01L
+046500980612     C           *LIKE     DEFN TBLKUT    KBLKUT           *TABEL00F
+046600980612     C           *LIKE     DEFN TBLCOD    KBLCOD
+046700980612     C           *LIKE     DEFN TBLKEY    KBLKEY
+046800980612     C*
+046900980612     C* CHIAVI DI LETTURA
+047000980612     C           KEYORG    KLIST                           *AZORG01L
+047100980612     C                     KFLD           KRGFIL            -FILIALE
+047200980612     C           KEYTAB    KLIST                           *TABEL00F
+047300980612     C                     KFLD           KBLKUT            -UTENTE
+047400980612     C                     KFLD           KBLCOD            -TABELLA
+047500980612     C                     KFLD           KBLKEY            -CHIAVE
+047600980612     C*
+047700980612     C* VARIABILI DI CONTROLLO
+047800980612     C                     MOVEL'N'       WRECOK  1        *VALIDITA' RECORD
+047900980612     C                     MOVEL'G'       $TGES   1        *G=GESTIONE
+048000980612     C*
+048100980612     C* ESEGUE OPERAZIONI INIZIALI STANDARD
+048200980612     C                     EXSR INZSTD
+048300980612     C*
+048400980612     C* IMPOSTAZIONI VIDEO
+048500980612     C                     EXSR IMPVID
+048600980612     C*
+048700980612     C* EMETTE VIDEATA
+048800980612     C                     EXSR CARV1
+048900980612     C*
+049000980612     C                     ENDSR
+049100980612     C*------------------------------------------------------------------------*
+049200980612     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+049300980612     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+049400980612     C*    LA PARTE DI SPECIFICHE 'C' SOTTOSTANTE SI RIFA' A PARTICOLARI
+049500980612     C*    STANDARDS DI PROGRAMMAZIONE E NELLA MAGGIOR PARTE DEI CASI
+049600980612     C*    NON E' NECESSARIO MODIFICARLA, NEL CASO FARE ATTENZIONE.
+049700980612     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+049800980612     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+049900980612     C*------------------------------------------------------------------------*
+050000980612     C* INZSTD - ROUTINE INIZIALE STANDARD
+050100980612     C*------------------------------------------------------------------------*
+050200980612     C           INZSTD    BEGSR
+050300980612     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+050400980612     C                     CALL 'XKEYS'
+050500980612     C                     PARM           DSKEYS
+050600980612     C                     MOVEAKEYRIG    KEYS             *CARICA SCHIERA FUNZ.
+050700980612     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+050800980612     C           XMSGPA    PLIST
+050900980612     C                     PARM           DSMSMS
+051000980612     C                     PARM           DSMSPG
+051100980612     C                     PARM           DSMSKE
+051200980612     C                     PARM           DSMSER
+051300980612     C* IMPOSTA PER CL=XMSG (MESSAGGI ALLA CODA PGM), FISSI IN TUTTO IL PGM
+051400980612     C                     MOVEL'TNVR92R' DSMSPG           *NOME PGM CHIAMANTE
+051500980612     C                     MOVEL'TNVR92R' VMCQUE           *CODA MESSAGGI DESTIN
+051600980612     C                     MOVEL*BLANKS   VMCKEY           *CHIAVE MESSAGGIO
+051700980612     C                     MOVEL*BLANKS   DSMSMS           *MESSAGGIO
+051800980612     C* INIZIALIZZO FLAG CONTROLLO PGM
+051900980612     C                     MOVEL'0'       $ERR    1        *ERRORE
+052000980612     C                     MOVEL'0'       $F03    1        *PREMUTO TASTO F03
+052100980612     C                     MOVEL*BLANKS   $GES    2        *GESTIONE VIDEO
+052200980612     C                     MOVEL*BLANKS   $MSG   80        *MESSAGGI
+052300980612     C                     MOVEL'0'       $FINE   1        *FINE PGM
+052400980612     C                     MOVEL'1'       $TESVD  1        *1=RIEMETT.TEST.VIDEO
+052500980612     C                     MOVEL'I'       $TGES   1        *I=INTER. G=GESTIONE
+052600980612     C* LANCIO ROUTINE PER VERIFICARE SE
+052700980612     C* SONO IN SEDE, IN FILIALE DI 1° LIVELLO O IN FILIALE DI 2° LIVELLO
+052800980612     C* E PER RECUPERARE LA RAGIONE SOCIALE DELL'UTENTE
+052900980612     C                     CALL 'XFIL'
+053000980612     C                     PARM           DSFIL
+053100980612     C* POSIZIONE MINIMA E MASSIMA DEL CURSORE PER GESTIONE MESSAGGI
+053200980612     C                     BITOF'01234567'POSMI1  1
+053300980612     C                     BITOF'01234567'POSMI2  1
+053400980612     C                     BITOF'01234567'POSMA1  1
+053500980612     C                     BITOF'01234567'POSMA2  1
+053600980612     C                     BITON'34'      POSMI1  1        *18
+053700980612     C                     BITON'7'       POSMI2  1        *01
+053800980612     C                     BITON'34'      POSMA1  1        *18
+053900980612     C                     BITON'0'       POSMA2  1        *80
+054000980612     C                     MOVE POSMI2    POSMIN  2
+054100980612     C                     MOVELPOSMI1    POSMIN
+054200980612     C                     MOVE POSMA2    POSMAX  2
+054300980612     C                     MOVELPOSMA1    POSMAX
+054400980612     C                     ENDSR
+054500980612     C*------------------------------------------------------------------------*
+054600980612     C* FUNSTD - LANCIA SUBROUTINE STANDARD
+054700980612     C*------------------------------------------------------------------------*
+054800980612     C           FUNSTD    BEGSR
+054900980612     C                     SELEC
+055000980612     C           KEY       WHEQ F3
+055100980612     C                     EXSR F03STD
+055200980612     C           KEY       WHEQ F12
+055300980612     C                     EXSR F12STD
+055400980612     C           KEY       WHEQ F24
+055500980612     C                     EXSR F24STD
+055600980612     C                     OTHER
+055700980612     C                     MOVELMSG,2     $MSG
+055800980612     C                     EXSR CARMSG
+055900980612     C                     ENDSL
+056000980612     C                     ENDSR
+056100980612     C*------------------------------------------------------------------------*
+056200980612     C* F03STD - GEST. TASTO FUNZ. F03 STANDARD ==> FINE
+056300980612     C*------------------------------------------------------------------------*
+056400980612     C           F03STD    BEGSR
+056500980612     C* IMPOSTO FLAG DI PREMUTO TASTO F03
+056600980612     C                     MOVEL'1'       $F03
+056700980612     C* IMPOSTO FLAG DI FINE PROGRAMMA
+056800980612     C                     MOVEL'1'       $FINE
+056900980612     C* PULISCE IL MESSAGGIO
+057000980612     C                     ENDSR
+057100980612     C*------------------------------------------------------------------------*
+057200980612     C* F12STD - GEST. TASTO FUNZ. F12 STANDARD ==> FINE
+057300980612     C*------------------------------------------------------------------------*
+057400980612     C           F12STD    BEGSR
+057500980612     C* IMPOSTO FLAG DI FINE PROGRAMMA
+057600980612     C                     MOVEL'1'       $FINE
+057700980612     C                     ENDSR
+057800980612     C*------------------------------------------------------------------------*
+057900980612     C* F24STD - GEST. TASTO FUNZ. F24 STANDARD ==> ALTRI TASTI
+058000980612     C*------------------------------------------------------------------------*
+058100980612     C           F24STD    BEGSR
+058200980612     C*
+058300980612     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+058400980612     C                     EXSR OUTFUN
+058500980612     C*
+058600980612     C                     ENDSR
+058700980612     C*------------------------------------------------------------------------*
+058800980612     C* CARMSG - CARICA MESSAGGIO NEL SUBFILE MESSAGGI E LO INVIA ALLA
+058900980612     C*          CODA MESSAGGI DEL PGM
+059000980612     C*------------------------------------------------------------------------*
+059100980612     C           CARMSG    BEGSR
+059200980612     C* SE QUELLO CHE STO PER CARICARE E' IL PRIMO MESSAGGIO
+059300980612     C* PULISCO SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+059400980612     C           MSGULT    IFEQ 0
+059500980612     C                     MOVEL'1'       *IN40
+059600980612     C                     WRITEVR92DVK
+059700980612     C                     MOVEL'0'       *IN40
+059800980612     C                     ENDIF
+059900980612     C* INVIA MESSAGGIO ALLA CODA DEL PGM
+060000980612     C                     MOVEL$MSG      DSMSMS
+060100980612     C                     CALL 'XMSG'    XMSGPA
+060200980612     C           DSMSER    IFEQ 0
+060300980612     C                     MOVELDSMSKE    VMCKEY           *CHIAVE DEL MESSAGGIO
+060400980612     C                     ENDIF
+060500980612     C* CARICA IL MESSAGGIO NEL SUBFILE MESSAGGI
+060600980612     C                     ADD  1         MSGULT  40       *CHIAVE SFL MESS
+060700980612     C                     WRITEVR92DVM                    *SFL MESS
+060800980612     C* PULISCO CAMPO MESSAGGIO APPENA CARICATO
+060900980612     C                     MOVEL*BLANKS   $MSG
+061000980612     C                     ENDSR
+061100980612     C*------------------------------------------------------------------------*
+061200980612     C* OUTMSG - EMETTE A VIDEO IL SUBFILE MESSAGGI
+061300980612     C*------------------------------------------------------------------------*
+061400980612     C           OUTMSG    BEGSR
+061500980612     C* VISUALIZZAZIONE MESSAGGIO
+061600980612     C                     MOVEL'1'       *IN44            *SFLEND (+)
+061700980612     C                     WRITEVR92DVK                    *CONTR MESS
+061800980612     C* AZZERO LA CHIAVE DEL SUBFILE MESSAGGI
+061900980612     C                     Z-ADD*ZEROS    MSGULT
+062000980612     C                     ENDSR
+062100980612     C*------------------------------------------------------------------------*
+062200980612     C* CARFUN - CARICA LE SCHIERE PER LA GESTIONE DEI TASTI FUNZIONALI
+062300980612     C*          INPUT:  - FUN    (SCHIERA TASTI ABILITATI PER IL VIDEO ATTUALE)
+062400980612     C*          OUTPUT: - FFU    (SCHIERA FUNZIONI)
+062500980612     C*                  - FDE    (SCHIERA DESCRIZIONI FUNZIONI)
+062600980612     C*                  - FAT    (SCHIERA FLAG DI FUNZIONE ATTIVA S/N)
+062700980612     C*------------------------------------------------------------------------*
+062800980612     C           CARFUN    BEGSR
+062900980612     C                     Z-ADD*ZEROS    FUNULT  50       *ULTIMA FUNZ. VISUAL.
+063000980612     C           1         DO   31        I       50       --- 1 -->
+063100980612     C                     MOVELFUN,I     FUNRIG           *DS RIGA FUNZIONI
+063200980612     C                     MOVELFUNFUN    FFU,I            *FUNZIONE
+063300980612     C                     MOVELFUNDES    FDE,I            *DESCRIZIONE
+063400980612     C           DSFITI    IFEQ 'S'                        --- 2 --> *SEDE
+063500980612     C           $TGES     IFEQ 'G'                        *GESTIONE
+063600980612     C                     MOVELFUNASG    FAT,I            *FUNZIONE ATTIVA S/N
+063700980612     C                     ELSE                            *INTERROG.
+063800980612     C                     MOVELFUNASI    FAT,I
+063900980612     C                     ENDIF
+064000980612     C                     ELSE                            <-- 2 --> *FILIALE
+064100980612     C           $TGES     IFEQ 'G'                        *GESTIONE
+064200980612     C                     MOVELFUNAFG    FAT,I
+064300980612     C                     ELSE                            *INTERROG.
+064400980612     C                     MOVELFUNAFI    FAT,I
+064500980612     C                     ENDIF
+064600980612     C                     ENDIF                           <-- 2 ---
+064700980612     C           FAT,I     IFEQ 'E'                        *FLAG 'E'->SOLO EDP
+064800980612     C                     MOVELUSER      WEDP    3        *PROFILO
+064900980612     C           WEDP      IFEQ 'EDP'                      *SE PROFILO EDPXX
+065000980612     C                     MOVEL'S'       FAT,I            *ABILITO
+065100980612     C                     ELSE
+065200980612     C                     MOVEL'N'       FAT,I            *NON ABILITO
+065300980612     C                     ENDIF
+065400980612     C                     ENDIF
+065500980612     C                     ENDDO                           <-- 1 ---
+065600980612     C                     ENDSR
+065700980612     C*------------------------------------------------------------------------*
+065800980612     C* OUTFUN - EMETTE A VIDEO LE FUNZIONI ABILITATE
+065900980612     C*          INPUT:  - FUNULT (ULTIMA FUNZIONE EMESSA NEL VIDEO PRECEDENTE)
+066000980612     C*          OUTPUT: - VFD001-008 (CAMPI FUNZIONI A VIDEO)
+066100980612     C*                  - FUNULT (ULTIMA FUNZIONE EMESSA A VIDEO)
+066200980612     C*------------------------------------------------------------------------*
+066300980612     C           OUTFUN    BEGSR
+066400980612     C           1         DO   8         I                *PULIZIA FUNZIONI A
+066500980612     C                     MOVEL*BLANKS   FUV,I            *VIDEO
+066600980612     C                     ENDDO
+066700980612     C* CONTROLLO QUANTE FUNZIONI ATTIVE DA EMETTERE A VIDEO CI SONO
+066800980612     C                     Z-ADD*ZEROS    FUNNAT  20       *N.FUNZIONI ATTIVE
+066900980612     C           1         DO   31        I
+067000980612     C           FAT,I     IFEQ 'S'                        *FUNZIONE ATTIVA
+067100980612     C           FDE,I     ANDNE*BLANKS                    *DESCRIZIONE FUNZIONE
+067200980612     C                     ADD  1         FUNNAT
+067300980612     C                     ENDIF
+067400980612     C                     ENDDO
+067500980612     C* SE VI SONO PIU' DI 8 FUNZIONI ATTIVO IL TASTO F24
+067600980612     C           FUNNAT    IFGT 8
+067700980612     C                     MOVEL'S'       FAT,24           *FLAG ATTIVITA' FUNZ
+067800980612     C                     ENDIF
+067900980612     C* IMPOSTO IL N.DI FUNZIONI VISUALIZZABILI A 8, E SE SONO ATTIVE F23 E F24
+068000980612     C* (SE ATTIVE DA VISUALIZZARE SEMPRE) DIVENTANO 6
+068100980612     C                     Z-ADD8         FUNVIS  50
+068200980612     C           FAT,23    IFEQ 'S'
+068300980612     C                     SUB  1         FUNVIS
+068400980612     C                     ENDIF
+068500980612     C           FAT,24    IFEQ 'S'
+068600980612     C                     SUB  1         FUNVIS
+068700980612     C                     ENDIF
+068800980612     C* AGGIUNGO UNO ALL'ULTIMA FUNZIONE VISUALIZZATA PER AVERE LA 1A DA VISUALI
+068900980612     C                     Z-ADD*ZEROS    W       50
+069000980612     C                     ADD  1         FUNULT
+069100980612     C           FUNULT    IFGT 31
+069200980612     C                     Z-ADD1         FUNULT
+069300980612     C                     ENDIF
+069400980612     C* RICERCO LE OPZIONI ATTIVE E LE EMETTO A VIDEO
+069500980612     C           FUNULT    DO   31        I                --- 1 -->
+069600980612     C* SE HO GIA' RAGGIUNTO IL NUMERO DI FUNZIONI VISUALIZZABILI VADO A FINE
+069700980612     C           W         IFLT FUNVIS                     --- 2 -->
+069800980612     C* SE OPZIONE ATTIVA ED ESISTE LA DESCRIZIONE EMETTO A VIDEO
+069900980612     C           FAT,I     IFEQ 'S'                        --- 3 -->
+070000980612     C           FDE,I     ANDNE*BLANKS
+070100980612     C           I         IFEQ 23                         *TOLGO F23
+070200980612     C           I         OREQ 24                         *E F24
+070300980612     C                     ELSE
+070400980612     C                     ADD  1         W
+070500980612     C                     MOVELFDE,I     FUV,W
+070600980612     C                     ENDIF
+070700980612     C                     ENDIF                           <-- 3 ---
+070800980612     C* MEMORIZZO L'ULTIMO INDICE TRATTATO
+070900980612     C                     Z-ADDI         FUNULT
+071000980612     C                     ENDIF                           <-- 2 ---
+071100980612     C                     ENDDO                           <-- 1 ---
+071200980612     C* TRASFERISCO LE OPZIONI DALLA SCHIERA AI CAMPI VIDEO
+071300980612     C                     MOVELFUV,1     VFD001
+071400980612     C                     MOVELFUV,2     VFD002
+071500980612     C                     MOVELFUV,3     VFD003
+071600980612     C                     MOVELFUV,4     VFD004
+071700980612     C                     MOVELFUV,5     VFD005
+071800980612     C                     MOVELFUV,6     VFD006
+071900980612     C           FAT,23    IFEQ 'N'                        --- 1 -->
+072000980612     C           FAT,24    ANDEQ'N'
+072100980612     C                     MOVELFUV,7     VFD007
+072200980612     C                     MOVELFUV,8     VFD008
+072300980612     C                     ELSE                            <-- 1 -->
+072400980612     C           FAT,23    IFEQ 'S'                        --- 2 -->
+072500980612     C           FAT,24    ANDEQ'S'
+072600980612     C                     MOVELFDE,23    VFD007
+072700980612     C                     MOVELFDE,24    VFD008
+072800980612     C                     ELSE                            <-- 2 -->
+072900980612     C                     MOVELFUV,7     VFD007
+073000980612     C           FAT,23    IFEQ 'S'
+073100980612     C                     MOVELFDE,23    VFD008
+073200980612     C                     ELSE
+073300980612     C                     MOVELFDE,24    VFD008
+073400980612     C                     ENDIF
+073500980612     C                     ENDIF                           <-- 2 ---
+073600980612     C                     ENDIF                           <-- 1 ---
+073700980612     C                     MOVEL'0'       $TESVD           *REIMPOSTA EMIS TESTA
+073800980612     C                     ENDSR
+073900980612     C*------------------------------------------------------------------------*
+074000980612     C* CONFUN - CONTROLLA SE LA FUNZIONE SCELTA E' ATTIVA
+074100980612     C*           INPUT:  - KEY    (FUNZIONE PREMUTA - DA INFDS)
+074200980612     C*           OUTPUT: - FUNOK  (OPZIONE OK S/N)
+074300980612     C*                   - ERRORE SE FUNZIONE NON ATTIVA
+074400980612     C*------------------------------------------------------------------------*
+074500980612     C           CONFUN    BEGSR
+074600980612     C* RICERCA FUNZIONE SCELTA IN TABELLA FUNZIONI
+074700980612     C           1         DO   31        I                --- 1 -->
+074800980612     C           KEY       IFEQ KEYS,I                     --- 2 -->
+074900980612     C* CONTROLLO SE IL TASTO E' ATTIVO
+075000980612     C           FAT,I     IFNE 'S'                        --- 3 -->
+075100980612     C                     MOVELMSG,1     $MSG             *FUNZ.NON ACCETTABILE
+075200980612     C                     EXSR CARMSG
+075300980612     C                     MOVEL'1'       $ERR
+075400980612     C                     ENDIF                           <-- 3 ---
+075500980612     C                     ENDIF                           <-- 2 ---
+075600980612     C                     ENDDO                           <-- 1 ---
+075700980612     C                     ENDSR
+075800980612     O*------------------------------------------------------------------------*
+075900980612** MSG - (MESSAGGI)
+076000980612TNVR92R- Tasto funzionale non valido.                                          1
+076100980612TNVR92R- Tasto funzionale abilitato ma non gestito. Avvertire CED.             2
+076200980612TNVR92R- Opzione non valida.                                                   3
+076300980612TNVR92R- Opzione abilitata ma non gestita. Avvertire CED.                      4
+076400980612TNVR92R- Inizio elenco.                                                        5
+076500980612TNVR92R- Fine elenco.                                                          6
+076600980612TNVR92R- 7
+076700980612TNVR92R- 8
+076800980612TNVR92R- 9
+076900980612TNVR92R- 10
+077000980612TNVR92R- Immettere uno dei valori possibili                                   11
+077100980612TNVR92R- Versione errata                                                      12
+077200980612TNVR92R- Azione non lanciabile da un S.informativo di prova                   13
+077300980612TNVR92R- Nazione errata                                                       14
+077400980612TNVR92R- Linea errata                                                         15
+077500980612TNVR92R- Il cap A deve essere maggiore/uguale del cap DA                      16
+077600980612TNVR92R- 17
+077700980612TNVR92R- 18
+077800980612TNVR92R- 19
+077900980612TNVR92R- 20
+078000980612** FUN  (PARAMETRI)       SEDE:GI FIL:GI   (G=GESTIONE,I=INTERROG.)
+078100980612F1    -                   -    NN     NN
+078200980612F2    -                   -    NN     NN
+078300980612F3    -F3=Fine            -    SS     SS
+078400980612F4    -                   -    NN     NN
+078500980612F5    -                   -    NN     NN
+078600980612F6    -F6=Conferma        -    SS     SS
+078700980612F7    -                   -    NN     NN
+078800980612F8    -                   -    NN     NN
+078900980612F9    -                   -    NN     NN
+079000980612F10   -                   -    NN     NN
+079100980612F11   -                   -    NN     NN
+079200980612F12   -F12=Ritorno        -    SS     SS
+079300980612F13   -                   -    NN     NN
+079400980612F14   -                   -    NN     NN
+079500980612F15   -                   -    NN     NN
+079600980612F16   -                   -    NN     NN
+079700980612F17   -                   -    NN     NN
+079800980612F18   -                   -    NN     NN
+079900980612F19   -                   -    NN     NN
+080000980612F20   -                   -    NN     NN
+080100980612F21   -                   -    NN     NN
+080200980612F22   -                   -    NN     NN
+080300980612F23   -                   -    NN     NN
+080400980612F24   -                   -    NN     NN
+080500980612ENTER -                   -    SS     SS
+080600980612ROLLUP-                   -    NN     NN
+080700980612ROLLDN-                   -    NN     NN
+080800980612HELP  -                   -    NN     NN
+080900980612PRINT -                   -    NN     NN
+081000980612BSPACE-                   -    NN     NN
+081100980612CLEAR -                   -    NN     NN

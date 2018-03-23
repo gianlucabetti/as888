@@ -1,0 +1,59 @@
+000100040120             PGM
+000200080213
+000300080219/* _____ Cancellazione lf di tncpo  _____________________________________________*/
+000400080219   dltf unitragru/TNCPO01L
+000500080219   dltf unitragru/TNCPO02L
+000600080219   dltf unitragru/TNCPO03L
+000700080219   dltf unitragru/TNCPO04L
+000800080219   dltf unitragru/TNCPO08L
+000900080219
+001000080225             ENDJRNPF   FILE(UNITRAGRU/TNCPO00F)
+001100080225             monmsg cpf0000
+001200080225
+001300080219             RNMOBJ     OBJ(UNITRAGRU/TNCPO00F) OBJTYPE(*FILE) +
+001400080219                          NEWOBJ(TNCPOOLD)
+001500080219
+001600080219/* _____ creazione nuovo file ___________________________________________________*/
+001700080219             CRTDUPOBJ  OBJ(TNCPO*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+001800080219                          TOLIB(UNITRAGRU)
+001900080219
+002000080219             CPYF       FROMFILE(UNITRAGRU/TNCPOOLD) +
+002100080219                          TOFILE(UNITRAGRU/TNCPO00F) +
+002200080219                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+002300080219
+002400080225             STRJRNPF   FILE(UNITRAGRU/TNCPO00F) +
+002500080225                          JRN(GAITRAGRU/JRWGRU) OMTJRNE(*OPNCLO)
+002600080225
+002700040909
+002800040907/* _____ Sposta i programmi dalla EDPWKSE alla OBJ ______________________________*/
+002900040915             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM('EDPWKSE   ' +
+003000040915                          'GAITRAOBJ' '*ALL     ')
+003100040915             MONMSG     MSGID(CPF0000)
+003200080213
+003300080219
+003400080219/* _____ Trascodifica categoria merceologica _________________________ __________*/
+003500080219             CALL       PGM(GAITRAOBJ/TRMKWSEAT)
+003600080219
+003700080219/* _____ copio il nuovo tncpo00f con la cat merc nuova x sicurezza ______________*/
+003800080219             CPYF       FROMFILE(UNITRAGRU/TNCPO00F) +
+003900080219                          TOFILE(EDPES/TNCPOCMERC) MBROPT(*ADD) +
+004000080219                          CRTFILE(*YES)
+004100080219             MONMSG     MSGID(CPF0000)
+004200040907
+004300080219
+004400080219/* _____ Modifica  e aggiunta dati in TNCPO ______________________     __________*/
+004500080219
+004600080219             CALL       PGM(GAITRAOBJ/TRUL07C) PARM('FILTRA201 ')
+004700080219
+004800080219             ADDLIBLE   LIB(EDPPOT) POSITION(*LAST)
+004900080219
+005000080225             CALL       PGM(GAITRAOBJ/TRMKWAG1) PARM('S' 'S' 'S' 'S' +
+005001080225                          'S' 'S')
+005100080219
+005200080219             CALL       PGM(GAITRAOBJ/TRMKWag2)
+005201080227
+005202080227
+005203080227             DLTF       FILE(EDPWKSE/TNCPO*)
+005204080227             MONMSG     MSGID(CPF0000)
+005300080219
+005400040716             ENDPGM

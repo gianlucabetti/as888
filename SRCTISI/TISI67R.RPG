@@ -1,0 +1,613 @@
+000100000000      ****************************************************************
+000200980210      * GESTISCE PER PROVA TUTTE LA FUNZIONI ROUTINE 'TISI57R'       *
+000300000000      ****************************************************************
+000400000000     H              J
+000500000000     F* FILE VIDEO (SUBFILE DATI)
+000600980210     FTISI67D CF  E                    WORKSTN      KINFDS DEVDS1
+000700980210     F                                        MSGULTKSFILE SI67DMS
+000800000000     E*****************************************************************
+000900000000     E* MESSAGGI
+001000930208     E                    MSG     1  20 78
+001100000000     E* DESCRIZIONI TASTI FUNZIONALI
+001200000000     E                    FUD     1  24 80
+001300000000     E* TABELLA TASTI FUNZIONALI DA CARICARE A VIDEO
+001400000000     E                    FUV        24 19
+001500000000     I*****************************************************************
+001600000000     I* RIDEFINIZIONE SCHIERA -FUD-
+001700000000     IFUDDS       DS
+001800000000     I*                -DESCRIZIONE PARZIALE
+001900000000     I                                        1   1 FUDDE1
+002000000000     I*                -FUNZIONE
+002100000000     I                                        2   3 FUDFUN
+002200000000     I*                -DESCRIZIONE PARZIALE
+002300000000     I                                        4  19 FUDDE2
+002400000000     I*                -FILLER
+002500000000     I                                       20  34 FUDFI0
+002600000000     I*                -FLAG FUNZ.ATTIVA (S/N)
+002700000000     I                                       35  35 FUDATT
+002800000000     I*                -FILLER
+002900000000     I                                       36  80 FUDFI1
+003000000000     I*                -DESCRIZIONE COMPLETA
+003100000000     I                                        1  19 FUDDES
+003200000000     I*                -RIDEFINIZIONE RIGA
+003300000000     I                                        1  80 FUDRIG
+003400930201     I*****************************************************************
+003500930201     I* PARAMETRI CHIAMATA CL XMSG (GESTIONE MESSAGGI AL PGM)
+003600930201     IDSMSG     E DS
+003700930305     I*****************************************************************
+003800980210     I* PARAMETRI CHIAMATA PGM TISI57R (CONTROLLO CAP)
+003900980210     ISI57      E DSTISI57DS
+004000930201     I*****************************************************************
+004100930201     I* DS PER GESTIONE TASTI FUNZIONALI
+004200930201     IDSKEY     E DS
+004300930201     IDEVDS1      DS
+004400930201     I                                      369 369 KEY
+004500950407     I***************************************************************
+004600950407     I* DS PER LANCIO PGM DATA->N.GIORNI (XSRDA8)
+004700950407     IG02PAR      DS
+004800950407     I                                        1   80G02DAT
+004900950407     I                                        9  160G02INV
+005000950407     I                                       17  17 G02ERR
+005100950407     I                                       18  220G02TGI
+005200930201     I***************************************************************
+005300930201     I* ARCHITETTURA
+005400980210     I****KPJBA     E DS
+005500000000     C*================================================================
+005600000000     C* MAIN DEL PGM
+005700000000     C                     EXSR RUTINZ
+005800000000     C*
+005900000000     C* SE CONTROLLI NON OK VADO A FINE PGM (ERRL00: 1=ERRORE)
+006000000000     C           ERRL00    IFEQ '0'                        --- 1 -->
+006100000000     C*
+006200000000     C* CICLO FINO A CHE:
+006300000000     C*  -F03 NON VIENE ACCESO (IN QUESTO PGM)                 OR
+006400000000     C*  -F12 NON VIENE ACCESO (IN QUESTO PGM)                 OR
+006500930202     C*  -E' STATA ESEGUITA LA FUNZIONE RICHIESTA
+006600000000     C           F03L00    DOUEQ'1'                        --- 2 -->
+006700000000     C           F12L00    OREQ '1'
+006800930202     C           FLFINE    OREQ '1'
+006900000000     C*
+007000000000     C* EMETTE FORMATO VIDEO
+007100000000     C                     EXSR BUTFMR
+007200000000     C*
+007300000000     C* CONTROLLO E GESTIONE TASTI FUNZIONALI
+007400000000     C                     EXSR FUNCON
+007500000000     C*
+007600000000     C                     END                             <-- 2 --
+007700000000     C*
+007800000000     C                     END                             <-- 1 --
+007900000000     C*
+008000000000     C                     SETON                     LR
+008100000000     C*FINE MAIN DEL PGM
+008200000000     C*================================================================
+008300000000     C* EMISSIONE FORMATO A VIDEO
+008400000000     C*================================================================
+008500000000     C           BUTFMR    BEGSR
+008600930204     C*
+008700930204     C* WRITE RECORD TESTATA
+008800980210     C                     WRITESI67D01
+008900930205     C*
+009000930205     C* VISUALIZZAZIONE MESSAGGIO
+009100930205     C                     EXSR SNDMSG
+009200930204     C*
+009300930204     C* WRITE RECORD FUNZIONI
+009400980210     C                     WRITESI67D02
+009500000000     C*
+009600930204     C* EXFMT RECORD DETTAGLIO
+009700980210     C                     EXFMTSI67D03
+009800000000     C*
+009900000000     C* AZZERO FLAG DI ERRORE LIVELLO
+010000000000     C                     MOVEL'0'       ERRL00
+010100000000     C*
+010200000000     C                     ENDSR
+010300000000     C*================================================================
+010400000000     C* SNDMSG - MANDA MESSAGGIO
+010500000000     C*================================================================
+010600000000     C           SNDMSG    BEGSR
+010700000000     C*
+010800000000     C* PULIZIA SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+010900000000     C                     MOVEL'1'       *IN40
+011000980210     C                     WRITESI67DMC
+011100000000     C                     MOVEL'0'       *IN40
+011200000000     C*
+011300000000     C* VISUALIZZAZIONE MESSAGGIO
+011400000000     C                     Z-ADD0         MSGULT  40
+011500930202     C                     CALL 'XMSG'    XMSGPA
+011600930201     C           DSMSER    IFEQ 0
+011700930201     C                     MOVELDSMSKE    MSGKEY
+011800000000     C                     END
+011900000000     C                     Z-ADD1         MSGULT
+012000980210     C                     WRITESI67DMS                    SFL MESS
+012100980210     C                     WRITESI67DMC                    CONTR MESS
+012200000000     C*
+012300000000     C* MANDO MESSAGGIO *BLANKS PER PULIRE SFLMSG
+012400930201     C                     MOVEL*BLANKS   DSMSMS
+012500000000     C*
+012600000000     C                     ENDSR
+012700000000     C*================================================================
+012800000000     C* ENTGES - GESTIONE DEL TASTO FUNZIONALE ENTER
+012900000000     C*================================================================
+013000000000     C           ENTGES    BEGSR
+013100950407     C*
+013200930201     C*
+013300930326     C* LANCIA ROUTINE
+013400950407     C           ERRL00    IFEQ '0'                        --- 1 -->
+013500980210     C                     CALL 'TISI57R'
+013600980210     C                     PARM           SI57
+013700950407     C                     ENDIF                           <-- 1 ---
+013800000000     C*
+013900000000     C                     ENDSR
+014000000000     C*================================================================
+014100930201     C* F01GES -GESTIONE TASTO FUNZIONALE F01 -
+014200000000     C*================================================================
+014300000000     C           F01GES    BEGSR
+014400000000     C                     ENDSR
+014500000000     C*================================================================
+014600930201     C* F03GES -GESTIONE TASTO FUNZIONALE F03 - FINE
+014700000000     C*================================================================
+014800000000     C           F03GES    BEGSR
+014900000000     C*
+015000930202     C* IMPOSTO FLAG F03 DI LIVELLO PGM
+015100000000     C                     MOVEL'1'       F03L00
+015200000000     C*
+015300000000     C                     ENDSR
+015400930201     C*================================================================
+015500930201     C* F06GES -GESTIONE TASTO FUNZIONALE F06 - CONFERMA
+015600930201     C*================================================================
+015700930201     C           F06GES    BEGSR
+015800930201     C                     ENDSR
+015900000000     C*================================================================
+016000930201     C* F07GES -GESTIONE TASTO FUNZIONALE F07 -
+016100000000     C*================================================================
+016200000000     C           F07GES    BEGSR
+016300000000     C                     ENDSR
+016400000000     C*================================================================
+016500930210     C* F08GES -GESTIONE TASTO FUNZIONALE F08 -
+016600000000     C*================================================================
+016700000000     C           F08GES    BEGSR
+016800000000     C                     ENDSR
+016900000000     C*================================================================
+017000930201     C* F12GES -GESTIONE TASTO FUNZIONALE F12 - RITORNO
+017100000000     C*================================================================
+017200000000     C           F12GES    BEGSR
+017300000000     C*
+017400000000     C* IMPOSTO FLAG DI LIVELLO
+017500000000     C                     MOVEL'1'       F12L00
+017600000000     C*
+017700000000     C                     ENDSR
+017800930201     C*================================================================
+017900930210     C* F21GES -GESTIONE TASTO FUNZIONALE F21 - STAMPA ELENCO
+018000930201     C*================================================================
+018100930201     C           F21GES    BEGSR
+018200930201     C                     ENDSR
+018300000000     C*================================================================
+018400930201     C* F22GES -GESTIONE TASTO FUNZIONALE F22 - GEST.STAMPE
+018500000000     C*================================================================
+018600000000     C           F22GES    BEGSR
+018700000000     C                     ENDSR
+018800000000     C*================================================================
+018900930201     C* F24GES -GESTIONE TASTO FUNZIONALE F24 - ALTRE FUNZIONI
+019000000000     C*================================================================
+019100000000     C           F24GES    BEGSR
+019200000000     C*
+019300000000     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+019400000000     C                     EXSR FUNGES
+019500000000     C*
+019600000000     C                     ENDSR
+019700000000     C*================================================================
+019800000000     C* HELGES -GESTIONE TASTO FUNZIONALE HELP
+019900000000     C*================================================================
+020000000000     C           HELGES    BEGSR
+020100000000     C                     ENDSR
+020200000000     C*================================================================
+020300000000     C*  RUTINZ - ROUTINE INIZIALE
+020400000000     C*================================================================
+020500000000     C           RUTINZ    BEGSR
+020600930401     C*
+020700930401     C* RICEVIMENTO PARAMETRI
+020800980210     C****       *ENTRY    PLIST
+020900980210     C******               PARM           KPJBA
+021000930201     C*
+021100930201     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+021200930201     C           XMSGPA    PLIST
+021300930201     C                     PARM           DSMSMS
+021400930201     C                     PARM           DSMSPG
+021500930201     C                     PARM           DSMSKE
+021600930201     C                     PARM           DSMSER
+021700930201     C*
+021800930201     C* CHIAMA XKEY PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+021900930201     C                     CALL 'XKEY'
+022000930201     C                     PARM           DSKEY
+022100930201     C*
+022200930201     C* DEFINISCE LE VARIABILI DI PROGRAMMA
+022300930201     C           *LIKE     DEFN FUDFUN    FUNKEY
+022400930201     C*
+022500930201     C* IMPOSTA PER CL=XMSG  (FISSI IN TUTTO IL PGM) :
+022600930201     C*   -NOME PGM CHIAMANTE
+022700930201     C*   -NOME CODA MESSAGGI DI DESTINAZIONE
+022800980210     C                     MOVEL'TISI67R' DSMSPG
+022900980210     C                     MOVEL'TISI67R' MSGQUE
+023000930201     C                     MOVEL*BLANKS   MSGKEY
+023100930201     C                     MOVEL*BLANKS   DSMSMS
+023200930201     C*
+023300930201     C* IMPOSTO INDICE PER EMISSIONE FUNZIONI A VIDEO
+023400930201     C                     Z-ADD0         FUNGRU  50
+023500930201     C*
+023600930201     C* GESTIONE TASTI FUNZIONALI A VIDEO
+023700930201     C                     EXSR FUNGES
+023800930201     C*
+023900930201     C* INIZIALIZZO SWITCH DI LIVELLO DI F12 E F03
+024000930201     C                     MOVEL'0'       F12L00  1
+024100930201     C                     MOVEL'0'       F03L00  1
+024200930201     C                     MOVEL'0'       FINL00  1
+024300930201     C                     MOVEL'0'       ERRL00  1
+024400930201     C                     MOVEL'0'       FLFINE  1
+024500930421     C*
+024600930421     C* AZZERA CAMPI VIDEO PACKED
+024700930421     C                     EXSR AZZERA
+024800930421     C*
+024900930421     C                     ENDSR
+025000930421     C*================================================================
+025100930421     C* AZZERA - AZZERA CAMPI PACKED
+025200930421     C*================================================================
+025300930421     C           AZZERA    BEGSR
+025400930305     C*
+025500930305     C* INIZIALIZZO CAMPI PACKED
+025600980210     C                     Z-ADD*ZEROS    I57AAS
+025601980210     C                     Z-ADD*ZEROS    I57MGS
+025602980210     C                     Z-ADD*ZEROS    I57LNP
+025603980210     C                     Z-ADD*ZEROS    I57NRS
+025604980210     C                     Z-ADD*ZEROS    I57NCD
+025605980210     C                     Z-ADD*ZEROS    I57NC1
+025606980210     C                     Z-ADD*ZEROS    I57NC2
+025607980210     C                     Z-ADD*ZEROS    I57VOL
+025608980210     C                     Z-ADD*ZEROS    I57PKG
+025609980210     C                     Z-ADD*ZEROS    I57LNA
+025610980210     C                     Z-ADD*ZEROS    I57ZSC
+025611980210     C                     Z-ADD*ZEROS    O57TNA
+025612980210     C                     Z-ADD*ZEROS    O57LNA
+025613980210     C                     Z-ADD*ZEROS    O57ZSC
+025700000000     C*
+025800000000     C                     ENDSR
+025900000000     C*================================================================
+026000000000     C* FUNGES - GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI GESTITI DA PGM
+026100000000     C*================================================================
+026200000000     C           FUNGES    BEGSR
+026300000000     C*
+026400000000     C* PULISCO CAMPI DI LAVORO
+026500000000     C                     Z-ADD0         W       50
+026600000000     C*
+026700000000     C* RICERCO QUANTE FUNZIONI SONO ATTIVE
+026800000000     C* E CARICO TABELLA FUNZIONI ATTIVE
+026900000000     C           1         DO   24        I
+027000000000     C                     MOVELFUD,I     FUDRIG
+027100000000     C*
+027200000000     C* PULIZIA FUNZIONI PRECEDENTI
+027300000000     C                     MOVEL*BLANKS   FUV,I
+027400000000     C*
+027500000000     C* IMPOSTA FUNZIONI ATTIVE IN TABELLA
+027600000000     C* (SALTA F24)
+027700000000     C           FUDATT    IFEQ 'S'
+027800000000     C           FUDFUN    ANDNE'24'
+027900000000     C                     ADD  1         W
+028000000000     C                     MOVELFUDDES    FUV,W
+028100000000     C                     END
+028200000000     C                     END                             DO WHILE
+028300000000     C*
+028400000000     C* SE VI SONO PIU' DI 6 FUNZIONI ATTIVE, ATTIVO FUNZIONE F24
+028500000000     C* ALTRIMENTI DISATTIVO F24
+028600000000     C           1         DO   24        I
+028700000000     C                     MOVELFUD,I     FUDRIG
+028800000000     C*
+028900000000     C           FUDFUN    IFEQ '24'
+029000000000     C           W         IFGT 6
+029100000000     C                     MOVEL'S'       FUDATT
+029200000000     C                     ELSE
+029300000000     C                     MOVEL*BLANKS   FUDATT
+029400000000     C                     END                             W GT 8
+029500000000     C                     MOVELFUDRIG    FUD,I
+029600000000     C                     END
+029700000000     C                     END                             DO WHILE
+029800000000     C*
+029900000000     C* IMPOSTO QUANTI GRUPPI DI 6 FUNZIONI SI POSSONO VISUALIZZARE
+030000000000     C           W         DIV  6         I
+030100000000     C                     MVR            Z
+030200000000     C*
+030300000000     C           Z         IFNE 0
+030400000000     C           I         ADD  1         Z
+030500000000     C                     ELSE
+030600000000     C                     Z-ADDI         Z       50
+030700000000     C                     END
+030800000000     C*
+030900000000     C* IMPOSTO SUCCESSIVE 6 FUNZIONI ATTIVE A VIDEO
+031000000000     C                     ADD  1         FUNGRU
+031100000000     C           FUNGRU    IFGT Z
+031200000000     C           FUNGRU    ORLT 1
+031300000000     C                     Z-ADD1         FUNGRU
+031400000000     C                     END
+031500000000     C*
+031600000000     C* PRIMO GRUPPO DI 6 FUNZIONI
+031700000000     C           FUNGRU    IFEQ 1
+031800000000     C                     MOVELFUV,1     FUN001
+031900000000     C                     MOVELFUV,2     FUN002
+032000000000     C                     MOVELFUV,3     FUN003
+032100000000     C                     MOVELFUV,4     FUN004
+032200000000     C                     MOVELFUV,5     FUN005
+032300000000     C                     MOVELFUV,6     FUN006
+032400000000     C                     END
+032500000000     C*
+032600000000     C* SECONDO GRUPPO DI 6 FUNZIONI
+032700000000     C           FUNGRU    IFEQ 2
+032800000000     C                     MOVELFUV,7     FUN001
+032900000000     C                     MOVELFUV,8     FUN002
+033000000000     C                     MOVELFUV,9     FUN003
+033100000000     C                     MOVELFUV,10    FUN004
+033200000000     C                     MOVELFUV,11    FUN005
+033300000000     C                     MOVELFUV,12    FUN006
+033400000000     C                     END
+033500000000     C*
+033600000000     C* TERZO GRUPPO DI 6 FUNZIONI
+033700000000     C           FUNGRU    IFEQ 3
+033800000000     C                     MOVELFUV,13    FUN001
+033900000000     C                     MOVELFUV,14    FUN002
+034000000000     C                     MOVELFUV,15    FUN003
+034100000000     C                     MOVELFUV,16    FUN004
+034200000000     C                     MOVELFUV,17    FUN005
+034300000000     C                     MOVELFUV,18    FUN006
+034400000000     C                     END
+034500000000     C*
+034600000000     C* QUARTO GRUPPO DI 6 FUNZIONI
+034700000000     C           FUNGRU    IFEQ 4
+034800000000     C                     MOVELFUV,19    FUN001
+034900000000     C                     MOVELFUV,20    FUN002
+035000000000     C                     MOVELFUV,21    FUN003
+035100000000     C                     MOVELFUV,22    FUN004
+035200000000     C                     MOVEL*BLANKS   FUN005
+035300000000     C                     MOVEL*BLANKS   FUN006
+035400000000     C                     END
+035500000000     C*
+035600000000     C* F24 SE C'E' VIENE SEMPRE VISUALIZZATO
+035700000000     C                     MOVEL*BLANKS   FUN007
+035800000000     C                     MOVEL*BLANKS   FUN008
+035900000000     C*
+036000000000     C           1         DO   24        I
+036100000000     C                     MOVELFUD,I     FUDRIG
+036200000000     C           FUDFUN    IFEQ '24'
+036300000000     C           FUDATT    ANDEQ'S'
+036400000000     C                     MOVELFUDDES    FUN008
+036500000000     C                     END
+036600000000     C                     END                             DO
+036700000000     C                     ENDSR
+036800000000     C*================================================================
+036900000000     C* GESTIONE SCELTE DELL'OPERATORE A VIDEO (ATTRAVERSO TASTI FXX)
+037000000000     C*================================================================
+037100000000     C           FUNCON    BEGSR
+037200000000     C*
+037300000000     C* TRADUCE TASTI FUNZIONALI IN VARIABILE -FUNKEY-
+037400000000     C                     EXSR FUNVAR
+037500000000     C*
+037600000000     C* PULISCO CAMPI DI LAVORO
+037700000000     C                     Z-ADD0         I       50
+037800000000     C                     Z-ADD0         W       50
+037900000000     C*
+038000000000     C* RICERCA FUNZIONE (DIVERSA DA ENTER) SCELTA IN TABELLA FUNZIONI
+038100000000     C           FUNKEY    IFNE *BLANKS
+038200000000     C           1         DO   24        I
+038300000000     C                     MOVELFUD,I     FUDRIG
+038400000000     C*
+038500000000     C* SALVO INDICE DI FUNZIONE TROVATA ED ATTIVA (W)
+038600000000     C           FUNKEY    IFEQ FUDFUN
+038700000000     C           FUDATT    ANDEQ'S'
+038800000000     C                     Z-ADDI         W
+038900000000     C                     END
+039000000000     C                     END                             DO WHILE
+039100000000     C*
+039200000000     C* FUNZIONE NON ATTIVA (ERRORE)
+039300000000     C           W         IFEQ 0
+039400000000     C*
+039500000000     C* EMISSIONE MESSAGGIO DI ERRORE
+039600930201     C                     MOVELMSG,1     DSMSMS
+039700930201     C*
+039800930201     C                     END                             W=0
+039900000000     C                     END                             FUNKEY NE *BLANKS
+040000000000     C*
+040100000000     C* FUNZIONE ATTIVA (PROCEDI ...)
+040200000000     C           W         IFNE 0
+040300000000     C           FUNKEY    OREQ *BLANKS
+040400000000     C*
+040500000000     C           FUNKEY    IFEQ *BLANKS
+040600000000     C                     EXSR ENTGES
+040700000000     C                     END
+040800000000     C           FUNKEY    IFEQ '01'
+040900000000     C                     EXSR F01GES
+041000000000     C                     END
+041100000000     C           FUNKEY    IFEQ '03'
+041200000000     C                     EXSR F03GES
+041300000000     C                     END
+041400930202     C           FUNKEY    IFEQ '06'
+041500930202     C                     EXSR F06GES
+041600930202     C                     END
+041700000000     C           FUNKEY    IFEQ '07'
+041800000000     C                     EXSR F07GES
+041900000000     C                     END
+042000000000     C           FUNKEY    IFEQ '08'
+042100000000     C                     EXSR F08GES
+042200000000     C                     END
+042300000000     C           FUNKEY    IFEQ '12'
+042400000000     C                     EXSR F12GES
+042500000000     C                     END
+042600930201     C           FUNKEY    IFEQ '21'
+042700930201     C                     EXSR F21GES
+042800930201     C                     END
+042900000000     C           FUNKEY    IFEQ '22'
+043000000000     C                     EXSR F22GES
+043100000000     C                     END
+043200000000     C           FUNKEY    IFEQ '24'
+043300000000     C                     EXSR F24GES
+043400000000     C                     END
+043500000000     C           FUNKEY    IFEQ 'HP'
+043600000000     C                     EXSR HELGES
+043700000000     C                     END
+043800000000     C*
+043900000000     C                     END
+044000000000     C*
+044100000000     C                     ENDSR
+044200000000     C*================================================================
+044300000000     C* FUNVAR -TRADUCE INDICATORI DI TASTO FUNZIONALE IN VARIABILE
+044400000000     C*================================================================
+044500000000     C           FUNVAR    BEGSR
+044600000000     C*
+044700000000     C* INIZIALIZZA VARIABILE -FUNKEY-
+044800000000     C*
+044900000000     C* FUNKEY=*BLANKS SIGNIFICA ENTER
+045000000000     C           KEY       IFEQ ENTER
+045100000000     C                     MOVEL*BLANKS   FUNKEY
+045200000000     C                     END
+045300000000     C           KEY       IFEQ F1
+045400000000     C                     MOVEL'01'      FUNKEY
+045500000000     C                     END
+045600000000     C           KEY       IFEQ F2
+045700000000     C                     MOVEL'02'      FUNKEY
+045800000000     C                     END
+045900000000     C           KEY       IFEQ F3
+046000000000     C                     MOVEL'03'      FUNKEY
+046100000000     C                     END
+046200000000     C           KEY       IFEQ F4
+046300000000     C                     MOVEL'04'      FUNKEY
+046400000000     C                     END
+046500000000     C           KEY       IFEQ F5
+046600000000     C                     MOVEL'05'      FUNKEY
+046700000000     C                     END
+046800000000     C           KEY       IFEQ F6
+046900000000     C                     MOVEL'06'      FUNKEY
+047000000000     C                     END
+047100000000     C           KEY       IFEQ F7
+047200000000     C                     MOVEL'07'      FUNKEY
+047300000000     C                     END
+047400000000     C           KEY       IFEQ F8
+047500000000     C                     MOVEL'08'      FUNKEY
+047600000000     C                     END
+047700000000     C           KEY       IFEQ F9
+047800000000     C                     MOVEL'09'      FUNKEY
+047900000000     C                     END
+048000000000     C           KEY       IFEQ F10
+048100000000     C                     MOVEL'10'      FUNKEY
+048200000000     C                     END
+048300000000     C           KEY       IFEQ F11
+048400000000     C                     MOVEL'11'      FUNKEY
+048500000000     C                     END
+048600000000     C           KEY       IFEQ F12
+048700000000     C                     MOVEL'12'      FUNKEY
+048800000000     C                     END
+048900000000     C           KEY       IFEQ F13
+049000000000     C                     MOVEL'13'      FUNKEY
+049100000000     C                     END
+049200000000     C           KEY       IFEQ F14
+049300000000     C                     MOVEL'14'      FUNKEY
+049400000000     C                     END
+049500000000     C           KEY       IFEQ F15
+049600000000     C                     MOVEL'15'      FUNKEY
+049700000000     C                     END
+049800000000     C           KEY       IFEQ F16
+049900000000     C                     MOVEL'16'      FUNKEY
+050000000000     C                     END
+050100000000     C           KEY       IFEQ F17
+050200000000     C                     MOVEL'17'      FUNKEY
+050300000000     C                     END
+050400000000     C           KEY       IFEQ F18
+050500000000     C                     MOVEL'18'      FUNKEY
+050600000000     C                     END
+050700000000     C           KEY       IFEQ F19
+050800000000     C                     MOVEL'19'      FUNKEY
+050900000000     C                     END
+051000000000     C           KEY       IFEQ F20
+051100000000     C                     MOVEL'20'      FUNKEY
+051200000000     C                     END
+051300000000     C           KEY       IFEQ F21
+051400000000     C                     MOVEL'21'      FUNKEY
+051500000000     C                     END
+051600000000     C           KEY       IFEQ F22
+051700000000     C                     MOVEL'22'      FUNKEY
+051800000000     C                     END
+051900000000     C           KEY       IFEQ F23
+052000000000     C                     MOVEL'23'      FUNKEY
+052100000000     C                     END
+052200000000     C           KEY       IFEQ F24
+052300000000     C                     MOVEL'24'      FUNKEY
+052400000000     C                     END
+052500000000     C           KEY       IFEQ ROLLUP
+052600000000     C                     MOVEL'RU'      FUNKEY
+052700000000     C                     END
+052800000000     C           KEY       IFEQ HELP
+052900000000     C                     MOVEL'HP'      FUNKEY
+053000000000     C                     END
+053100000000     C                     ENDSR
+053200000000     C*================================================================
+053300000000     C* NOTE PER COMPILAZIONE SCHIERE
+053400000000     C*================================================================
+053500000000     C* -MSG-
+053600000000     C* INSERIRE I VARI MESSAGGI EMESSI DAL PGM
+053700000000     C* (NON TOCCARE MSG,1)
+053800000000     C*
+053900000000     C* -CMD-
+054000000000     C* INSERIRE I VARI COMANDI DI SISTEMA RICHIESTI NEL PGM
+054100000000     C*
+054200000000     C* -FUD-
+054300000000     C* INSERIRE LE VARIE FUNZIONI GESTITE DAL PGM
+054400000000     C*  . DEVONO ESSERE IN ORDINE DI PRESENTAZIONE A VIDEO
+054500000000     C*  . METTERE S/N (SI/NO) PER INDICARE QUELLE GESTITE A PGM
+054600000000     C*  . POSSONO ESSERE IN ORDINE SPARSO
+054700000000     C*  . PUO' ESSERE VARIATO IL CONTENUTO NEL PGM
+054800000000     C*    (VIENE RICARICATA LA VISUALIZZAZIONE OGNI CICLO)
+054900000000     C*  . SE MESSO S/N=S E NEL PGM NON E' GESTITA ALLORA:
+055000971002     C*    . VIENE VISUALIZZATA A VIDEO MA IL PGM DICE "NON GESTITA"
+055100000000     C*  . METTERE F23 E F24 CON S/N=S  (RICALCOLATE NEL PGM)
+055200000000     C*  . SEGUIRE LE NOTE MESSE NELLA SCHIERA
+055300000000     C*
+055400000000     C*================================================================
+055500000000** ======== SCHIERA: MSG  (MESSAGGI)                       ================
+055600980210TISI67R- Tasto funzionale non gestito                                          1
+055700980210TISI67R- 2                                                                     2
+055800980210TISI67R- 3                                                                     3
+055900980210TISI67R- 4                                                                     4
+056000980210TISI67R- 5                                                                     5
+056100980210TISI67R- 6                                                                     6
+056200980210TISI67R- 7                                                                     7
+056300980210TISI67R- 8                                                                     8
+056400980210TISI67R- 9                                                                     9
+056500980210TISI67R- 10                                                                   10
+056600980210TISI67R- 11                                                                   11
+056700980210TISI67R- 12                                                                   12
+056800980210TISI67R- 13                                                                   13
+056900980210TISI67R- 14                                                                   14
+057000980210TISI67R- 15                                                                   15
+057100980210TISI67R- 16                                                                   16
+057200980210TISI67R- 17                                                                   17
+057300980210TISI67R- 18                                                                   18
+057400980210TISI67R- 19                                                                   19
+057500980210TISI67R- 20                                                                   20
+057600000000** ======== SCHIERA: FUD  TASTI FUNZION. GESTITI NEL PGM (ATTIVA=S)
+057700930201                   -        (S/N)=N                        funz.01¬
+057800000000                   -        (S/N)=N                        funz.02¬
+057900000000F03=Fine           -        (S/N)=S  <== S-FISSO           funz.03¬
+058000000000                   -        (S/N)=N                        funz.04¬
+058100000000                   -        (S/N)=N                        funz.05¬
+058200930305                   -        (S/N)=N                        funz.06¬
+058300930201                   -        (S/N)=N                        funz.07¬
+058400930210                   -        (S/N)=N                        funz.08¬
+058500000000                   -        (S/N)=N                        funz.09¬
+058600000000                   -        (S/N)=N                        funz.10¬
+058700000000                   -        (S/N)=N                        funz.11¬
+058800930202F12=Ritorno        -        (S/N)=S  <= S-FISSO            funz.12¬
+058900000000                   -        (S/N)=N                        funz.13¬
+059000000000                   -        (S/N)=N                        funz.14¬
+059100000000                   -        (S/N)=N                        funz.15¬
+059200000000                   -        (S/N)=N                        funz.16¬
+059300000000                   -        (S/N)=N                        funz.17¬
+059400000000                   -        (S/N)=N                        funz.18¬
+059500000000                   -        (S/N)=N                        funz.19¬
+059600000000                   -        (S/N)=N                        funz.20¬
+059700930305                   -        (S/N)=N                        funz.21¬
+059800930305                   -        (S/N)=N                        funz.22¬
+059900000000                   -        (S/N)=N                        funz.23¬
+060000000000F24=Altri tasti    -        (S/N)=S  <== S-FISSO           funz.24¬

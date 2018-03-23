@@ -1,0 +1,261 @@
+000100090225/*?******************************************************************/
+000200111213/*?  RICEVE ED ELABORA IFTSTA FUORI STANDARD      da UPLOAD         */
+000300111213/*?  Ricezione in Sede tramite UPLOAD     IFTSTA D96A               */
+000400090225/*?******************************************************************/
+000500090225
+000600111214
+000700111214             PGM        PARM(&ESITO)
+000800111214
+000900090225
+001000111214             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+001100111214             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001200111214             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001300090225             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001400101025             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001500100723
+001600100723             DCL        VAR(&FLD5) TYPE(*CHAR) LEN(1)
+001700100723             DCL        VAR(&STARTCMT) TYPE(*CHAR) LEN(1) VALUE(' ')
+001800100723
+001900100723             DCL        VAR(&ACTMSG) TYPE(*CHAR) LEN(1) VALUE(' ')
+002000100723             DCL        VAR(&MSGD01) TYPE(*CHAR) LEN(1) VALUE(' ')
+002100100723             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10) VALUE('          ')
+002200100723             DCL        VAR(&ORMI) TYPE(*CHAR) LEN(4) VALUE('0000')
+002300100723
+002400100723             DCL        VAR(&TIPO784) TYPE(*CHAR) LEN(1) VALUE(' ')
+002500100723             DCL        VAR(&TIPO781) TYPE(*CHAR) LEN(1) VALUE(' ')
+002600100723             DCL        VAR(&DUEVOLTE) TYPE(*CHAR) LEN(1) VALUE(' ')
+002700100723             DCL        VAR(&TIPFILE) TYPE(*CHAR) LEN(10) VALUE(' ')
+002800100723             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+002900100723             DCL        VAR(&SIGLA) TYPE(*CHAR) LEN(2) VALUE(' ')
+003000100723             DCL        VAR(&NAMSYS) TYPE(*CHAR) LEN(10) VALUE('          ')
+003100100723
+003200100723             RTVNETA    SYSNAME(&NAMSYS)
+003300100723             IF         COND(&NAMSYS *EQ 'AS888') THEN(DO)
+003400100723/* ambiente di TEST inesistente x EDI .... comunque ....              */
+003500100723             CHGVAR     VAR(&TEST) VALUE('P')
+003600100723             ENDDO
+003700100723
+003800100723/* SYSINFO DI PROVA   */
+003900100723             IF         COND(&TEST *NE ' ') THEN(DO)
+004000100723             ENDDO
+004100111214
+004200111214/* Aggiunge le librerie di Filiale su cui tradurre i dati      */
+004300111214
+004400111214             ADDLIBLE   LIB(FILTRAGRPF) POSITION(*AFTER UNITRAGRP)
+004500111214             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+004600111214
+004700111214             ADDLIBLE   LIB(FILTRAPRD) POSITION(*AFTER FILTRAGRPF)
+004800111214             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+004900111214
+005000111214/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+005100111214/* procedura/programma fosse finita in maniera anomala occorre */
+005200111214/* parare il colpo riducendo il male al male minore ossia      */
+005300111214/* con un rollback chiudere le precedenti transazioni fatte a  */
+005400111214/* metà piuttosto che confermarle. E ripartendo da una         */
+005500111214/* situazione pulita.                                          */
+005600111214             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+005700111214/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+005800111214             MONMSG     MSGID(CPF8351) EXEC(DO)
+005900111214             ENDCMTCTL
+006000111214             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+006100111214             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+006200111214             ENDDO
+006300111214
+006400111214/*-------------------------------------------------------------*/
+006500111214/* NON POSSONO ESSERCI PIU' FILE CONSECUTIVI SULLO STESSO      */
+006600111214/*  MEMBRO DEL TIVIN00R.     - QUESTA E'UNA REGOLA -           */
+006700111214/*                e va verificate  dopo aver finito la prima   */
+006800111214/*                traduzione si deve verificare che siano      */
+006900111214/*                finite le righe lette sul TIVIN.             */
+007000111214/*-------------------------------------------------------------*/
+007100111214
+007200111214/*   INIZIA IL GIRO .                                          */
+007300111214
+007400100723
+007500111213             CLRPFM     FILE(TRTCT14W)
+007600100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+007700100723             CHGVAR VAR(&FLD5) VALUE('1')
+007800100723             CHGVAR     VAR(&ESITO) VALUE('2')
+007900100723             GOTO       CMDLBL(ERROR)
+008000100723             ENDDO
+008100090216
+008200100723/*-----------------------------------------------------------------*/
+008300111213/* Carica il file TRTCT14W  con il flat file                       */
+008400100723/*-----------------------------------------------------------------*/
+008500100723
+008600111213             CALL       PGM(TRTCT14R) PARM(&ESITO)
+008700090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+008800090213             ROLLBACK
+008900090213             ENDDO
+009000090216
+009100100723/* ?+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+009200100723/* ?Reperisce lo User a cui inviare msg di avviso e se inviarlo        */
+009300100723/* ?+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+009400100723             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(' ')
+009500100723             CALL       PGM(TRTC95BR) PARM(&KPJBA)
+009600100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+009700100723             CHGVAR     VAR(&FLD5) VALUE('1')
+009800100723             CHGVAR     VAR(&ESITO) VALUE('2')
+009900100723             GOTO       CMDLBL(ERROR)
+010000100723             ENDDO
+010100100723
+010200100723             CHGVAR     VAR(&USRMSG) VALUE(%SST(&KPJBA 250 10))
+010300100723             CHGVAR     VAR(&ACTMSG) VALUE(%SST(&KPJBA 247 1))
+010400100723             CHGVAR     VAR(&MSGD01) VALUE(%SST(&KPJBA 249 1))
+010500100723             CHGVAR     VAR(&ORMI) VALUE(%SST(&KPJBA 260 4))
+010600100723
+010700111213             CRTDUPOBJ  OBJ(TRTCT14W) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+010800111213                          TOLIB(QTEMP) NEWOBJ(WFTMP784)
+010900100723
+011000111213             CRTDUPOBJ  OBJ(TRTCT14W) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+011100111213                          TOLIB(QTEMP) NEWOBJ(WFTMP781)
+011200100723
+011300100723/*?* Prende il FLAT e lo copia sui file RCV dopo averlo diviso fra 784 e 781 */
+011400100723/*  IFTSTA   di ATR e di Delivery                                                   */
+011500100723
+011600111213             CLRPFM     FILE(QTEMP/WFTMP784)
+011700100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+011800100723             CHGVAR VAR(&FLD5) VALUE('1')
+011900100723             CHGVAR     VAR(&ESITO) VALUE('2')
+012000100723             GOTO       CMDLBL(ERROR)
+012100100723             ENDDO
+012200100723
+012300111213             CLRPFM     FILE(QTEMP/WFTMP781)
+012400100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+012500100723             CHGVAR VAR(&FLD5) VALUE('1')
+012600100723             CHGVAR     VAR(&ESITO) VALUE('2')
+012700100723             GOTO       CMDLBL(ERROR)
+012800100723             ENDDO
+012900100723
+013000111213             CPYF       FROMFILE(TRTCT14W) TOFILE(QTEMP/WFTMP784) +
+013100100723                          FROMMBR(*FIRST) MBROPT(*REPLACE) +
+013200100723                          FMTOPT(*NOCHK)
+013300100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+013400100723             CHGVAR VAR(&FLD5) VALUE('1')
+013500100723             CHGVAR     VAR(&ESITO) VALUE('2')
+013600100723             GOTO       CMDLBL(ERROR)
+013700100723             ENDDO
+013800100723
+013900111213             CPYF       FROMFILE(TRTCT14W) TOFILE(QTEMP/WFTMP781) +
+014000100723                          FROMMBR(*FIRST) MBROPT(*REPLACE) +
+014100100723                          FMTOPT(*NOCHK)
+014200100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+014300100723             CHGVAR VAR(&FLD5) VALUE('1')
+014400100723             CHGVAR     VAR(&ESITO) VALUE('2')
+014500100723             GOTO       CMDLBL(ERROR)
+014600100723             ENDDO
+014700100723
+014800111213             OVRDBF     FILE(WFRCV784) TOFILE(QTEMP/WFTMP784)
+014900111213             OVRDBF     FILE(WFRCV781) TOFILE(QTEMP/WFTMP781)
+015000111213             CALL       PGM(TRTCT14R1) PARM(&TIPO784 &TIPO781)
+015100100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+015200100723             CHGVAR     VAR(&FLD5) VALUE('1')
+015300100723             CHGVAR     VAR(&ESITO) VALUE('2')
+015400100723             GOTO       CMDLBL(ERROR)
+015500100723             ENDDO
+015600100723
+015700100723
+015800100723/* se ci sono sia stati di Delivery che di ATR esegue 2 volte il giro x processare */
+015900100723/* separatamente i 2 file sul nostro sistema                                       */
+016000100723/* Altrimenti procede una volta sola                                               */
+016100100723             IF         COND((&TIPO784 *EQ 'S') *AND (&TIPO781 *EQ +
+016200100723                          'S')) THEN(DO)
+016300100723
+016400100723             CHGVAR     VAR(&DUEVOLTE) VALUE('S')
+016500100723
+016600100723  /* imposta il primo dei 2 files da importare iniziando dalle Deliveries      */
+016700111213             CPYF       FROMFILE(QTEMP/WFTMP784) TOFILE(TRTCT14W) +
+016800100723                          FROMMBR(*FIRST) MBROPT(*REPLACE) +
+016900100723                          FMTOPT(*NOCHK)
+017000100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+017100100723             CHGVAR VAR(&FLD5) VALUE('1')
+017200100723             CHGVAR     VAR(&ESITO) VALUE('2')
+017300100723             GOTO       CMDLBL(ERROR)
+017400100723             ENDDO
+017500100723             ENDDO
+017600100723
+017700100723/* ?ripete da qua solo x IFTSTA con ATR e Delivery mischiate  */
+017800100723/* ?poichè li ha separati e li processa indipendentemente     */
+017900100723RIPETI:
+018000111213             CPYF       FROMFILE(TRTCT14W) TOFILE(RCVIFTSTA) +
+018100100723                          FROMMBR(*FIRST) MBROPT(*ADD) FMTOPT(*NOCHK)
+018200100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+018300100723             CHGVAR VAR(&FLD5) VALUE('1')
+018400100723             CHGVAR     VAR(&ESITO) VALUE('2')
+018500100723             GOTO       CMDLBL(ERROR)
+018600100723             ENDDO
+018700100723
+018800100723             CHGVAR     VAR(&TIPFILE) VALUE('IFTSTA')
+018900100723
+019000100723/*?* PULIZIA W.F                                                             */
+019100111213             CLRPFM     FILE(TRTCT14W)
+019200100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+019300100723             CHGVAR VAR(&FLD5) VALUE('1')
+019400100723             CHGVAR     VAR(&ESITO) VALUE('2')
+019500100723             GOTO       CMDLBL(ERROR)
+019600100723             ENDDO
+019700100723
+019800100723/*?* Richiamo pgm per incasellare i msg ricevuti                             */
+019900100723
+020000100723
+020100100723             CALL       PGM(TRTC100R) PARM(&TEST &USRMSG &TIPFILE)
+020200100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+020300100723             CHGVAR VAR(&FLD5) VALUE('1')
+020400100723             CHGVAR     VAR(&ESITO) VALUE('2')
+020500100723             GOTO       CMDLBL(ERROR)
+020600100723             ENDDO
+020700100723
+020800100723/* ?solo x IFTSTA se ha diviso in 2 il file con ATR e Delivery mischiate  */
+020900100723             IF         COND(&DUEVOLTE *EQ 'S') THEN(DO)
+021000100723
+021100100723             CHGVAR     VAR(&DUEVOLTE) VALUE(' ')
+021200100723
+021300100723  /* imposta il secondo dei 2 files dopo aver importato le Deliveries ora gli ATR */
+021400111213             CPYF       FROMFILE(QTEMP/WFTMP781) TOFILE(TRTCT14W) +
+021500100723                          FROMMBR(*FIRST) MBROPT(*REPLACE) +
+021600100723                          FMTOPT(*NOCHK)
+021700100723             MONMSG     MSGID(CPF0000) EXEC(DO)
+021800100723             CHGVAR VAR(&FLD5) VALUE('1')
+021900100723             CHGVAR     VAR(&ESITO) VALUE('2')
+022000100723             GOTO       CMDLBL(ERROR)
+022100100723             ENDDO
+022200100723
+022300100723             GOTO       CMDLBL(RIPETI)
+022400100723             ENDDO
+022500100723
+022600100723/* ?errore esecuzione                                                  */
+022700100723 ERROR:
+022800100723
+022900100723             IF         COND(&FLD5 *NE '1') THEN(DO)
+023000100723             CHGVAR     VAR(&FLD5) VALUE('0')
+023100100723             ENDDO
+023200100723
+023300100723 FINE:
+023400100723 /* se per qualsiasi motivo il programma si è interrotto in modo */
+023500100723 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+023600100723 /* in modo pulito senza lasciare transazioni a metà.            */
+023700100723
+023800100723             DLTOVR     FILE(*ALL)
+023900111213             DLTF       FILE(QTEMP/WFTMP784)
+024000100723             MONMSG     MSGID(CPF0000)
+024100111213             DLTF       FILE(QTEMP/WFTMP781)
+024200100723             MONMSG     MSGID(CPF0000)
+024300100723
+024400111214
+024500111214 /*--------------------------------------------------------------*/
+024600111214 /* se per qualsiasi motivo il programma si è interrotto in modo */
+024700111214 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+024800111214 /* in modo pulito senza lasciare transazioni a metà.            */
+024900111214 /*                                                              */
+025000111214             ENDCMTCTL
+025100111214             MONMSG     MSGID(CPF0000)
+025200111214 /*                                                             */
+025300111214 /*-------------------------------------------------------------*/
+025400111214
+025500111214             rmvLIBLE   LIB(FILTRAGRPF)
+025600111214             MONMSG     MSGID(CPF0000)
+025700111214             rmvLIBLE   LIB(FILTRAPRD)
+025800111214             MONMSG     MSGID(CPF0000)
+025900111214
+026000090216
+026100090212             ENDPGM

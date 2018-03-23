@@ -1,0 +1,248 @@
+000100100507/*------------------------------------------------------------------------------------------------*/
+000200100507
+000300100507/*  ?                                                                               ?             */
+000400100507/*  ?                                                                               ?             */
+000500100507/*  ?              STATISTICA  -  DELTA                                             ?             */
+000600100507/*  ?                          -  DELTA PESI/VOLUMI                                 ?             */
+000700100507/*  ?                          -  CLIENTI PERSI                                     ?             */
+000800100507/*  ?                                                                               ?             */
+000900100507/*  ?                                                                               ?             */
+001000100507
+001100100507/*                  ATTENZIONE  alla LIBRERIA   --> del   BUDGET                                  */
+001200100507
+001300100507/*  ?                                                                               ?             */
+001400100507/*  ?                                                                               ?             */
+001500100507/*  ?    TUTTI i FILES utilizzati dai programmi >> DEVONO ESSERE REPLICATI <<       ?             */
+001600100507/*  ?    ___________________ nella  LIBRERIA  del  BUDGET. __________________       ?             */
+001700100507/*  ?                                                                               ?             */
+001800100507/*  ?                                                                               ?             */
+001900100507
+002000100302/*------------------------------------------------------------------------------------------------*/
+002100100507/* STATISTICHE DELTA - PROCEDURA                                                                  */
+002200000000/*------------------------------------------------------------------------------------------------*/
+002300130131/*  FILE base:   WFDEA00F   -   WFDEAV0F   -   SEPCC00F    -   WADFPV0F                           */
+002400130131/*  FILE   PC:   WADELPCF/E/T/N (x cliente)         WADEAPCI/E/T (x Cli/T_Serv/NTW)               */
+002500130131/*               WADELPCV (varie x cliente) <- al momento x il FUEL a TOTALE                      */
+002600130131/*               WFTISE93F  WFTISE94F  -  WADELCLP   -   SEPCC00F   -   WADFPV0F (pesi/volumi)    */
+002700100511/*                                                                                                */
+002800100507/*------------------------------------------------------------------------------------------------*/
+002900100507/* CHIAMANTE: TISE90R - RICHIESTA PARAMETRI STATISTICHE DELTA                                     */
+003000100507/* LANCIA   : TISE92R - CREAZIONE FILE DI LAVORO                                                  */
+003100100507/*            TISE93R - STATISTICHE DELTA COMMERCIALE                                             */
+003200100507/*            TISE94R - STATISTICA DELTA FILIALE                                                  */
+003300100507/*                                                                                                */
+003400100507/*            TISE91R - CREAZIONE FILE DELTA PER COMMERCIALE X PC                                 */
+003500100507/*            TISE91C1- CREAZIONE FILE DELTA X PC  a TOTALE                                       */
+003600100507/*            TISE91C3- CREAZIONE FILE DELTA X PC  a TOTALE                                       */
+003700100507/*                                                                                                */
+003800100507/*            TISE91R2- CREAZIONE FILE CLIENTI PERSI NEGLI ULTIMI 4 MESI                          */
+003900100507/*                                                                                                */
+004000070418/*          ?   - 18/04/2007 aggiunti 2 WFiles WADELPCF/E come i WFDELPCF/E   ? con campi in +    */
+004100130131/*          ?   - 31/05/2007 aggiunto WADFPV0F da generare con il WFDEL00F    ? a fine procedura  */
+004200070605/*            statistica DELTA viene lanciato lo stesso programma TISE92R generante il WFDEL00F   */
+004300130131/*            per generare il nuovo file WADFPV0F non toccando più il WFDEL00F .                  */
+004400130131/*            Il WADFPV0F formalmente è uguale al WFDEL00F però con in più il Peso ed il  Volume  */
+004500070605/*            CML. La creazione del nuovo file che serve per la statistica delta Fasce PesiVolumi */
+004600130131/*          ?   - WADFPV0F - è SEMPRE a livello di cliente e NON di unificante.       ?           */
+004700100507/*          ?   - quindi è sempre il ciclo dei SALDI letto dal TISE92R  a generarlo.  ?           */
+004800100302/*                                                                                                */
+004900100302/*          ?   - 02/02/2010 aggiunto il nuovo WFDEA00F al posto del WFDEL00F ? con NTW e TIPO    */
+005000100507/*            SERVIZIO in più generato dal nuovo TISE92R  che scrive i nuovi WFDEA00F e WFDEAV0F  */
+005100100302/*            non toccando il vecchio file per generare la Statistica x Fasce di Peso/Volume.     */
+005200100302/*            Si è VOLUTAMENTE deciso di NON modificare anche la base dati dell'altra statistica  */
+005300130131/*            non modificando  il WADFPV0F generato x cliente singolo e MAI x UNIFICANTE.         */
+005400100302/*          ?   - 02/02/2010 aggiunto il nuovo WFDEAV0F x le VARIE "e" / "h"  ? da riportare sui  */
+005500100302/*            nuovi WADEAPCI/E/T ...SOLO x i TIPI servizi E=Priority / H=H10:30.                  */
+005600100302/*          ?   - 02/02/2010 aggiunti WFiles WADEAPCI/E/T come i WADELPCF/E/T ? con campi NTW     */
+005700100302/*            e Tipo Servizio e valorizzato con le VARIE.                                         */
+005800130131/*          ?   - 31/01/2013 aggiunto  File  WADELPCV  totali VARIE           ? x il calcolo del  */
+005900130131/*            FUEL da scorporare ai Ricavi ITALIA e TOTALI. (La varia FUEL dovrebbe essere solo   */
+006000130131/*            applicata su spedizioni ITALIA - solo x questo è possibile dire ITALIA poichè sui   */
+006100130131/*            saldi delle VARIE non vi sono distinzioni fra ITALIA ed ESTERO).                    */
+006200000000/*------------------------------------------------------------------------------------------------*/
+006300020116 TISE91C:    PGM        PARM(&KPJBA)
+006400000000
+006500000000/* DICHIARAZIONI VARIABILI ---------------------------------------------------------------------- */
+006600000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+006700000000             DCL        VAR(&DCK)   TYPE(*CHAR) LEN(1)
+006800000000             DCL        VAR(&DCC)   TYPE(*CHAR) LEN(1)
+006900000000             DCL        VAR(&DCF)   TYPE(*CHAR) LEN(1)
+007000000000             DCL        VAR(&DFF)   TYPE(*CHAR) LEN(1)
+007100000000             DCL        VAR(&STA)   TYPE(*CHAR) LEN(1)
+007200000825             DCL        VAR(&CRE)   TYPE(*CHAR) LEN(1)
+007300030311             DCL        VAR(&FPC)   TYPE(*CHAR) LEN(1)
+007400050224             DCL        VAR(&IOE)   TYPE(*CHAR) LEN(1)
+007500100514             DCL        VAR(&USER)  TYPE(*CHAR) LEN(10)
+007600000000
+007700100507             DCL        VAR(&LISTALIB) TYPE(*CHAR) LEN(2750)
+007800100507             DCL        VAR(&X) TYPE(*DEC) LEN(5 0) VALUE(1)
+007900100507             DCL        VAR(&SYSBUDGET) TYPE(*CHAR) LEN(1) VALUE('N')
+008000100507             DCL        VAR(&MANCAFILE) TYPE(*CHAR) LEN(1) VALUE('N')
+008100100510             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+008200120130             DCL        VAR(&LIBTEST) TYPE(*CHAR) LEN(10) +
+008300120130                          VALUE('EDPABCUR  ')
+008400100507
+008500100514/* in base all'utente non verranno o verranno condizionate delle cose in questo programma ------- */
+008600100514             CHGVAR     VAR(&USER) VALUE(%SUBSTRING(&KPJBA 1 10))
+008700100514
+008800000000/* VALORIZZAZIONE VARIABILI --------------------------------------------------------------------- */
+008900000000             CHGVAR     VAR(&DCK) VALUE(%SUBSTRING(&KPJBA 259 1))
+009000000000             CHGVAR     VAR(&DCC) VALUE(%SUBSTRING(&KPJBA 260 1))
+009100000000             CHGVAR     VAR(&DCF) VALUE(%SUBSTRING(&KPJBA 261 1))
+009200000000             CHGVAR     VAR(&DFF) VALUE(%SUBSTRING(&KPJBA 269 1))
+009300000000             CHGVAR     VAR(&STA) VALUE(%SUBSTRING(&KPJBA 278 1))
+009400050224             CHGVAR     VAR(&IOE) VALUE(%SUBSTRING(&KPJBA 281 1))
+009500000825             CHGVAR     VAR(&CRE) VALUE(%SUBSTRING(&KPJBA 308 1))
+009600030311             CHGVAR     VAR(&FPC) VALUE(%SUBSTRING(&KPJBA 331 1))
+009700100302
+009800120130     /*===================================== */
+009900120130             ADDLIBLE   LIB(&LIBTEST)
+010000120130             MONMSG     MSGID(CPF2103)
+010100120130     /*===================================== */
+010200120130
+010300100302/*============================================================================= */
+010400100302/*  ?   - C R E A    la Statistica  in 3 Steps + 1 (Commerciale)   ?            */
+010500100302/*============================================================================= */
+010600120130
+010700120130
+010800120130/*  ?   - PULISCE  I FILES PC                   -SE RICHIESTO-     ?  */
+010900120130/*  ?        x     I T A L I A .                                   ?  */
+011000120130             IF         COND((&FPC *EQ 'S') *AND ((&IOE *EQ 'I') *OR +
+011100120130                          (&IOE *EQ ' '))) THEN(DO)
+011200120130
+011300120130             CLRPFM     FILE(&LIBTEST/WADELPCF) /*? Italia +
+011400120130                          Totalizzato         ?*/
+011500120130             CLRPFM     FILE(&LIBTEST/WADEAPCI) /*? Italia x +
+011600120130                          NETWORK/Tip.SERV. ?*/
+011700130131             CLRPFM     FILE(&LIBTEST/WADELPCV) /*? Totalizza le varie (FUEL) x CLIENTE                              ?*/
+011800120130             ENDDO
+011900120130
+012000120130/*   ?   - PULISCE  I FILES PC                   -SE RICHIESTO-     ?  */
+012100120130/*   ?        x     E S T E R O .                                   ?  */
+012200120130             IF         COND((&FPC *EQ 'S') *AND (&IOE *EQ 'E')) +
+012300120130                          THEN(DO)
+012400120130
+012500120130             CLRPFM     FILE(&LIBTEST/WADELPCE) /*? Estero +
+012600120130                          Totalizzato         ?*/
+012700120130             CLRPFM     FILE(&LIBTEST/WADEAPCE) /*? Estero x +
+012800120130                          NETWORK/Tip.SERV. ?*/
+012900120130
+013000120130             CLRPFM     FILE(&LIBTEST/WADELPCN) /*? Estero suddiviso +
+013100120130                          x NETWORK ?*/
+013200120130             ENDDO
+013300120130
+013400120130
+013500100302
+013600100302
+013700100302/*  1° Step : Stat.Delta x Cliente ossia di Filiale ?*/
+013800000000/* ESEGUE LA STATISTICA DELTA DI FILIALE -SE RICHIESTO- ----------------------------------------- */
+013900100302             IF         COND(&DCK *EQ 'S' ) THEN(DO)  /*? Se Richiesto x Filiale            ?*/
+014000100302
+014100100302/* con OVRRIDE ?*/
+014200100302             IF         COND(&IOE *EQ 'E')  THEN(DO)  /*? Se ESTERO  sostituisce i Files    ?*/
+014300120130             OVRDBF     FILE(WADELPCF) TOFILE(&LIBTEST/WADELPCE)
+014400120130             OVRDBF     FILE(WADEAPCI) TOFILE(&LIBTEST/WADEAPCE)
+014500050224             enddo
+014600100302
+014700100302/* Flag che individua elaborazione di Filiale ->(K)  ?*/
+014800000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('K')
+014900100302
+015000020116             OVRPRTF    FILE(TISE94P) FORMTYPE(*STD)
+015100100302             CALL       PGM(TISE93R) PARM(&KPJBA)    /*? Esegue Statistica/Crea Files PC   ?*/
+015200100302
+015300100302
+015400100302/* elimina OVRRIDE ?*/
+015500050224             IF         COND(&IOE *EQ 'E')  THEN(DO)
+015600120130             DLTOVR     FILE(WADELPCF)
+015700100302             DLTOVR     FILE(WADEAPCI)
+015800050224             enddo
+015900000000             ENDDO
+016000000000
+016100100302
+016200100302
+016300100302/*  2° Step : Stat.Delta x AREA  ?*/
+016400000000/* ESEGUE LA STATISTICA DELTA DI AREA -SE RICHIESTO- -------------------------------------------- */
+016500000000             IF         COND(&DCC *EQ 'S' ) THEN(DO)
+016600100302
+016700100302/* Flag che individua elaborazione di Filiale ->(C)  ?*/
+016800000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('C')
+016900020116             OVRPRTF    FILE(TISE94P) FORMTYPE(*STD)
+017000100302             CALL       PGM(TISE93R) PARM(&KPJBA)    /*? Esegue Solo Statistica            ?*/
+017100000000             ENDDO
+017200000000
+017300100302
+017400100302
+017500100302/*  3° Step : Stat.Delta x DIVISIONE  ?*/
+017600000000/* ESEGUE LA STATISTICA DELTA DI DIVISIONE -SE RICHIESTO- --------------------------------------- */
+017700000000             IF         COND(&DCF *EQ 'S' ) THEN(DO)
+017800100302
+017900100302/* Flag che individua elaborazione di Filiale ->(F)  ?*/
+018000000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE('F')
+018100020116             OVRPRTF    FILE(TISE94P) FORMTYPE('2COPIE')
+018200100302             CALL       PGM(TISE93R) PARM(&KPJBA)    /*? Esegue Solo Statistica            ?*/
+018300000000             ENDDO
+018400000000
+018500100302
+018600100302
+018700100302
+018800100302/*  4° Step : Stat.Delta Commerciale  ?*/
+018900000000/* ESEGUE LA STATISTICA DELTA COMMERCIALE -SE RICHIESTO- ---------------------------------------- */
+019000000000             IF         COND(&DFF *EQ 'S') THEN(DO)
+019100100302
+019200100302/* Flag che individua elaborazione            ->( )  ?*/
+019300000000             CHGVAR     VAR(%SST(&KPJBA 278 1)) VALUE(' ')
+019400020116             OVRPRTF    FILE(TISE94P) FORMTYPE('2COPIE')
+019500020116             CALL       PGM(TISE94R) PARM(&KPJBA)
+019600000000             ENDDO
+019700070531
+019800100302
+019900100302/*============================================================================= */
+020000100302/*  ?   - C R E A    i files di TOTALE della statistica DELTA  )   ?            */
+020100100302/*============================================================================= */
+020200100302/*?       Esegue la creazione del WADELPCT come Sommatoria dei 2 WADELPCF e WADELPCE.         ?  */
+020300120130             CALL       PGM(TISE91CT1) PARM(&KPJBA)
+020400100302
+020500100302
+020600100302/*?       Esegue la creazione del WADEAPCT come Sommatoria dei 2 WADEAPCI e WADEAPCE.         ?  */
+020700100302/*?  ...e I DATI DELLE VARIE (e) e (h) precaricati sul WFDEAV0F verranno inseriti solo        ?  */
+020800100302/*?       a livello di TOTALE di CLIENTE/TIPO SERVIZIO sul WADEAPCT.                          ?  */
+020900120130             CALL       PGM(TISE91CT3) PARM(&KPJBA)
+021000100302
+021100100302
+021200100302/*============================================================================= */
+021300100302/*  ?   - C R E A    la Statistica  x Fasce di PESO/VOLUME         ?            */
+021400100302/*============================================================================= */
+021500100302
+021600100302/*?  Con lo stesso flag utilizzato per creare il WFile di Base x la Stat.Delta,     ?  */
+021700130131/*?  Pulisce  il WFILE WADFPV0F e Genera i dati a livello di CLIENTE NON Unificato. ?  */
+021800070531             IF         COND(&CRE *EQ 'S' ) THEN(DO)
+021900120130             CLRPFM     FILE(&LIBTEST/WADFPV0F)
+022000070531
+022100130131/*  Il parametro PARWADEL qui deve essere 'S' x generare il WADFPV0F e NON toccare ?  */
+022200100302/*  il WFDEA00F.  ?                                                                   */
+022300100302/*  Il CLIENTE deve essere "C" sempre poichè i dati NON DEVONO essere x UNIficante ?  */
+022400070531             CHGVAR     VAR(%SST(&KPJBA 279 1)) VALUE('C')
+022500070531             CHGVAR     VAR(%SST(&KPJBA 334 1)) VALUE('S')
+022600100302
+022700100302/*?  Con questi parametri il WFDEA00F NON viene toccato mentre viene generato il    ?  */
+022800130131/*?  WADFPV0F per la statistica Delta FASCE PESI VOLUMI (programmi TISE9A*).        ?  */
+022900100302/*?  Questi è la base dati x l'estrazione del file finale WFFPV00F con il TISE9AR1. ?  */
+023000100302
+023100100507             CALL       PGM(TISE92R) PARM(&KPJBA) /*? 2°Giro chiamando il TISE92R.  ?  */
+023200070531             ENDDO
+023300090824
+023400100302/*============================================================================= */
+023500100302/*  ?   - C R E A    la Statistica  dei clienti Persi tipo C/B     ?            */
+023600100302/*============================================================================= */
+023700090824/*?       Esegue la creazione del WADELCLP x Clienti Persi fra quelli tipo (C) o (B).         ?  */
+023800100507/*?       Negli  ultimi 4 Mesi dal mese di riferimento per la stampa x ora Trimestrale.       ?  */
+023900090824/*?       Lo deve fare solo quando ha fatto già Italia e dopo che ha fatto l'Estero.          ?  */
+024000090824             IF         COND(&IOE *EQ 'E')  THEN(DO)
+024100100302/*  ?   l'elaborazione si basa sul file del DELTA    WADELPCT !!!!                  ?            */
+024200090824             CALL       PGM(TISE91R2) PARM(&KPJBA)
+024300090824             ENDDO
+024400100514
+024500100507END_PROC:
+024600000000             RCLRSC     LVL(*CALLER)
+024700000000
+024800000000             ENDPGM

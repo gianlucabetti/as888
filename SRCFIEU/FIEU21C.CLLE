@@ -1,0 +1,25 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200160216/* FIEU21C:  Spunte da VDL per parcel DPD                                     */
+000300000000/*----------------------------------------------------------------------------*/
+000400041102             PGM
+000500090807
+000600090807             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+000700150622             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+000800160719             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900150622
+001000150622             RTVNETA    SYSNAME(&SYSNAM)
+001100160719    /*       IF         COND(&SYSNAM *EQ 'AS888') THEN(GOTO +
+001200160719                          CMDLBL(END))                              */
+001300160719/* KPJBA di FILIALE  */
+001400160719             CALL       PGM(TRULRKPJC) PARM('F' &KPJBA)
+001500121023
+001600160216/* Conferma gli SCAN */
+001700160719 RUN:        CALL       PGM(FIEU21R) PARM(&CHIUDI &SYSNAM &KPJBA)
+001800041102             RCLRSC     LVL(*CALLER)
+001900090807
+002000090807             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(END))
+002100041102
+002200160722             DLYJOB     DLY(30)
+002300041102             GOTO       CMDLBL(RUN)
+002400041102
+002500090807 END:        ENDPGM

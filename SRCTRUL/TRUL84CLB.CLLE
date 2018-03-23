@@ -1,0 +1,130 @@
+000100040224/******************************************************/
+000200040224/*  CONVERTE IN FILE IL CONTENUTO DI UN OUTQ          */
+000300040225/******************************************************/
+000400040225/** FORZATURE:                                        */
+000500040225/**  - se libreria coda non impostata forzo *LIBL     */
+000600040225/**  - se libreria file non impostata forzo QTEMP     */
+000700040224/******************************************************/
+000800040224/** ERRORI PREVISTI:                                  */
+000900040224/**  2 = Libreria file impostata *LIBL                */
+001000040224/**  3 = Libreria file impostata GAITRAAZM            */
+001100040224/**  4 = Libreria inesistente                         */
+001200040224/**  5 = Coda di stampa non impostata                 */
+001300040224/**  6 = Coda di stampa inesistente                   */
+001400040224/**  7 = Impossibile creare file di output            */
+001500040224/******************************************************/
+001600040224             PGM        PARM(&OUTQ &OUTQLIB &OUTLIB &REPLACE &ERRORE)
+001700040224
+001800040224/*CODA DI STAMPA */
+001900040224             DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(10)
+002000040224/*LIBRERIA CODA DI STAMPA */
+002100040224             DCL        VAR(&OUTQLIB) TYPE(*CHAR) LEN(10)
+002200040225/*LIBRERIA DEL FILE DI OUTPUT WFOUTQW */
+002300040223             DCL        VAR(&OUTLIB) TYPE(*CHAR) LEN(10)
+002400040224/*S=REPLACE */
+002500040224             DCL        VAR(&REPLACE) TYPE(*CHAR) LEN(1)
+002600040224/*RITORNO ERRORE AL CHIAMANTE */
+002700040224             DCL        VAR(&ERRORE) TYPE(*CHAR) LEN(1)
+002800040224
+002900040224             DCL        VAR(&FULLOUTQ) TYPE(*CHAR) LEN(20)
+003000040224             DCL        VAR(&STRPOS) TYPE(*CHAR) LEN(4)
+003100040224             DCL        VAR(&NBRENT) TYPE(*DEC) LEN(9 0)
+003200040224             DCL        VAR(&ENTLEN) TYPE(*CHAR) LEN(4)
+003300040224             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+003400040224    /* FILE DI WORK */
+003500040224             DCL        VAR(&FILEWRK) TYPE(*CHAR) LEN(10) +
+003600040225                          VALUE('WFOUTQW')
+003700040224    /* NOME USER SPACE con LIBRERIA */
+003800040224             DCL        VAR(&FULLSPC) TYPE(*CHAR) LEN(20) +
+003900040224                          VALUE('WFOUTQUS  QTEMP')
+004000040224    /* NOME USER SPACE */
+004100040224             DCL        VAR(&NOMESPC) TYPE(*CHAR) LEN(10) +
+004200040224                          VALUE('WFOUTQUS')
+004300040224    /* LIBRERIA USER SPACE */
+004400040224             DCL        VAR(&LIBRSPC) TYPE(*CHAR) LEN(20) +
+004500040224                          VALUE('QTEMP     ')
+004600040223
+004700040223             RTVNETA    SYSNAME(&SYSNAM)
+004800040225
+004900040224             CHGVAR     VAR(&ERRORE) VALUE(' ')
+005000040225
+005100040224             IF         COND(&OUTQLIB *EQ '         ') THEN(CHGVAR +
+005200040224                          VAR(&OUTQLIB) VALUE('*LIBL'))
+005300040225
+005400040225             IF         COND(&OUTLIB *EQ '         ') THEN(CHGVAR +
+005500040225                          VAR(&OUTLIB) VALUE('QTEMP'))
+005600040223
+005700040224/* Controllo parametri */
+005800040225   /* La libreria del file non può essere GAITRAAZM o *LIBL */
+005900040225   /* e deve esistere                                       */
+006000040224             IF         COND(&OUTLIB *EQ '*LIBL ') THEN(DO)
+006100040224             CHGVAR     VAR(&ERRORE) VALUE('2')
+006200040224             GOTO       CMDLBL(FINE)
+006300040224             ENDDO
+006400040224             IF         COND(&OUTLIB *EQ 'GAITRAAZM') THEN(DO)
+006500040224             CHGVAR     VAR(&ERRORE) VALUE('3')
+006600040224             GOTO       CMDLBL(FINE)
+006700040224             ENDDO
+006800040224             CHKOBJ     OBJ(QSYS/&OUTLIB) OBJTYPE(*LIB)
+006900040224             MONMSG     MSGID(CPF0000) EXEC(DO)
+007000040224             CHGVAR     VAR(&ERRORE) VALUE('4')
+007100040224             GOTO       CMDLBL(FINE)
+007200040224             ENDDO
+007201050211  /* La coda di stampa = *DEV > QPRINTS */
+007202050211             IF         COND(&OUTQ *EQ '*DEV  ') THEN(DO)
+007203050211             CHGVAR     VAR(&outq) VALUE('QPRINTS')
+007205050211             ENDDO
+007300040224  /* La coda di stampa non può essere blank e deve esistere */
+007400040224             IF         COND(&OUTQ *EQ '      ') THEN(DO)
+007500040224             CHGVAR     VAR(&ERRORE) VALUE('5')
+007600040224             GOTO       CMDLBL(FINE)
+007700040224             ENDDO
+007800040224             CHKOBJ     OBJ(&OUTQLIB/&OUTQ) OBJTYPE(*OUTQ)
+007900040224             MONMSG     MSGID(CPF0000) EXEC(DO)
+008000040224             CHGVAR     VAR(&ERRORE) VALUE('6')
+008100040224             GOTO       CMDLBL(FINE)
+008200040224             ENDDO
+008300040223
+008400040224/* Controllo se file esiste e nel caso lo creo */
+008500040224             CHKOBJ     OBJ(&OUTLIB/&FILEWRK) OBJTYPE(*FILE)
+008600040224             MONMSG     MSGID(CPF9801) EXEC(DO)
+008700040224             CPYF       FROMFILE(GAITRAAZM/WFOUTQ0F) +
+008800040224                          TOFILE(&OUTLIB/&FILEWRK) CRTFILE(*YES)
+008900040224             MONMSG     MSGID(CPF0000) EXEC(DO)
+009000040224             CHGVAR     VAR(&ERRORE) VALUE('7')
+009100040224             GOTO       CMDLBL(FINE)
+009200040224             ENDDO
+009300040223             ENDDO
+009400040223
+009500040224/* Se Replace = 'S' pulisco il membro */
+009600040224             IF         COND(&REPLACE *EQ 'S') THEN(CLRPFM +
+009700040224                          FILE(&OUTLIB/&FILEWRK))
+009800040224
+009900040226/* Se libreria OUTQ generica ricavo quella reale */
+010000040224             IF         COND(&OUTQLIB *EQ '*LIBL') THEN(RTVOBJD +
+010100040224                          OBJ(&OUTQLIB/&OUTQ) OBJTYPE(*OUTQ) +
+010200040224                          RTNLIB(&OUTQLIB))
+010300040226
+010400040226/* Aggiungo GAICMZ in lista x comandi */
+010500040226             ADDLIBLE   LIB(GAICMZ) POSITION(*FIRST)
+010600040301             MONMSG     MSGID(CPF0000)
+010700040226
+010800040224/* Creo USER SPACE */
+010900040224             CRTUSRSPC  USRSPC(&LIBRSPC/&NOMESPC) DELETE(*YES) +
+011000040224                          TEXT('Space for TRUL84R')
+011100040224   /*        RMVMSG     CLEAR(*ALL)   */
+011200040224
+011300040224/* Inserisco immagine OUTQ nell'USER SPACE */
+011400040224             CHGVAR     VAR(&FULLOUTQ) value(&OUTQ *CAT &OUTQLIB)
+011500040224             CALL       PGM(QUSLSPL) PARM(&FULLSPC 'SPLF0100' '*ALL' +
+011600040224                          &FULLOUTQ '*ALL' '*ALL')
+011700040224             RTVUSRSPCI USRSPC(&LIBRSPC/&NOMESPC) STRPOS(&STRPOS) +
+011800040224                          NBRENT(&NBRENT) ENTLEN(&ENTLEN)
+011900040224
+012000040224/* Creo file di OUTPUT */
+012100040224             OVRDBF     FILE(WFOUTQ0F) TOFILE(&OUTLIB/&FILEWRK)
+012200040224             CALL       PGM(TRUL84R) PARM(&SYSNAM &STRPOS &NBRENT +
+012300040224                          &ENTLEN &FULLSPC)
+012400040224
+012500040224FINE:
+012600040223             ENDPGM

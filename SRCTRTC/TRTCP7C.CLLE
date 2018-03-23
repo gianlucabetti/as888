@@ -1,0 +1,42 @@
+000100921111/*----------------------------------------------------------*/
+000200090128/*  Caricamento spunte da VDL     - Positrova 2008 -                          */
+000300070214/* -------------------------------------------------------------------------- */
+000400090128/* 1) DALLE SPUNTE LETTE -FITR400F- CREA:                                     */
+000500090128/*  - file di carica spunte (FIBARxxxV )                                      */
+000501090128/*  - Storico spunte        (FLTR700F)                                        */
+000502090128/*  - Saldi letture         (FNMSA00F E FNMSC00F)                             */
+000700090128/* 2) SOTTOMETTE aggiornamento su AS400 dei dati accodati in FIBARxxxV        */
+000800070214/*    a file spunte  AS400  (FNBRV00F)                                        */
+000900070214/*                                                                            */
+001000070214/* INPUT --> FILIALE CHE SPUNTA (lunga 3 senza lettera davanti)               */
+001100070214/* -------------------------------------------------------------------------- */
+001200070214 TRTCP8C:    PGM        PARM(&PARPO)
+001300930308
+001400070209             DCL        VAR(&PARPO) TYPE(*char) LEN(3)
+001500070209             DCL        VAR(&FLAG) TYPE(*char) LEN(1)
+001600070213             DCL        VAR(&PARSPU) TYPE(*CHAR) LEN(1) VALUE(' ')
+001700070209             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10) +
+001800090128                          VALUE('FIBAR00FV ')
+001900090128             DCL        VAR(&NOMEJOB) TYPE(*CHAR) LEN(10) +
+002000090128                          VALUE('VDLxxx_P7 ')
+002100070213             DCL        VAR(&UTENT) TYPE(*CHAR) LEN(10) +
+002200090128                          VALUE('VDLxxx    ')
+002500070209             CHGVAR     VAR(%SST(&FILE 6 3)) VALUE(&PARPO)
+002600070209             OVRDBF     FILE(FIBAR00F) TOFILE(&FILE)
+002700071009/*                                               */
+002800090128 SOPRA:      CALL       PGM(FIMS97R) PARM(&PARPO &FLAG &PARSPU)
+002900070213/* Sottomossione pgm caricamento spunte su AS/400                 */
+003000090218             CHGVAR     VAR(%SST(&UTENT 4 3)) VALUE(&parpo)
+003100090218             CHGVAR     VAR(%SST(&NOMEJOB 4 3)) VALUE(&parpo)
+003300090128/**/
+003400071016             IF         COND(&PARSPU = 'S') THEN(SBMJOB CMD(CALL +
+003500070213                          PGM(FNLS45C5) PARM(&PARPO &FILE)) +
+003600071016                          JOB(&NOMEJOB) JOBQ(AGGPC) USER(&UTENT))
+003700070213
+003800090128/* Se richiesta chiusura del sottosistema vado a fine pgm          */
+003900070209             IF         COND(&FLAG = '1') THEN(GOTO CMDLBL(FINE))
+004000070213
+004100070209             DLYJOB     DLY(15)
+004200070209             GOTO       CMDLBL(SOPRA)
+004300070213
+004400070209 FINE:       ENDPGM

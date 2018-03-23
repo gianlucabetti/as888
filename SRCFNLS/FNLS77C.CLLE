@@ -1,0 +1,89 @@
+000100941228 FNLS77C:    PGM        PARM(&KPJBA)
+000200030616
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400950419             DCL        VAR(&PARFLG) TYPE(*CHAR) LEN(1)
+000500950419             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+000600950419             DCL        VAR(&QDATE) TYPE(*CHAR) LEN(6)
+000700950419             DCL        VAR(&GIORNO) TYPE(*CHAR) LEN(2)
+000800950419             DCL        VAR(&MESE) TYPE(*CHAR) LEN(2)
+000900950419             DCL        VAR(&ANNO) TYPE(*CHAR) LEN(2)
+001000950419             DCL        VAR(&QTIME) TYPE(*CHAR) LEN(6)
+001100950419             DCL        VAR(&ORA) TYPE(*CHAR) LEN(2)
+001200950419             DCL        VAR(&MIN) TYPE(*CHAR) LEN(2)
+001300950419             DCL        VAR(&SEC) TYPE(*CHAR) LEN(2)
+001400950419             DCL        VAR(&MESSAGGIO) TYPE(*CHAR) LEN(512)
+001500900924
+001600030613             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+001700030613             DCL        VAR(&PRTBA4)   TYPE(*CHAR)  LEN(10)
+001800030613             DCL        VAR(&PRTBA5)   TYPE(*CHAR)  LEN(10)
+001900030613             DCL        VAR(&PRTETI)   TYPE(*CHAR)  LEN(10)
+002000030613             DCL        VAR(&MODBA4)   TYPE(*CHAR)  LEN(10)
+002100030613             DCL        VAR(&MODBA5)   TYPE(*CHAR)  LEN(10)
+002200030613             DCL        VAR(&MODETI)   TYPE(*CHAR)  LEN(10)
+002300071029             DCL        VAR(&VPOmaxLDV) TYPE(*CHAR)  LEN(5)
+002400030613
+002500030613             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+002600030613             CHGVAR     VAR(&PRTBA4) VALUE(%SST(&KPJBU 167 10))
+002700030613             CHGVAR     VAR(&PRTBA5) VALUE(%SST(&KPJBU 177 10))
+002800030613             CHGVAR     VAR(&MODBA4) VALUE(%SST(&KPJBU 187 10))
+002900030613             CHGVAR     VAR(&MODBA5) VALUE(%SST(&KPJBU 197 10))
+003000030613             CHGVAR     VAR(&MODETI) VALUE(%SST(&KPJBU 227 10))
+003100030613             CHGVAR     VAR(&PRTETI) VALUE(%SST(&KPJBU 247 10))
+003200030613
+003300030613   /* prtf bolle per stampanti laser */
+003400030613             OVRPRTF    FILE(FNLSB5PA4) OUTQ(&PRTBA4) +
+003500030613                          FORMTYPE(&MODBA4) USRDTA('Rist.Bolle') +
+003600030613                          SHARE(*YES)
+003700030613             OVRPRTF    FILE(FNLSB5PA5) OUTQ(&PRTBA5) +
+003800030613                          FORMTYPE(&MODBA5) USRDTA('Rist.Bolle') +
+003900030613                          SHARE(*YES)
+004000030613
+004100030616/* Richiamo pgm di stampa -------------------------------------------*/
+004200941228             CALL       PGM(FNLS77R) PARM(&KPJBA)
+004300950419
+004400030613/* Controllo la corretta esecuzione delle stampe --------------------*/
+004500030613             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+004600030613             CHGVAR     VAR(&PARFLG) VALUE(%SST(&KPJBU 156 1))
+004700950419
+004800950419/* SE SUPERO TOT. PAGINE IN STAMPA (PARFLG = "E"), EMETTO MESSAGGIO */
+004900950419             IF         COND(&PARFLG *EQ 'E') THEN(DO)
+005000071029             chgvar     var(&VPOmaxLDV) value(%sst(&KPJBU 151 5))
+005100950419             RTVJOBA    USER(&USER)
+005200950419             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&QDATE)
+005300950419             CHGVAR     VAR(&GIORNO) VALUE(%SST(&QDATE 1 2))
+005400950419             CHGVAR     VAR(&MESE) VALUE(%SST(&QDATE 3 2))
+005500950419             CHGVAR     VAR(&ANNO) VALUE(%SST(&QDATE 5 2))
+005600950419             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&QTIME)
+005700950419             CHGVAR     VAR(&ORA) VALUE(%SST(&QTIME 1 2))
+005800950419             CHGVAR     VAR(&MIN) VALUE(%SST(&QTIME 3 2))
+005900950419             CHGVAR     VAR(&SEC) VALUE(%SST(&QTIME 5 2))
+006000950419/* INVIO MESSAGGIO CON OBBLIGO DI RISPOSTA ALLA CODA DELL'OPERATORE */
+006100950419             CHGVAR     VAR(&MESSAGGIO) VALUE(&GIORNO *CAT '/' *CAT +
+006200950419                          &MESE *CAT '/' *CAT &ANNO *CAT '   ' *CAT +
+006300950419                          &ORA *CAT ':' *CAT &MIN *CAT ':' *CAT +
+006400950419                          &SEC *BCAT '                 Programma di +
+006500950419                          ristampa bolle.       ATTENZIONE, +
+006600950419                          l''utente' *BCAT &USER *BCAT 'ha +
+006700950419                          richiesto un''elaborazione che sta +
+006800071029                          ristampando piu'' di' *bcat &VPOmaxLDV +
+006900071029                                                *bcat 'bolle. +
+007000950419                          L''elaborazione viene interrotta e la +
+007100950419                          stampa congelata. Rispondere OK per +
+007200950419                          chiudere il lavoro.')
+007300950419             SNDUSRMSG  MSG(&MESSAGGIO) TOUSR(*SYSOPR)
+007400080710
+007500030613             HLDSPLF    FILE(FNLSB5PA4) SELECT(&USER)
+007600030613             MONMSG     MSGID(CPF3337)
+007700030613             MONMSG     MSGID(CPF3309)
+007800030616             MONMSG     MSGID(CPF3303)
+007900030613             HLDSPLF    FILE(FNLSB5PA5) SELECT(&USER)
+008000030613             MONMSG     MSGID(CPF3337)
+008100030613             MONMSG     MSGID(CPF3309)
+008200030616             MONMSG     MSGID(CPF3303)
+008300950419             ENDDO
+008400920124
+008500030616/* Fine -------------------------------------------------------------*/
+008600910218             RCLRSC     LVL(*CALLER)
+008700900925             DLTOVR     FILE(*ALL)
+008800030613
+008900000000             ENDPGM

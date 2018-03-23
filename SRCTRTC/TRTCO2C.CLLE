@@ -1,0 +1,43 @@
+000100991027/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600160607             PGM        PARM(&OPZIONE &FILNAM &JOBNAM &USRNAM &JOBNUM +
+000700160607                             &NUMFIL &FAXIN &FAXOUT &ESITO)
+000800060721
+000900990908
+001000160607             DCL        VAR(&OPZIONE)   TYPE(*CHAR) LEN(2)
+001100001006             DCL        VAR(&FILNAM)    TYPE(*CHAR) LEN(10)
+001200001006             DCL        VAR(&JOBNAM)    TYPE(*CHAR) LEN(10)
+001300001006             DCL        VAR(&USRNAM)    TYPE(*CHAR) LEN(10)
+001400001006             DCL        VAR(&JOBNUM)    TYPE(*CHAR) LEN(6)
+001500001006             DCL        VAR(&NUMFIL)    TYPE(*CHAR) LEN(6)
+001600070607             DCL        VAR(&FAXIN)     TYPE(*CHAR) LEN(10)
+001700071031             DCL        VAR(&FAXOUT)    TYPE(*CHAR) LEN(10)
+001800160607             DCL        VAR(&ESITO)     TYPE(*CHAR) LEN(1)
+001900060721
+002000071031
+002100071031
+002200071031/* Sposto lo spool dalla coda d "IN" alla coda d "OUT" -----*/
+002300160607             IF         COND(&OPZIONE *EQ 'CC') THEN(DO)
+002400071031             CHGSPLFA   FILE(&FILNAM) JOB(&JOBNUM/&USRNAM/&JOBNAM) +
+002500071031                          SPLNBR(&NUMFIL) OUTQ(*LIBL/&FAXOUT)
+002600071031             MONMSG     MSGID(CPF0000) EXEC(DO)
+002700071031             CHGVAR     VAR(&ESITO) VALUE('2')
+002800071031             ENDDO
+002900071031
+003000071031/* Se errore registro nel log l'esito della conversione ------------*/
+003100071031             IF         COND(&ESITO = '2') THEN(DO)
+003200071031             SNDPGMMSG  MSG('ERRORE durante lo spostamento di outq +
+003300071031                          da: ' *CAT &FAXIN *CAT ' a ' *CAT &FAXOUT)
+003400071031             MONMSG     MSGID(CPF0000) EXEC(DO)
+003500071031             GOTO       CMDLBL(FINE)
+003600071031             ENDDO
+003700071031             ENDDO
+003800071031
+003900071031             ENDDO
+004000070607
+004100030402 FINE:
+004200030402
+004300990907             ENDPGM

@@ -1,0 +1,51 @@
+000100140417             PGM        PARM(&kpjba)
+000200140417             DCL        VAR(&kpjba) TYPE(*CHAR) LEN(502)
+000300140417             DCL        VAR(&kpjbu) TYPE(*CHAR) LEN(256)
+000400140417             DCL        VAR(&knsif) TYPE(*CHAR) LEN(10)
+000500140417             DCL        VAR(&knmtd) TYPE(*CHAR) LEN(10)
+000600140418             DCL        VAR(&lib) TYPE(*CHAR) LEN(10)
+000700140417             DCL        VAR(&prova) TYPE(*CHAR) LEN(1)
+000800140417             DCL        VAR(&anno) TYPE(*char) LEN(4)
+000900140418             DCL        VAR(&anatt) TYPE(*char) LEN(2)
+001000140417             DCL        VAR(&an) TYPE(*char) LEN(2)
+001100140417             CHGVAR     VAR(&knsif) VALUE(%SST(&kpjba 92 10))
+001200140417             CHGVAR     VAR(&prova) VALUE(%SST(&knsif 7 1))
+001300140417             CHGVAR     VAR(&knmtd) VALUE(%SST(&kpjba 20 10))
+001400140417             CHGVAR     VAR(&lib) VALUE('UNITRAGRP ')
+001500140417
+001600140417             chgvar     var(&anno) value(%sst(&kpjbu 1 4))
+001700140417             CHGVAR     VAR(&an) VALUE(%SST(&anno 3 2))
+001800140417         /*      verifica se sistema di test(unitragrp) o  buono(unitragru)      */
+001900140417
+002000140417             IF         COND(&prova  *NE 'P') THEN(DO)
+002100140417             CHGVAR     VAR(&lib) VALUE('UNITRAGRU ')
+002200140418             enddo
+002300140417
+002400140417         /*      importa anno da una delle aree dati in linea per confronto     */
+002500140417
+002600140417             RTVDTAARA  DTAARA(&LIB/OCLBL1 (7 2)) RTNVAR(&ANATT)
+002700140417
+002800140417             IF         COND(&AN  *EQ &ANATT) THEN(DO)
+002900140417             SNDBRKMSG  MSG('ATTENZIONE si sta inserendo un anno che +
+003000140417                          è già presente nelle numerazioni di +
+003100140417                          sistema verificare la richiesta e +
+003200140417                          riproporre il comando') TOMSGQ(&KNMTD)
+003300140417             goto    endpgm
+003400140418             ENDDO
+003500140417
+003600140417         /*      numeratori ordini                                    */
+003700140417             CHGDTAARA  DTAARA(unitragru/dtaorc) VALUE('00001')
+003800140417             CHGDTAARA  DTAARA(unitragru/dtaorf) VALUE('00001')
+003900140417
+004000140417         /*      numeratori bolle clienti                             */
+004100140417             CHGDTAARA  DTAARA(unitragru/oclbl1) VALUE('000000AN0101')
+004200140417             CHGDTAARA  DTAARA(UNITRAGRU/oclbl1 (7 2)) VALUE(&AN)
+004300140417             CHGDTAARA  DTAARA(unitragru/oclbl2) VALUE('000000AN0101')
+004400140417             CHGDTAARA  DTAARA(UNITRAGRU/oclbl2 (7 2)) VALUE(&AN)
+004500140417
+004600140417         /*      numeratori bolle fornitori                           */
+004700140417             CHGDTAARA  DTAARA(unitragru/ofndt1 (1 5)) VALUE('00000')
+004800140417             CHGDTAARA  DTAARA(UNITRAGRU/OFNDT1 (18 2)) VALUE(&AN)
+004900140417
+005000140417
+005100140418 endpgm:     ENDPGM

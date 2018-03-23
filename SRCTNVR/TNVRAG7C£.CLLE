@@ -1,0 +1,41 @@
+000100101110             PGM        PARM(&KPJBA)
+000200101110
+000300101110             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400110429
+000500110429/* Variabili per invio e-mail */
+000600120911             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) +
+000700120912                          VALUE('dallantonia.luciano@brt.it')
+000800120912             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253) +
+000900120912                          VALUE('andrea.zizzo@brt.it')
+001000110429             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44) +
+001100110429                          VALUE('Elaborazione dati per SIC')
+001200110429             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000) +
+001300110429                          VALUE('L''estrazione giornaliera dei +
+001400110429                          dati per il SIC è stata eseguita +
+001500110429                          correttamente.')
+001600110429             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+001700091218
+001800101110/* Pulisco file in movimento */
+001900101110             CLRPFM     FILE(TIATCI0F)
+002000101111             CLRPFM     FILE(TIVISI0F)
+002100101111             CLRPFM     FILE(TIVOFI0F)
+002200101111             CLRPFM     FILE(TIVIII0F)
+002300091218
+002400101110/* Richiamo programmi */
+002500110418
+002600110418/* Aggiorna categoria potenziale su file potenziali e attività da eseguire o eseguite */
+002700110418/* dal 11/04/2011 */
+002800110418
+002900110418             CALL       PGM(TRMK06R) PARM(&KPJBA)
+003000110418
+003100101110             CALL       PGM(TRMKQ1R) PARM(&KPJBA)
+003200101111
+003300101111             CALL       PGM(TRMKQ2R) PARM(&KPJBA)
+003400110427
+003500110427/* Crea attività 60 su potenziali mai codificati */
+003600110427             CALL       PGM(TRMK37R) PARM(&KPJBA)
+003700110429
+003800110429/* Invio mail di elaborazione eseguita */
+003900110429             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+004000091218
+004100091218             ENDPGM

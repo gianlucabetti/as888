@@ -1,0 +1,463 @@
+000100050914      *PARMS RSTDSP(*YES)
+000200050713      *** FIDN86D *-------------------------------------------------***
+000300051017      *?  Gestione Rimborsi Eventi da A.I.G.                         ?*
+000400050713      ***-----------------------------------------------------------***
+000500050726      *? N.B. ?:                                                      *
+000600050727      * DSPF con SFL in uso dai pgm: FIDN86R, FIDN87R e FIDN88R.      *
+000700050726      ***-----------------------------------------------------------***
+000800050713     A                                      REF(CNDIZION)
+000900050713     A                                      DSPSIZ(24 80 *DS3)
+001000050713     A                                      CHGINPDFT(HI UL)
+001100050713     A                                      PRINT
+001200050713     A                                      CA03
+001300050713      *---------------------------------------------------------------*
+001400050713     A          R FI86T01
+001500050713     A                                      TEXT('Testata')
+001600050713     A            RSUT          20A  O  1  2
+001700051007     A                                  1 28'*  GESTIONE RIMBORSO  *'
+001800050713     A                                      DSPATR(RI)
+001900050713     A            V1TPGM    R        O  1 59REFFLD($PGM  CNDIZION)
+002000050713     A                                  1 70DATE(*YY)
+002100050713     A                                      EDTCDE(Y)
+002200050713     A            KNSIF     R        O  2  2REFFLD(KNSIF KPJBA)
+002300050713     A                                   + 1USER
+002400051017     A                                  2 28'*     E V E N T I     *'
+002500050914     A                                      DSPATR(RI)
+002600050914     A                                      DSPATR(UL)
+002700050713     A                                  2 70TIME
+002800050713      *---------------------------------------------------------------*
+002900050713     A          R FI86D01
+003000050713     A                                      TEXT('Parametri')
+003100050713     A                                      OVERLAY
+003200050713     A  28        V1DMSG        78   M
+003300050713      *
+003400050721     A                                  6  2'Numero Evento .....(?):'
+003500050721     A            V1CNEV    R     A  B  6 30
+003600050713     A                                      REFFLD($NEV)
+003700050718     A                                      CHECK(RZ)
+003800050728     A  51                                  DSPATR(PC)
+003900051010     A                                  6 42'Anno:'
+004000050713     A            V1CAAE    R     Y  B   + 1
+004100050713     A                                      REFFLD($AA4)
+004200050713     A                                      EDTCDE(Z)
+004300050713     A                                      CHECK(RZ)
+004400050728     A  52                                  DSPATR(PC)
+004500050713      *
+004600050721     A                                  8  2'Data apertura Evento .:'
+004700050721     A                                  8 26'dal'
+004800050713     A            V1CDAI    R     Y  B   + 1
+004900050713     A                                      REFFLD($DEV)
+005000050715     A*** Visualizza  0/00/0000             EDTCDE(Y)
+005100050715     A                                      EDTWRD('  /  /    ')
+005200051007     A                                      CHECK(RB)
+005300050728     A  53                                  DSPATR(PC)
+005400051010     A                                  8 42'   al'
+005500050713     A            V1CDAF    R     Y  B   + 1
+005600050713     A                                      REFFLD($DEV)
+005700050715     A*** Visualizza  0/00/0000             EDTCDE(Y)
+005800050715     A                                      EDTWRD('  /  /    ')
+005900051007     A                                      CHECK(RB)
+006000050728     A  54                                  DSPATR(PC)
+006100050713      *
+006200051021     A                                 12  2'SELEZIONE EVENTI:'
+006300051010     A                                      DSPATR(UL)
+006400051010      *
+006500051021     A                                 14  2'Eventi con richieste di r-
+006600051010     A                                      imborso da eseguire:'
+006700050713     A            V1CSE1    R     A  B   + 1
+006800050713     A                                      REFFLD($FLA)
+006900051021     A                                      VALUES('N' 'S')
+007000050728     A  55                                  DSPATR(PC)
+007100051021     A                                   + 1'(S=Si, N=No)'
+007200050713      *
+007300051021     A                                 16  2'Eventi in attesa di rimbo-
+007400051010     A                                      rso ...............:'
+007500050713     A            V1CSE2    R     A  B   + 1
+007600050713     A                                      REFFLD($FLA)
+007700051021     A                                      VALUES('N' 'S')
+007800050728     A  56                                  DSPATR(PC)
+007900051021     A                                   + 1'(S=Si, N=No)'
+008000051010      *
+008100051021     A                                 18  2'Eventi rimborsati totalme-
+008200051010     A                                      nte ...............:'
+008300051010     A            V1CSE3    R     A  B   + 1
+008400051010     A                                      REFFLD($FLA)
+008500051021     A                                      VALUES('N' 'S')
+008600051010     A  57                                  DSPATR(PC)
+008700051021     A                                   + 1'(S=Si, N=No)'
+008800050713      *
+008900051017     A                                 20  2'Eventi esclusi ..........-
+009000051010     A                                      ...................:'
+009100051010     A            V1CSE4    R     A  B   + 1
+009200050713     A                                      REFFLD($FLA)
+009300051021     A                                      VALUES('N' 'S')
+009400051010     A  58                                  DSPATR(PC)
+009500051021     A                                   + 1'(S=Si, N=No)'
+009600051017      *
+009700051017     A                                 22  2'Eventi fortuiti .........-
+009800051017     A                                      ...................:'
+009900051017     A            V1CSE5    R     A  B   + 1
+010000051017     A                                      REFFLD($FLA)
+010100051021     A                                      VALUES('N' 'S')
+010200051017     A  59                                  DSPATR(PC)
+010300051021     A                                   + 1'(S=Si, N=No)'
+010400050713      *---------------------------------------------------------------*
+010500050713     A          R FI86S01
+010600050713     A                                      TEXT('SubFile EVENTI')
+010700050713     A                                      SFL
+010800050713     A  32                                  SFLNXTCHG
+010900050713      * Campi hidden
+011000050920     A            H1DTAD    R        H      REFFLD(§TADDESC  DTAD)
+011100051017     A            H1CAAE    R        H      REFFLD(DETAAE FNDET00F)
+011200050915     A            H1CALE         5  0H      TEXT('Numero totale C.A. l-
+011300050713     A                                      egate all''Evento')
+011400050919     A            H1CAOL         5  0H      TEXT('Numero totale C.A. e-
+011500050919     A                                      vento di spedizioni preced-
+011600050919     A                                      enti il 18/04/2005')
+011700050915     A            H1CANC         5  0H      TEXT('Numero C.A. NON chiu-
+011800050915     A                                      se legate all''Evento')
+011900050915     A            H1CANP         5  0H      TEXT('Numero totale C.A. a-
+012000050713     A                                      ncora da pagare ai clienti')
+012100050919     A            H1CANR         5  0H      TEXT('Numero C.A. evento s-
+012200050919     A                                      enza richiesta rimborso ad-
+012300050919     A                                      A.I.G.')
+012400050919     A            H1CARR         5  0H      TEXT('Numero C.A. evento n-
+012500050914     A                                      on rimborsateci da A.I.G.')
+012600050915     A            H1CARA         5  0H      TEXT('Numero C.A. evento g-
+012700050914     A                                      ià rimborsateci da A.I.G.')
+012800050713     A            H1CVPL    R        H      REFFLD(DCLVPL FNDCL00F)
+012900050801     A            H1CDI1    R        H      REFFLD(DRADIR FNDRA00F)
+013000050801     A            H1CDIR    R        H      REFFLD(DRADIR FNDRA00F)
+013100050713      * Campi di i/o
+013200050914     A            S1COPZ         1A  B  7  3
+013300050713     A                                      TEXT('Campo Opzione')
+013400050713     A  50                                  DSPATR(PC)
+013500050713     A            S1CNEV    R        O   + 1
+013600050713     A                                      REFFLD($NEV)
+013700050713     A                                      EDTCDE(Z)
+013800051017     A            S1CDEV    R    6Y 0O   + 1
+013900050713     A                                      REFFLD($DEV)
+014000050713     A                                      EDTCDE(Y)
+014100051017     A            S1CEVF    R        O   + 1
+014200051017     A                                      REFFLD(§TADEVFO  DTAD)
+014300051017     A  42                                  DSPATR(RI)
+014400050801     A            S1CDRR    R        O   + 1
+014500050713     A                                      REFFLD($DA8)
+014600050713     A                                      TEXT('Data Ultima Richiest-
+014700050713     A                                      a di Rimborso')
+014800050715     A                                      EDTWRD('  /  /    ')
+014900050801     A            S1CDVR    R        O   + 1
+015000050713     A                                      REFFLD($DA8)
+015100050713     A                                      TEXT('Data Ultimo Rimborso-
+015200050713     A                                       Ricevuto')
+015300050715     A                                      EDTWRD('  /  /    ')
+015400050713     A            S1CIPL    R    9  2O   + 1
+015500050713     A                                      REFFLD(DCLIPL FNDCL00F)
+015600050713     A                                      TEXT('Totale degli importi-
+015700050713     A                                       liquidati ai clienti rela-
+015800050713     A                                      tivi all''evento')
+015900050726     A                                      EDTCDE(4)
+016000050713     A            S1CIR1    R    9  2O   + 1
+016100050713     A                                      REFFLD(DCLIPR FNDCL00F)
+016200050713     A                                      TEXT('Totale degli importi-
+016300050713     A                                       richiesti all''AIG relati-
+016400050713     A                                      vi all''evento')
+016500050726     A                                      EDTCDE(4)
+016600050801     A            S1CIRI    R    9  2O   + 1
+016700050713     A                                      REFFLD(DCLIPR FNDCL00F)
+016800050713     A                                      TEXT('Totale degli importi-
+016900050713     A                                       rimborsati dall''AIG rela-
+017000050713     A                                      tivi all''evento')
+017100050726     A                                      EDTCDE(4)
+017200050914     A            S1CFLE    R        O   + 1
+017300050713     A                                      REFFLD($FLA)
+017400050713     A                                      TEXT('Flag di?ESCLUSIONE?d-
+017500050713     A                                      ell''evento dalla richiest-
+017600050713     A                                      a di rimborso')
+017700050728     A  41                                  DSPATR(RI)
+017800050713      *
+017900050914     A                                  8  5'Tipo Anomalia'
+018000050713     A                                      DSPATR(HI)
+018100050713     A            S1CTAD    R        O   + 1
+018200050713     A                                      REFFLD(DETTAD FNDET00F)
+018300050921     A            S1DTAD    R   13   O   + 1
+018400050713     A                                      REFFLD($DES10)
+018500050921     A            S1DNOT    R        O   + 1
+018600050920     A                                      REFFLD($NOT)
+018700050713     A                                   + 1'P.O.'
+018800050713     A                                      DSPATR(HI)
+018900050713     A            S1CFCE    R        O   + 1
+019000050713     A                                      REFFLD(DETFCE FNDET00F)
+019100050713      *---------------------------------------------------------------*
+019200050713     A          R FI86C01
+019300050713     A                                      TEXT('SubFile control EVENTI')
+019400050713     A                                      SFLCTL(FI86S01)
+019500050801     A                                      SFLSIZ(0017)
+019600050803     A                                      SFLPAG(0008)
+019700050713     A                                      SFLDROP(CF09)
+019800050713     A***                                   SFLFOLD(CF09)
+019900050713     A N30                                  SFLDSP
+020000050713     A    N31                               SFLDSPCTL
+020100050713     A  30 31                               SFLCLR
+020200050713     A        33                            SFLEND(*MORE)
+020300050713      *
+020400050713     A                                      OVERLAY
+020500050713      *
+020600051013     A    N39                               CF08
+020700050713     A                                      CF09
+020800050713     A                                      CA12
+020900050713     A       N33                            ROLLUP
+021000050713      *
+021100050713     A                                      SFLCSRRRN(&C01CSR)
+021200050713     A            C01RCD         4S 0H      SFLRCDNBR(CURSOR)
+021300050713     A            C01CSR         5S 0H
+021400050713      *
+021500050713     A  28        V1DMSG        78   M
+021600050713      *
+021700050713     A                                  3  2'Opzioni:'
+021800050713     A                                      DSPATR(UL)
+021900050713     A                                      COLOR(BLU)
+022000050914     A                                   + 1'G=Gestione C.A. -
+022100050914     A                                      legate all''evento   R=Ric-
+022200050921     A                                      hiesta rimborso ad A.I.G.  '
+022300050713     A                                      COLOR(BLU)
+022400050713     A                                  4  2'E=Esclusione evento da ri-
+022500050713     A                                      chiesta rimborso    I=Incl-
+022600050920     A                                      usione evento escluso      '
+022700050713     A                                      COLOR(BLU)
+022800050713      *
+022900050914     A                                  5  2'   |*  E V E N T O  *|Dat-
+023000050914     A                                      a Ult. |Data Ult. | Tot.Im-
+023100050914     A                                      p. | Tot.Imp. | Tot.Imp. |-
+023200050914     A                                      E'
+023300050713     A                                      DSPATR(HI)
+023400051019     A                                  6  2'Opz|Numero    del   F|Ric-
+023500050914     A                                      h.Rimb.|Rimb.Ricev|Liquida-
+023600050914     A                                      ti |Richiesti |Rimborsati|-
+023700050914     A                                      s'
+023800050713     A                                      DSPATR(HI)
+023900050713     A                                      DSPATR(UL)
+024000050726      *---------------------------------------------------------------*
+024100050726     A          R FI86S02
+024200050726     A                                      TEXT('SubFile C.A. legate -
+024300050726     A                                      al singolo evento')
+024400050726     A                                      SFL
+024500050728     A  37                                  SFLNXTCHG
+024600050726      * Campi hidden
+024700050914     A            H2CAAE    R        H      REFFLD(DETAAE  FNDET00F)
+024800050914     A            H2CMGE    R        H      REFFLD(DETMGE  FNDET00F)
+024900050726     A            H2CNEV    R        H      REFFLD(DCTNEV  FNDCT00F)
+025000050726     A            H2CAAC    R        H      REFFLD(DCTAAC  FNDCT00F)
+025100050726     A            H2CMGC    R        H      REFFLD(DCTMGC  FNDCT00F)
+025200050726     A            H2CFCA    R        H      REFFLD(DCTFCA  FNDCT00F)
+025300050726     A            H2CTAD    R        H      REFFLD(DCTTAD  FNDCT00F)
+025400050726     A            H2CAAS    R        H      REFFLD(DCTAAS  FNDCT00F)
+025500050726     A            H2CLNP    R        H      REFFLD(DCTLNP  FNDCT00F)
+025600050726     A            H2CNRS    R        H      REFFLD(DCTNRS  FNDCT00F)
+025700050726     A            H2CNSP    R        H      REFFLD(DCTNSP  FNDCT00F)
+025800050921     A            H2CFIC    R        H      REFFLD(DCLFIC  FNDCL00F)
+025900050726      * Campi di I/O
+026000050914     A            S2COPZ         1A  B 10  3
+026100050726     A                                      TEXT('Campo Opzione')
+026200050726     A  50                                  DSPATR(PC)
+026300050726      * Campi di solo O
+026400050914     A            S2CFIL    R        O   + 2
+026500050726     A                                      REFFLD(DRAFIL  FNDRA00F)
+026600050726     A                                      EDTWRD('0   ')
+026700050726     A            S2CNCA    R        O   + 1
+026800050726     A                                      REFFLD(DRANCA  FNDRA00F)
+026900050726     A                                      EDTCDE(Z)
+027000050726     A            S2CDCA    R    8  0O   + 1
+027100050726     A                                      REFFLD($DA8    CNDIZION)
+027200050726     A                                      TEXT('Data C.A.')
+027300050726     A                                      EDTWRD('  /  /    ')
+027400050726     A            S2CIPL    R   10  2O   + 1
+027500050726     A                                      REFFLD(DCLIPL  FNDCL00F)
+027600050726     A                                      EDTCDE(2)
+027700050726     A            S2CDRR    R        O   + 1
+027800050726     A                                      REFFLD(DRADRR  FNDRA00F)
+027900050726     A                                      EDTWRD('  /  /    ')
+028000050726     A            S2CIRI    R   10  2O   + 1
+028100050726     A                                      REFFLD(DRAIRI  FNDRA00F)
+028200050726     A                                      EDTCDE(2)
+028300050726     A            S2CDVR    R        O   + 1
+028400050726     A                                      REFFLD(DRADVR  FNDRA00F)
+028500050726     A                                      EDTWRD('  /  /    ')
+028600050914     A            S2CESC    R        O   + 1
+028700050726     A                                      REFFLD(DRAESC  FNDRA00F)
+028800050728     A  41                                  DSPATR(RI)
+028900050726      *---------------------------------------------------------------*
+029000050726     A          R FI86C02
+029100050726     A                                      TEXT('SubFile control C.A.-
+029200050726     A                                       legate al singolo evento')
+029300050726     A                                      SFLCTL(FI86S02)
+029400050727     A                                      SFLSIZ(0013)
+029500050727     A                                      SFLPAG(0012)
+029600050728     A N35                                  SFLDSP
+029700050728     A    N36                               SFLDSPCTL
+029800050728     A  35 36                               SFLCLR
+029900050728     A        38                            SFLEND(*MORE)
+030000050726      *
+030100050726     A                                      OVERLAY
+030200050726      *
+030300050916     A                                      CF04
+030400050803     A                                      CF06
+030500050727     A                                      CF08
+030600050726     A                                      CA12
+030700050728     A       N38                            ROLLUP
+030800050726      *
+030900050726     A                                      SFLCSRRRN(&C02CSR)
+031000050726     A            C02RCD         4S 0H      SFLRCDNBR(CURSOR)
+031100050726     A            C02CSR         5S 0H
+031200050726      *
+031300050726     A  28        V1DMSG        78   M
+031400050726      *
+031500050914     A                                  3  2'EVENTO:'
+031600050726     A                                      DSPATR(HI)
+031700050726     A            C2CNEV    R        O   + 1
+031800050726     A                                      REFFLD(DCTNEV  FNDCT00F)
+031900050726     A                                      EDTCDE(Z)
+032000050726     A                                      DSPATR(HI)
+032100050726     A            C2CAAE    R        O   + 1
+032200050726     A                                      REFFLD(DCTAAE  FNDCT00F)
+032300050726     A                                      EDTCDE(Z)
+032400050726     A                                      DSPATR(HI)
+032500051021     A            C2DEVF        10A  O   + 1
+032600051021     A                                      DSPATR(HI BL)
+032700051021     A                                   + 4'Tipo anomalia:'
+032800050726     A                                      DSPATR(HI)
+032900050726     A            C2CTAD    R        O   + 1
+033000050726     A                                      REFFLD(DCTTAD  FNDCT00F)
+033100050726     A                                      DSPATR(HI)
+033200050914     A            C2DTAD    R        O   + 1
+033300050914     A                                      REFFLD(§TADDESC  DTAD)
+033400050726     A                                      TEXT('Descrizione tipo an-
+033500050726     A                                      omalia')
+033600050726     A                                      DSPATR(HI)
+033700050919     A                                  4  2'Numero C.A. da pagare ai-
+033800050919     A                                       clienti :'
+033900050919     A            C2CANP         3  0O   + 1
+034000050919     A                                      TEXT('Numero C.A. ancora -
+034100050919     A                                      da pagare ai clienti')
+034200050919     A                                      EDTCDE(1)
+034300050919     A                                  4 42'Numero C.A. in attesa di-
+034400050919     A                                       rimborso:'
+034500050919     A            C2CARR         3  0O   + 1
+034600050914     A                                      TEXT('Numero C.A. non anc-
+034700050914     A                                      ora rimborsateci da AIG')
+034800050914     A                                      EDTCDE(1)
+034900050919     A                                  5  2'Numero C.A. senza richie-
+035000050919     A                                      sta rimb.:'
+035100050919     A            C2CANR         3  0O   + 1
+035200050919     A                                      TEXT('Numero C.A. contabi-
+035300050919     A                                      lizzate ma senza richiest-
+035400050919     A                                      ta rimborso ad A.I.G.')
+035500050914     A                                      EDTCDE(1)
+035600050919     A                                  5 42'Numero C.A. rimborsate d-
+035700050919     A                                      a A.I.G. :'
+035800050914     A            C2CAGR         3  0O   + 1
+035900050914     A                                      TEXT('Numero C.A. già rim-
+036000050914     A                                      borsateci da AIG')
+036100050914     A                                      EDTCDE(1)
+036200050726      *
+036300050726     A                                  6  2'Opzioni:'
+036400050726     A                                      DSPATR(UL)
+036500050726     A                                      COLOR(BLU)
+036600050914     A                                   + 1'5=Visualizza C.A-
+036700050919     A                                      .   8=Note C.A.   E=Esclus-
+036800050919     A                                      ione C.A.  I=Inclusione C.-
+036900050914     A                                      A.'
+037000050726     A                                      COLOR(BLU)
+037100050920     A                                  7  2'         R=Richiesta rimb-
+037200050920     A                                      orso ad A.I.G.    2=Rimbor-
+037300050920     A                                      so A.I.G.                 -
+037400050914     A                                        '
+037500050726     A                                      COLOR(BLU)
+037600050726      *
+037700050914     A                                  8  2'   |                     -
+037800050914     A                                       |     Importo | Dta Rich.-
+037900050914     A                                      |     Importo |   Data   |-
+038000050914     A                                      E'
+038100050726     A                                      DSPATR(HI)
+038200050914     A                                  9  2'Opz|Comunicazione Anomali-
+038300050914     A                                      a|   Liquidato | Rimborso -
+038400050914     A                                      |  Rimborsato | Rimborso |-
+038500050914     A                                      s'
+038600050726     A                                      DSPATR(HI)
+038700050726     A                                      DSPATR(UL)
+038800050726      *---------------------------------------------------------------*
+038900050726     A          R FI86P02
+039000050726     A                                      TEXT('Piede del sfl')
+039100050726      *
+039200050726     A                                      OVERLAY
+039300050802     A            P2CVPL    R        H      REFFLD(DCLVPL  FNDCL00F)
+039400050802     A            P2CDIR    R        H      REFFLD(DRADIR  FNDRA00F)
+039500050726      *
+039600050914     A                                 23  5' T O T A L I : '
+039700050726     A                                      DSPATR(RI)
+039800050914     A            P2CIPL    R   11  2O 23 28
+039900050726     A                                      REFFLD(DCLIPL  FNDCL00F)
+040000050726     A                                      EDTCDE(1)
+040100050726     A                                      DSPATR(RI)
+040200050914     A            P2CIRI    R   11  2O 23 53
+040300050726     A                                      REFFLD(DRAIRI  FNDRA00F)
+040400050726     A                                      EDTCDE(1)
+040500050726     A                                      DSPATR(RI)
+040600050919     A N40                               + 1'RIMBORSATO'
+040700050914     A                                      DSPATR(RI)
+040800050919     A  40                             23 68'RICHIESTO'
+040900050727     A                                      DSPATR(RI)
+041000050713      *---------------------------------------------------------------*
+041100050713     A          R FI86D02
+041200050713     A                                      TEXT('Avviso NO rec.')
+041300050713      *
+041400050713     A                                      OVERLAY
+041500050713     A                                 14 10'NESSUN EVENTO DA VISUALIZZARE'
+041600050713     A                                      DSPATR(HI BL)
+041700050726      *---------------------------------------------------------------*
+041800050726     A          R FI86D03
+041900050726     A                                      TEXT('Avviso NO rec.')
+042000050726      *
+042100050726     A                                      OVERLAY
+042200050726     A                                 16 10'NESSUNA C.A. DA VISUALIZZARE'
+042300050726     A                                      DSPATR(HI BL)
+042400050713      *---------------------------------------------------------------*
+042500050713     A          R FI86Z01
+042600050713     A                                      TEXT('Elenco tasti funzion-
+042700050713     A                                      ali abilitati alla videata-
+042800050713     A                                       D01')
+042900050713     A                                      OVERLAY
+043000050713     A                                 24  2'F3=Fine'
+043100050713     A                                      COLOR(BLU)
+043200050713      *---------------------------------------------------------------*
+043300050713     A          R FI86Z02
+043400050713     A                                      TEXT('Elenco tasti funzion-
+043500050713     A                                      ali abilitati al subfile S-
+043600050713     A                                      01')
+043700050713     A                                      OVERLAY
+043800050803     A                                 24  2'F3=Fine'
+043900050720     A                                      COLOR(BLU)
+044000051013     A    N39                            + 3'F8=Stampa elenco Eventi'
+044100050802     A                                      COLOR(BLU)
+044200050803     A                                   + 3'F9=Altri dati'
+044300050713     A                                      COLOR(BLU)
+044400050801     A                                   + 3'F12=Ritorno'
+044500050713     A                                      COLOR(BLU)
+044600050726     A                                      DSPATR(HI BL)
+044700050726      *---------------------------------------------------------------*
+044800050726     A          R FI86Z03
+044900050726     A                                      TEXT('Elenco tasti funzion-
+045000050726     A                                      ali abilitati al subfile S-
+045100050726     A                                      02')
+045200050726     A                                      OVERLAY
+045300050920     A                                 24  2'F3=Fine'
+045400050920     A                                      COLOR(BLU)
+045500050920     A                                   + 3'F6=Conferma richiesta rim-
+045600050914     A                                      borso'
+045700050726     A                                      COLOR(BLU)
+045800050916     A N40                               + 3'F8=Tot.Richiesto '
+045900050727     A                                      COLOR(BLU)
+046000050920     A  40                             24 45'F8=Tot.Rimborsato'
+046100050919     A                                      COLOR(BLU)
+046200050916     A                                   + 2'F12=Ritorno'
+046300050726     A                                      COLOR(BLU)

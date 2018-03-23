@@ -1,0 +1,499 @@
+000100950315     H              J
+000200980410      *--------------------------------------------------------------*
+000300980410      *         - GESTIONE DISTINTA ARRIVI ESTERO -                  *
+000400980410      *                -- DISTINTA ERRORI --                         *
+000500980410      *--------------------------------------------------------------*
+000600980410     FFNLRK1D CF  E                    WORKSTN
+000700980410     F                                        NRR3  KSFILE LRK1S03
+000800980410     F                                        NRR5  KSFILE LRK1S05
+000900980410     FFNCDA04LUF  E           K        DISK
+001000950315     F                                              KCOMIT
+001100980415     FFNARB01LIF  E           K        DISK
+001200980415     F                                              KCOMIT
+001300980410     FFNCDA03LUF  E           K        DISK
+001400980325     F                                              KCOMIT
+001500980410     F            FNCDA000                          KRENAMEFNCDA003
+001600950320      *----------------------------------------------------------------*
+001700980325     E                    ERR     1   7 70               ERRORI
+001800950315      *--------------------------------------------------------------*
+001900980410     IFNCDA003
+002000980410     I              CDATRC                          CD$TRC
+002100980410     I              CDADAM                          CD$DAM
+002200980410     I              CDAHRA                          CD$HRA
+002300980410     I              CDACMC                          CD$CMC
+002400980410     I              CDANCL                          CD$NCL
+002500980410     I              CDACCA                          CD$CCA
+002600980410     I              CDANO1                          CD$NO1
+002700980410     I              CDANOT                          CD$NOT
+002800980410     I              CDAERR                          CD$ERR
+002900980410     I              CDASTS                          CD$STS
+003000980410     I              CDACOD                          CD$COD
+003100980410     I              CDAMOT                          CD$MOT
+003200980410     I              CDAFTX                          CD$FTX
+003300980410     I              CDAFL1                          CD$FL1
+003400980410     I              CDAFL2                          CD$FL2
+003500980410     I              CDAFL3                          CD$FL3
+003600980410     I              CDANDC                          CD$NDC
+003700980410      *
+003800950315      * DS per richiamo pgm FNLR36R
+003900950315     IDSLR36      DS
+004000950315     I                                       14  170P36AAS
+004100950315     I                                       18  200P36LNP
+004200950315     I                                       21  220P36NRS
+004300950315     I                                       23  290P36NSP
+004400950315     I                                       30  30 P36F03
+004500950315     I                                       31  31 P36FLG
+004600980410     IFNLRK1    E DSFNLRK1DS
+004700980410      *
+004800950315     IKPJBA     E DS
+004900980410      *
+005000950315     I           SDS
+005100950315     I                                        1  10 NOMPGM
+005200950315      *---------------------------------------------------------------*
+005300950317     C           *ENTRY    PLIST
+005400950317     C                     PARM           KPJBA
+005500980410      *
+005600980410     C                     MOVELKPJBU     FNLRK1
+005700980410     C                     Z-ADDDK1LNA    KLNA
+005800980410      *
+005900980410     C           DK1TRI    IFNE 'U'
+006000980410      *  Caricamento subfile errori da subfile hidden
+006100950317     C                     EXSR INZS03
+006200950315      *  Loop gestione subfile degli errori
+006300950315     C           WFINE     DOUEQ'S'
+006400980410      *  Gestione subfile errori
+006500950317     C           WTPVID    CASEQ'3'       GESS03
+006600950315     C                     END
+006700950317     C                     END
+006800980410      *
+006900950315     C           FINE      TAG
+007000980424     C                     Z-ADDTSTFRZ    DK1NRR
+007100980410     C                     MOVELFNLRK1    KPJBU
+007200950315     C                     SETON                     RT
+007300980403     C                     Z-ADD*ZEROS    TSTFRZ
+007400950320     C                     ELSE
+007500980410      *
+007600950320     C                     COMIT
+007700950320     C                     SETON                     LR
+007800950320     C                     END
+007900950317      *---------------------------------------------------------------*
+008000950317      * Gestione videata subfile errori                               *
+008100950317      *---------------------------------------------------------------*
+008200950317     C           INZS03    BEGSR
+008300950317      *
+008400950320     C                     SETOF                     202128
+008500980410     C                     WRITELRK1C03
+008600950317     C                     SETON                     2021
+008700980410      *
+008800980410     C                     MOVELDK1DLA    V3DLNA
+008900980410     C                     Z-ADDDK1LNA    V3CLNA
+009000980410     C                     Z-ADDDK1NDT    V3CNDT
+009100950317     C                     Z-ADD1         NRR5    40
+009200950317     C                     Z-ADD0         NRR3    40
+009300970304     C                     MOVEL'S'       WNOREC  1
+009400950320     C                     Z-ADD1         NR3KEY
+009500950321     C                     MOVEL'N'       WFINE
+009600980324      *
+009700980410     C           NRR5      CHAINLRK1S05              31
+009800980324      *
+009900950317     C           *IN31     DOWEQ'0'
+010000980410     C                     Z-ADDDK1NDT    KNDC
+010100950606     C                     Z-ADDV5CAAS    KAAS
+010200950606     C                     Z-ADDV5CLNP    KLNP
+010300950606     C                     Z-ADDV5CNSP    KNSP
+010400950606     C                     Z-ADDV5CNRS    KNRS
+010500980410      *
+010600980324      *  se spedizione = vecchia e *IN03 on prendo ex scelta
+010700961122     C           WSVAAS    IFEQ V5CAAS
+010800961122     C           WSVLNP    ANDEQV5CLNP
+010900961122     C           WSVNRS    ANDEQV5CNRS
+011000961122     C           WSVNSP    ANDEQV5CNSP
+011100961122     C           V5CIN3    ANDEQ'1'
+011200961122     C                     MOVELWSVSCE    V5CSCE
+011300961122     C                     ELSE
+011400980410      *  salvo vecchia scelta e vecchio numero spedizione
+011500961122     C                     MOVELV5CSCE    WSVSCE  1
+011600961122     C                     Z-ADDV5CAAS    WSVAAS  40
+011700961122     C                     Z-ADDV5CLNP    WSVLNP  30
+011800961122     C                     Z-ADDV5CNRS    WSVNRS  20
+011900961122     C                     Z-ADDV5CNSP    WSVNSP  70
+012000961122     C                     END
+012100980410      *
+012200961120     C                     SETOF                     405022
+012300961121     C                     SETOF                     41
+012400961120     C                     MOVEL*BLANKS   V3CSCE
+012500980325      *
+012600980325      *  Spedizione con note EDI
+012700961120     C           V5CFTX    IFEQ 'S'
+012800961211     C                     SETON                     415022
+012900961120     C                     END
+013000980331      *
+013100980410      *  Gestione dettaglio
+013200980331      *
+013300980410     C           V5CSCE    IFEQ 'D'
+013400980331      *
+013500980410     C                     Z-ADDV5CAAS    DK1AAS
+013600980410     C                     Z-ADDV5CLNP    DK1LNP
+013700980410     C                     Z-ADDV5CNSP    DK1NSP
+013800980410     C                     Z-ADDV5CNRS    DK1NRS
+013900980417     C                     Z-ADDV5CDEV    DK1DSE
+014000980415      *
+014100980415     C           KARB      CHAINFNARB000             01
+014200980424     C                     Z-ADD*ZEROS    DK1NCL
+014300980424     C  N01                Z-ADDARBNCL    DK1NCL
+014400980401      *
+014500980410     C                     MOVELFNLRK1    KPJBU
+014600980410     C                     CALL 'FNLRK1R5'
+014700980331     C                     PARM           KPJBA
+014800980410     C                     MOVELKPJBU     FNLRK1
+014900980331      *
+015000980410      *  Se ho elaborato il dettaglio eventi determino la scelta sulla testata.
+015100980410      *  se non ci sono rcd di FNCDA dettaglio ==> A
+015200980331      *  se ci sono rcd con distinta uguale a quella in elaborazione ==> F
+015300980331      *  se non ci sono rcd con distinta uguale a quella in elaborazione ==> E
+015400980331      *
+015500980331     C                     MOVEL*BLANKS   V5CSCE
+015600980417     C           V5CDEV    IFNE DK1DSE
+015700980331      *
+015800980410     C           KCDAD     CHAINFNCDA003             32
+015900980410     C           *IN32     IFEQ '1'
+016000980331     C                     MOVEL'A'       V5CSCE
+016100980410     C                     ELSE
+016200980331      *
+016300980410     C           *IN32     DOWEQ'0'
+016400980331     C                     MOVEL'E'       V5CSCE
+016500980410     C           DK1NDT    IFEQ CD$NDC
+016600980331     C                     MOVEL'F'       V5CSCE
+016700980331     C                     SETON                     32
+016800980403     C                     EXCPTNOAGG
+016900980410     C                     END
+017000980410     C  N32      KCDAD     READEFNCDA003                 32
+017100980410     C                     END
+017200980331      *
+017300980331     C                     END
+017400980401     C                     END
+017500980331      *
+017600980422      * Aggiorno subfile
+017700980417     C                     Z-ADDDK1DSE    V5CDEV
+017800980410     C                     UPDATLRK1S05
+017900980331     C                     END
+018000980325      *
+018100980325      *  Annulla record
+018200980325      *
+018300950606     C           V5CSCE    IFEQ 'A'
+018400980325      *
+018500980410     C           KCDA      DELETFNCDA000             31
+018600980331     C           *IN31     DOWEQ'0'
+018700980410     C           KCDAD     DELETFNCDA003             31
+018800980325     C                     END
+018900980331     C                     SETOF                     31
+019000980410      *  Se l'errore era forzabile sottraggo 1 al numero delle bolle in distinta
+019100961121     C           V5CBLO    IFNE 'S'
+019200980410     C                     SUB  1         DK1NRR
+019300961211     C                     END
+019400950606     C                     GOTO NOWRT
+019500950606     C                     END
+019600980325      *
+019700980325      *  Escludi record
+019800980325      *
+019900961120     C           V5CSCE    IFEQ 'E'
+020000980410     C           KCDA      CHAINFNCDA000             31
+020100980325      *
+020200980325     C           *IN31     IFEQ '0'
+020300980410     C                     Z-ADDCDANDC    §NDC
+020400980410     C                     Z-ADD*ZEROS    CDANDC
+020500980410     C                     EXCPTAGGCDA
+020600980325      *
+020700980410     C           KCDAD     CHAINFNCDA003             32
+020800980331     C           *IN32     DOWEQ'0'
+020900980410     C           CD$NDC    IFEQ §NDC
+021000980410     C                     Z-ADD0         CD$NDC
+021100980410     C                     EXCPTAGGCD$
+021200980325     C                     END
+021300980410     C           KCDAD     READEFNCDA003                 32
+021400980325     C                     END
+021500980325     C                     END
+021600980325      *
+021700980410      *  Se l'errore era forzabile sottraggo 1 al numero delle bolle in distinta
+021800961211     C           V5CBLO    IFNE 'S'
+021900980410     C                     SUB  1         DK1NRR
+022000961120     C                     END
+022100961120     C                     GOTO NOWRT
+022200961120     C                     END
+022300980325      *
+022400980325      *  Forzo immissione in distinta
+022500980325      *
+022600961120     C           V5CSCE    IFEQ 'F'
+022700980403     C                     Z-ADD1         TSTFRZ  10
+022800961120     C                     GOTO NOWRT
+022900961120     C                     END
+023000980325      *
+023100980325      *  Riscrivo subfile errori da subfile nascosto
+023200950606     C                     MOVEL*BLANKS   V3CTPD
+023300961122     C                     MOVELV5CSCE    V3CSCE
+023400961122     C                     MOVELV5CIN3    V3CIN3
+023500961122     C                     MOVELV5CIN3    *IN03
+023600950317     C                     MOVELV5CERR    V3CERR
+023700980417     C                     Z-ADDV5CDEV    V3CDEV
+023800980325     C                     Z-ADDV5CAAS    V3CAAS
+023900950317     C                     Z-ADDV5CLNP    V3CLNP
+024000950317     C                     Z-ADDV5CNRS    V3CNRS
+024100950317     C                     Z-ADDV5CNSP    V3CNSP
+024200980410     C                     Z-ADDV5CDAM    V3CDAM
+024300950317     C                     Z-ADDV5CRMN    V3CRMN
+024400961120     C                     MOVELV5CSTS    V3CSTS
+024500961120     C                     MOVELV5CCOD    V3CCOD
+024600961120     C                     MOVELV5DCOD    V3DCOD
+024700961120     C                     MOVELV5CBLO    V3CBLO
+024800961120     C                     MOVELV5CFTX    V3CFTX
+024900950317     C                     Z-ADDNRR5      V3CNR5
+025000961120     C                     ADD  1         NRR3
+025100970304     C                     MOVEL'N'       WNOREC  1
+025200980410     C                     WRITELRK1S03
+025300980325      *
+025400950606     C           NOWRT     TAG
+025500950317     C                     ADD  1         NRR5
+025600980410     C           NRR5      CHAINLRK1S05              31
+025700950317     C                     END
+025800980325      *
+025900980325      *  Se il subfile degli errori è vuoto esco da programma
+026000950317     C           NRR3      IFEQ 0
+026100980424      *?*        DK1NRR    ANDNE0
+026200950317     C                     MOVEL'S'       WFINE
+026300950317     C                     END
+026400980325      *
+026500950317     C                     ENDSR
+026600980401      *---------------------------------------------------------------*
+026700980401      * Gestione videata subfile errori                               *
+026800980401      *---------------------------------------------------------------*
+026900980401     C           GESS03    BEGSR
+027000980401      *
+027100961120      * Controllo se devo inviare messaggio che non ci sono bolle
+027200961120      * buone in distinta
+027300950315     C                     SETON                     2021
+027400970304     C           WNOREC    IFEQ 'S'
+027500970207     C                     SETOF                     20
+027600970207     C                     END
+027700980403     C           TSTFRZ    COMP *ZEROS                   02
+027800980410     C   02      DK1NRR    COMP *ZEROS                   02
+027900970213     C   02                Z-ADD1         NRR3
+028000970214     C  N28                Z-ADD1         NR3KEY
+028100980325      *
+028200980410     C                     WRITELRK1Z03
+028300980410     C                     EXFMTLRK1C03
+028400980325      *
+028500950320     C                     Z-ADD1         NR3KEY
+028600950320     C                     SETOF                     28
+028700980325      *  Fine Lavoro
+028800950315     C           *INKC     IFEQ '1'
+028900950315     C                     MOVEL'S'       WFINE
+029000980410     C                     MOVEL'1'       DK1F03
+029100950315     C                     GOTO FINVD3
+029200950315     C                     END
+029300980325      *  Escludi tutte
+029400961127     C   KA                EXSR TUTTE
+029500980325      *  Loop di controlli
+029600950315     C                     EXSR CTR03
+029700980325      *  Se ci sono ancora dei record ricarico il subfile
+029800950606     C  N28 KF             EXSR INZS03
+029900980325      *
+030000950317     C           FINVD3    ENDSR
+030100961127      *---------------------------------------------------------------*
+030200961127      *  Escludi tutte                                                *
+030300961127      *---------------------------------------------------------------*
+030400961127     C           TUTTE     BEGSR
+030500961127      *
+030600961127     C                     MOVEL'N'       WINTER  1
+030700961127     C                     Z-ADD1         NRR3
+030800980410     C           NRR3      CHAINLRK1S03              32
+030900980325      *
+031000961127     C           *IN32     DOWEQ'0'
+031100961127     C                     SETOF                     414050
+031200980325      *
+031300980410      *  Se esistono note EDI visualizzo il campo
+031400980410     C           V3CFTX    IFEQ 'S'
+031500961127     C                     SETON                     50
+031600961127     C                     END
+031700980325      *
+031800980325      *  Aggiorno subfile forzando 'E' nella scelta
+031900961127     C                     SETON                     22
+032000961127     C                     MOVELV3CIN3    *IN03
+032100961127     C                     MOVEL'E'       V3CSCE
+032200980410     C                     UPDATLRK1S03
+032300961127     C                     SETOF                     22
+032400980325      *
+032500980325      *  Aggiorno subfile nascosto
+032600980410     C           V3CNR5    CHAINLRK1S05              31
+032700961127     C                     MOVELV3CSCE    V5CSCE
+032800961127     C                     MOVELV3CTPD    V5CTPD
+032900980410     C  N31                UPDATLRK1S05
+033000980325      *
+033100980325      * Leggo RCD successivo
+033200961127     C                     ADD  1         NRR3
+033300980410     C           NRR3      CHAINLRK1S03              32
+033400961127     C                     END
+033500980325      *
+033600961127     C                     COMIT
+033700980325      *
+033800961127     C                     ENDSR
+033900950315      *---------------------------------------------------------------*
+034000950315      *  Loop di errori  subfile errori                               *
+034100950315      *---------------------------------------------------------------*
+034200950315     C           CTR03     BEGSR
+034300950315      *
+034400950317     C                     MOVEL'N'       WINTER  1
+034500980410     C                     READCLRK1S03                  32
+034600980325      *
+034700950317     C           *IN32     DOWEQ'0'
+034800950320     C           *IN28     ANDEQ'0'
+034900980325      *
+035000961121     C                     SETOF                     414050
+035100980410     C           V3CFTX    IFEQ 'S'
+035200950606     C                     SETON                     50
+035300950606     C                     END
+035400980325      *  Controllo se devo richiamare la visualizzazione delle note EDI
+035500961120     C           V3CTPD    IFEQ 'E'
+035600961120     C           V3CFTX    IFEQ 'S'
+035700980410     C                     Z-ADDV3CAAS    DK1AAS
+035800980410     C                     Z-ADDV3CLNP    DK1LNP
+035900980410     C                     Z-ADDV3CNSP    DK1NSP
+036000980410     C                     Z-ADDV3CNRS    DK1NRS
+036100980410     C                     MOVELFNLRK1    KPJBU
+036200980410     C                     CALL 'FNLRK1R4'
+036300961120     C                     PARM           KPJBA
+036400961120     C                     MOVEL*BLANKS   V3CTPD
+036500980325      *
+036600961120     C                     ELSE
+036700961120     C                     SETON                     4128
+036800961120     C                     Z-ADDNRR3      NR3KEY
+036900961120     C                     MOVELERR,4     $MSG
+037000961120     C                     END
+037100961120     C                     END
+037200980325      *
+037300980325      *  Interrogazione bolle
+037400950317     C           V3CSCE    IFEQ 'V'
+037500950317     C                     MOVEL'S'       WINTER
+037600950317     C                     MOVEL'1'       P36FLG
+037700950317     C                     Z-ADDV3CAAS    P36AAS
+037800950317     C                     Z-ADDV3CLNP    P36LNP
+037900950317     C                     Z-ADDV3CNSP    P36NSP
+038000950317     C                     Z-ADDV3CNRS    P36NRS
+038100950317     C                     MOVELDSLR36    KPJBU
+038200950317     C                     CALL 'FNLR36R'
+038300950317     C                     PARM           KPJBA
+038400950606     C                     MOVEL' '       V3CSCE
+038500980410      *
+038600950317     C                     ELSE
+038700980325      *
+038800980325      *  Controllo se l'errore è forzabile oppure no !
+038900961120     C           V3CBLO    IFEQ 'S'
+039000961120     C           V3CSCE    ANDEQ'F'
+039100961120     C                     SETON                     4028
+039200961120     C                     Z-ADDNRR3      NR3KEY
+039300961120     C                     MOVELERR,3     $MSG
+039400961120     C                     END
+039500980325      *
+039600980410      *  Se record con dettaglio da analizzare non posso forzare
+039700980417     C           V3CDEV    IFGE 2
+039800980325     C           V3CSCE    ANDEQ'F'
+039900980325     C                     SETON                     4028
+040000980325     C                     Z-ADDNRR3      NR3KEY
+040100980325     C                     MOVELERR,3     $MSG
+040200980325     C                     END
+040300980325      *
+040400980410      *  Gestione dettaglio solo se esiste
+040500980410     C           V3CSCE    IFEQ 'D'
+040600980417     C           V3CDEV    ANDLT2
+040700980325     C                     SETON                     4028
+040800980325     C                     Z-ADDNRR3      NR3KEY
+040900980325     C                     MOVELERR,7     $MSG
+041000980325     C                     END
+041100980325      *
+041200950320     C                     END
+041300980325      *
+041400980325      *  Aggiorno subfile
+041500950320     C                     SETON                     22
+041600980325     C                     MOVELV3CIN3    *IN03
+041700980410     C                     UPDATLRK1S03
+041800950320     C                     SETOF                     22
+041900980325      *
+042000980325      *  Aggiorno subfile nascosto
+042100980410     C           V3CNR5    CHAINLRK1S05              31
+042200961122     C                     MOVELV3CSCE    V5CSCE
+042300950606     C                     MOVELV3CTPD    V5CTPD
+042400980410     C  N31                UPDATLRK1S05
+042500980325      *
+042600980410     C  N28                READCLRK1S03                  32
+042700950317     C                     END
+042800980325      *
+042900950317     C                     COMIT
+043000980410      *
+043100980410      *  Se richiesto interogazione bolle senza selezione richiamo il pgm.
+043200950317     C           *INKG     IFEQ '1'
+043300950317     C           WINTER    ANDEQ'N'
+043400950317     C                     MOVEL' '       P36FLG
+043500950317     C                     Z-ADDV3CAAS    P36AAS
+043600950317     C                     Z-ADDV3CLNP    P36LNP
+043700950317     C                     Z-ADDV3CNSP    P36NSP
+043800950317     C                     Z-ADDV3CNRS    P36NRS
+043900950317     C                     MOVELDSLR36    KPJBU
+044000950317     C                     CALL 'FNLR36R'
+044100950317     C                     PARM           KPJBA
+044200950317     C                     END
+044300980410      *
+044400950317     C                     ENDSR
+044500980410      *-----------------------------------------------------*
+044600980410      *  IMPOSTAZIONI INIZIALI                              *
+044700980410      *-----------------------------------------------------*
+044800950317     C           *INZSR    BEGSR
+044900980325      *
+045000980325      *  Definizione chiavi
+045100980410     C           KCDA      KLIST
+045200950317     C                     KFLD           KNDC
+045300950317     C                     KFLD           KAAS
+045400950317     C                     KFLD           KLNP
+045500950317     C                     KFLD           KNRS
+045600950317     C                     KFLD           KNSP
+045700980410      *
+045800980410     C           KCDAD     KLIST
+045900980410     C                     KFLD           KLNA
+046000980410     C                     KFLD           KAAS
+046100980410     C                     KFLD           KLNP
+046200980410     C                     KFLD           KNRS
+046300980410     C                     KFLD           KNSP
+046400980415      *
+046500980415     C           KARB      KLIST
+046600980415     C                     KFLD           KAAS
+046700980415     C                     KFLD           KLNP
+046800980415     C                     KFLD           KNRS
+046900980415     C                     KFLD           KNSP
+047000980325      *
+047100980325      *  Definizione delle variabili
+047200980410     C           *LIKE     DEFN CDAAAS    KAAS
+047300980410     C           *LIKE     DEFN CDALNP    KLNP
+047400980410     C           *LIKE     DEFN CDALNA    KLNA
+047500980410     C           *LIKE     DEFN CDANRS    KNRS
+047600980410     C           *LIKE     DEFN CDANSP    KNSP
+047700980410     C           *LIKE     DEFN CDANDC    KNDC
+047800980410     C           *LIKE     DEFN CDANDC    §NDC
+047900980325      *
+048000980325      *  Inizializzazione variabili
+048100950317     C                     MOVEL'N'       WFINE   1
+048200950317     C                     MOVEL'3'       WTPVID  1
+048300980325      *
+048400950317     C                     ENDSR
+048500980325      *----------------------------------------------------*
+048600980410     OFNCDA000E                AGGCDA
+048700980410     O                         CDANDC
+048800980410     OFNCDA003E                AGGCD$
+048900980410     O                         CD$NDC
+049000980410     OFNCDA003E                NOAGG
+049100980410      *----------------------------------------------------*
+049200980325**
+049300950320Opzione non valida
+049400961121Immetti G=sped.giac./C=Conse./A=L.Avv.
+049500961120Non è possibile forzare l'immissione della spedizione in distinta
+049600961120Non ci sono note EDI da visualizzare
+049700961121E' possibile visualizzare solo le note EDI
+049800961212Obbligatorio immettere C/G/A
+049900980410Non esiste dettaglio da visualizzare

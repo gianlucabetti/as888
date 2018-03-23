@@ -1,0 +1,3 @@
+000100120720     D GetValueOfEnvironmentVariable...
+000200120720     D                 PR              *   EXTPROC('getenv')
+000300120720     D  name                           *   VALUE OPTIONS(*STRING)

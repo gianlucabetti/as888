@@ -1,0 +1,60 @@
+000100990514/*PARMS DFTACTGRP(*YES)                                                       */
+000200990514/*PARMS                                                                       */
+000300990514/*PARMS                                                                       */
+000400990514/*PARMS                                                                       */
+000500990514/*PARMS                                                                       */
+000600990519             PGM        PARM(&TIPO &VS)
+000700990517             DCL        VAR(&TIPO) TYPE(*CHAR) LEN(1)
+000800990519             DCL        VAR(&VS) TYPE(*CHAR) LEN(1)
+000900990517             DCL        VAR(&NOEXC) TYPE(*CHAR) LEN(1)
+001000990519             DCL        VAR(&CRTXREF) TYPE(*CHAR) LEN(1)
+001100990517
+001200990517             ALCOBJ     OBJ((XRDBR00F *FILE *SHRRD)) WAIT(0)
+001300990517             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&NOEXC) +
+001400990517                          VALUE('1'))
+001500990517             DLCOBJ     OBJ((XRDBR00F *FILE *SHRRD))
+001600990517
+001700990517             ALCOBJ     OBJ((XRPGM00F *FILE *SHRRD)) WAIT(0)
+001800990517             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&NOEXC) +
+001900990517                          VALUE('1'))
+002000990517             DLCOBJ     OBJ((XRPGM00F *FILE *SHRRD))
+002100990517
+002200990517             IF         COND(&NOEXC *EQ '1') THEN(DO)
+002300990517             SNDPGMMSG  MSG('Comando non eseguibile in questo +
+002400990517                          momento. Creazione cross reference in +
+002500990517                          corso.') MSGTYPE(*COMP)
+002600990517             GOTO       CMDLBL(ENDPGM)
+002700990517             ENDDO
+002800990519
+002900990519             RTVDTAARA  DTAARA(XREF (1 1)) RTNVAR(&CRTXREF)
+003000990519             IF         COND(&CRTXREF *EQ '1') THEN(DO)
+003100990519             SNDPGMMSG  MSG('La creazione del cross reference è +
+003200990519                          terminata in modo anomalo, quindi i dati +
+003300990519                          da visualizzare non sono completi. +
+003400990519                          Eseguire il comando CRTXREF.') MSGTYPE(*COMP)
+003500990519             GOTO       CMDLBL(ENDPGM)
+003600990519             ENDDO
+003700990517
+003800990517             IF         COND(&TIPO *EQ 'P') THEN(DO)
+003900990519             IF         COND(&VS *EQ 'V') THEN(DO)
+004000990616             RUNQRY     QRY(XREF11Q) QRYFILE((XRDBR02J)) +
+004100990616                          OUTTYPE(*DISPLAY) RCDSLT(*YES)
+004200990519             ENDDO
+004300990519             IF         COND(&VS *EQ 'S') THEN(DO)
+004400990616             RUNQRY     QRY(XREF11Q) QRYFILE((XRDBR02J)) +
+004500990616                          OUTTYPE(*PRINTER) RCDSLT(*YES)
+004600990519             ENDDO
+004700990517             ENDDO
+004800990517
+004900990517             IF         COND(&TIPO *EQ 'O') THEN(DO)
+005000990519             IF         COND(&VS *EQ 'V') THEN(DO)
+005100990616             RUNQRY     QRY(XREF12Q) QRYFILE((XRPGM00F)) +
+005200990616                          OUTTYPE(*DISPLAY) RCDSLT(*YES)
+005300990519             ENDDO
+005400990519             IF         COND(&VS *EQ 'S') THEN(DO)
+005500990616             RUNQRY     QRY(XREF12Q) QRYFILE((XRPGM00F)) +
+005600990616                          OUTTYPE(*PRINTER) RCDSLT(*YES)
+005700990519             ENDDO
+005800990517             ENDDO
+005900990517
+006000990517 ENDPGM:     ENDPGM

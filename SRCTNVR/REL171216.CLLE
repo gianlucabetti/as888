@@ -1,0 +1,39 @@
+000100060111/*********************************************************************/
+000200060317             pgm
+000300171212
+000301171211             DCL        VAR(&SQL) TYPE(*CHAR) LEN(999)
+000302171211
+000400171211/* ___Salvo copia archivio  autisti __________*/
+000500171212             CRTDUPOBJ  OBJ(fiapvd0F) FROMLIB(UNITRAGRU) +
+000600171212                          OBJTYPE(*FILE) TOLIB(EDPSED) +
+000700171212                          NEWOBJ(fiapvd0F) DATA(*YES)
+000800171212/* ___Ridenomino i vecchi file autisti __________*/
+000900171212
+001000171212             RNMOBJ     OBJ(UNITRAGRU/fiapvd1L) OBJTYPE(*FILE) +
+001100171212                          NEWOBJ(fiapvd1LEX)
+001600171212             RNMOBJ     OBJ(UNITRAGRU/fiapvd0f) OBJTYPE(*FILE) +
+001700171212                          NEWOBJ(fiapvd0FEX)
+001800171212
+001900171212/* ___genera nuovi tracciati da libreria di appoggio _______*/
+002000171212
+002100171212             CRTDUPOBJ  OBJ(fiapvd*) FROMLIB(EDPWKSE) OBJTYPE(*FILE) +
+002200171212                          TOLIB(UNITRAGRU)
+002300171212/* ___elimina da libreria di work ________________*/
+002400171212
+002500171212             DLTF       FILE(EDPWKSE/fiapvd*)
+002600171212
+002700171212/* ___esegue copia dati da file salvato nel nuovo modificato _______*/
+002800171212             CPYF       FROMFILE(EDPSED/fiapvd0F) +
+002900171212                          TOFILE(UNITRAGRU/fiapvd0F) +
+003000171212                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+004200171212
+004300171212/* _____ Sposta i programmi dalla EDPWKSE alla OBJ __________________*/
+004400171212             call       pgm(GAITRAOBJ/TNSYMVC) +
+004500171212                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+004600171212
+004601171212             CHGVAR     VAR(&SQL) VALUE('UPDATE UNITRAGRU/FIAPVD0F +
+004602171212                          SET APVD4TRC = ''TEL'' WHERE APVDAPD = ''T''')
+004603171212             RUNSQL     SQL(&SQL)
+004604171212             monmsg     msgid(CPF0000)
+004605171212
+005000060317             endpgm

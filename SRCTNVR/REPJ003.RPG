@@ -1,0 +1,112 @@
+000100981116     H
+000200981116     F*+----------------------------------------------------------*
+000300981116     F*- RELEASE PROJ  CAMBIO I CAPICONTO   IN CNACO/CNIND.....   *
+000500981116     F*-----------------------------------------------------------*
+000501981116     FCNACO00FUF  E           K        DISK
+000502981116     FCNIND00FUF  E           K        DISK
+000503981116     FCNCLP00FUF  E           K        DISK
+000504981116     FTFNTC00FUF  E                    DISK                           UC
+000505981119     E                    CMD1    1   1 60               CHKOBJ
+001302981116      *
+001303981116      * CONVERTO CNACO
+001304981116      * --------------
+001305981116     C           *LOVAL    SETLLCNACO000
+001306981116  B1 C           *IN20     DOUEQ*ON
+001307981116     C                     READ CNACO000                 20
+001308981116  B2 C           *IN20     IFEQ *OFF
+001309981116      * CLIENTI
+001310981116  B3 C           ACOKCC    IFEQ 51
+001311981116     C                     Z-ADD151       ACOKCC
+001312981116  E3 C                     END
+001313981116      * FORNITORI
+001314981116  B3 C           ACOKCC    IFEQ 161
+001315981116     C                     Z-ADD400       ACOKCC
+001316981116  E3 C                     END
+001317981116      * IVA
+001318981116  B3 C           ACOKCC    IFEQ 175
+001319981116     C                     Z-ADD440       ACOKCC
+001320981116  E3 C                     END
+001321981116     C                     EXCPTAGGACO
+001322981116  E2 C                     ENDIF
+001323981116  E1 C                     ENDDO
+001324981116      *
+001325981116      * CONVERTO CNIND
+001326981116      * --------------
+001327981116     C           *LOVAL    SETLLCNIND000
+001328981116  B1 C           *IN20     DOUEQ*ON
+001329981116     C                     READ CNIND000                 20
+001330981116  B2 C           *IN20     IFEQ *OFF
+001331981116      * CLIENTI
+001332981121  B3 C           INDKCC    IFEQ 51
+001333981116     C                     Z-ADD151       INDKCC
+001334981116  E3 C                     END
+001335981116      * FORNITORI
+001336981121  B3 C           INDKCC    IFEQ 161
+001337981116     C                     Z-ADD400       INDKCC
+001338981116  E3 C                     END
+001342981116     C                     EXCPTAGGIND
+001343981116  E2 C                     ENDIF
+001344981116  E1 C                     ENDDO
+001345981116      *
+001346981116      * CONVERTO CNCLP
+001347981116      * --------------
+001348981116     C           *LOVAL    SETLLCNCLP000
+001349981116  B1 C           *IN20     DOUEQ*ON
+001350981116     C                     READ CNCLP000                 20
+001351981116  B2 C           *IN20     IFEQ *OFF
+001352981116      * CLIENTI
+001353981121  B3 C           CLPKCC    IFEQ 51
+001354981116     C                     Z-ADD151       CLPKCC
+001355981116  E3 C                     END
+001356981116     C                     EXCPTAGGCLP
+001357981116  E2 C                     ENDIF
+001358981116  E1 C                     ENDDO
+001359981116      * I RESTANTI FILE NON SONO DA CONVERTIRE SE è IL GIRO DELLE VISITE
+001360981116      * -----------------------------------------------------------------
+001361981116  B1 C           PDCVIS    IFEQ 'PDC'
+001384981116      *
+001385981116      * CONVERTO TFNTC
+001386981116      * --------------
+001387981116     C*  TESTO SE ESISTE TFNTC00F
+001388981119     C                     Z-ADD60        LUNG
+001389981116     C                     MOVEL*BLANKS   COMMAN 80        TFNTC00F
+001390981116     C                     MOVEACMD1,1    COMMAN
+001391981116     C                     CALL 'QCMDEXC'              71
+001392981116     C                     PARM           COMMAN
+001393981119     C                     PARM           LUNG   155
+001394981116  B2 C           *IN71     IFEQ '0'                        C'E' TFNTC0F
+001395981116     C                     OPEN TFNTC00F
+001396981116  B3 C           *IN20     DOUEQ*ON
+001397981116     C                     READ TFNTC                    20
+001398981116  B4 C           *IN20     IFEQ *OFF
+001399981116  B5 C           NTCAPL    IFEQ 'C'
+001400981116     C           NTCAPL    OREQ 'V'
+001401981116      * CLIENTI
+001402981116     C                     MOVELNTCNK1    WRKKCC  4
+001403981116  B6 C           WRKKCC    IFEQ '0051'
+001404981116     C                     MOVEL'0151'    NTCNK1
+001405981116  E6 C                     END
+001406981116     C                     EXCPTAGGNTC
+001407981116  E5 C                     ENDIF
+001408981116  E4 C                     ENDIF
+001409981116  E3 C                     ENDDO
+001410981116  E2 C                     ENDIF
+001411981116  E1 C                     ENDIF
+001412981116      *----- FINE
+001413981116     C                     SETON                     LR
+001414981116      *-------------------------------------------------
+001415981116     C           *INZSR    BEGSR
+001416981116     C           *ENTRY    PLIST
+001417981116     C                     PARM           PDCVIS  3
+001418981116     C                     ENDSR
+001419981116      *
+001420981116     OCNACO000E                AGGACO
+001421981116     O                         ACOKCC
+001500981116     OCNIND000E                AGGIND
+001501981116     O                         INDKCC
+001502981116     OCNCLP000E                AGGCLP
+001503981116     O                         CLPKCC
+001507981116     OTFNTC   E                AGGNTC
+001508981116     O                         NTCNK1
+001509981116**
+001700981116CHKOBJ OBJ(TFNTC00F) OBJTYPE(*FILE)

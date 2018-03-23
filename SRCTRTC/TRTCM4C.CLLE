@@ -1,0 +1,71 @@
+000100991027/*PARMS DFTACTGRP(*YES)                                                       */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600031211             PGM        PARM(&OPZIONE &FILNAM &JOBNAM &USRNAM &JOBNUM &NUMFIL +
+000700031210                          &ESITO)
+000800990908
+000900031211             DCL        VAR(&OPZIONE)   TYPE(*CHAR) LEN(3)
+001000001006             DCL        VAR(&FILNAM)    TYPE(*CHAR) LEN(10)
+001100001006             DCL        VAR(&JOBNAM)    TYPE(*CHAR) LEN(10)
+001200001006             DCL        VAR(&USRNAM)    TYPE(*CHAR) LEN(10)
+001300001006             DCL        VAR(&JOBNUM)    TYPE(*CHAR) LEN(6)
+001400001006             DCL        VAR(&NUMFIL)    TYPE(*CHAR) LEN(6)
+001500001006             DCL        VAR(&ESITO)     TYPE(*CHAR) LEN(1)
+001600031210             DCL        VAR(&LINK)      TYPE(*CHAR) LEN(300)
+001700030404
+001800991028
+001900001006             CHGVAR     VAR(&ESITO) VALUE('0')
+002000991021
+002100031211             IF         COND(&OPZIONE *EQ 'O04') THEN(DO)
+002200031210
+002300031210/* Rimuove il file dall' IFS AS/400 -----------*/
+002400040722             CHGVAR     VAR(&LINK)  VALUE('/BARTMAILING/' *TCAT &FILNAM *TCAT &JOBNAM +
+002500031210                        *TCAT &USRNAM *TCAT &JOBNUM *TCAT &NUMFIL *TCAT '.TXT')
+002600031210             RMVLNK     OBJLNK(&LINK)
+002700030401             MONMSG     MSGID(CPF0000) EXEC(DO)
+002800030402             CHGVAR     VAR(&ESITO) VALUE('2')
+002900030404             ENDDO
+003000030401
+003100030401
+003200030401/* Se errore registro nel log l'esito della conversione ------------*/
+003300030402             IF         COND(&ESITO = '2') THEN(DO)
+003400031210             SNDPGMMSG  MSG('ERRORE durante la rimozione del file ' +
+003500040906                          *BCAT &LINK *BCAT ' da IFS')
+003600030401             MONMSG     MSGID(CPF0000)
+003700030404             GOTO       CMDLBL(FINE)
+003800030401             ENDDO
+003900031211             ENDDO
+004000031211
+004100031211
+004200031211
+004300031211
+004400031211             IF         COND(&OPZIONE *EQ 'O15') THEN(DO)
+004500161110
+004600161110/* Se spool ----*/
+004700161110             IF         COND(%SST(&JOBNAM 1 3) *NE 'ZZZ') THEN(DO)
+004800031211
+004900031211/* Visualizzo il file d spool -----------------*/
+005000031211             DSPSPLF    FILE(&FILNAM) JOB(&JOBNUM/&USRNAM/&JOBNAM) +
+005100031211                          SPLNBR(&NUMFIL)
+005200031211             MONMSG     MSGID(CPF0000) EXEC(DO)
+005300031211             CHGVAR     VAR(&ESITO) VALUE('2')
+005400031211             ENDDO
+005500161110             ENDDO
+005600161110
+005700161110             ELSE       CMD(DO)
+005800161110
+005900161110/* Visualizzo il file nel IFS -----------------*/
+006000161110             DSPF       STMF('/BARTMAILING/' *TCAT &FILNAM *TCAT &JOBNAM +
+006100161110                               *TCAT &USRNAM *TCAT &JOBNUM *TCAT &NUMFIL +
+006200161110                               *TCAT '.TXT')
+006300161110             MONMSG     MSGID(CPF0000) EXEC(DO)
+006400161110             CHGVAR     VAR(&ESITO) VALUE('2')
+006500161110             ENDDO
+006600161110             ENDDO
+006700030401
+006800161110             ENDDO
+006900030402 FINE:
+007000030402
+007100990907             ENDPGM

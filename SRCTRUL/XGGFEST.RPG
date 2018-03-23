@@ -1,0 +1,141 @@
+000100880202     H              J
+000200880202     F*------------------------------------------------------------------
+000300920217     F*   ROUTINE GENERALIZZATA PER CALCOLO GIORNI FESTIVI TRA
+000400920217     F*   DUE DATE
+000500880202     F*------------------------------------------------------------------
+000600940913     F*   CAMPO DATADA - CONTERRA' LA Ia DATA FORMATO    -AAAAMMGG-
+000700940913     F*         DATAA  - CONTERRA' LA IIa DATA FORMATO   -AAAAMMGG-
+000800920217     F*         GGF    - CONTERRA' IL NUMERO DI GIORNI FESTIVI
+000900880202     F*------------------------------------------------------------------
+001000990906     FAZCLN01LIF  E           K        DISK
+001100920217     F*------------------------------------------------------------------
+001200990906     E                    GME        31  1                                CRC90
+001300920217     E*
+001400920217     E                    XDTF   12  12  2 0
+001500940913     F*------------------------------------------------------------------
+001600940913      * $COMOD - CAMPI DI COMODO PER CONTROLLI SULLA DATA
+001700940913     I            DS
+001800940913     I                                        1   80$COMOD
+001900940913     I                                        1   20$COMO1
+002000940913     I                                        3   40$COMO2
+002100940913     I                                        5   60$COMO3
+002200940913     I                                        7   80$COMO4
+002300940913     IWDAT8       DS
+002400940913     I                                        1   80DATADA
+002500940913     I                                        9  160DATAA
+002600940913     I                                       17  210GGF
+002700920217     IDATAVA      DS                                                      CRC90
+002800940913     I                                        1   40AN                    CRC90
+002900940913     I                                        5   60ME                    CRC90
+003000940913     I                                        7   80GI                    CRC90
+003100940913     I                                        1   80DATA8                 CRC90
+003200920217     IGMEDS       DS                                                      CRC90
+003300990906     I                                        1  31 GME                   CRC90
+003400920217     C*----------------------------------------------------*
+003500990906     C           KEYCLN    KLIST                           *
+003600990906     C                     KFLD           KTFP
+003700990906     C                     KFLD           KTFA
+003800990906     C                     KFLD           KANN
+003900990906     C                     KFLD           KMES
+004000990906     C* Definizione delle variabili
+004100990906     C           *LIKE     DEFN CLNTFP    KTFP
+004200990906     C           *LIKE     DEFN CLNTFA    KTFA
+004300990906     C           *LIKE     DEFN CLNANN    KANN
+004400990906     C           *LIKE     DEFN CLNMES    KMES
+004500920217     C*----------------------------------------------------*
+004600880202     C           *ENTRY    PLIST
+004700940913     C                     PARM           WDAT8
+004800940913     C*
+004900940913     C                     Z-ADD0         GGF
+005000940913     C                     MOVE DATAA     DATAVA
+005100940913     C*  Controllo la data finale e di 6 cifre e se si la trasformo
+005200940913     C*  in 8 cifre
+005300940913     C                     Z-ADDDATAA     $COMOD
+005400940913     C           $COMO1    IFEQ 0
+005500940913     C           $COMO2    ANDNE0
+005600940913     C           $COMO3    ANDNE0
+005700940913     C           $COMO4    ANDNE0
+005800940913     C           $COMO2    IFGT 60
+005900940913     C                     ADD  1900      AN
+006000940913     C                     ELSE
+006100940913     C                     ADD  2000      AN
+006200940913     C                     END
+006300940913     C                     Z-ADDDATA8     DATAA
+006400940913     C                     END
+006500940913     C*
+006600940913     C                     Z-ADDAN        AA      40
+006700920217     C                     Z-ADDME        MA      20
+006800920217     C                     Z-ADDGI        GA      20
+006900940913     C*
+007000920217     C                     MOVE DATADA    DATAVA
+007100940913     C*  Controllo la data finale e di 6 cifre e se si la trasformo
+007200940913     C*  in 8 cifre
+007300940913     C                     Z-ADDDATADA    $COMOD
+007400940913     C           $COMO1    IFEQ 0
+007500940913     C           $COMO2    ANDNE0
+007600940913     C           $COMO3    ANDNE0
+007700940913     C           $COMO4    ANDNE0
+007800940913     C           $COMO2    IFGT 60
+007900940913     C                     ADD  1900      AN
+008000940913     C                     ELSE
+008100940913     C                     ADD  2000      AN
+008200940913     C                     END
+008300940913     C                     Z-ADDDATA8     DATADA
+008400940913     C                     END
+008500940913     C*
+008600940913     C                     Z-ADDAN        ADA     40
+008700920217     C                     Z-ADDME        MDA     20
+008800920217     C                     Z-ADDGI        GDA     20
+008900940913     C*
+009000920217     C           MDA       DOWLEMA
+009100920217     C           ADA       ORLT AA
+009200990906     C                     CLEARKTFP
+009300990906     C                     CLEARKTFA
+009400990906     C                     Z-ADDMDA       KMES
+009500990906     C                     Z-ADDADA       KANN
+009600990906     C           KEYCLN    CHAINAZCLN01L             44
+009700990906     C  N44                MOVELCLNPOM    GMEDS
+009800920217     C  N44      MDA       IFEQ MA
+009900920217     C           ADA       ANDEQAA
+010000920217     C           GA        SUB  GDA       GIO     20
+010100950919     C                     ADD  1         GIO
+010200950919     C                     Z-ADDGDA       X
+010300920217     C                     DO   GIO       I       20
+010400990906     C           GME,X     IFEQ 'F'
+010500920217     C                     ADD  1         GGF
+010600920217     C                     END
+010700950919     C           GDA       ADD  I         X       20
+010800920217     C                     END
+010900920217     C                     ELSE
+011000950919     C*  LA PRIMA VOLTA CHE ENTRA E' SEMPRE UGUALE PERCHè DEVE
+011100950919     C*  CONSIDERARE I GG DALLA DATA DA A FINE MESE POI MDA CAMBIA
+011200950919     C*  XCHè SI INCREMENTA
+011300920217     C           MDA       IFEQ ME
+011400920217     C           XDTF,MDA  SUB  GDA       GIO
+011500950919     C                     ADD  1         GIO
+011600950919     C                     Z-ADDGDA       X
+011700920217     C                     DO   GIO       I
+011800990906     C           GME,X     IFEQ 'F'
+011900920217     C                     ADD  1         GGF
+012000920217     C                     END
+012100950919     C           GDA       ADD  I         X
+012200920217     C                     END
+012300920217     C                     ELSE
+012400920217     C                     DO   XDTF,MDA  I
+012500990906     C           GME,I     IFEQ 'F'
+012600920217     C                     ADD  1         GGF
+012700920217     C                     END
+012800920217     C                     END
+012900920217     C                     END
+013000920217     C                     END
+013100920217     C                     ADD  1         MDA
+013200950919     C                     Z-ADD1         GDA
+013300920217     C           MDA       IFEQ 13
+013400920217     C           ADA       ANDNEAA
+013500920217     C                     Z-ADD1         MDA
+013600920217     C                     ADD  1         ADA
+013700920217     C                     END
+013800920217     C                     END
+013900941220     C                     SETON                     RT
+014000880202**
+014100880202312831303130313130313031

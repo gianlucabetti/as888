@@ -1,0 +1,36 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200991018/* TIST16C - STATISTICA PESI - GUIDA                                          */
+000300000000/*----------------------------------------------------------------------------*/
+000400991018  TIST16C:    PGM        PARM(&KPJBA)
+000500000000
+000600000000              DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700000000              DCL        VAR(&SNR) TYPE(*CHAR) LEN(1)
+000800050105              DCL        VAR(&SAL) TYPE(*CHAR) LEN(1)
+000900980209              DCL        VAR(&DET) TYPE(*CHAR) LEN(1)
+001000000000              CHGVAR     VAR(&SNR) VALUE(%SUBSTRING(&KPJBA 256 1))
+001100980209              CHGVAR     VAR(&DET) VALUE(%SUBSTRING(&KPJBA 285 1))
+001200050105              CHGVAR     VAR(&SAL) VALUE(%SUBSTRING(&KPJBA 312 1))
+001300000000
+001400000000  /* SE RICHIESTO RIGENERA IL FILE DI LAVORO                                  */
+001500000000             IF         COND(&SNR *EQ 'S') THEN(DO)
+001600991018             CALL       PGM(TIST16R) PARM(&KPJBA)
+001700000000             ENDDO
+001800000000
+001900050105  /* SE RICHIESTO RIGENERA IL FILE SALDI X CLIENTE                            */
+002000050105             IF         COND(&SAL *EQ 'S') THEN(DO)
+002100050105             CALL       PGM(TIST16R1) PARM(&KPJBA)
+002200050105             ENDDO
+002300050105
+002400000000  /* LANCIA STAMPA                                                            */
+002500980209             IF         COND(&DET *EQ 'S') THEN(DO) /* Sintetica */
+002600160707             OVRPRTF    FILE(PRTF198) OUTQ(QPRINTS) FORMTYPE(*STD) +
+002700160707                          SAVE(*YES) USRDTA('ST.PESI')
+002800980209             ENDDO
+002900980209             IF         COND(&DET *EQ 'D') THEN(DO) /* Dettaglio */
+003000160707             OVRPRTF    FILE(PRTF198) OUTQ(QPRINTS) FORMTYPE(*STD) +
+003100160707                          SAVE(*YES) USRDTA('ST.PESI')
+003200980209             ENDDO
+003300991021             CALL       PGM(TIST17R) PARM(&KPJBA)
+003400000000             RCLRSC     LVL(*CALLER)
+003500000000
+003600000000             ENDPGM

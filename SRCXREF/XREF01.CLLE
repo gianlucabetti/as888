@@ -1,0 +1,54 @@
+000100990514/*PARMS DFTACTGRP(*YES)                                                       */
+000200990514/*PARMS                                                                       */
+000300990514/*PARMS                                                                       */
+000400990514/*PARMS                                                                       */
+000500990514/*PARMS                                                                       */
+000600990514             PGM
+000700990519
+000800990519             DCL        VAR(&NOEXC) TYPE(*CHAR) LEN(1)
+000900990525             DCL        VAR(&MASTER) TYPE(*CHAR) LEN(10)
+001000990922             DCL        VAR(&DAYOFWEEK) TYPE(*CHAR) LEN(4)
+001100990525
+001200990922             RTVSYSVAL  SYSVAL(QDAYOFWEEK) RTNVAR(&DAYOFWEEK)
+001300990525             RTVDTAARA  DTAARA(XREF (2 10)) RTNVAR(&MASTER)
+001400990517
+001500990519             ALCOBJ     OBJ((XRDBR00F *FILE *EXCL)) WAIT(0)
+001600990519             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&NOEXC) +
+001700990519                          VALUE('1'))
+001800990519
+001900990519             ALCOBJ     OBJ((XRPGM00F *FILE *EXCL)) WAIT(0)
+002000990519             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&NOEXC) +
+002100990519                          VALUE('1'))
+002200990519
+002300990519             IF         COND(&NOEXC *EQ '1') THEN(DO)
+002400990519             SNDPGMMSG  MSG('Comando non eseguibile in questo +
+002500990519                          momento. La creazione del cross reference +
+002600990519                          è già in corso o è in corso una +
+002700990519                          interrogazione.') MSGTYPE(*COMP)
+002800990519             GOTO       CMDLBL(ENDPGM)
+002900990519             ENDDO
+003000990517
+003100990519             CHGDTAARA  DTAARA(XREF (1 1)) VALUE('1')
+003200990525
+003300990525             SNDMSG     MSG('Creazione cross reference iniziata.') +
+003400990525                          TOUSR(&MASTER)
+003500990517
+003600990922             CALL       PGM(XREF02) PARM(&DAYOFWEEK)
+003700990519             CALL       PGM(XREF05)
+003800990621
+003900990621             RCLRSC
+004000990519
+004100990519             CHGDTAARA  DTAARA(XREF (1 1)) VALUE('0')
+004200990517
+004300990517             DLCOBJ     OBJ((XRDBR00F *FILE *EXCL))
+004400990517             DLCOBJ     OBJ((XRPGM00F *FILE *EXCL))
+004500990525
+004600990525             RGZPFM     FILE(XRDBR00F)
+004700990525             MONMSG     MSGID(CPF0000)
+004800990525             RGZPFM     FILE(XRPGM00F)
+004900990525             MONMSG     MSGID(CPF0000)
+005000990621
+005100990621             SNDMSG     MSG('Creazione cross reference terminata.') +
+005200990621                          TOUSR(&MASTER)
+005300990517
+005400990519 ENDPGM:     ENDPGM

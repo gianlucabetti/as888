@@ -1,0 +1,142 @@
+000100921103     H        1   D J
+000200921103?    F* CMZM03R *----------------------------------------------------*
+000300921103?    F*---------*                                                    *
+000400921103?    F*               - STAMPA DOCUMENTO -                           *
+000500921103?    F*               --------------------                           *
+000600921103?    F*                                                              *
+000700921103?    F*                                                 AZ.          *
+000800921103?    F*                                                              *
+000900921103?    F*--------------------------------------------------------------*
+001000921103?    F* I N D I C A T O R I                                          *
+001100921103?    F*--------------------------------------------------------------*
+001200921103     F*                                                              *
+001300921103     F*                                                              *
+001400921103     F* -30- LETTURA CMTSM04L                                        *
+001500921103     F* -31- LETTURA CMRGM01L                                        *
+001600921103?    F*
+001700921103?    F*--------------------------------------------------------------*
+001800921103?    F*  DATA BASE                                                   *
+001900921103?    F*--------------------------------------------------------------*
+002000921103     F*
+002100921103?    F*------------
+002200921103     FCMTSM04LIF  E           K        DISK
+002300921103?    F*------------
+002400921103     FCMRGM01LIF  E           K        DISK
+002500921103?    F*------------
+002600921104     FSTAMPA  O   F     199            DISK
+002700921104?    I*------------------------------------------------------------
+002800921104?    I*  DS
+002900921104?    I*------------------------------------------------------------
+003000921104      *---
+003100921104?     *-- DefInizione dei campi di STAMPA
+003200921104     ISTAMP       DS
+003300921104     I                                        1 199 TXT
+003400930322     IORA         DS
+003500930322     I                                        1   2 ORAH
+003600930322     I                                        3   4 ORAM
+003700930322     IDATA        DS
+003800930322     I                                        1   2 DATAA
+003900930322     I                                        3   4 DATMM
+004000930322     I                                        5   6 DATGG
+004100921103?     *
+004200930322     I              'Titolo ...........:' C         TITOLO
+004300930322     I              'Mittente .........:' C         MITTEN
+004400930322     I              'Destinatario .....:' C         DESTIN
+004500930322     I              'Consegna .........:' C         CONSEG
+004600921103?     *------------------------------------------------------------
+004700921103?     *  FLUSSO PRINCIPALE
+004800921103?     *------------------------------------------------------------
+004900921103?     *
+005000921103?    C                     EXSR INIZIO
+005100921103     C*
+005200921103     C*  Stampo la Testata
+005300921103     C*
+005400921103     C           M03DOL    CHAINCMTSM04L             30
+0055009211031    C  N30                DO
+005600930322     C*
+005700930322     c* DATA
+005800930322     C                     MOVE UDATE     DATA
+005900930322     C           '1'       CAT  DATAA:1   TXT
+006000930322     C           TXT       CAT  '/':0     TXT
+006100930322     C           TXT       CAT  DATMM:0   TXT
+006200930322     C           TXT       CAT  '/':0     TXT
+006300930322     C           TXT       CAT  DATGG:0   TXT
+006400930322?    C                     WRITESTAMPA    STAMP
+006500921103     C*
+006600930322     c* titolo
+006700921106     C                     MOVE *BLANK    TXT
+006800930322     C           '-'       CAT  TITOLO    TXT
+006900930322     C           TXT       CAT  TSMTXT:1  TXT
+007000921104?    C                     WRITESTAMPA    STAMP
+007100930322     c* mittente
+007200930322     C                     MOVE *BLANK    TXT
+007300930322     C           ' '       CAT  MITTEN    TXT
+007400930322     C           TSMTIP    IFEQ 'P'
+007500930322     C                     MOVE TSMFIL    FIL     3
+007600930322     C                     MOVE TSMUTL    UTE    10
+007700930322     C                     ELSE
+007800930401     C                     MOVE TSMFIR    FIL
+007900930322     C                     MOVE TSMUTR    UTE
+008000930322     C                     END
+008100930322     C           TXT       CAT  FIL:1     TXT
+008200930322     C           TXT       CAT  UTE:1     TXT
+008300930322?    C                     WRITESTAMPA    STAMP
+008400921103     C*
+008500930322     c* DESTINATARIO
+008600930322     C                     MOVE *BLANK    TXT
+008700930322     C           ' '       CAT  DESTIN    TXT
+008800930401     C           TSMTIP    IFEQ 'A'
+008900930322     C                     MOVE TSMFIL    FIL     3
+009000930322     C                     MOVE TSMUTL    UTE
+009100930322     C                     ELSE
+009200930401     C                     MOVE TSMFIR    FIL
+009300930322     C                     MOVE TSMUTR    UTE
+009400930322     C                     END
+009500930322     C           TXT       CAT  FIL:1     TXT
+009600930322     C           TXT       CAT  UTE:1     TXT
+009700930322?    C                     WRITESTAMPA    STAMP
+009800930322     C*
+009900930322     c* CONSEGNA
+010000930322     C                     MOVE *BLANK    TXT
+010100930322     C           ' '       CAT  CONSEG    TXT
+010200930322     C                     MOVELTSMORR    ORA     4
+010300930322     C                     MOVE TSMDTR    DATA    6
+010400930322     C           TXT       CAT  ORAH:1    TXT
+010500930322     C           TXT       CAT  ':':0     TXT
+010600930322     C           TXT       CAT  ORAM:0    TXT
+010700930322     C           TXT       CAT  DATGG:1   TXT
+010800930322     C           TXT       CAT  '/':0     TXT
+010900930322     C           TXT       CAT  DATMM:0   TXT
+011000930322     C           TXT       CAT  '/':0     TXT
+011100930322     C           TXT       CAT  DATAA:0   TXT
+011200930322?    C                     WRITESTAMPA    STAMP
+011300921103     C*  Stampo le righe
+011400921103     C*
+011500940418     C           TSMDOC    SETLLCMRGM01L
+011600940418     C           TSMDOC    READECMRGM01L                 31
+0117009211032    C           *IN31     DOWEQ'0'
+011800921104     C*
+011900921104     C                     MOVELRGMFCC    TXT
+012000921104     C                     MOVE RGMRIG    TXT
+012100921104?    C                     WRITESTAMPA    STAMP
+012200921103     C*
+012300940418     C           TSMDOC    READECMRGM01L                 31
+0124009211032-   C                     END
+012500921103     C*
+0126009211031-   C                     END
+012700921103     C*
+012800921103     C                     SETON                         LR
+012900921103?     *
+013000921103?     *------------------------------------------------------------
+013100921103?     *  INIZIALIZZAZIONE CAMPI DI LAVORO E DEFINIZIONE CHIAVI
+013200921103?     *------------------------------------------------------------
+013300921103?     *
+013400921103     C*
+013500921103?    C           INIZIO    BEGSR
+013600921103     C*
+013700921103     C           *ENTRY    PLIST
+013800921103     C                     PARM           M03DOL  70
+013900921103     C*
+014000921103     C                     MOVE '0'       *IN
+014100921103     C*
+014200921103     C                     ENDSR

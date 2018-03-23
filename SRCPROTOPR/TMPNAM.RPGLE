@@ -1,0 +1,3 @@
+000100110314     D ProduceTemporaryFileName...
+000200110314     D                 PR              *   EXTPROC('tmpnam')
+000300110303     D  string                       39A   OPTIONS(*OMIT)

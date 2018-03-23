@@ -1,0 +1,55 @@
+000100030430             PGM        PARM(&KPJBA)
+000200030430
+000300030430             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400030430             DCL        VAR(&NRREC) TYPE(*DEC) LEN(10 0)
+000500030603             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+000600030430RICONTA:
+000700030430             RTVMBRD    FILE(TITASQUE) MBR(*FIRST) NBRCURRCD(&NRREC)
+000800030415
+000900030430/* se TITASQUE ha più di 15000 records significa che è ancora in elaborazione */
+001000030430/* il calcolo del Conto Economico quindi non si deve saldificare.             */
+001100030430/* Aspetto 5 minuti e ci rirpovo intanto segnalo la cosa alla coda operatore  */
+001200030430             IF         COND(&NRREC > 15000) THEN(DO)
+001300030430
+001400030603/*          SNDPGMMSG  MSG('<<  ATTENZIONE più di 15000 records in +
+001500030430                          TITASQUE.  >>                        - Il +
+001600030430                          Calcolo SALDI Competenze C/E Batch è in +
+001700030430                          attesa che finisca l''elaborazione del +
+001800030430                          calcolo del C/E. - Fra 5 minuti la +
+001900030430                          procedura proverà nuovamente ad eseguire +
+002000030430                          i SALDI.  Verificare che tutto sia +
+002100030430                          regolare o che non ci siano problemi nel +
+002200030430                          Calcolo del C/E -> sul +
+002300030430                          TITASQUE.                   Rispondere OK +
+002400030430                          per presa visione.') TOUSR(*SYSOPR) +
+002500030603                          MSGTYPE(*INQ)                                */
+002600030603
+002700030605             SNDUSRMSG  MSG('<<  ATTENZIONE più di 15000 records in +
+002800030605                          TITASQUE.  >>                        - Il +
+002900030605                          Calcolo SALDI Competenze C/E Batch è in +
+003000030605                          attesa che finisca l''elaborazione del +
+003100030605                          calcolo del C/E. +
+003200030605                          -                          Risposte: (I) +
+003300030605                          Ignora il controllo e andare avanti +
+003400030605                          comunque con il Lavoro;    (R) Riprova +
+003500030605                          fra 10 minuti ad eseguire il +
+003600030605                          controllo;    (C) Cancellare il Lavoro +
+003700030605                          ricordandosi prima di congelare o +
+003800030605                          cancellare il Lavoro (FN34 -> che Stampa +
+003900030605                          i Saldi) nella coda KSKEDULA.  (I R C)') +
+004000030605                          VALUES(R C I) DFT('R') TOMSGQ(*SYSOPR) +
+004100030605                          MSGRPY(&RISP)
+004200030603
+004300030603
+004400030603             IF         COND(&RISP *EQ 'I') THEN(GOTO CMDLBL(PROCEDI))
+004500030603             IF         COND(&RISP *EQ 'C') THEN(GOTO CMDLBL(FINE))
+004600030603
+004700030603
+004800030604             DLYJOB     DLY(600)
+004900030430             GOTO       CMDLBL(RICONTA)
+005000030603
+005100030430             ENDDO
+005200030603PROCEDI:
+005300030430             CALL       PGM(FICN32R) PARM(&KPJBA)
+005400030415
+005500030603FINE:        ENDPGM

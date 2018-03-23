@@ -1,0 +1,3 @@
+000100071116     D Proj_Autorizzazione...
+000200071116     D                 PR                  EXTPROC('XCHKAUT')
+000300071116     D  xChkAutDs                          LIKEDS(xChkAutDs)

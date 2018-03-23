@@ -1,0 +1,145 @@
+000100940912     H              J
+000200960912     H* TNTL57R  *----------------------------------------------------*
+000300951110     H*----------*                                                    *
+000400960912     H*      PULIZIA TRAINI E FOGLI VIAGGIO PARTENZA  IN SEDE - FILTRO**
+000500951110     H*---------------------------------------------------------------*
+000600960912     FTNTL57D CF  E                    WORKSTN
+000700960912     FTABEL00FIF  E           K        DISK
+000800951110     E*
+000900951110     E* DEFINIZIONE SCHIERE
+001000960315     E                    MSG     1  10 78               MESSAGGI ERRORE
+001100951110     I*
+001200960912     I* DS PER TNTL57R - DS DI PASSAGGIO PARAMETRI
+001300960912     IDSTL57    E DSTNTL57DS
+001400960315     I*
+001500960318     IWLBDAT      DS
+001600960318     I                                        1   80G02DAT
+001700960318     I                                        9  160G02INV
+001800960318     I                                       17  17 G02ERR
+001900960318     I                                       18  220G02TGI
+002000960912     IWGIDAT      DS
+002100960912     I                                        1   80GIODAT
+002200960912     I                                        9  160GIOINV
+002300960912     I                                       17  210GIOTGI
+002400960229     I*
+002500970718     IDS5A2     E DS
+002600951110     IKPJBA     E DS
+002700960229     IUT§DSE    E DSUT§DSE0F
+002800951110     I/SPACE 3
+002900951110     C*****************************************************************
+003000951110     C* RIEPILOGO INDICATORI
+003100951110     C*****************************************************************
+003200960912     C* 28    - INDICATORE DI EMISSIONE MESSAGGIO DI ERRORE
+003300960912     C* 30    - DI COMODO
+003400960912     C* 40    - ERRORE
+003500960912     C* 90    - INDICATORE DI ERRORE GENERICO
+003600951110     C*****************************************************************
+003700951110     C           *ENTRY    PLIST
+003800951110     C                     PARM           KPJBA
+003900960912     C                     MOVELKPJBU     DSTL57
+004000951113     C*
+004100951110     C*---------------------------------------------------------------*
+004200960318     C           FMT01     TAG
+004300960912     C                     EXFMTTL57D01
+004400960315     C*
+004500960315     C* PULIZIA CAMPO MESSAGGIO E RELATIVO INDICATORE (*IN28)
+004600960315     C                     CLEARV1CMSG
+004700960912     C                     SETOF                     2840
+004800960315     C*
+004900960315     C* CMD3  - FINE LAVORO
+005000960315     C   KC                GOTO FINE
+005100960315     C*
+005200960315     C* CONTROLLI 1° VIDEATA
+005300960315     C                     EXSR CTRD01
+005400960912     C  NKF
+005500960912     COR 90                GOTO FMT01
+005600960318     C*
+005700960912     C* CMD6  - ELABORAZIONE
+005800960912     C*   PULIZIA TRAINI
+005900960912     C                     MOVELDSTL57    KPJBU
+006000960912     C                     MOVEL'TL58'    KCOAZ
+006100960912     C                     CALL 'BCH10'
+006200960912     C                     PARM           KPJBA
+006300960912     C*   PULIZIA FOGLI VIAGGIO PARTENZA
+006400960912     C                     MOVELDSTL57    KPJBU
+006500960912     C                     MOVEL'TL59'    KCOAZ
+006600960912     C                     CALL 'BCH10'
+006700960912     C                     PARM           KPJBA
+006800960912     C*
+006900960912     C           FINE      TAG
+007000960912     C                     SETON                     LR
+007100960302     C*
+007200960315     C*--- CONTROLLI 1° VIDEATA --------------------------------------*
+007300960315     C           CTRD01    BEGSR
+007400960315     C                     SETOF                     90
+007500960315     C*
+007600960912     C****  DATA ELABORAZIONE  AL  ****
+007700960912     C                     MOVELV1CDEA    G02DAT
+007800960315     C                     MOVEL*ZERO     G02INV
+007900960315     C                     MOVEL*BLANKS   G02ERR
+008000960315     C                     CALL 'XSRDA8'
+008100960315     C                     PARM           WLBDAT
+008200960315     C           G02ERR    IFEQ '1'
+008300960912     C                     MOVELMSG,1     V1CMSG
+008400960912     C                     SETON                     402890
+008500960315     C                     GOTO ENDCTR
+008600960315     C                     ENDIF
+008700960912     C                     Z-ADDG02DAT    V1CDEA
+008800960912     C                     Z-ADDG02INV    D57DEA
+008900960315     C*
+009000960315     C           ENDCTR    ENDSR
+009100960321     C*
+009200960226     C*--- SR INIZIALE -----------------------------------------------*
+009300951110     C           *INZSR    BEGSR
+009400960912     C****
+009500960912     C** KLIST
+009600960912     C****
+009700960912     C* ACCESSO TABEL00F
+009800960912     C           KTAB      KLIST
+009900960912     C                     KFLD           CODUT
+010000960912     C                     KFLD           COD
+010100960912     C                     KFLD           KEY
+010200960912     C****
+010300960912     C** DEFINIZIONE CAMPI
+010400960912     C****
+010500960912     C           *LIKE     DEFN TBLCOD    COD
+010600960912     C           *LIKE     DEFN TBLKEY    KEY
+010700960912     C*
+010800960912     C* REPERISCO LA RAGIONE SOCIALE UTENTE
+010900960229     C                     Z-ADD1         CODUT
+011000960229     C                     CALL 'X§PARUT'
+011100960229     C                     PARM           UT§DSE
+011200960315     C                     MOVELRAGUT     V1CRSU
+011300960228     C*
+011400970718     C* DATA ELABORAZIONE AL: REPERISCO GIORNI DA DS5A
+011500970718     C                     MOVEL'5A'      COD
+011600970718     C                     MOVEL'2'       KEY       P
+011700960912     C           KTAB      CHAINTABEL                30
+011800960912     C           *IN30     IFEQ *OFF
+011900960912     C           TBLFLG    ANDEQ' '
+012000970718     C                     MOVELTBLUNI    DS5A2
+012100960912     C                     ELSE
+012200970718     C                     CLEARDS5A2
+012300960912     C                     ENDIF
+012400960912     C*
+012500960912     C* PRENDO LA DATA DEL GIORNO DA TIME
+012600960912     C                     TIME           W0140  140
+012700960912     C                     MOVE W0140     UDATE8  80
+012800960912     C*
+012900960912     C                     MOVE UDATE8    G02DAT
+013000960912     C                     MOVEL*BLANK    G02ERR
+013100960912     C                     CALL 'XSRDA8'
+013200960912     C                     PARM           WLBDAT
+013300960912     C*
+013400970718     C* SOTTRAGGO §5AFVS AI GIORNI
+013500970718     C           G02TGI    SUB  §5AFVS    GIOTGI
+013600960912     C*
+013700960912     C                     CALL 'XSRGI8'
+013800960912     C                     PARM           WGIDAT
+013900960912     C                     Z-ADDGIODAT    V1CDEA
+014000960912     C                     Z-ADDGIOINV    D57DEA
+014100960912     C*
+014200960229     C                     ENDSR
+014300960315     C*--------------------------------------------------------------*
+014400960315**  MSG
+014500960912Data errata                                                                   1

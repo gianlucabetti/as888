@@ -1,0 +1,298 @@
+000100980323     H              J
+000200980323     H*------------------------------------------------------------------------*
+000300990611     H* PREP. ARCHIVIO TARIFFE PARTICOLARI PER IL T.C.P. E PULIZIA ARCHIVIO    *
+000400990611     H* TNTAM NEI CAMPI DEL TCP                                                *
+000500990824     H* NELLA TARIFFA DI CARTELLO PULISCO GLI IMPORTI IN TNTAM E NON CREO      *
+000600990824     H* TARIFFA PARTICOLARE
+000700980323     H*------------------------------------------------------------------------*
+000800980323     F*
+000900990825     FTNTAM01LUF  E           K        DISK
+001000990611     FTITPT01LUF  E           K        DISK                      A
+001100990611     FTITPD00FO   E           K        DISK
+001200980323     FTABEL00FIF  E           K        DISK
+001300980323     FQSYSPRT O   F     132     OF     PRINTER
+001400980323     F*
+001500980323     E* SCHIERE PER CARICAMENTO L1
+001600980323     E                    L1         30  3 0             FIL.GESTITE
+001700980323     E                    LIN        30  3 0             SKI COMODO
+001800980323     E                    ST      1   3 66
+001900980323      *
+002000990611     IKPJBA     E DS
+002100980323     IDSCT      E DS
+002200990611     IDSQT2     E DS
+002300980323     ICNCR80    E DS
+002400980323     IUT§DSE    E DSUT§DSE0F
+002500980323     I* DS PER TRUL06R - CARICAMENTO £1
+002600980323     IDSUL06    E DSTRUL06DS
+002700980323     I                                        1  900LIN
+002800980323     I*
+002900980323      *
+003000980323     C                     Z-ADD1         CODUT
+003100980323     C                     CALL 'X§PARUT'
+003200980323     C                     PARM           UT§DSE
+003300980323     C                     MOVELREC80     CNCR80
+003400980323     C*
+003500980323     C* ACCESSO TABEL00F
+003600980323     C           KTAB      KLIST
+003700980323     C                     KFLD           CODUT
+003800980323     C                     KFLD           COD
+003900980323     C                     KFLD           KEY
+004000980323     C                     Z-ADD1         CODUT
+004100980324     C*
+004200990611     C* ACCESSO TITPT01L
+004300980324     C           KTPT      KLIST
+004400980324     C                     KFLD           TAMKSC
+004500980324     C                     KFLD           TAMCTR
+004600980324     C                     KFLD           TAMPRG
+004700980324     C                     KFLD           TPTFTC
+004800980323     C***
+004900980323     C** DEFINIZIONE CAMPI
+005000980323     C***
+005100980323     C           *LIKE     DEFN TBLCOD    COD
+005200980323     C           *LIKE     DEFN TBLKEY    KEY
+005300990611     C           *LIKE     DEFN TPDSGL    TPDSG1
+005400990611     C           *LIKE     DEFN TPDSGL    TPDSG2
+005500990611     C           *LIKE     DEFN TPDITR    TPDIT1
+005600990611     C           *LIKE     DEFN TPDITR    TPDIT2
+005700990611     C***
+005800990611     C** CARICO TABELLA STANDARD TARIFFE
+005900990611     C***
+006000990611     C                     EXSR DECSTD
+006100980323     C*
+006200980323     C* SOLO SE SONO IN FILIALE CARICO TABELLA L1
+006300980323    1C           SIMFEL    IFGT 0
+006400980323     C                     SETON                     15
+006500980323     C                     EXSR CARTAB
+006600980326    1C                     END
+006700980323     C*
+006800980323     C                     EXCPTTESTA
+006900980323     C*
+007000980323     C           *LOVAL    SETLLTNTAM01L
+007100980323     C                     READ TNTAM01L                 30
+007200980323     C*
+007300980323     C           *IN30     DOWEQ*OFF
+007400980323     C* CONTROLLO SE E' UN CLIENTE GESTITO DALLA FILIALE
+007500980323     C                     MOVELTAMKSC    W0030   30
+007600980323     C*
+007700980323     C* 15 ON  - SONO IN FILIALE
+007800980518    1C           *IN15     IFEQ *ON
+007900980323     C*
+008000990611     C* MODIFICO LA TARIFFA MA NON LA SFLAGGO SE NON E' UN CLIENTE DELLA FILIALE
+008100980323     C           W0030     LOKUPL1                       35
+008200980323     C                     SETOF                         90
+008300980323     C*
+008400980323     C*
+008500980323   X1C                     ELSE
+008600980323     C* 15 OFF - SONO IN SEDE
+008700980323     C*
+008800990611     C           W0030     IFNE 888
+008900990611     C* MODIFICO LA TARIFFA MA NON LA SFLAGGO
+009000990611     C                     SETOF                         35
+009100990611     C                     ELSE
+009200990611     C* MODIFICO LA TARIFFA MA LA SFLAGGO
+009300990611     C                     SETON                         35
+009400990611     C                     ENDIF
+009500980326     C                     SETOF                         90
+009600980323    1C                     ENDIF
+009700990825     C* CONTROLLO : SE IL FLAG TCP E' UGUALE A 0  NON FACCIO NIENTE
+009800990825     C           TAMFMP    IFEQ '0'
+009900990825     C                     GOTO LEGGI
+010000990825     C                     ENDIF
+010100990611     C* SCRIVO LA TESTATA DELLA TARIFFA PARTICOLARE
+010200980323     C* VALORIZZO I CAMPI DI TIPO TARIFFA E TIPO PAGAMENTO
+010300990824     C* SOLO SE NON SONO UNA TARIFFA 888
+010400990824     C           W0030     IFNE 888
+010500990611     C                     MOVEL'7 '      TPTFTC
+010600980324     C* CONTROLLO SE ESISTE GIA' LA TARIFFA PARTICOLARE
+010700990611     C           KTPT      CHAINTITPT01L             34
+010800980324     C           *IN34     IFEQ *ON
+010900990611     C* TARIFFA A KG
+011000990611     C                     MOVEL'3'       TPTTPG
+011100990611     C* CREAZIONE TARIFFA PARTICOLARE
+011200980323     C                     EXSR VALTPT
+011300990611     C*
+011400990611     C* CREAZIONE DETTAGLIO TARIFFA PARTICOLARE  1° SCAGLIONE
+011500990611     C* SE IMPORTI SONO UGUALI A ZERO PRENDO QUELLI DELLA TABELLA
+011600990611     C*
+011700990611     C           TAMLRC    IFEQ 0
+011800990611     C           TAMLAS    ANDEQ0
+011900990611     C* RECUPERO LE TARIFFE DALLA TABELLA QT
+012000990611     C*
+012100990611     C                     Z-ADDTPDIT1    TAMLRC
+012200990611     C                     Z-ADDTPDIT2    TAMLAS
+012300990611     C*
+012400990611     C                     ENDIF
+012500990611     C* 1° SCAGLIONE
+012600990611     C                     Z-ADDTPDSG1    TPDSGL
+012700990618     C                     Z-ADDTAMLRC    TPDMIN
+012800990618     C                     Z-ADD*ZEROS    TPDITR
+012900980323     C                     Z-ADD*ZEROS    TPDMAX
+013000980323     C*
+013100980323     C                     EXSR VALTPD
+013200980323     C*
+013300990611     C* 2° SCAGLIONE
+013400990611     C                     Z-ADDTPDSG2    TPDSGL
+013500990618     C                     Z-ADDTAMLAS    TPDMIN
+013600990618     C                     Z-ADD*ZEROS    TPDITR
+013700990611     C                     Z-ADD*ZEROS    TPDMAX
+013800990611     C*
+013900990611     C                     EXSR VALTPD
+014000990611     C*
+014100990820     C* 3° SCAGLIONE  E ULTIMO
+014200990611     C                     MOVE *ALL'9'   TPDSGL
+014300990611     C                     Z-ADD*ZEROS    TPDITR
+014400990611     C                     Z-ADD*ZEROS    TPDMIN
+014500990611     C                     Z-ADD*ZEROS    TPDMAX
+014600990611     C*
+014700990611     C                     EXSR VALTPD
+014800990611     C*
+014900980323     C  N90 OF             EXCPTTESTA
+015000980323     C  N90                EXCPTRIGA
+015100980323     C  N90                SETON                     90
+015200980324     C*
+015300980324     C                     ENDIF
+015400990824     C                     ENDIF
+015500990825     C*
+015600990825     C                     CLEARTAMLRC
+015700990825     C                     CLEARTAMLAS
+015800980323     C*
+015900990825     C           LEGGI     TAG
+016000990611     C                     CLEARTAMFMP
+016100990611     C* SOLO SE SI TRATTA DI UNA MIA TARIFFA
+016200990611     C   35                CLEARTAMFTR
+016300990611     C   35                CLEARTAMDTR
+016400990825     C                     UPDATTNTAM000
+016500980323     C*
+016600980323     C                     READ TNTAM01L                 30
+016700980323     C*
+016800980323     C                     ENDDO
+016900980323     C*
+017000980323     C                     SETON                     LR
+017100980323     C*-----------------------------------------------------------------------**
+017200980323     C* VALORIZZO I CAMPI DELLE TARIFFE PARTICOLARE
+017300980323     C*-----------------------------------------------------------------------**
+017400980323     C           VALTPT    BEGSR
+017500980323     C*
+017600990611     C                     MOVELTAMATB    TPTATB
+017700980507     C                     CLEARTPTARL
+017800980507     C                     CLEARTPTARF
+017900980507     C                     CLEARTPTARO
+018000980507     C                     CLEARTPTRPV
+018100980507     C                     CLEARTPTVLM
+018200990611     C                     CLEARTPTVVM
+018300990611     C                     CLEARTPTTMA
+018400980507     C                     CLEARTPTFVM
+018500980507     C                     CLEARTPTAPL
+018600980507     C                     CLEARTPTFTR
+018700980507     C                     CLEARTPTDTR
+018800990820     C* METTO IL FLAG DI TRASMISSIONE DELLA TESTATA
+018900990820     C  N35                MOVELTAMFTR    TPTFTR
+019000990820     C  N35                Z-ADDTAMDTR    TPTDTR
+019100980507     C*
+019200980323     C                     MOVE TAMKSC    TPTKSC
+019300980323     C                     MOVE TAMCTR    TPTCTR
+019400980323     C                     MOVE TAMPRG    TPTPRG
+019500980323     C*
+019600990611     C                     WRITETITPT000
+019700980323     C*
+019800980323     C                     ENDSR
+019900980323     C*-----------------------------------------------------------------------**
+020000980323     C* VALORIZZO I CAMPI DELLE TARIFFE PARTICOLARE DETTAGLIO
+020100980323     C*-----------------------------------------------------------------------**
+020200980323     C           VALTPD    BEGSR
+020300980323     C*
+020400990611     C                     MOVELTAMATB    TPDATB
+020500980323     C                     MOVE TAMKSC    TPDKSC
+020600980323     C                     MOVE TAMCTR    TPDCTR
+020700980323     C                     MOVE TAMPRG    TPDPRG
+020800980323     C                     MOVE TPTFTC    TPDFTC
+020900990611     C                     CLEARTPDFTR
+021000990611     C                     CLEARTPDDTR
+021100990820     C* METTO IL FLAG DI TRASMISSIONE DELLA TESTATA
+021200990611     C  N35                MOVELTAMFTR    TPDFTR
+021300990611     C  N35                Z-ADDTAMDTR    TPDDTR
+021400980323     C*
+021500990824     C* SE TARIFFA ESTERA
+021600990824     C           TAMFIE    IFEQ 'E'
+021700980323     C                     MOVEL'EE'      TPDCTS
+021800980323     C* SCRIVO IL DETTAGLIO
+021900980323     C                     EXSR DECORP
+022000980323     C                     ELSE
+022100980323     C* SE TARIFFA ITALIA
+022200980323     C           TAMFIE    IFEQ 'I'
+022300980323     C                     MOVEL'IT'      TPDCTS
+022400980323     C* SCRIVO IL DETTAGLIO
+022500980323     C                     EXSR DECORP
+022600980323     C                     END
+022700980323     C*
+022800980323     C                     END
+022900980323     C*
+023000980323     C                     ENDSR
+023100980323     C*------------------------------------------------------------------------*
+023200980323     C* RECUPERO ORDINAMENTO PROVINCIA DALLA TABELLA CODICE TASSAZIONE
+023300980323     C*------------------------------------------------------------------------*
+023400980323     C           DECORP    BEGSR
+023500980323     C*
+023600980323     C                     MOVEL'CT'      COD
+023700980323     C                     MOVEL*BLANKS   KEY
+023800980323     C                     MOVELTPDCTS    KEY
+023900980323     C           KTAB      CHAINTABEL                34
+024000980323     C                     MOVELTBLUNI    DSCT
+024100990611     C                     MOVE §CTCOR    TPDORP
+024200990611     C                     WRITETITPD000
+024300980323     C*
+024400980323     C                     ENDSR
+024500980323     C*
+024600990611     C*------------------------------------------------------------------------*
+024700990611     C* RECUPERO SCAGLIONI E TARIFFE STANDARD DALLA TABELLA QT (2)
+024800990611     C*------------------------------------------------------------------------*
+024900990611     C           DECSTD    BEGSR
+025000990611     C*
+025100990611     C                     MOVEL'QT'      COD
+025200990611     C                     MOVEL*BLANKS   KEY
+025300990611     C                     MOVEL'2'       KEY
+025400990611     C           KTAB      CHAINTABEL                34
+025500990611     C                     MOVELTBLUNI    DSQT2
+025600990611     C                     Z-ADD§QTFP3    TPDSG1
+025700990611     C                     Z-ADD§QTFP4    TPDSG2
+025800990611     C                     Z-ADD§QTIP3    TPDIT1
+025900990611     C                     Z-ADD§QTIP4    TPDIT2
+026000990611     C*
+026100990611     C                     ENDSR
+026200990611     C*
+026300980323     C*--- CARICAMENTO TABELLE ---------------------------------------*
+026400980323     C           CARTAB    BEGSR
+026500980323     C*
+026600980323     C****  CARICO TABELLA FILIALI GESTITE £1  ****
+026700980323     C                     CLEARDSUL06
+026800980323     C                     MOVE '£1'      D06COD
+026900980323     C                     MOVELSIMFEL    D06KEY
+027000980323     C                     MOVELDSUL06    KPJBU
+027100980323     C                     CALL 'TRUL06R'
+027200980323     C                     PARM           KPJBA
+027300980323     C                     MOVELKPJBU     DSUL06
+027400980323     C                     MOVEALIN       L1
+027500980323     C*
+027600980323     C                     ENDSR
+027700980323     OQSYSPRT E   02           TESTA
+027800980323     O                         ST,1      66
+027900980323     O                         ST,1     132
+028000980323     O        E   03           TESTA
+028100980323     O                         ST,2      66
+028200980323     O                         ST,3     132
+028300980323     O        E   04           TESTA
+028400980323     O                         ST,1      66
+028500980323     O                         ST,1     132
+028600980323     O        E 20             RIGA
+028700980323     O                         TAMKSCZ    7
+028800980323     O                         TAMCTRZ   12
+028900980323     O                                   13 '/'
+029000990611     O                         TAMPRGZ   18
+029100990611     O                         TAMFIE    25
+029200990611     O                         TAMFMP    34
+029300990611     O                         TAMLRC1   47
+029400990611     O                         TAMLAS1   66
+029500980323**
+029600980323------------------------------------------------------------------
+029700990611Cliente  Tariffa    I/E  Flag TCP  Importo fino a 20 KG Otre
+029800990611

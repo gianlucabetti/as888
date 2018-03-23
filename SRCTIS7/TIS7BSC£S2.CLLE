@@ -1,0 +1,69 @@
+000100161205/*PARMS DFTACTGRP(*NO) ACTGRP(BARTVAS_RR)                                     */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600000928
+000700000928
+000800010330             PGM        PARM(&KPJBA)
+000900010330
+001000120323             DCL        VAR(&KPJBA)   TYPE(*CHAR) LEN(512)
+001100010330             DCL        VAR(&UNI)     TYPE(*CHAR) LEN(7)
+001200001218             DCL        VAR(&MBR)     TYPE(*CHAR) LEN(10)
+001300100312             DCL        VAR(&PARAM)   TYPE(*CHAR) LEN(37)
+001400050825             DCL        VAR(&OPZ)     TYPE(*CHAR) LEN(1)
+001500010131
+001600120323             CHGVAR     VAR(&PARAM)   VALUE(%SST(&KPJBA 247 37))
+001700120323             CHGVAR     VAR(&OPZ)     VALUE(%SST(&PARAM 26 1))
+001800120323             CHGVAR     VAR(&UNI)     VALUE(%SST(&PARAM 27 7))
+001900010330
+002000050825
+002100050825  /* Se richiesta creazione membro "RIC" in FNVAC00T */
+002200050825             IF         COND(&OPZ = '1') THEN(DO)
+002300010131             CHGVAR     VAR(&MBR) VALUE(RIC *CAT &UNI)
+002400010131
+002500001218
+002600001222             ADDPFM     FILE(FNVAB00T) MBR(&MBR)
+002700001218             MONMSG     MSGID(CPF5812 CPF7306)
+002800001218
+002900001222             ALCOBJ     OBJ((FNVAB00T *FILE *EXCL &MBR))
+003000000928
+003100001222             OVRDBF     FILE(FNVAB00T) TOFILE(FNVAB00T) MBR(&MBR) +
+003200001218                          OVRSCOPE(*CALLLVL)
+003300050825             ENDDO
+003400001218
+003500001218
+003600161205  /* AVVIO IL CONTROLLO SINCRONIA ------------------------------------*/
+003700161206             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+003800161205             MONMSG     MSGID(CPF8351)
+003900161205
+004000050825
+004100050825  /* Eseguo elaborazione */
+004200120323             CALL       PGM(TIS7BSR) PARM(&PARAM)
+004300161205             MONMSG     MSGID(CPF0000) EXEC(DO)
+004400161206             ROLLBACK
+004500161206             MONMSG     MSGID(CPF0000)
+004600161206             SNDBRKMSG  MSG('ERRORE in rigenerazione dati BS +
+004700161206                          cliente ' *TCAT &UNI) +
+004800161206                          TOMSGQ(QSYSOPR)
+004900161206             RCLRSC     LVL(*CALLER)
+005000161205             ENDDO
+005100161205
+005200161205
+005300161205  /* SANCISCO IL COMMIT ----------------------------------------------*/
+005400161205             COMMIT
+005500161205             MONMSG     MSGID(CPF0000)
+005600161205
+005700161205
+005800161205  /* STOPPO IL CONTROLLO SINCRONIA -----------------------------------*/
+005900161205             ENDCMTCTL
+006000161205             MONMSG     MSGID(CPF8356 CPF8355)
+006100001218
+006200050825
+006300050825  /* Se richiesta creazione membro "RIC" in FNVAC00T */
+006400050825             IF         COND(&OPZ = '1') THEN(DO)
+006500001222             DLCOBJ     OBJ((FNVAB00T *FILE *EXCL &MBR))
+006600050825             ENDDO
+006700001218
+006800991026
+006900990907             ENDPGM

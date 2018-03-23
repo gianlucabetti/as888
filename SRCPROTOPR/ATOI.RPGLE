@@ -1,0 +1,3 @@
+000100170929     D ConvertCharacterStringToInteger...
+000101170929     D                 PR            10I 0 EXTPROC('atoi')
+000102170929     D  char                           *   VALUE OPTIONS(*STRING)

@@ -1,0 +1,53 @@
+000100050330             pgm        parm(&LIBIN &MSKOBJ &TIPOFILE &LIBOUT &FILEOUT &CPYOPZ)
+000200020507
+000300050330             dcl        var(&LIBIN)    type(*char) len(10)
+000400050330             dcl        var(&MSKOBJ)   type(*char) len(10)
+000500050330             dcl        var(&TIPOFILE) type(*char) len(10)
+000600050330             dcl        var(&LIBOUT)   type(*char) len(10)
+000700050330             dcl        var(&FILEOUT)  type(*char) len(10)
+000800050330             dcl        var(&CPYOPZ)   type(*char) len(10)
+000900050330
+001000050330
+001100050330 /* Outfile from command DSPOBJD */
+001200050330             dclf       file(LISTSAFILO)
+001300050330
+001400050330 /* Creo la libreria d wrk x deposito file già trattati */
+001500050330             crtlib     lib(EDPFGSAFIL)
+001600050330             monmsg     msgid(CPF0000)
+001700050330             addlible   lib(EDPFGSAFIL)
+001800050330             monmsg     msgid(CPF0000)
+001900050330
+002000050330 /* Inizializzo il file d destinazione che conterrà tutti i file della GAICMZ */
+002100050330             clrpfm     file(&LIBOUT/&FILEOUT)
+002200050330             monmsg     msgid(CPF0000)
+002300020507
+002400050330 /* Effettuo listing dei file "tradotti" presenti nella libreria GAICMZ */
+002500050330             dspobjd    obj(&LIBIN/&MSKOBJ) objtype(*FILE) +
+002600050330                          output(*OUTFILE) outfile(EDPFGSAFIL/LISTSAFILO)
+002700020507
+002800050330 /* Leggo quindi il file temporaneo appena creato con la lista dei file da copiare */
+002900020507
+003000020507 READ:
+003100020507
+003200050330   /* Ciclo di lettura */
+003300020507             rcvf
+003400020507             monmsg     msgid(CPF0864)     exec(goto cmdlbl(E_O_F))
+003500020507
+003600050330             if         cond(&ODOBTX = &TIPOFILE)  then(DO)
+003700020507
+003800050330 /* Copio il file origine corrente nel file destinazine */
+003900050330             cpyf       fromfile(&ODLBNM/&ODOBNM) +
+004000050330                          tofile(&LIBOUT/&FILEOUT) mbropt(&CPYOPZ) +
+004100050330                          fmtopt(*NOCHK)
+004200050330 /* Sposto il file origine in una libreria d wrk */
+004300050330             movobj     obj(&ODLBNM/&ODOBNM) objtype(*FILE) tolib(EDPFGSAFIL)
+004400020507
+004500020507             enddo
+004600020507
+004700050330   /* Lettura prossimo record (ovvero prossimo file) */
+004800020507             goto       cmdlbl(READ)
+004900020507
+005000020507 E_O_F:
+005100020507
+005200050330
+005300020507             ENDPGM

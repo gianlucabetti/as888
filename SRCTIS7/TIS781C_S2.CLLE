@@ -1,0 +1,35 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(BARTVAS)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600080903             PGM        PARM(&TIPSI &TIPNO)
+000700991111
+000800080903             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1) VALUE(' ')
+000900090521             DCL        VAR(&TIS781DS)   TYPE(*CHAR) LEN(329)
+001000080903             DCL        VAR(&VGDPRG)     TYPE(*CHAR) LEN(10)
+001100080903             DCL        VAR(&TIPSI)      TYPE(*CHAR) LEN(2)
+001200080903             DCL        VAR(&TIPNO)      TYPE(*CHAR) LEN(2)
+001300080903
+001400080903             CHGVAR     VAR(&TIS781DS) VALUE(%SUBSTRING(&TIS781DS 1 52) +
+001500080903                           *CAT &TIPSI *CAT &TIPNO *CAT                 +
+001600080903                           %SUBSTRING(&TIS781DS 57 15))
+001700080904             CHGVAR     VAR(&TIS781DS) VALUE(%SUBSTRING(&TIS781DS 1 12) +
+001800080904                           *CAT '00000000' *CAT %SUBSTRING(&TIS781DS 21 51))
+001900080904
+002000991111
+002100060804 GUFO:       CALL       PGM(TIS781C1) PARM(&ESITO &TIS781DS &VGDPRG)
+002200991111             MONMSG     MSGID(CPF0000)
+002300991111
+002400120111             CALL       PGM(TIS7T02R)
+002500120111             MONMSG     MSGID(CPF0000)
+002600140804
+002700140804             RCLACTGRP  ACTGRP(*ELIGIBLE)
+002800140804             RCLRSC
+002900140804
+003000150702             CHGVAR     VAR(&ESITO) VALUE(' ')
+003100120111
+003200140731             DLYJOB     DLY(300)
+003300000621             GOTO       CMDLBL(GUFO)
+003400991111
+003500990907             ENDPGM

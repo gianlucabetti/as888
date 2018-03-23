@@ -1,0 +1,233 @@
+000100040225     h Decedit('0,') Datedit(*YMD.) Option(*nodebugio)
+000200001006
+000300040225      *------------------------------------------------------------------------*
+000400040415      * Dati errati in bolla  - DUT
+000500040225      *------------------------------------------------------------------------*
+000600111107     FTNTBE01L  IF   E           K DISK
+000700111107     fTitas30c  if   e           k Disk
+000800111107     ffiar531c  if   e           k Disk
+000900111107     fFiar500r  if   e             Disk    rename(fiar5000:fiar50rr)
+001000040415     FQSYSPRT   O    F  132        PRINTER OFLIND(*INOF)
+001100111107      *
+001200111107     d AR5n            s                   like(AR5trd)  dim(50)
+001300111107     d dAR5          e ds                  inz
+001400111107     d dtasflo       e ds
+001500040302
+001600040415     iTitas000      01
+001700040415     iTitas010      02
+001800040415     iTitasp00      03
+001900040225
+002000001006      *------------------------------------------------------------------------*
+002100040415     C     *entry        plist
+002200040415     c                   parm                    aGGIORNA          1
+002300111107     C     Kar5f         KLIST
+002400040415     C                   KFLD                    ar5aas
+002500040415     C                   KFLD                    ar5lnp
+002600040415     C                   KFLD                    ar5nrs
+002700040415     C                   KFLD                    ar5nsp
+002800111107     C                   KFLD                    ar5trd
+002900111107     C     Ktas          KLIST
+003000111107     C                   KFLD                    ar5aas
+003100111107     C                   KFLD                    ar5lnp
+003200111107     C                   KFLD                    ar5nrs
+003300111107     C                   KFLD                    ar5nsp
+003400111107     c
+003500111107      * Effettuo caricamento dei tipi record FIAR5 da NON trasmettere
+003600111107     c                   clear                   ii                3 0
+003700111107     c                   clear                   AR5n
+003800111107     c                   eval      TBEcod   = 'AR5'
+003900111107     c     TBEcod        setll     TNTBE000
+004000111107     c     TBEcod        reade     TNTBE000
+004100111107do  1c                   DOW       Not %Eof(TNTBE01L)
+004200111107if  2c                   if        TBEatb   = *blanks
+004300111107     c                   eval      dAR5 = TBEuni
+004400111107if  3c                   IF        §AR5trmi <> 'S'
+004500111107     c                   add       1             ii
+004600111107     c                   movel     TBEke1        AR5n(ii)
+004700111107e   3c                   ENDIF
+004800111107e   2c                   endif
+004900111107     c     TBEcod        reade     TNTBE000
+005000111107e   1c                   ENDDO
+005100040225
+005200111107     c                   Read      Fiar500r
+005300040226
+005400111107    1c                   dow       not %eof(fiar500r)
+005500111107     c     kar5f         chain     fiar531c                           30
+005600111107     c
+005700111107     c                   if        %found(fiar531c) and ar5trd<>'GEN'
+005800111107     c***                except    erroreS
+005900111107     c                   select
+006000111107     c                   when      ar5trd='BAN'
+006100111107     c                   add       1             totbans           9 0
+006200111107     c                   when      ar5trd='BNB'
+006300111107     c                   add       1             totbnbs           9 0
+006400111107     c                   when      ar5trd='RCC'
+006500111107     c                   add       1             totrccs           9 0
+006600111107     c                   when      ar5trd='EMD'
+006700111107     c                   add       1             totemds           9 0
+006800111107     c                   other
+006900111107     c                   add       1             totS              9 0
+007000111107     c                   ENDSL
+007100111107     c
+007200111107     c                   else
+007300111107     c
+007400111107     c                   if        not %found(fiar531c) and ar5trd<>'GEN'
+007500111107     c                   exsr      aggfiar5
+007600040420    4c                   endif
+007700111107    4c                   endif
+007800111107     c
+007900111107     c                   if        not %found(fiar531c) and ar5trd= 'GEN'
+008000111107     c***                except    erroreN
+008100111107     c                   select
+008200111107     c                   when      ar5trd='GEN'
+008300111107     c                   add       1             totgenN           9 0
+008400111107     c                   endsl
+008500111107    4c                   endif
+008600111107     c
+008700111107     c                   select
+008800111107     c                   when      ar5trd='GEN'
+008900111107     c                   add       1             totgen            9 0
+009000111107     c                   when      ar5trd='BAN'
+009100111107     c                   add       1             totban            9 0
+009200111107     c                   when      ar5trd='BNB'
+009300111107     c                   add       1             totbnb            9 0
+009400111107     c                   when      ar5trd='RCC'
+009500111107     c                   add       1             totrcc            9 0
+009600111107     c                   when      ar5trd='EMD'
+009700111107     c                   add       1             totemd            9 0
+009800111107     c                   other
+009900111107     c                   add       1             tot               9 0
+010000111107     c                   ENDSL
+010100040415
+010200040225
+010300111107     c                   Read      Fiar500r
+010400040415    1c                   EndDo
+010500010202
+010600111107     c                   except    totale
+010700111107     c
+010800040225     c                   Eval      *Inlr = *On
+010900111107     c*--------------------------------------------
+011000111107     c     AggFIAR5      BEGSR
+011100111107     c
+011200111107     c                   if        ar5trd='EMD'
+011300111107     c                   setoff                                       010203
+011400111107     c     ktas          chain     titas30c                           30
+011500111107     c
+011600111107     c                   if        (*in01  and tasnft>0)  or not *in01
+011700111107     C                   EXCEPT    EMDS
+011800111107     c                   add       1             totnoEMD          9 0
+011900111107     c                   endif
+012000111107     C
+012100111107     c                   leavesr
+012200111107     c                   endif
+012300111107     c
+012400111107      * - fleggo come ricevuto in filiale
+012500111107     C                   eval      AR5ft1 = 'R'
+012600111107     C                   eval      AR5dt1 = 20111107
+012700111107      * - fleggo come ricevuto in sede
+012800111107     C                   eval      AR5ft2 = 'R'
+012900111107     C                   eval      AR5dt2 = 20111107
+013000111107      * - verifico se per il tipo record di FIAR5 è previsto il
+013100111107      *   ritorno info al cliente: se non è previsto imposto
+013200111107      *   il record come già trasmesso (cioè da non trasmettere).
+013300111107     c                   eval      *in30  =  *off
+013400111107     c     AR5trd        lookup    AR5n                                   30
+013500111107if  3c                   IF        *in30
+013600111107     c                   eval      AR5ft3 = 'T'
+013700111107     c                   eval      AR5dt3 = *all'9'
+013800111107x   3c                   ELSE
+013900111107     c                   clear                   AR5ft3
+014000111107     c                   clear                   AR5dt3
+014100111107e   3c                   ENDIF
+014200111107      *
+014300111107     c                   select
+014400111107     c                   when      ar5trd='GEN'
+014500111107     c                   add       1             totgenW           9 0
+014600111107     c                   when      ar5trd='BAN'
+014700111107     c                   add       1             totbanW           9 0
+014800111107     c                   when      ar5trd='BNB'
+014900111107     c                   add       1             totbnbW           9 0
+015000111107     c                   when      ar5trd='RCC'
+015100111107     c                   add       1             totrccW           9 0
+015200111107     c                   when      ar5trd='EMD'
+015300111107     c                   add       1             totemdW           9 0
+015400111107     c                   other
+015500111107     c                   add       1             totW              9 0
+015600111107     c                   ENDSL
+015700111107     c
+015800111107     c                   ENDSR
+015900111107     OQSYSPRT   E            EMDS        1
+016000111107     O                                         +  1 'EMD NON CARIICATI  '
+016100111107     O                       ar5aas        z   +  1
+016200111107     O                       ar5lnp        z   +  1
+016300111107     O                       ar5nrs        z   +  1
+016400111107     O                       ar5nsp        2   +  1
+016500111107     O                       TASKSC            +  1
+016600111107     O                       TASNFT        2   +  1
+016700111107     O                       TASDFT            +  1 '    /  /  '
+016800111107     O                       TASFIV            +  1
+016900111107     O
+017000111107     OQSYSPRT   E            erroreN     1
+017100111107     O                                         +  1 'FIAr5 non ricevuto '
+017200111107     O                       ar5aas        z   +  1
+017300111107     O                       ar5lnp        z   +  1
+017400111107     O                       ar5nrs        z   +  1
+017500111107     O                       ar5nsp        2   +  1
+017600111107     O                       ar5trd            +  1
+017700111107     O                       ar5ft1            +  1
+017800111107     O                       ar5dt1            +  1
+017900111107     OQSYSPRT   E            erroreS     1
+018000111107     O                                         +  1 'FIAr5 ricevuto     '
+018100111107     O                       ar5aas        z   +  1
+018200111107     O                       ar5lnp        z   +  1
+018300111107     O                       ar5nrs        z   +  1
+018400111107     O                       ar5nsp        2   +  1
+018500111107     O                       ar5trd            +  1
+018600111107     O                       ar5ft1            +  1
+018700111107     O                       ar5dt1            +  1
+018800111107     OQSYSPRT   E            totale      1
+018900111107     O                                         +  1 'GEN :'
+019000111107     O                       totgen        2   +  1
+019100111107     o                                         +  3 'non ricevuto'
+019200111107     O                       totgenn       2   +  1
+019300111107     O                                         +  1 'EMD non caricato:'
+019400111107     O                       totnoemd      2   +  1
+019500111107     OQSYSPRT   E            totale      1
+019600111107     O                                         +  1 'BAN :'
+019700111107     O                       totban        2   +  1
+019800111107     o                                         +  3 '    ricevuto'
+019900111107     O                       totbanS       2   +  1
+020000111107     OQSYSPRT   E            totale      1
+020100111107     O                                         +  1 'BNB :'
+020200111107     O                       totbnb        2   +  1
+020300111107     o                                         +  3 '    ricevuto'
+020400111107     O                       totbnbS       2   +  1
+020500111107     OQSYSPRT   E            totale      1
+020600111107     O                                         +  1 'EMD :'
+020700111107     O                       totemd        2   +  1
+020800111107     o                                         +  3 '    ricevuto'
+020900111107     O                       totemdS       2   +  1
+021000111107     OQSYSPRT   E            totale      1
+021100111107     O                                         +  1 'RCC :'
+021200111107     O                       totrcc        2   +  1
+021300111107     o                                         +  3 '    ricevuto'
+021400111107     O                       totrccS       2   +  1
+021500111107     OQSYSPRT   E            totale      1
+021600111107     O                                         +  1 'ALTRO:'
+021700111107     O                       tot           2   +  1
+021800111107     o                                         +  3 '    ricevuto'
+021900111107     O                       totS          2   +  1
+022000111107     OQSYSPRT   E            totale      1
+022100111107     O                                         +  1 'Scritti:'
+022200111107     O                                         +  1 'GEN:'
+022300111107     O                       totgenW       2   +  1
+022400111107     O                                         +  2 'BAN:'
+022500111107     O                       totbAnW       2   +  1
+022600111107     O                                         +  2 'BNB:'
+022700111107     O                       totbNbW       2   +  1
+022800111107     O                                         +  2 'EMD:'
+022900111107     O                       totEMDW       2   +  1
+023000111107     O                                         +  2 'RCC:'
+023100111107     O                       totRCCW       2   +  1
+023200111107     O                                         +  2 'AlTRO:'
+023300111107     O                       totw          2   +  1

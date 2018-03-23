@@ -1,0 +1,49 @@
+000100970117/*----------------------------------------------------------------------------*/
+000200040804/* TNTE41C - creazione dati tipo in sede                                      */
+000300970117/*----------------------------------------------------------------------------*/
+000400040804             PGM        PARM(&KPJBA)
+000500970117
+000600970117             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700040804             DCL        VAR(&SIM) TYPE(*CHAR) LEN(1)
+000800040806             DCL        VAR(&kcdaz) TYPE(*CHAR) LEN(4)
+000900970117
+001000040804             CHGVAR     VAR(&SIM) VALUE(%SUBSTRING(&KPJBA 300 1))
+001100040806             CHGVAR     VAR(&kcdaz) VALUE(%SUBSTRING(&KPJBA 60 4))
+001200040806
+001300040804 /* se in simulazione duplico file dati tipo in qtemp                         */
+001400041103/*ATT.NE per test EDPPSP ho impostato FROMLIB = *CURLIB quando si  */
+001500041103/* dovrà allineare in buona deve esserci UNITRAGRU */
+001600040804             IF         COND(&SIM *EQ 'S') THEN(DO)
+001700041103             CRTDUPOBJ  OBJ(TEETC*) FROMLIB(UNITRAGRU) +
+001800041103                          OBJTYPE(*FILE) TOLIB(QTEMP)
+001900040804             MONMSG     MSGID(CPF0000) EXEC(DO)
+002000040804             CLRPFM     FILE(QTEMP/TEETC00F)
+002100040804             ENDDO
+002200040804             CRTDUPOBJ  OBJ(TEETS*) FROMLIB(UNITRAGRU) +
+002300040804                          OBJTYPE(*FILE) TOLIB(QTEMP)
+002400040804             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500040804             CLRPFM     FILE(QTEMP/TEETS00F)
+002600040804             ENDDO
+002700040804             CRTDUPOBJ  OBJ(TEETT*) FROMLIB(UNITRAGRU) +
+002800040804                          OBJTYPE(*FILE) TOLIB(QTEMP)
+002900040804             MONMSG     MSGID(CPF0000) EXEC(DO)
+003000040804             CLRPFM     FILE(QTEMP/TEETT00F)
+003100040804             ENDDO
+003200040804             enddo
+003300040806
+003400041029 /* CHIAMA IL PROGRAMMA DI CREAZIONE DATI TIPO te46=sede te47=filiale         */
+003500040806
+003600041029             IF         COND(&KCDAZ *EQ 'TE46') THEN(CALL +
+003700040806                          PGM(TNTE41R) PARM(&KPJBA))
+003800040806
+003900041029             IF         COND(&KCDAZ *EQ 'TE47') THEN(CALL +
+004000040806                          PGM(TNTE45R) PARM(&KPJBA))
+004100040806
+004200040806             DLTF       FILE(QTEMP/TEETC*)
+004300040806             MONMSG     MSGID(CPF0000)
+004400040806             DLTF       FILE(QTEMP/TEETS*)
+004500040806             MONMSG     MSGID(CPF0000)
+004600040806             DLTF       FILE(QTEMP/TEETT*)
+004700040806             MONMSG     MSGID(CPF0000)
+004800971009
+004900970117             ENDPGM

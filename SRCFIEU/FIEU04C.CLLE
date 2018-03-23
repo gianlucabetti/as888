@@ -1,0 +1,86 @@
+000100060609/*?******************************************************************/
+000200060614/*?  RICEVE ED ELABORA STATI   DPD   "STATNEUPF"  da UPLOAD         */
+000300060609/*?  Ricezione in Sede tramite server FTP cliente "0DPD00IN"        */
+000400060609/*?******************************************************************/
+000500060613
+000600060613             PGM        PARM(&TIVLRDS &ESITO &PRMLIT &PRMFIR)
+000700060609
+000800060613             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+000900060613             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001000060613             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001100060613             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001200060623             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001300060613
+001400060623             CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))
+001500060613/* ?-----------------------------------------------------------------  */
+001600060613/* ? Lista di librerie per reperire correttamente i programmi          */
+001700060613/* ?-----------------------------------------------------------------  */
+001800060614
+001900060614             ADDLIBLE   LIB(FILTRAGRU) POSITION(*AFTER UNITRAGRU)
+002000060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002100060614
+002200060614             ADDLIBLE   LIB(FILTRA201) POSITION(*AFTER FILTRAGRU)
+002300060614             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002400060623
+002500060623             IF         COND(&TEST *NE ' ') THEN(DO)
+002600060623             ADDLIBLE   LIB(EDPDPDTST)
+002700060623             MONMSG     MSGID(CPF2103) /* E' GIA IN LISTA LIBRERIE */
+002800060623             ENDDO
+002900161020
+003000161020
+003100161020/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003200161020/* procedura/programma fosse finita in maniera anomala occorre */
+003300161020/* parare il colpo riducendo il male al male minore ossia      */
+003400161020/* con un rollback chiudere le precedenti transazioni fatte a  */
+003500161020/* metà piuttosto che confermarle. E ripartendo da una         */
+003600161020/* situazione pulita.                                          */
+003700161020             STRCMTCTL  LCKLVL(*chg) CMTSCOPE(*JOB)
+003800161020/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+003900161020             MONMSG     MSGID(CPF8351) EXEC(DO)
+004000161020             ENDCMTCTL
+004100161020             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004200161020             STRCMTCTL  LCKLVL(*chg) CMTSCOPE(*JOB)
+004300161020             ENDDO
+004400161020
+004500161020
+004600060613
+004700050413/* ?-----------------------------------------------------------------  */
+004800050413/* ?  Parte Nuova di trascodifica senza uso delle trasmissioni         */
+004900050413/* ?-----------------------------------------------------------------  */
+005000161018             CALL       PGM(FIEU04R) PARM(&ESITO)
+005100060710             MONMSG     MSGID(CPF0000) EXEC(DO)
+005200060710/*           CHGVAR     VAR(&ESITO) VALUE('2')                         */
+005300060623             ENDDO
+005400161019
+005500161019/* ?-----------------------------------------------------------------  */
+005600161019/* ?  Parte Nuova SCAN in ATTESA da fare a parte                       */
+005700161019/* ?-----------------------------------------------------------------  */
+005800180313             CALL       PGM(FIEU04R2) PARM(&ESITO)
+005900161019             MONMSG     MSGID(CPF0000) EXEC(DO)
+006000161019/*           CHGVAR     VAR(&ESITO) VALUE('2')                         */
+006100161019             ENDDO
+006200161020
+006300161020
+006400161020 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006500161020 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006600161020 /* in modo pulito senza lasciare transazioni a metà.            */
+006700161020             ENDCMTCTL
+006800161020
+006900161019
+007000060614             rmvLIBLE   LIB(FILTRAGRU)
+007100060614             MONMSG     MSGID(CPF0000)
+007200060614             rmvLIBLE   LIB(FILTRA201)
+007300060614             MONMSG     MSGID(CPF0000)
+007400060623
+007500060623             IF         COND(&TEST *NE ' ') THEN(DO)
+007600060623             RMVLIBLE   LIB(EDPDPDTST)
+007700060623             MONMSG     MSGID(CPF0000)
+007800060623             ENDDO
+007900060614
+008000060630             RCLRSC     LVL(*CALLER)
+008100060808
+008200060808             RGZPFM     FILE(TIDP500F)
+008300060808             MONMSG     MSGID(CPF0000)
+008400050413/* ?-----------------------------------------------------------------  */
+008500050413FINE:
+008600020911             ENDPGM

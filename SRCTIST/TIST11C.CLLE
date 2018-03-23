@@ -1,0 +1,54 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200000000/* REPORT COMMERCIALE - LANCIO CREAZIONE WFILE COMMERCIALI                    */
+000300000000/*----------------------------------------------------------------------------*/
+000400000000 TIST11C:    PGM        PARM(&KPJBA)
+000500000000
+000600000000/* Dichiarazione variabili */
+000700000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800110127             DCL        VAR(&AS400)   TYPE(*CHAR) LEN(8)
+000900110127 /* Reprisco il sistema AS/400 corrente */
+001000110127             RTVNETA    SYSNAME(&AS400)
+001100110127
+001200000000
+001300000000/* Crea il file del report - Parte 1 */
+001400020409             CALL       PGM(TIST12R) PARM(&KPJBA)
+001500000000
+001600000000/* Crea il file del report - Parte 2 */
+001700020409             CALL       PGM(TIST13R) PARM(&KPJBA)
+001800981118
+001900981118/* Sistema organigramma report */
+002000020408             CALL       PGM(TIST14R) PARM(&KPJBA)
+002100110127
+002200110127/* Crea il file del report - Parte 3 */
+002300110127
+002400110127 /* Se presenti elimino dalla QTEMP gli eventuali file WFRCA* già esistenti */
+002500110127 /* Se presenti elimino dalla QTEMP gli eventuali file WFRPA* già esistenti */
+002600110127             DLTF       FILE(QTEMP/WFRCA*)
+002700110127             MONMSG     MSGID(CPF0000)
+002800110127
+002900110127             DLTF       FILE(QTEMP/WFRPA*)
+003000110127             MONMSG     MSGID(CPF0000)
+003100110127
+003200110127
+003300110127 /* Duplica in QTEMP dei file WFRCA* WFRPA* */
+003400110127             IF         COND(&AS400 *EQ 'AS888') THEN(DO)
+003500110927             CRTDUPOBJ  OBJ(WFRCA*) FROMLIB(UNITRAGRP) OBJTYPE(*FILE) +
+003600110127                          TOLIB(QTEMP)
+003700110927             CRTDUPOBJ  OBJ(WFRPA*) FROMLIB(UNITRAGRP) OBJTYPE(*FILE) +
+003800110127                          TOLIB(QTEMP)
+003900110127             ENDDO
+004000110127             IF         COND(&AS400 *EQ 'SETRAS') THEN(DO)
+004100110927             CRTDUPOBJ  OBJ(WFRCA*) FROMLIB(UNITRAGRU) OBJTYPE(*FILE) +
+004200110127                          TOLIB(QTEMP)
+004300110927             CRTDUPOBJ  OBJ(WFRPA*) FROMLIB(UNITRAGRU) OBJTYPE(*FILE) +
+004400110127                          TOLIB(QTEMP)
+004500110127             ENDDO
+004600110131
+004700110127
+004800110127/* Richiamo programma */
+004900110127
+005000110127             CALL       PGM(TIST24R) PARM(&KPJBA)
+005100110127
+005200981118
+005300000000             RCLRSC     LVL(*CALLER)
+005400000000             ENDPGM

@@ -1,0 +1,2554 @@
+000100000000     H*------------------------------------------------------------------------*
+000200020514     H* SIMULAZIONE DELIVERY E TASSAZIONE - RICHIESTA PARAMETRI                *
+000300000000     H*------------------------------------------------------------------------*
+000400000000     H DECEDIT('0,') DATEDIT(*DMY.)
+000500000000     F*------------------------------------------------------------------------*
+000600000000     F* DATA BASE
+000700000000     F*------------------------------------------------------------------------*
+000800970707     FTISI92D   CF   E             WORKSTN INFDS(DEVDS1)
+000900970707     F                                     SFILE(SI92DVM:MSGULT)
+001000000000     FAZORG01L  IF   E           K DISK
+001100000000     FTABEL00F  IF   E           K DISK
+001200960617     FCNACO00F  IF   E           K DISK
+001300960617     FTNTAM01L  IF   E           K DISK
+001400000000     D*------------------------------------------------------------------------*
+001500000000     D* SHIERE
+001600000000     D*------------------------------------------------------------------------*
+001700000000     D*-------------------
+001800000000     D* SCHIERE A TEMPO DI COMPILAZIONE
+001900000000     D*-------------------
+002000120509     D MSG             S             78    DIM(48) CTDATA PERRCD(1)             *MESSAGGI
+002100000000     D FUN             S             40    DIM(31) CTDATA PERRCD(1)             *FUNZ.VIDEO
+002200000000     D*-------------------
+002300000000     D* SINGOLE SCHIERE ALL'INTERNO DELLA RIGA FUNZIONI
+002400000000     D*-------------------
+002500000000     D FFU             S              6    DIM(31)                              *FUNZIONE
+002600000000     D FDE             S             19    DIM(31)                              *DESCRIZIONE FUNZION
+002700000000     D FAT             S              1    DIM(31)                              *FUNZIONE ATTIVA S/N
+002800000000     D*-------------------
+002900000000     D* TABELLA DESCRIZIONI A VIDEO
+003000000000     D*-------------------
+003100000000     D FUV             S             19    DIM(8)                               *FUNZIONI A VIDEO
+003200000000     D*-------------------
+003300000000     D* TABELLA TASTI FUNZIONALI PREMUTI
+003400000000     D*-------------------
+003500000000     D KEYS            S              1    DIM(40)
+003600960617     D*-------------------
+003700960617     D* CAPOCONTO / SOTTOCONTO DI RITORNO "XCLIR"
+003800960617     D*-------------------
+003900960617     D KSC             S              7  0 DIM(30)
+004000960617     D KSA             S              4    DIM(30)                              *ALFANUMERICO
+004100000000     D*------------------------------------------------------------------------*
+004200000000     D* INPUT
+004300000000     D*------------------------------------------------------------------------*
+004400000000     D*-------------------
+004500000000     D* RIDEFINIZIONE SCHIERA -FUD- (FUNZIONI)
+004600000000     D*-------------------
+004700000000     D DSFUN         E DS
+004800000000     D  FUNRIG                 1     40
+004900000000     D*-------------------
+005000000000     D* PARAMETRI CHIAMATA CL XMSG (GESTIONE MESSAGGI AL PGM)
+005100000000     D*-------------------
+005200000000     D DSMSG         E DS
+005300000000     D*-------------------
+005400000000     D* DS PER GESTIONE TASTI FUNZIONALI
+005500000000     D*-------------------
+005600000000     D DSKEYS        E DS
+005700000000     D  KEYRIG                 1     40
+005800000000     D*-------------------
+005900000000     D* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+006000000000     D*-------------------
+006100000000     D                SDS
+006200000000     D  USER                 254    263
+006300000000     D*-------------------
+006400000000     D* RIDEFINIZIONE INFDS DEL FILE VIDEO
+006500000000     D*-------------------
+006600000000     D DEVDS1          DS
+006700000000     D  KEY                  369    369
+006800000000     D  CURSOR               370    371
+006900020225     D*-------------------
+007000020225     D* DS DEFINIZIONE TABELLA "NETWORK"
+007100020225     D*-------------------
+007200020225     D DNTW          E DS
+007300020225     D*-------------------
+007400020225     D* DS *PGM REPIMEMTO TARIFFE DI CARTELLO
+007500020225     D*-------------------
+007600020225     D TRUL27DS      E DS
+007700110922     D*-------------------
+007800110922     D* DS PER TRUL73R - CONTROLLO LIMITI per tipo servizio
+007900110922     D*-------------------
+008000110922     D trul73ds      E DS
+008100000000     D*------------------
+008200000000     D* DS CONTROLLO DATE (8)
+008300000000     D*------------------
+008400000000     D WLBDA8          DS                  INZ
+008500000000     D  G08DAT                 1      8  0
+008600000000     D  G08INV                 9     16  0
+008700000000     D  G08ERR                17     17
+008800000000     D  G08TGI                18     22  0
+008900000000     D*------------------
+009000000000     D* DS DATA (8)
+009100000000     D*------------------
+009200000000     D                 DS
+009300000000     D  GIOR                   1      2  0
+009400000000     D  MESE                   3      4  0
+009500000000     D  ANNO                   5      8  0
+009600981214     D  DATA                   1      8  0
+009700090506     d
+009800090506     D DSta01        E DS
+009900120509     D og143         E DS
+010000120509
+010100120509     D ds3idp        E DS
+010200000000     D*------------------
+010300000000     D* DS NAZIONI
+010400000000     D*------------------
+010500000000     D DS15          E DS
+010600050413     D*------------------
+010700050413     D* DS consegne particolari
+010800050413     D*------------------
+010900050413     D DS1P          E DS
+011000000000     D*------------------
+011100000000     D* DS TIPI SERVIZIO
+011200000000     D DS5E          E DS
+011300110623     D*------------------
+011400110623     D* DS TIPI inoltro
+011500110623     D DS9A          E DS
+011600970704     D*-------------------
+011700970704     D* DS VALUTE
+011800970704     D*-------------------
+011900970704     D DSCV          E DS
+012000010823     D DSCW          E DS
+012100970704     D*-------------------
+012200970704     D* DS TIPI INCASSO C/ASSEGNO
+012300970704     D*-------------------
+012400970704     D DS1A          E DS
+012500970704     D*------------------
+012600970704     D* DS "XCLIR" - INTERROGAZIONE CLIENTI
+012700970704     D*------------------
+012800970704     D DSXC          E DS                  EXTNAME(XCLIRDS)
+012900970704     D*---
+013000970704     D                 DS
+013100970704     D  DSKSN                  1      4P 0
+013200970704     D  DSKSA                  1      4
+013300970704     D*------------------
+013400970704     D* DS "TISI00R" - INTERROGAZIONE ARCHIVI CAPPARIO
+013500970704     D*------------------
+013600970704     D DSSI00        E DS                  EXTNAME(TISI00DS)
+013700000000     D*------------------
+013800970704     D* DS "TISI95R" CONTROLLA CAP
+013900000000     D*------------------
+014000970704     D DSSI95        E DS                  EXTNAME(TISI95DS)
+014100090615     D fnlv13ds      E DS
+014200090615     d
+014300090615     D tisi97ds      E DS
+014400090616     D dcppflo       E DS
+014500970704     D*-------------------
+014600970704     D* DS DI PROCEDURA
+014700970704     D*-------------------
+014800970707     D DSSI92        E DS                  EXTNAME(TISI92DS) INZ
+014900970704     D*-------------------
+015000970704     D* ARCHITETTURA
+015100970704     D*-------------------
+015200970704     D KPJBA         E DS
+015300020225     D*-------------------
+015400020225     D* VARIABILI DI WRK
+015500020225     D*-------------------
+015600020225     D DATA_EUR        S               D   DATFMT(*eur)
+015700020925     D*------------
+015800020925     D* DS REPERIMENTO DATI UTENTE
+015900020925     D*------------
+016000020925     D TIBS34DS      E DS                                                       *Profili utente
+016100020925     D DDATIUTE      E DS                                                       *Dati utente
+016200020925     D AZUTEDS       E DS                  extname(AZUTE00F)                    *Utenti
+016300100406     d* Controllo abilitazioni utente
+016400100406     d tntaa1ds      e ds
+016500020925     D*------------
+016600020925     D* DS CONTROLLO/SCELTA TABELLE
+016700020925     D*------------
+016800020925     D TIBS02DS      E DS                                                       *Ricerca tabella
+016900090429     D*-------------------
+017000090429     D* PASSO IN SCELTA COD TARIFFA DI TARIFFA/OFFERTA - TNTA36R -
+017100090429     D PARAM4          DS
+017200090429     D  PA4COD                 6     12  0
+017300090429     D  PA4CTR                13     15
+017400090429     D  PA4FLG                16     16
+017500090429     D  PA4VPR                17     17
+017600090429     D  PA4CCC                18     21  0
+017700090429     D  PA4DCV                22     36
+017800090429     d  pa4prg                37     39
+017900090429     d  pa4dtr                40     47
+018000020925     D*------------------
+018100020925     D* SCHIERA X LINEEE CONSENTITE
+018200020925     D*------------------
+018300020925     D L1              S              3    DIM(250)
+018400030320
+018500030403     d wflg            s              1    Inz
+018600090429     d forzaPA         s              1    Inz
+018700090429     d forzaBLO        s              1    Inz
+018800090506     d forzaIE         s              1    Inz
+018900090616     d forzaCapUti     s              1    Inz
+019000040301     d p26vol          s              8  3
+019100050413     d wtcx            s                   like(v1ctc1)
+019200050413     d wdtcx           s                   like(v1dtc1)
+019300090618     d svtbluni        s                   like(tbluni)
+019400090616     d savksc          s                   like(v1cksc) inz
+019500090616     d savctr          s                   like(v1cctr) inz
+019600090616     d savtpo          s                   like(v1ctpo) inz
+019700090616     d savntw          s                   like(v1cntw) inz
+019800090616     d savcas          s                   like(v1ccas) inz
+019900090618     d savcad          s                   like(v1ccad) inz
+020000090618     d savnar          s                   like(v1cnar) inz
+020100110923     d wncl_pre        s                   like(v1cncl) inz
+020200110923     d wpes_pre        s                   like(v1cpkb) inz
+020300110923     d wvol_pre        s                   like(v1cvlf) inz
+020400110923     d savtsp          s                   like(v1ctsp) inz
+020500120608     d savpkb          s                   like(v1cpkb) inz
+020600030320
+020700000000     C*------------------------------------------------------------------------*
+020800000000     C* MAIN LINE
+020900000000     C*------------------------------------------------------------------------*
+021000000000     C*
+021100000000     C* CICLO FINO A CHE:
+021200000000DO  1C     $FINE         DOUEQ     '1'
+021300000000     C*
+021400000000     C                   MOVEL     '0'           $ERR                           *FLAG ERRORE
+021500000000     C*
+021600000000     C* CONTROLLA GESTIONE VIDEO
+021700000000IF  2C     $GES          IFEQ      'V1'
+021800000000     C                   EXSR      GESV1                                        *PARAMETRI
+021900000000E   2C                   ENDIF
+022000000000     C*
+022100000000E   1C                   ENDDO
+022200000000     C* FINE PGM
+022300960729     C                   EXSR      CHIUDI                                       *CHIUDE FILE
+022400000000     C                   SETON                                        LR
+022500000000     C*------------------------------------------------------------------------*
+022600000000     C* CHIUDI  - CHIUDE EVENTUALI PGM CON USCITA RETURN
+022700000000     C*------------------------------------------------------------------------*
+022800000000     C     CHIUDI        BEGSR
+022900970704     C* TISI95R
+023000970704     C                   CLEAR                   DSSI95
+023100970704     C                   MOVEL     'C'           I95TLA                         'C'=CHIUDI
+023200970704     C                   CALL      'TISI95R'                            99
+023300970704     C                   PARM                    DSSI95
+023400100406     C*
+023500100406     C                   clear                   tntaa1ds
+023600100406     C                   movel     'C'           Itaa1Tla
+023700100406     C                   movel(p)  tntaa1ds      kpjbu
+023800100406     C                   CALL      'TNTAA1C'
+023900100406     C                   PARM                    KPJBA
+024000110922     c*
+024100110922     C                   clear                   trul73ds
+024200110922     C                   movel     'C'           I73tla
+024300110922     C                   CALL      'TRUL73R'
+024400110922     C                   PARM                    trul73ds
+024500100406     c
+024600000000     C*
+024700000000     C                   ENDSR
+024800000000     C*------------------------------------------------------------------------*
+024900000000     C* GESV1 - GESTIONE VIDEO
+025000000000     C*------------------------------------------------------------------------*
+025100000000     C     GESV1         BEGSR
+025200000000     C*
+025300000000IF  1C     $TESVD        IFEQ      '1'                                          *RIEMETTERE TESTATA
+025400000000     C                   EXSR      CARV1                                        *CARICA VIDEO
+025500000000E   1C                   ENDIF
+025600000000     C*
+025700000000IF  1C     MSGULT        IFEQ      *ZEROS                                       *SE CI SONO MESSAGGG
+025800000000     C                   MOVEL     *BLANKS       $MSG                           *EMETTE BLANK
+025900000000     C                   EXSR      CARMSG                                       *CARICA MESSAGGIO
+026000000000E   1C                   ENDIF
+026100000000     C                   EXSR      OUTMSG                                       *EMETTE MESSAGGI
+026200000000     C*
+026300970707     C                   EXFMT     SI92DV1                                      *PARAMETRI
+026400000000     C*
+026500000000     C                   EXSR      CONFUN                                       *CONTROLLA TASTI FUN
+026600000000     C*
+026700000000IF  1C     $ERR          IFEQ      '0'                                          *TASTO ABILITATO
+026800000000SL  2C                   SELECT
+026900000000     C     KEY           WHENEQ    ENTER
+027000000000     C                   EXSR      ENTV1                                        *GEST.ENTER VIDEO V1
+027100000000     C     KEY           WHENEQ    F6
+027200000000     C                   EXSR      F06GES                                       *GEST.F6 (LANCIO)
+027300030320     C     KEY           WHENEQ    F11
+027400040301     C                   EXSR      F11GES                                       *GEST.F11(Volume)
+027500000000     C                   OTHER
+027600000000     C                   EXSR      FUNSTD                                       *GEST.TASTI STANDARD
+027700000000E   2C                   ENDSL
+027800000000E   1C                   ENDIF
+027900000000     C*
+028000000000     C                   ENDSR
+028100000000     C*------------------------------------------------------------------------*
+028200000000     C* CARV1 - CARICA VIDEO
+028300000000     C*------------------------------------------------------------------------*
+028400000000     C     CARV1         BEGSR
+028500000000     C*
+028600000000     C                   MOVEL     'V1'          $GES                           *GESTIONE ATTUALE
+028700000000     C*
+028800000000     C                   EXSR      CARFUN                                       *CARICA FUNZIONI
+028900000000     C                   EXSR      OUTFUN                                       *EMETTE FUNZIONI
+029000000000     C*
+029100970707     C                   WRITE     SI92DVT                                      *TESTATA
+029200970707     C                   WRITE     SI92DVF                                      *FUNZIONI
+029300000000     C*
+029400000000     C                   ENDSR
+029500000000     C*------------------------------------------------------------------------*
+029600000000     C* ENTV1 - GESTIONE TASTO ENTER VIDEO
+029700000000     C*------------------------------------------------------------------------*
+029800000000     C     ENTV1         BEGSR
+029900000000     C*
+030000000000     C* CONTROLLA I CAMPI IMMESSI
+030100000000     C                   EXSR      DECODI                                       *CONTROLLO CAMPI
+030200000000     C*
+030300000000     C                   ENDSR
+030400000000     C*------------------------------------------------------------------------*
+030500000000     C* F06GES - GEST. TASTO FUNZ. F06 ==> CONFERMA LANCIO
+030600000000     C*------------------------------------------------------------------------*
+030700000000     C     F06GES        BEGSR
+030800000000     C*
+030900000000     C* CONTROLLA I CAMPI IMMESSI
+031000000000     C                   EXSR      DECODI                                       *CONTROLLO CAMPI
+031100000000     C*
+031200000000     C* NON CI SONO ERRORI
+031300000000IF  1C     $ERR          IFEQ      '0'
+031400000000     C*
+031500000000     C* LANCIA PROGRAMMA
+031600001115     C                   CLEAR                   DSSI92
+031700000000     C                   MOVEL     '0'           D92F03
+031800000000     C                   MOVEL     '0'           D92F12
+031900000000     C                   MOVEL     '0'           D92ERR
+032000000000     C                   MOVEL     *BLANKS       D92MSG
+032100000000     C                   Z-ADD     DSPV1C        D92DSP
+032200000000     C                   MOVEL     V1CLNP        D92LNP
+032300000000     C                   MOVEL     V1CNAR        D92NAR
+032400000000     C                   MOVEL     V1CCAD        D92CAD
+032500970704     C                   MOVEL     V1CLOD        D92LOD
+032600000000     C                   MOVEL     V1CTSP        D92TSP
+032700000000     C                   MOVEL     V1CISO        D92ISO
+032800980116     C                   MOVEL     V1CFFD        D92FFD
+032900000919     C                   MOVEL     V1CFDN        D92FDN
+033000980703     C                   MOVEL     V1CTPO        D92TPO
+033100980703     C                   MOVEL     V1CNZM        D92NZM
+033200980703     C                   MOVEL     V1CCAM        D92CAM
+033300980703     C                   MOVEL     V1CLOM        D92LOM
+033400960528     C                   Z-ADD     V1CNCL        D92NCL
+033500960528     C                   Z-ADD     V1CPKB        D92PKB
+033600960528     C                   Z-ADD     V1CVLF        D92VLF
+033700960617     C                   MOVEL     V1CKSC        D92KSC
+033800960614     C                   MOVEL     V1CCTR        D92CTR
+033900010822     C                   Z-ADD     V1CCAS        D92CAS
+034000960926     C                   MOVEL     V1CVCA        D92VCA
+034100960926     C                   MOVEL     V1CTIC        D92TIC
+034200010822     C                   Z-ADD     V1CIAS        D92IAS
+034300960926     C                   MOVEL     V1CVAS        D92VAS
+034400050415     C                   Z-ADD     V1Cqft        D92qft
+034500020813     C                   Z-ADD     V1CSCO        D92SCO
+034600021106     C                   MOVEL     V1CDDT        D92DDT
+034700020225     C                   MOVEL     V1CNTW        D92NTW
+034800050413     c                   if        v1ctc1=' ' and v1ctc2<>' '
+034900050413     c                   movel     v1ctc2        d92tc1
+035000050413     c                   else
+035100050413     C                   MOVEL     V1Ctc1        D92tc1
+035200050413     C                   MOVEL     V1Ctc2        D92tc2
+035300050413     c                   endif
+035400110818     c                   movel     v1cemd        d92emd
+035500050413     c
+035600020514     C                   MOVEL     DSSI92        KPJBU
+035700970707     C                   CALL      'TISI93R'
+035800000000     C                   PARM                    KPJBA
+035900970707     C                   MOVEL     KPJBU         DSSI92
+036000970704     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+036100000000     C*
+036200000000     C* RITORNA MESSAGGIO DI ERRORE, LO VISUALIZZA
+036300000000IF  2C     D92ERR        IFNE      '0'                                          *ERRORE
+036400000000     C                   MOVEL     D92ERR        $ERR
+036500000000     C                   MOVEL     D92MSG        $MSG
+036600000000     C                   EXSR      CARMSG
+036700000000X   2C                   ELSE                                                   *NO ERRORE
+036800000000     C*
+036900000000     C* SE RITORNA PREMUTO F3 ESCE DAL PROGRAMMA, SE F12 NO
+037000000000IF  3C     D92F03        IFEQ      '1'
+037100000000     C     D92F12        OREQ      '1'
+037200000000     C                   MOVEL     '1'           $ERR                           *NON VA AVANTI
+037300000000IF  4C     D92F03        IFEQ      '1'
+037400000000     C                   MOVEL     '1'           $F03                           *FINE PGM
+037500000000     C                   MOVEL     '1'           $FINE                          *FINE CICLO
+037600000000E   4C                   ENDIF
+037700000000E   3C                   ENDIF
+037800000000E   2C                   ENDIF
+037900000000     C*
+038000000000E   1C                   ENDIF
+038100030403
+038200030403     c                   Clear                   wflg
+038300000000     C*
+038400000000     C                   ENDSR
+038500030320     C*------------------------------------------------------------------------*
+038600030320     C* F11GES - GEST. TASTO FUNZ. F11 ==> Calcolo volume
+038700030320     C*------------------------------------------------------------------------*
+038800030320     C     F11GES        BEGSR
+038900030320
+039000090429     c                   If        wflg = *Blanks
+039100030403     c                   Clear                   v1cvlf
+039200030403     c                   Eval      wflg = '1'
+039300030403     c                   EndIf
+039400040301
+039500040301     c                   Clear                   p26vol
+039600040301     c                   Call      'TRUL36R'
+039700040301     c                   Parm                    p26vol
+039800030403
+039900040301     C                   Add       p26vol        v1cvlf
+040000040301     c                   Eval      $tesvd = '1'                                 *RIEMETTERE TESTATA
+040100040301
+040200030320     C*
+040300030320     C                   ENDSR
+040400000000     C*------------------------------------------------------------------------*
+040500000000     C* DECODI - CONTROLLA CAMPI E DECODIFICA
+040600000000     C*------------------------------------------------------------------------*
+040700000000     C     DECODI        BEGSR
+040800000000     C*
+040900960528     C                   SETOFF                                       606162          *DELIVERY
+041000000000     C                   SETOFF                                       636465
+041100980116     C                   SETOFF                                       667778
+041200960528     C                   SETOFF                                       676869          *TASSAZIONE
+041300960925     C                   SETOFF                                       707172
+041400960925     C                   SETOFF                                       737475
+041500980703     C                   SETOFF                                       767980
+041600020225     C                   SETOFF                                       818283
+041700050413     C                   SETOFF                                       848586
+041800110817     C                   SETOFF                                       8788
+041900960528     C***
+042000960528     C* SIMULAZIONE DELIVERY
+042100960528     C***
+042200000000     C*--------------------
+042300000000     C* DATA SPEDIZIONE
+042400000000     C*--------------------
+042500000000     C     *LIKE         DEFINE    V1CDSP        DSPV1C
+042600000000IF  1C     $ERR          IFEQ      '0'
+042700000000     C                   Z-ADD     V1CDSP        WDA8
+042800000000     C                   Z-ADD     *ZEROS        DA8W
+042900000000     C                   EXSR      CHKDA8
+043000000000     C                   Z-ADD     DA8W          DSPV1C
+043100000000     C                   Z-ADD     WDA8          V1CDSP
+043200000000IF  2C     $ERR          IFEQ      '1'
+043300000000     C                   MOVEL     MSG(7)        $MSG
+043400000000     C                   EXSR      CARMSG
+043500000000     C                   SETON                                        60
+043600000000E   2C                   ENDIF
+043700000000E   1C                   ENDIF
+043800000000     C*--------------------
+043900000000     C* LINEA DI PARTENZA
+044000000000     C*--------------------
+044100000000IF  1C     $ERR          IFEQ      '0'
+044200000000     C                   MOVEL     V1CLNP        WLNP
+044300970704     C                   MOVEL     *BLANKS       WDLNP
+044400000000     C                   EXSR      CHKLNP
+044500000000     C                   MOVEL     WLNP          V1CLNP
+044600000000     C                   MOVEL     WDLNP         V1DLNP
+044700960704IF  2C     $ERR          IFEQ      '1'
+044800000000     C                   MOVEL     MSG(8)        $MSG
+044900000000     C                   EXSR      CARMSG
+045000000000     C                   SETON                                        61
+045100000000E   2C                   ENDIF
+045200000000E   1C                   ENDIF
+045300000000     C*--------------------
+045400000000     C* NAZIONE
+045500000000     C*--------------------
+045600000000IF  1C     $ERR          IFEQ      '0'
+045700970704     C                   MOVEL     V1CNAR        WNAR
+045800970704     C                   MOVEL     *BLANKS       WDNAR
+045900000000     C                   EXSR      CHKNAR
+046000000000     C                   MOVEL     WNAR          V1CNAR
+046100000000     C                   MOVEL     WDNAR         V1DNAR
+046200000000IF  2C     $ERR          IFEQ      '1'
+046300000000     C                   MOVEL     MSG(10)       $MSG
+046400000000     C                   EXSR      CARMSG
+046500080912     c                   clear                   svtbluni
+046600000000     C                   SETON                                        62
+046700080912     c                   else
+046800080912      * mi salvo i dati della nazione che mi servono dopo
+046900080912     c                   eval      svtbluni = tbluni
+047000000000E   2C                   ENDIF
+047100000000E   1C                   ENDIF
+047200000000     C*--------------------
+047300970704     C* CAP
+047400000000     C*--------------------
+047500000000IF  1C     $ERR          IFEQ      '0'
+047600970714IF  2C     V1CCAD        IFGT      *BLANKS
+047700090615     c                   clear                   tisi97ds
+047800970704     C                   MOVEL     V1CNAR        WNAR
+047900970704     C                   MOVEL     V1CCAD        WCAP
+048000090615     c
+048100970704     C                   EXSR      CHKCAP
+048200970704     C                   MOVEL     WNAR          V1CNAR
+048300970704     C                   MOVEL     WCAP          V1CCAD
+048400970714IF  3C     $ERR          IFEQ      '1'
+048500000000     C                   MOVEL     MSG(11)       $MSG
+048600000000     C                   EXSR      CARMSG
+048700970704     C                   SETON                                        6263
+048800970714E   3C                   ENDIF
+048900970714E   2C                   ENDIF
+049000000000E   1C                   ENDIF
+049100090618IF  4C                   IF        $err='0'   and (v1ccad<>savcad
+049200090618     c                                        or   v1cnar<>savnar)
+049300090618     c                   clear                   forzacaputi
+049400090618     c                   eval      savcad=v1ccad
+049500090618     c                   eval      savnar=v1cnar
+049600090618    4c                   endif
+049700970704     C*--------------------
+049800970704     C* LOCALITA'
+049900970704     C*--------------------
+050000970704IF  1C     $ERR          IFEQ      '0'
+050100970714IF  2C     V1CLOD        IFGT      *BLANKS
+050200970704     C                   MOVEL     V1CNAR        WNAR
+050300970704     C                   MOVEL     V1CCAD        WCAP
+050400970704     C                   MOVEL     V1CLOD        WLOC
+050500970704     C                   EXSR      CHKLOC
+050600970704     C                   MOVEL     WNAR          V1CNAR
+050700970704     C                   MOVEL     WCAP          V1CCAD
+050800970704     C                   MOVEL     WLOC          V1CLOD
+050900970714E   2C                   ENDIF
+051000970704E   1C                   ENDIF
+051100970704     C*--------------------
+051200970714     C* CAP + LOCALITA'
+051300970704     C*--------------------
+051400970714IF  1C     $ERR          IFEQ      '0'
+051500970714IF  2C     V1CCAD        IFEQ      *BLANKS
+051600970714     C                   MOVEL     '1'           $ERR
+051700970714     C                   MOVEL     MSG(11)       $MSG
+051800970714     C                   EXSR      CARMSG
+051900970714     C                   SETON                                        6263
+052000970714E   2C                   ENDIF
+052100970714E   1C                   ENDIF
+052200970704IF  1C     $ERR          IFEQ      '0'
+052300090615     c                   clear                   tisi97ds
+052400970704     C                   MOVEL     V1CNAR        WNAR
+052500970704     C                   MOVEL     V1CCAD        WCAP
+052600970704     C                   MOVEL     V1CLOD        WLOC
+052700970704     C                   EXSR      CHKCLP
+052800970704IF  2C     $ERR          IFEQ      '1'
+052900970704     C                   MOVEL     MSG(14)       $MSG
+053000970704     C                   EXSR      CARMSG
+053100980116     C                   SETON                                        64
+053200970704E   2C                   ENDIF
+053300970704E   1C                   ENDIF
+053400000000     C*--------------------
+053500000000     C* TIPO SERVIZIO
+053600000000     C*--------------------
+053700000000IF  1C     $ERR          IFEQ      '0'
+053800000000     C                   MOVEL     V1CTSP        WTSP
+053900970704     C                   MOVEL     *BLANKS       WDTSP
+054000000000     C                   EXSR      CHKTSP
+054100000000     C                   MOVEL     WTSP          V1CTSP
+054200000000     C                   MOVEL     WDTSP         V1DTSP
+054300000000IF  2C     $ERR          IFEQ      '1'
+054400000000     C                   MOVEL     MSG(9)        $MSG
+054500000000     C                   EXSR      CARMSG
+054600000000     C                   SETON                                        65
+054700000000E   2C                   ENDIF
+054800000000E   1C                   ENDIF
+054900000000     C*--------------------
+055000110623     C* FLAG inoltro
+055100000000     C*--------------------
+055200000000IF  1C     $ERR          IFEQ      '0'
+055300110623     c     v1ciso        andne     *blanks
+055400110623     C                   MOVEL     *BLANKS       V1DISO
+055500110623     C                   MOVEL     V1cISO        WINL
+055600110623     C                   MOVEL     *BLANKS       WDINL
+055700110623     C                   EXSR      CHKINL
+055800110623     C                   MOVEL     WINL          V1cISO
+055900110623     C                   MOVEL     WDINL         V1DISO
+056000110623IF  2C     $err          IFEQ      '1'
+056100110623     C                   SETON                                        66
+056200110623     C                   MOVEL     MSG(12)       $MSG
+056300110623     C                   EXSR      CARMSG
+056400110623X   2C                   ELSE
+056500110623E   2C                   ENDIF
+056600110623E   1C                   ENDIF
+056700980116     C*--------------------
+056800980116     C* FERMO DEPOSITO
+056900980116     C*--------------------
+057000980116IF  1C     $ERR          IFEQ      '0'
+057100980116IF  2C     V1CFFD        IFEQ      'S'
+057200980116     C     V1CFFD        OREQ      'N'
+057300980116X   2C                   ELSE
+057400980116     C                   MOVEL     '1'           $ERR
+057500980116     C                   MOVEL     MSG(15)       $MSG
+057600980116     C                   EXSR      CARMSG
+057700980116     C                   SETON                                        78
+057800980116E   2C                   ENDIF
+057900980116E   1C                   ENDIF
+058000050428     c*
+058100050428     c* Non posso forzare inoltro I o P se fermo deposito='S'
+058200050428IF  1C     $ERR          IFEQ      '0'
+058300050428     c                   if        v1cffd='S' and v1ciso<>' ' and v1ciso<>'C'
+058400050428     C                   MOVEL     '1'           $ERR
+058500050428     C                   MOVEL     MSG(36)       $MSG
+058600050428     C                   EXSR      CARMSG
+058700050428     C                   SETON                                        78
+058800050428E   2C                   ENDIF
+058900050428E   1C                   ENDIF
+059000000919     C*--------------------
+059100000919     C* MERCE A MAGAZZINO
+059200000919     C*--------------------
+059300000919IF  1C     $ERR          IFEQ      '0'
+059400000919IF  2C     V1CFDN        IFEQ      'S'
+059500000919     C     V1CFDN        OREQ      'N'
+059600000919X   2C                   ELSE
+059700000919     C                   MOVEL     '1'           $ERR
+059800000919     C                   MOVEL     MSG(15)       $MSG
+059900000919     C                   EXSR      CARMSG
+060000000919     C                   SETON                                        82
+060100000919E   2C                   ENDIF
+060200000919E   1C                   ENDIF
+060300980703     C*--------------------
+060400980703     C* TIPO PORTO
+060500980703     C*--------------------
+060600980703IF  1C     $ERR          IFEQ      '0'
+060700980703IF  2C     V1CTPO        IFEQ      'F'
+060800980703     C     V1CTPO        OREQ      'A'
+060900980703X   2C                   ELSE
+061000980703     C                   MOVEL     '1'           $ERR
+061100980703     C                   MOVEL     MSG(13)       $MSG
+061200980703     C                   EXSR      CARMSG
+061300980703     C                   SETON                                        77
+061400980703E   2C                   ENDIF
+061500980703E   1C                   ENDIF
+061600090616
+061700090616    1c                   if        $err='0' and v1ctpo<>savtpo
+061800090616     c                   movel     v1ctpo        savtpo
+061900090616     c                   clear                   forzaPA
+062000090616     c                   clear                   forzaCAPuti
+062100090616    1c                   endif
+062200090617     c
+062300090617IF  4C                   IF        $err='0'   and v1ccas<>savcas
+062400090617     c                   clear                   forzacaputi
+062500090617     c                   eval      savcas=v1ccas
+062600090617    4c                   endif
+062700980703     C***
+062800980703     C* DATI MITTENTE OBBLIGATORI, SE PORTO ASSEGNATO
+062900980703     C***
+063000980703IF  1C     $ERR          IFEQ      '0'
+063100980703IF  2C     V1CTPO        IFEQ      'F'                                          *FRANCO
+063200980703IF  3C     V1CNZM        IFNE      *BLANKS
+063300980703     C     V1CCAM        ORNE      *BLANKS
+063400980703     C     V1CLOM        ORNE      *BLANKS
+063500980703     C                   MOVEL     '1'           $ERR
+063600980703     C                   MOVEL     MSG(28)       $MSG
+063700980703     C                   EXSR      CARMSG
+063800980703     C                   SETON                                        798081
+063900980703E   3C                   ENDIF
+064000980703X   2C                   ELSE                                                   *ASSEGNATO
+064100980703     C*--------------------
+064200980703     C* NAZIONE MITTENTE
+064300980703     C*--------------------
+064400980703IF  3C     $ERR          IFEQ      '0'
+064500980703     C                   MOVEL     V1CNZM        WNAR
+064600980703     C                   MOVEL     *BLANKS       WDNAR
+064700980703     C                   EXSR      CHKNAR
+064800980703     C                   MOVEL     WNAR          V1CNZM
+064900980703IF  4C     $ERR          IFEQ      '1'
+065000980703     C                   MOVEL     MSG(10)       $MSG
+065100980703     C                   EXSR      CARMSG
+065200980703     C                   SETON                                        79
+065300980703E   4C                   ENDIF
+065400980703E   3C                   ENDIF
+065500980703     C*--------------------
+065600980703     C* CAP MITTENTE
+065700980703     C*--------------------
+065800980703IF  3C     $ERR          IFEQ      '0'
+065900980703IF  4C     V1CCAM        IFGT      *BLANKS
+066000090615     c                   clear                   tisi97ds
+066100980703     C                   MOVEL     V1CNZM        WNAR
+066200980703     C                   MOVEL     V1CCAM        WCAP
+066300980703     C                   EXSR      CHKCAP
+066400980703     C                   MOVEL     WNAR          V1CNZM
+066500980703     C                   MOVEL     WCAP          V1CCAM
+066600980703IF  5C     $ERR          IFEQ      '1'
+066700980703     C                   MOVEL     MSG(11)       $MSG
+066800980703     C                   EXSR      CARMSG
+066900980703     C                   SETON                                        7980
+067000980703E   5C                   ENDIF
+067100980703E   4C                   ENDIF
+067200980703E   3C                   ENDIF
+067300980703     C*--------------------
+067400980703     C* LOCALITA' MITTENTE
+067500980703     C*--------------------
+067600980703IF  3C     $ERR          IFEQ      '0'
+067700980703IF  4C     V1CLOM        IFGT      *BLANKS
+067800980703     C                   MOVEL     V1CNZM        WNAR
+067900980703     C                   MOVEL     V1CCAM        WCAP
+068000980703     C                   MOVEL     V1CLOM        WLOC
+068100980703     C                   EXSR      CHKLOC
+068200980703     C                   MOVEL     WNAR          V1CNZM
+068300980703     C                   MOVEL     WCAP          V1CCAM
+068400980703     C                   MOVEL     WLOC          V1CLOM
+068500980703E   4C                   ENDIF
+068600980703E   3C                   ENDIF
+068700980703     C*--------------------
+068800980703     C* CAP + LOCALITA' MITTENTE
+068900980703     C*--------------------
+069000980703IF  3C     $ERR          IFEQ      '0'
+069100980703IF  4C     V1CCAM        IFEQ      *BLANKS
+069200980703     C                   MOVEL     '1'           $ERR
+069300980703     C                   MOVEL     MSG(11)       $MSG
+069400980703     C                   EXSR      CARMSG
+069500980703     C                   SETON                                        7980
+069600980703E   4C                   ENDIF
+069700980703E   3C                   ENDIF
+069800980703IF  3C     $ERR          IFEQ      '0'
+069900980703     C                   MOVEL     V1CNZM        WNAR
+070000980703     C                   MOVEL     V1CCAM        WCAP
+070100980703     C                   MOVEL     V1CLOM        WLOC
+070200980703     C                   EXSR      CHKCLP
+070300980703IF  4C     $ERR          IFEQ      '1'
+070400980703     C                   MOVEL     MSG(14)       $MSG
+070500980703     C                   EXSR      CARMSG
+070600980703     C                   SETON                                        81
+070700980703E   4C                   ENDIF
+070800980703E   3C                   ENDIF
+070900980703E   2C                   ENDIF
+071000980703E   1C                   ENDIF
+071100020225     C*--------------------
+071200020225     C* NETWORK
+071300020225     C*--------------------
+071400020225IF  1C     $ERR          IFEQ      '0'
+071500080912     c                   movel     svtbluni      ds15
+071600090615    2C     V1CNAR        IFEQ      *BLANKS
+071700090615    3C     V1CNTW        IFNE      *BLANKS
+071800020225     C                   MOVEL     MSG(16)       $MSG
+071900020225     C                   EXSR      CARMSG
+072000020225     C                   SETON                                        6283
+072100090615    3C                   ENDIF
+072200090618     c                   clear                   Dntw
+072300090618     c                   clear                   v1Dntw
+072400120509     c                   if        savntw<>v1cntw
+072500120509     c                   clear                   forzaIE
+072600120509     c                   clear                   forzaCAPuti
+072700120509     c                   movel     v1cntw        savntw
+072800120509     c                   endif
+072900090506     c
+073000090615   x2C                   ELSE
+073100020225     C                   EXSR      CHKNTW
+073200090615IF  3C     $ERR          IFEQ      '1'
+073300020225     C                   MOVEL     MSG(31)       $MSG
+073400020225     C                   EXSR      CARMSG
+073500020225     C                   SETON                                        83
+073600090615   x3c                   else
+073700090615     c* controllo cappario utilizzi particolari
+073800090615     c                   clear                   tisi97ds
+073900090615     c                   eval      i97ntw=v1cntw
+074000090615     C                   MOVEL     V1CNAR        WNAR
+074100090615     C                   MOVEL     V1CCAD        WCAP
+074200090615     C                   MOVEL     V1CLOD        WLOC
+074300090615     C                   EXSR      CHKCLP
+074400090616     c
+074500090616     c* errore forzabile per cappario utilizzi particolari
+074600090616     c                   if        $err='1' and forzacaputi=' '
+074700090615     C                   MOVEL     o13msg        $MSG
+074800090615     C                   EXSR      CARMSG
+074900090615     C                   SETON                                        83
+075000090616     c                   eval      Forzacaputi='S'
+075100090615E   4C                   ENDIF
+075200090616     c
+075300090615E   3C                   ENDIF
+075400090615    2C                   ENDIF
+075500020225E   1C                   ENDIF
+075600020514     C*--------------------
+075700020514     C* NAZIONE IN RELAZIONE AL NETWORK
+075800020514     C*--------------------
+075900020514IF  1C     $ERR          IFEQ      '0'
+076000020514     C     V1CNAR        IFNE      *BLANKS
+076100020514     C     V1CNTW        ANDNE     *BLANKS
+076200020514     C* CONTROLLO X DPD
+076300020514     C     V1CNTW        IFEQ      'DPD'
+076400020514     C     §15LAD        ANDEQ     *ZEROS
+076500020514     C                   SETON                                        6283
+076600020514     C                   MOVEL     '1'           $ERR
+076700020514     C                   MOVEL     MSG(32)       $MSG
+076800020514     C                   EXSR      CARMSG
+076900020514     C                   ENDIF
+077000020514     C* CONTROLLO X FED-EX
+077100020514     C     V1CNTW        IFEQ      'FED'
+077200020514     C     §15LAF        ANDEQ     *ZEROS
+077300020514     C                   SETON                                        6283
+077400020514     C                   MOVEL     '1'           $ERR
+077500020514     C                   MOVEL     MSG(32)       $MSG
+077600020514     C                   EXSR      CARMSG
+077700020514     C                   ENDIF
+077800020514     C* CONTROLLO X FED-EX
+077900020514     C     V1CNTW        IFEQ      'EEX'
+078000020514     C     §15EEX        ANDNE     'S'
+078100020514     C                   SETON                                        6283
+078200020514     C                   MOVEL     '1'           $ERR
+078300020514     C                   MOVEL     MSG(32)       $MSG
+078400020514     C                   EXSR      CARMSG
+078500020514     C                   ENDIF
+078600020514     C                   ENDIF
+078700020514E   1C                   ENDIF
+078800050413     C*--------------------
+078900050413     C* CONSEGNE PARTICOLARI
+079000050413     C*--------------------
+079100050413IF  1C     $ERR          IFEQ      '0'
+079200050413     C                   MOVEL     V1CTC1        WTCX
+079300050413     C                   MOVEL     *BLANKS       WDTCX
+079400050413     C                   EXSR      CHKtcx
+079500050413     C                   MOVEL     Wtcx          V1Ctc1
+079600050413     C                   MOVEL     WDtcx         V1Dtc1
+079700050413IF  2C     $ERR          IFEQ      '1'
+079800050413     C                   MOVEL     MSG(34)       $MSG
+079900050413     C                   EXSR      CARMSG
+080000050413     C                   SETON                                        86
+080100050413E   2C                   ENDIF
+080200050413E   1C                   ENDIF
+080300050413     c
+080400050413IF  1C     $ERR          IFEQ      '0'
+080500050413     C                   MOVEL     V1CTC2        WTCX
+080600050413     C                   MOVEL     *BLANKS       WDTCX
+080700050413     C                   EXSR      CHKtcx
+080800050413     C                   MOVEL     Wtcx          V1Ctc2
+080900050413     C                   MOVEL     WDtcx         V1Dtc2
+081000050413IF  2C     $ERR          IFEQ      '1'
+081100050413     C                   MOVEL     MSG(34)       $MSG
+081200050413     C                   EXSR      CARMSG
+081300050413     C                   SETON                                        87
+081400050413E   2C                   ENDIF
+081500050413E   1C                   ENDIF
+081600050413     c* Devono essere <>
+081700050413IF  1C     $ERR          IFEQ      '0'
+081800050413     c                   if        v1ctc1 = v1ctc2 and v1ctc1<>' '
+081900050413     c                   eval      $err='1'
+082000050413     C                   MOVEL     MSG(35)       $MSG
+082100050413     C                   EXSR      CARMSG
+082200050413     C                   SETON                                        87
+082300050413E   2C                   ENDIF
+082400050413     c                   endif
+082500960528     C***
+082600960528     C* SIMULAZIONE TASSAZIONE
+082700960528     C***
+082800960729     C* SE I COLLI SONO = 0 NON ESEGUE LA TASSAZIONE
+082900960729     C* SE I COLLI SONO > 0 RICERCA I DATI DI TASSAZIONE
+083000960703     C*--------------------
+083100000919     C* SE IL CLIENTE È VUOTO, IMPOSTA LA TARIFFA DI CARTELLO
+083200960703     C*--------------------
+083300120509 F  1C     $ERR          IFEQ      '0'
+083400020313     C                   MOVEL     V1CKSC        DEPCART           5 0
+083500020313IF  2C                   IF        V1CNCL  <> *ZEROS AND
+083600020313     C                             (V1CKSC  = *ZEROS OR
+083700020313     C                              DEPCART = 88888)
+083800021104     C*
+083900021104     C* REIMPOSTO I DATI RELATIVI ALLA TARIFFA DI CARTELLO SOLO SE NN TRATTASI DI FED-EX
+084000120608     c*  o se cambiato il peso
+084100021104     C                   IF        O27NTW = 'FED' AND V1CNTW = 'FED'
+084200120608     c                             and v1cpkb=savpkb
+084300021104     C                   ELSE
+084400020226     C* 1 VOLTA REPERITO/CONTROLLATO IL NETWORK DETERMINO LA TARIFFA DI CARTELLO
+084500020226     C                   EXSR      CARTAR
+084600120608     c                   move      o27ksc        alfaksc           7
+084700120608     c                   movel     o27ctr        alfactr           3
+084800120608     c**                 if        alfaksc<>v1cksc or alfactr<>v1cctr
+084900120608     c**                 eval      $err='1'
+085000120608     C**                 ENDIF
+085100020225     C                   MOVE      O27KSC        V1CKSC
+085200020226     C                   MOVEL     O27CTR        V1CCTR
+085300120608     C                   MOVEL     V1CCTR        WCTR
+085400120608     C                   EXSR      CHKCTR
+085500020226     C***                MOVEL     *ZEROS        V1CCTR
+085600120608     c                   eval      savpkb=v1cpkb
+085700120608     c
+085800120608     C                   ENDIF
+085900960729E   2C                   ENDIF
+086000960729E   1C                   ENDIF
+086100120509     C*----------------------------
+086200120509     C* COLLI e Peso rispetto a DPD
+086300120509     C*----------------------------
+086400120509 F  1C     $ERR          IFEQ      '0'
+086500120509      * OBBLIGATORIO 1 COLLO
+086600120509     C     §OGNTW        IFEQ      'DPD'
+086700120509     C     v1cntw        oreq      'DPD'
+086800120509     C     V1CNCL        ifne      1
+086900120509     C                   MOVEL     '1'           $ERR
+087000120509     C                   MOVEL     MSG(47)       $MSG
+087100120509     C                   EXSR      CARMSG
+087200120509     C                   SETON                                        67
+087300120509     C                   ENDIF
+087400120509     C                   ENDIF
+087500120509    1C                   ENDIF
+087600120509      * Massimo peso inseribile --> da tabella
+087700120509 F  1C     $ERR          IFEQ      '0'
+087800120514     C                   if        (v1cntw='DPD' or §ogntw='DPD')
+087900120509     c                             and v1cpkb>§3ipkd
+088000120509     C                   MOVEL     '1'           $ERR
+088100120509     C                   MOVEL     MSG(48)       $MSG
+088200120509     c                   eval      $msg = %trim($msg) + ' ' +
+088300120509     c                             %trim(%editc(§3ipkd:'2'))+
+088400120509     c                             ' Kg.'
+088500120509     C                   EXSR      CARMSG
+088600120509     C                   SETON                                        68
+088700120509     C                   ENDIF
+088800120509    1c                   endif
+088900960528     C*--------------------
+089000960528     C* PESO
+089100960528     C*--------------------
+089200960528IF  1C     $ERR          IFEQ      '0'
+089300960729IF  2C     V1CNCL        IFGT      *ZEROS
+089400960729IF  3C     V1CPKB        IFLE      *ZEROS
+089500960528     C                   MOVEL     '1'           $ERR
+089600960528     C                   MOVEL     MSG(18)       $MSG
+089700960528     C                   EXSR      CARMSG
+089800960528     C                   SETON                                        68
+089900960729E   3C                   ENDIF
+090000960729X   2C                   ELSE
+090100960729     C                   Z-ADD     *ZEROS        V1CPKB
+090200960729E   2C                   ENDIF
+090300960528E   1C                   ENDIF
+090400960528     C*--------------------
+090500960528     C* VOLUME
+090600960528     C*--------------------
+090700960528IF  1C     $ERR          IFEQ      '0'
+090800960729IF  2C     V1CNCL        IFGT      *ZEROS
+090900960729IF  3C     V1CVLF        IFLE      *ZEROS
+091000960528     C                   MOVEL     '1'           $ERR
+091100960528     C                   MOVEL     MSG(19)       $MSG
+091200960528     C                   EXSR      CARMSG
+091300960528     C                   SETON                                        69
+091400960729E   2C                   ENDIF
+091500960729X   2C                   ELSE
+091600960729     C                   Z-ADD     *ZEROS        V1CVLF
+091700960528E   2C                   ENDIF
+091800960528E   1C                   ENDIF
+091900110923     C*--------------------
+092000110923     C* Limiti colli/peso/volume
+092100110923     C*--------------------
+092200110923IF  1C     $ERR          IFEQ      '0'
+092300110923     c*
+092400110923     c* campi per la forzatura del messaggio di errore --> pulizia a cambio di tipo servizio
+092500110923     c                   if        v1ctsp<>savtsp
+092600110923     c                   clear                   wncl_pre
+092700110923     c                   clear                   wpes_pre
+092800110923     c                   clear                   wvol_pre
+092900110923     c                   eval      savtsp=v1ctsp
+093000110923     c                   endif
+093100110923     c*
+093200110923     c                   clear                   trul73ds
+093300110923     c                   eval      i73tsp=v1ctsp
+093400110923     c                   eval      i73psk=v1cpkb
+093500110923     c                   eval      i73vmc=v1cvlf
+093600110923     c                   eval      i73ncl=v1cncl
+093700110923     c                   call      'TRUL73R'
+093800110923     c                   parm                    trul73ds
+093900110923     c                   select
+094000110923     c* colli
+094100110927     c                   when      o73fclm='1' and v1cncl<>wncl_pre
+094200110923     C                   MOVEL     '1'           $ERR
+094300110923     c                   eval      $msg=msg(46)
+094400110923     C                   EXSR      CARMSG
+094500110923     c                   seton                                        67
+094600110923     c                   eval      wncl_pre=v1cncl
+094700110923     c* peso kg
+094800110927     c                   when      O73FKGM='1' and v1cpkb<>wpes_pre
+094900110923     C                   MOVEL     '1'           $ERR
+095000110923     c                   eval      $msg=msg(46)
+095100110923     C                   EXSR      CARMSG
+095200110923     c                   seton                                        68
+095300110923     c                   eval      wpes_pre=v1cpkb
+095400110923     c*volume mc
+095500110927     c                   when      O73FMCM='1' and v1cvlf<>wvol_pre
+095600110923     C                   MOVEL     '1'           $ERR
+095700110923     c                   eval      $msg=msg(46)
+095800110923     C                   EXSR      CARMSG
+095900110923     c                   seton                                        69
+096000110923     c                   eval      wvol_pre=v1cvlf
+096100110923     c                   endsl
+096200110923E   1C                   ENDIF
+096300960614     C*--------------------
+096400960614     C* CLIENTE
+096500960614     C*--------------------
+096600960703IF  1C     $ERR          IFEQ      '0'
+096700960729IF  2C     V1CNCL        IFGT      *ZEROS
+096800960614     C                   MOVEL     V1CKSC        WKSC
+096900960614     C                   MOVEL     *BLANKS       WDKSC
+097000960614     C                   EXSR      CHKKSC
+097100960614     C                   MOVEL     WKSC          V1CKSC
+097200960614     C                   MOVEL     WDKSC         V1DKSC
+097300960729IF  3C     $ERR          IFEQ      '1'
+097400960614     C                   MOVEL     MSG(20)       $MSG
+097500960614     C                   EXSR      CARMSG
+097600960614     C                   SETON                                        70
+097700960729E   3C                   ENDIF
+097800960729X   2C                   ELSE
+097900960729     C                   MOVEL     *ZEROS        V1CKSC
+098000960729E   2C                   ENDIF
+098100960703E   1C                   ENDIF
+098200960614     C*--------------------
+098300960614     C* TARIFFA
+098400960614     C*--------------------
+098500960703IF  1C     $ERR          IFEQ      '0'
+098600090429     c
+098700960729IF  2C     V1CNCL        IFGT      *ZEROS
+098800960614     C                   MOVEL     V1CCTR        WCTR
+098900960614     C                   EXSR      CHKCTR
+099000960729IF  3C     $ERR          IFEQ      '1'
+099100960729E   3C                   ENDIF
+099200960729X   2C                   ELSE
+099300960729     C                   MOVEL     *ZEROS        V1CCTR
+099400960729E   2C                   ENDIF
+099500960703E   1C                   ENDIF
+099600010823     C*--------------------
+099700960925     C* C/ASSEGNO
+099800010823     C*--------------------
+099900010823     C*=======
+100000010823     C* DIVISA E/O TIPO INCASSO IMPOSTATI MA MANCA IMPORTO CONTRASSEGNO
+100100010823     C*=======
+100200010823IF  1C     $ERR          IFEQ      '0'
+100300010823IF  2C     V1CVCA        IFNE      *BLANKS
+100400010823     C     V1CTIC        ORNE      *BLANKS
+100500010823IF  3C     V1CCAS        IFEQ      *ZEROS
+100600010823     C                   MOVEL     '1'           $ERR
+100700010823     C                   MOVEL     MSG(24)       $MSG
+100800010823     C                   EXSR      CARMSG
+100900010823     C                   SETON                                        72
+101000010823E   3C                   ENDIF
+101100010823E   2C                   ENDIF
+101200010823E   1C                   ENDIF
+101300010823     C*
+101400010823     C*=======
+101500010823     C* DIVISA
+101600010823     C*=======
+101700010823IF  1C     $ERR          IFEQ      '0'
+101800010823IF  2C     V1CCAS        IFGT      *ZEROS
+101900010823     C                   MOVEL     V1CVCA        WDIV
+102000010823     C                   EXSR      CHKDIV
+102100010823     C                   MOVEL     WDIV          V1CVCA
+102200090616IF  3C     $ERR          IFEQ      '1'
+102300010829     C     V1CVCA        OREQ      *BLANKS
+102400010823     C                   MOVEL     MSG(22)       $MSG
+102500010823     C                   EXSR      CARMSG
+102600010823     C                   SETON                                        73
+102700090616E   3C                   ENDIF
+102800010823     C*=======
+102900010823     C* TIPO INCASSO
+103000010823     C*=======
+103100090616IF  3C     $ERR          IFEQ      '0'
+103200010823     C                   MOVEL     V1CTIC        WTIC
+103300010823     C                   MOVEL     *BLANKS       WUDE
+103400010823     C                   EXSR      CHKTIC
+103500010823     C                   MOVEL     WTIC          V1CTIC
+103600090616IF  4C     $ERR          IFEQ      '1'
+103700010823     C                   MOVEL     MSG(23)       $MSG
+103800010823     C                   EXSR      CARMSG
+103900010823     C                   SETON                                        74
+104000090616E   4C                   ENDIF
+104100090616     c
+104200090617E   3C                   ENDIF
+104300010823E   2C                   ENDIF
+104400960926E   1C                   ENDIF
+104500960926     C*--------------------
+104600960926     C* VALUTA + IMPORTO
+104700960926     C*--------------------
+104800960926IF  1C     $ERR          IFEQ      '0'
+104900960926IF  2C     WFDC          IFNE      'S'
+105000960926     C                   MOVE      V1CCAS        WN33              3 3
+105100960926IF  3C     WN33          IFNE      *ZEROS
+105200960926     C                   MOVEL     '1'           $ERR
+105300960926     C                   MOVEL     MSG(25)       $MSG
+105400960926     C                   EXSR      CARMSG
+105500960926     C                   SETON                                        7273
+105600960926E   3C                   ENDIF
+105700960926E   2C                   ENDIF
+105800960926E   1C                   ENDIF
+105900090617
+106000960926     C*---
+106100960926     C* ASSICURAZIONE
+106200960926     C*---
+106300960926     C*--------------------
+106400960926     C* VALUTA
+106500960926     C*--------------------
+106600010823IF  1C     $ERR          IFEQ      '0'
+106700010823IF  2C     V1CIAS        IFGT      *ZEROS
+106800960926     C                   MOVEL     *BLANKS       WFDC
+106900960926     C                   MOVEL     V1CVAS        WDIV
+107000960926     C                   EXSR      CHKDIV
+107100960926     C                   MOVEL     WDIV          V1CVAS
+107200010829IF  5C     $ERR          IFEQ      '1'
+107300010829     C     V1CVAS        OREQ      *BLANKS
+107400960926     C                   MOVEL     MSG(22)       $MSG
+107500960926     C                   EXSR      CARMSG
+107600960926     C                   SETON                                        76
+107700010829E   5C                   ENDIF
+107800010829E   2C                   ENDIF
+107900010829E   1C                   ENDIF
+108000960926     C*--------------------
+108100960926     C* IMPORTO
+108200960926     C*--------------------
+108300960926IF  1C     $ERR          IFEQ      '0'
+108400960926IF  2C     V1CVAS        IFNE      *BLANKS
+108500960926IF  3C     V1CIAS        IFEQ      *ZEROS
+108600960926     C                   MOVEL     '1'           $ERR
+108700960926     C                   MOVEL     MSG(27)       $MSG
+108800960926     C                   EXSR      CARMSG
+108900960926     C                   SETON                                        75
+109000960926E   3C                   ENDIF
+109100960926E   2C                   ENDIF
+109200960926E   1C                   ENDIF
+109300960926     C*--------------------
+109400960926     C* VALUTA + IMPORTO
+109500960926     C*--------------------
+109600960926IF  1C     $ERR          IFEQ      '0'
+109700960926IF  2C     WFDC          IFNE      'S'
+109800960926     C                   MOVE      V1CIAS        WN33              3 3
+109900960926IF  3C     WN33          IFNE      *ZEROS
+110000960926     C                   MOVEL     '1'           $ERR
+110100960926     C                   MOVEL     MSG(25)       $MSG
+110200960926     C                   EXSR      CARMSG
+110300960926     C                   SETON                                        7576
+110400960926E   3C                   ENDIF
+110500960926E   2C                   ENDIF
+110600960926E   1C                   ENDIF
+110700021106     C*--------------------
+110800021106     C* CONSEGNA DDT
+110900021106     C*--------------------
+111000021106IF  1C     $ERR          IFEQ      '0'
+111100021106IF  2C     V1CDDT        IFEQ      'S'
+111200021106     C     V1CDDT        OREQ      'N'
+111300021106X   2C                   ELSE
+111400021106     C                   MOVEL     '1'           $ERR
+111500021106     C                   MOVEL     MSG(15)       $MSG
+111600021106     C                   EXSR      CARMSG
+111700021106     C                   SETON                                        85
+111800021106E   2C                   ENDIF
+111900021106E   1C                   ENDIF
+112000110817     C*----------------------
+112100110817     C* EMAIL AL DESTINATARIO
+112200110817     C*----------------------
+112300110817IF  1C     $ERR          IFEQ      '0'
+112400110817IF  2C     V1CEMD        IFEQ      'S'
+112500110817     C     V1CEMD        OREQ      'N'
+112501130925     C     V1CEMD        OREQ      'M'
+112600110817X   2C                   ELSE
+112700110817     C                   MOVEL     '1'           $ERR
+112800110817     C                   MOVEL     MSG(15)       $MSG
+112900110817     C                   EXSR      CARMSG
+113000110817     C                   SETON                                        88
+113100110817E   2C                   ENDIF
+113200110817E   1C                   ENDIF
+113300960926     C*
+113400960926     C                   ENDSR
+113500000000     C*------------------------------------------------------------------------*
+113600000000     C* CHKDA8 - CONTROLLA UNA DATA LUNGA 8 (G/M/A) E LA INVERTE (A/M/G)
+113700000000     C*------------------------------------------------------------------------*
+113800000000     C     CHKDA8        BEGSR
+113900000000     C*
+114000000000     C     *LIKE         DEFINE    G08DAT        WDA8
+114100000000     C     *LIKE         DEFINE    G08INV        DA8W
+114200000000     C*
+114300000000     C                   Z-ADD     WDA8          G08DAT
+114400000000     C                   Z-ADD     *ZEROS        G08INV
+114500000000     C                   MOVEL     '0'           G08ERR
+114600000000     C                   CALL      'XSRDA8'
+114700000000     C                   PARM                    WLBDA8
+114800000000     C                   Z-ADD     G08DAT        WDA8
+114900000000IF  1C     G08ERR        IFEQ      '1'
+115000000000     C                   MOVEL     '1'           $ERR
+115100000000X   1C                   ELSE
+115200000000     C                   Z-ADD     G08INV        DA8W
+115300000000E   1C                   ENDIF
+115400000000     C*
+115500000000     C                   ENDSR
+115600000000     C*------------------------------------------------------------------------*
+115700000000     C* CHKLNP - CONTROLLA LA FILIALE
+115800000000     C*------------------------------------------------------------------------*
+115900000000     C     CHKLNP        BEGSR
+116000000000     C*
+116100000000     C     *LIKE         DEFINE    V1CLNP        WLNP
+116200000000     C     *LIKE         DEFINE    V1DLNP        WDLNP
+116300000000     C*
+116400970704     C* RICHIESTO ELENCO
+116500000000     C     '?'           SCAN      WLNP                                   99
+116600000000IF  1C     *IN99         IFEQ      *ON
+116700000000     C                   MOVEL     *BLANKS       §TIP              1
+116800960926     C                   MOVEL     *BLANKS       §FIL              3
+116900960926     C                   MOVE      *BLANKS       §DEC             25
+117000971203     C                   MOVE      *BLANKS       §PRA              3
+117100971203     C                   CALL      'TNSD24R'
+117200960926     C                   PARM                    §FIL
+117300000000     C                   PARM                    §TIP
+117400960926     C                   PARM                    §DEC
+117500971203     C                   PARM                    §PRA
+117600960926     C                   MOVEL     §FIL          WLNP
+117700960926     C                   MOVEL     §DEC          WDLNP
+117800970704     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+117900970704E   1C                   ENDIF
+118000000000     C*
+118100970704     C* SOLO CARATTERI NUMERICI
+118200000000     C                   SETOFF                                       28
+118300000000     C                   TESTN                   WLNP                 28
+118400970704IF  1C     *IN28         IFEQ      *ON                                          DA TESTN E'NUMERO
+118500000000     C                   MOVE      WLNP          W001              1
+118600970704IF  2C     W001          IFLT      '0'                                          *TROVATA UN LETTERA
+118700000000     C                   MOVEL     '1'           $ERR
+118800970704E   2C                   ENDIF
+118900970704X   1C                   ELSE                                                   DA TESTN E'UN NUMERO
+119000000000     C                   MOVEL     '1'           $ERR
+119100970704E   1C                   ENDIF
+119200000000     C*
+119300970704     C* CONTROLLA ESISTENZA CODICE
+119400970704IF  1C     $ERR          IFEQ      '0'
+119500000000     C                   MOVEL     WLNP          KORFIL
+119600120509     c                   clear                   og143
+119700000000     C     KEYORG        CHAIN     AZORG01L                           99
+119800970704IF  2C     *IN99         IFEQ      *OFF
+119900000000     C     ORGFVA        ANDEQ     *BLANKS
+120000000000     C     ORGFAG        ANDNE     'V'
+120100000000     C                   MOVEL     ORGDES        WDLNP
+120200120509     C                   MOVEL     ORGDE3        OG143
+120300970704X   2C                   ELSE
+120400000000     C                   MOVEL     '1'           $ERR
+120500000000     C                   MOVEL     *ALL'*'       WDLNP
+120600970704E   2C                   ENDIF
+120700000000E   1C                   ENDIF
+120800000000     C*
+120900000000     C                   ENDSR
+121000000000     C*------------------------------------------------------------------------*
+121100000000     C* CHKNAR - CONTROLLA LA NAZIONE
+121200000000     C*------------------------------------------------------------------------*
+121300000000     C     CHKNAR        BEGSR
+121400000000     C*
+121500000000     C     *LIKE         DEFINE    V1CNAR        WNAR
+121600000000     C     *LIKE         DEFINE    V1DNAR        WDNAR
+121700000000     C*
+121800970704     C* RICHIESTO ELENCO
+121900000000     C     '?'           SCAN      WNAR                                   99
+122000000000IF  1C     *IN99         IFEQ      *ON
+122100020919     C                   MOVEL     1             §KUT              1 0
+122200000000     C                   MOVEL     '15'          §TAB              2
+122300000000     C                   MOVEL     *BLANKS       §KEY              8
+122400960926     C                   MOVEL     *BLANKS       §DES             30
+122500000000     C                   CALL      'X§TABER'
+122600000000     C                   PARM                    §KUT
+122700000000     C                   PARM                    §TAB
+122800000000     C                   PARM                    §KEY
+122900960926     C                   PARM                    §DES
+123000000000     C                   MOVEL     §KEY          WNAR
+123100960926     C                   MOVEL     §DES          WDNAR
+123200000000     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+123300970704E   1C                   ENDIF
+123400000000     C*
+123500970704     C* CONTROLLA ESISTENZA CODICE
+123600020919     C                   MOVEL     1             KTBKUT
+123700000000     C                   MOVEL     '15'          KTBCOD
+123800000000     C                   MOVEL     *BLANKS       KTBKEY
+123900000000     C                   MOVEL     WNAR          KTBKEY
+124000000000     C     KEYTAB        CHAIN     TABEL00F                           99
+124100970704IF  1C     *IN99         IFEQ      *OFF
+124200000000     C     TBLFLG        ANDEQ     *BLANKS
+124300000000     C                   MOVEL     TBLUNI        DS15
+124400000000     C                   MOVEL     §15DES        WDNAR
+124500970704X   1C                   ELSE
+124600000000     C                   MOVEL     '1'           $ERR
+124700000000     C                   MOVEL     *ALL'*'       WDNAR
+124800000000E   1C                   ENDIF
+124900000000     C*
+125000000000     C                   ENDSR
+125100020225     C*------------------------------------------------------------------------*
+125200020225     C* CHKNTW - CONTROLLA IL NETWORK
+125300020225     C*------------------------------------------------------------------------*
+125400020225     C     CHKNTW        BEGSR
+125500020225     C*
+125600020225     C* RICHIESTO ELENCO
+125700020225     C     '?'           SCAN      V1CNTW                                 99
+125800020225     C* SCELTA VALORE DA TABELLA
+125900020225IF  1C     *IN99         IFEQ      *ON
+126000020925     C                   CLEAR                   TIBS02DS
+126100020225     C                   MOVEL     'NTW'         T02COD
+126200020225     C                   MOVEL     KNSIF         T02SIF
+126300020225     C                   MOVEL     'R'           T02MOD
+126400020225     C                   CALL      'TIBS02R'
+126500020225     C                   PARM                    KPJBA
+126600020925     C                   PARM                    TIBS02DS
+126700020225     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+126800020225     C*
+126900020225     C                   ELSE
+127000020225     C* VERIFICA VALORE IN TABELLA
+127100020925     C                   CLEAR                   TIBS02DS
+127200020225     C                   MOVEL     'NTW'         T02COD
+127300020225     C                   MOVEL     KNSIF         T02SIF
+127400020225     C                   MOVEL     V1CNTW        T02KE1
+127500020225     C                   MOVEL     'C'           T02MOD
+127600020225     C                   CALL      'TIBS02R'
+127700020225     C                   PARM                    KPJBA
+127800020925     C                   PARM                    TIBS02DS
+127900020225E   1C                   ENDIF
+128000020225     C*
+128100020225     C     T02ERR        IFEQ      *BLANKS
+128200020225     C                   MOVEL     T02UNI        DNTW
+128300020226     C                   MOVEL     T02KE1        V1CNTW
+128400020226     C                   MOVEL     §NTWDES       V1DNTW
+128500020225     C     §NTWFIE       IFEQ      'E'
+128600020225     C     T02KE1        OREQ      'DPD'
+128700020225     C                   ELSE
+128800020225     C                   MOVEL     '1'           $ERR
+128900020225     C                   ENDIF
+129000020225     C                   ELSE
+129100020225     C                   MOVEL     '1'           $ERR
+129200020225     C                   ENDIF
+129300090506     c                   if        savntw<>v1cntw
+129400090506     c                   clear                   forzaIE
+129500090616     c                   clear                   forzaCAPuti
+129600090506     c                   movel     v1cntw        savntw
+129700090506     c                   endif
+129800020225     C*
+129900020225     C                   ENDSR
+130000050413     C*------------------------------------------------------------------------*
+130100050413     C* CHKTCx - CONTROLLA consegna particolare
+130200050413     C*------------------------------------------------------------------------*
+130300050413     C     CHKTCx        BEGSR
+130400050413    1C     wtcx          IFNE      ' '
+130500050413     C* RICERCA
+130600050413    2C     wtcx          IFEQ      '?'
+130700050413     C                   MOVEL     1             §KUT              1 0
+130800050413     C                   MOVEL     '1P'          §TAB              2
+130900050413     C                   MOVEL     *BLANKS       §KEY              8
+131000050413     C                   MOVEL     *BLANKS       §DES             30
+131100050413     C                   CALL      'X§TABER'
+131200050413     C                   PARM                    §KUT
+131300050413     C                   PARM                    §TAB
+131400050413     C                   PARM                    §KEY
+131500050413     C                   PARM                    §DES
+131600050413     C                   MOVEL     §KEY          WTcx
+131700050413     C                   MOVEL     §DES          WDTCx
+131800050413     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+131900050413    2C                   END
+132000050413     C* CONTROLLO
+132100050413     C                   MOVEL     1             KTBKUT
+132200050413     C                   MOVEL     '1P'          KTBCOD
+132300050413     C                   MOVEL(P)  WTCx          KTBKEY
+132400050413     C     KEYTAB        CHAIN     TABEL00F                           99
+132500050413IF  2C     *IN99         IFEQ      *OFF
+132600050413     C     TBLFLG        ANDEQ     *BLANKS
+132700050413     C                   MOVEL     tbluni        WDTCx
+132800050413     C                   MOVEL     tbluni        ds1p
+132900050413X   2C                   ELSE
+133000050413     C                   MOVEL     '1'           $ERR
+133100050413     C                   MOVEL     *ALL'*'       WDTCx
+133200050413E   2C                   ENDIF
+133300050413     c* Se non ' utilizzza<bile errore
+133400050413     c                   if        $err='0' and
+133500050413     c                             §1puar=' ' and §1pupr=' '
+133600050413     C                   MOVEL     '1'           $ERR
+133700050413     C                   MOVEL     *ALL'*'       WDTCx
+133800050413     c                   endif
+133900050413E   1C                   ENDIF
+134000050413     c
+134100050413     c                   endsr
+134200000000     C*------------------------------------------------------------------------*
+134300970704     C* CHKCAP - CONTROLLA IL CAP
+134400000000     C*------------------------------------------------------------------------*
+134500000000     C     CHKCAP        BEGSR
+134600000000     C*
+134700000000     C     *LIKE         DEFINE    V1CCAD        WCAP
+134800970704     C*
+134900970704     C* RICHIESTO ELENCO
+135000970704     C                   SETOFF                                           99
+135100970704     C     '?'           SCAN      WCAP                                   99
+135200970704IF  1C     *IN99         IFEQ      *ON
+135300970704     C                   CLEAR                   DSSI00
+135400970704     C                   MOVEL     'C01'         D00OP0
+135500970704     C                   Z-ADD     DSPV1C        D00DRI
+135600970704     C                   CALL      'TISI02R'
+135700000000     C                   PARM                    KPJBA
+135800970704     C                   PARM                    DSSI00
+135900970704IF  2C     D00ERR        IFNE      '1'
+136000970704     C                   MOVEL     D00NAR        WNAR                           *NAZIONE
+136100970704     C                   MOVEL     D00CAP        WCAP                           *CAP
+136200970704E   2C                   ENDIF
+136300000000     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+136400970704E   1C                   ENDIF
+136500970704     C*
+136600970704     C* CONTROLLA ESISTENZA CODICE
+136700090615     C                   CLEAR                   fnlv13ds
+136800090615     C                   CLEAR                   DSSI95
+136900970704     C                   MOVEL     *BLANKS       I95TLA                         *TIPO LANCIO
+137000970704     C                   MOVEL     '3'           I95TCN                         *CONTROLLO
+137100970704     C                   MOVEL     WNAR          I95NAR                         *NAZIONE
+137200120802
+137300120802     c                   if        wnar='IRL'
+137400120802     C                   MOVEL     'EIRE'        I95CAP                         *CAP
+137500120802     c                   else
+137600120802     C                   MOVEL     WCAP          I95CAP                         *CAP
+137700120802     c                   endif
+137800120802     c
+137900970704     C                   Z-ADD     DSPV1C        I95DAT                         *DATA RIFERIMENTO
+138000020225     C                   IF        V1CNTW = 'FED'
+138100020225     C                   MOVEL     'S'           I95FI1
+138200020225     C                   ENDIF
+138300090615     C* ERRORE AFFIDABILITA = 0
+138400090615     C                   MOVEL     ' '           I13AF0
+138500090615     C                   CALL      'FNLV13R'
+138600090615     C                   PARM                    KPJBA
+138700090615     C                   PARM                    fnlv13ds
+138800970704     C                   PARM                    DSSI95
+138900090615     C                   PARM      ' '           flgbac            1
+139000090615     C                   PARM                    tisi97ds
+139100090615     c
+139200970704IF  1C     O95ERR        IFNE      *BLANKS
+139300090615     c     o13err        orne      *blanks
+139400090629     c     o13rop        andeq     *blanks
+139500970704     C                   MOVEL     '1'           $ERR
+139600970704E   1C                   ENDIF
+139700000000     C*
+139800000000     C                   ENDSR
+139900970704     C*------------------------------------------------------------------------*
+140000970704     C* CHKLOC - CONTROLLA LA LOCALITA'
+140100970704     C*------------------------------------------------------------------------*
+140200970704     C     CHKLOC        BEGSR
+140300970704     C*
+140400970704     C     *LIKE         DEFINE    V1CLOD        WLOC
+140500970704     C*
+140600970704     C* RICHIESTO ELENCO
+140700970704     C                   SETOFF                                           99
+140800970704     C     '?'           SCAN      WLOC                                   99
+140900970704IF  1C     *IN99         IFEQ      *ON
+141000970704     C                   CLEAR                   DSSI00
+141100970704     C                   MOVEL     'L01'         D00OP0
+141200970704     C                   MOVEL     WNAR          D00NAR
+141300970704     C                   MOVEL     WCAP          D00CAP
+141400970704     C                   Z-ADD     DSPV1C        D00DRI
+141500970704     C                   CALL      'TISI30R'
+141600970704     C                   PARM                    KPJBA
+141700970704     C                   PARM                    DSSI00
+141800970704IF  2C     D00ERR        IFNE      '1'
+141900970704     C                   MOVEL     D00NAR        WNAR                           *NAZIONE
+142000970704     C                   MOVEL     D00CAP        WCAP                           *CAP
+142100970704     C                   MOVEL     D00LOC        WLOC                           *LOCALITA'
+142200970704E   2C                   ENDIF
+142300970704     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+142400970704E   1C                   ENDIF
+142500970704     C*
+142600970704     C                   ENDSR
+142700970704     C*------------------------------------------------------------------------*
+142800970704     C* CHKCLP - CONTROLLA CAP + LOCALITA' + PROVINCIA
+142900970704     C*------------------------------------------------------------------------*
+143000970704     C     CHKCLP        BEGSR
+143100970704     C*
+143200970704     C* CONTROLLA ESISTENZA CODICE
+143300970704     C                   CLEAR                   DSSI95
+143400970704     C                   MOVEL     *BLANKS       I95TLA                         *TIPO LANCIO
+143500970704     C                   MOVEL     '3'           I95TCN                         *CONTROLLO
+143600970704     C                   MOVEL     WNAR          I95NAR                         *NAZIONE
+143700120802     c                   if        wnar='IRL'
+143800120802     C                   MOVEL     'EIRE'        I95CAP                         *CAP
+143900120802     c                   else
+144000120802     C                   MOVEL     WCAP          I95CAP                         *CAP
+144100120802     c                   endif
+144200970704     C                   MOVEL     WLOC          I95LOC                         *LOCALITA'
+144300970704     C                   Z-ADD     DSPV1C        I95DAT                         *DATA RIFERIMENTO
+144400020225     C                   IF        V1CNTW = 'FED'
+144500020225     C                   MOVEL     'S'           I95FI1
+144600020225     C                   ENDIF
+144700090615     c* C/ASS
+144800090615     C     v1ccas        IFgt      0
+144900090615     C                   MOVEL     'S'           I95FCA
+145000090615     C                   ENDIF
+145100090615     c* Tipo bolla
+145200090615     C                   MOVEL     v1ctpo        I95TPO
+145300090615     C* ERRORE AFFIDABILITA = 0
+145400090615     C                   MOVEL     ' '           I13AF0
+145500090615     C                   CALL      'FNLV13R'
+145600090615     C                   PARM                    KPJBA
+145700090615     C                   PARM                    fnlv13ds
+145800090615     C                   PARM                    DSSI95
+145900090615     C                   PARM      ' '           flgbac            1
+146000090615     C                   PARM                    tisi97ds
+146100090615     c
+146200090615     c* Errore per il network
+146300090616    0c                   if        i97ntw<>*blanks
+146400090617     c                   movel     o97flo        dcppflo
+146500090617     c
+146600090617     c                   select
+146700090617    1c                   when      forzacaputi<>' '
+146800090617     c
+146900090617    1c                   when      o13err<>*blanks
+147000090615     C                   MOVEL     '1'           $ERR
+147100090618    2c                   if        §cppall=' 'and
+147200090618     c                             §cpppas<>' ' and §cppcas='S'
+147300090618     c                   eval      o13msg=msg(44)
+147400090618    2c                   endif
+147500090618     c
+147600090617   x1c                   other
+147700090617    2c                   if        §cpppas='O' and v1ctpo='A'
+147800090616     C                   MOVEL     '1'           $ERR
+147900090617     c                   eval      o13msg=msg(45)
+148000090618     c                   else
+148100090618     c                   eval       o13msg=%trim(o13msg)+':ENTR forza'
+148200090616    2c                   endif
+148300090617    1c                   endsl
+148400090616     c
+148500090615   x0c                   else
+148600090615     c
+148700090615     c* Errore sulla località
+148800970704IF  1C     O95ERR        IFNE      *BLANKS
+148900120802     c
+149000090615IF   C     o13err        orNE      *BLANKS
+149100090629     c     o13rop        andeq     *blanks
+149200120802
+149300970714     C     O95LIA        OREQ      '1'
+149400120802     c
+149500120802     C     WLOC          ORNE      *BLANKS
+149600120802     C     Wnar          andeq     *BLANKS
+149700970714     C     O95LID        ANDLT     '3'
+149800970704     C                   MOVEL     '1'           $ERR
+149900970704E   1C                   ENDIF
+150000090615E   0C                   ENDIF
+150100970704     C*
+150200970704     C                   ENDSR
+150300000000     C*------------------------------------------------------------------------*
+150400000000     C* CHKTSP - CONTROLLA IL TIPO SERVIZIO
+150500000000     C*------------------------------------------------------------------------*
+150600000000     C     CHKTSP        BEGSR
+150700000000     C*
+150800000000     C     *LIKE         DEFINE    V1CTSP        WTSP
+150900000000     C     *LIKE         DEFINE    V1DTSP        WDTSP
+151000000000     C*
+151100970704     C* RICHIESTO ELENCO
+151200000000     C     '?'           SCAN      WTSP                                   99
+151300000000IF  1C     *IN99         IFEQ      *ON
+151400020919     C                   MOVEL     1             §KUT              1 0
+151500000000     C                   MOVEL     '5E'          §TAB              2
+151600000000     C                   MOVEL     *BLANKS       §KEY              8
+151700960926     C                   MOVEL     *BLANKS       §DES             30
+151800000000     C                   CALL      'X§TABER'
+151900000000     C                   PARM                    §KUT
+152000000000     C                   PARM                    §TAB
+152100000000     C                   PARM                    §KEY
+152200960926     C                   PARM                    §DES
+152300000000     C                   MOVEL     §KEY          WTSP
+152400960926     C                   MOVEL     §DES          WDTSP
+152500000000     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+152600970704E   1C                   ENDIF
+152700000000     C*
+152800970704     C* CONTROLLA ESISTENZA CODICE
+152900020919     C                   MOVEL     1             KTBKUT
+153000000000     C                   MOVEL     '5E'          KTBCOD
+153100000000     C                   MOVEL     *BLANKS       KTBKEY
+153200000000     C                   MOVEL     WTSP          KTBKEY
+153300000000     C     KEYTAB        CHAIN     TABEL00F                           99
+153400970704IF  1C     *IN99         IFEQ      *OFF
+153500000000     C     TBLFLG        ANDEQ     *BLANKS
+153600000000     C                   MOVEL     TBLUNI        DS5E
+153700000000     C                   MOVEL     §5EDES        WDTSP
+153800970704X   1C                   ELSE
+153900000000     C                   MOVEL     '1'           $ERR
+154000000000     C                   MOVEL     *ALL'*'       WDTSP
+154100000000E   1C                   ENDIF
+154200000000     C*
+154300960703     C                   ENDSR
+154400960926     C*------------------------------------------------------------------------*
+154500960926     C* CHKDIV - CONTROLLA LA DIVISA
+154600960926     C*------------------------------------------------------------------------*
+154700960926     C     CHKDIV        BEGSR
+154800960926     C*
+154900960926     C     *LIKE         DEFINE    V1CVCA        WDIV
+155000960926     C     *LIKE         DEFINE    §CVFDC        WFDC
+155100010823     C     *LIKE         DEFINE    §CVDVA        WDVA
+155200010823     C     *LIKE         DEFINE    §CWDLC        WDLC
+155300960926     C*
+155400970704     C* RICHIESTA ELENCO
+155500960926     C     '?'           SCAN      WDIV                                   99
+155600960926IF  1C     *IN99         IFEQ      *ON
+155700020919     C                   Z-ADD     1             §KUT
+155800960926     C                   MOVEL     'CV'          §COD
+155900960926     C                   MOVEL     *BLANKS       §KEY
+156000960926     C                   MOVEL     *BLANKS       §DES
+156100960926     C                   CALL      'X§TABER'
+156200960926     C                   PARM                    §KUT              1 0
+156300960926     C                   PARM                    §COD              2
+156400960926     C                   PARM                    §KEY              8
+156500960926     C                   PARM                    §DES             30
+156600960926     C                   MOVEL     §KEY          WDIV
+156700960926     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+156800960926E   1C                   ENDIF
+156900960926     C*
+157000960926     C* CONTROLLA ESISTENZA CODICE
+157100020919     C                   Z-ADD     1             KTBKUT
+157200960926     C                   MOVEL     'CV'          KTBCOD
+157300960926     C                   MOVEL(P)  WDIV          KTBKEY
+157400960926     C     KEYTAB        CHAIN     TABEL00F                           99
+157500960926IF  1C     *IN99         IFEQ      *ON
+157600960926     C     TBLFLG        OREQ      '*'
+157700960926     C                   MOVEL     '1'           $ERR
+157800960926X   1C                   ELSE
+157900960926     C                   MOVEL     TBLUNI        DSCV
+158000960926     C                   MOVEL     §CVFDC        WFDC                           *DIVISA CON IMP.DEC.
+158100010823     C                   MOVEL     §CVDVA        WDVA                           *S=SI DIVISA ALTERNA
+158200010823     C                   ENDIF
+158300010823     C*
+158400010823     C* REPERISCO GIA' QUI L'ESTENSIONE DELLA TABELLA CV
+158500020919     C                   Z-ADD     1             KTBKUT
+158600010823     C                   MOVEL     'CW'          KTBCOD
+158700010823     C                   MOVEL(P)  WDIV          KTBKEY
+158800010823     C     KEYTAB        CHAIN     TABEL00F                           99
+158900010823IF  1C     *IN99         IFEQ      *ON
+159000010823     C     TBLFLG        OREQ      '*'
+159100010823     C                   MOVEL     '1'           $ERR
+159200010823X   1C                   ELSE
+159300010823     C                   MOVEL     TBLUNI        DSCW
+159400010823     C                   Z-ADD     §CWDLC        WDLC                           *DATA LIMITE CONTABI
+159500010823     C                   ENDIF
+159600960926     C*
+159700960926     C                   ENDSR
+159800960926     C*------------------------------------------------------------------------*
+159900960926     C* CHKTIC - CONTROLLA IL TIPO INCASSO C/ASSEGNO
+160000960926     C*------------------------------------------------------------------------*
+160100960926     C     CHKTIC        BEGSR
+160200960926     C*
+160300960926     C     *LIKE         DEFINE    V1CTIC        WTIC
+160400960926     C     *LIKE         DEFINE    §1AUDE        WUDE
+160500010823     C     *LIKE         DEFINE    §1ACDL        WCDL
+160600960926     C*
+160700970704     C* RICHIESTA ELENCO
+160800960926     C     '?'           SCAN      WTIC                                   99
+160900960926IF  1C     *IN99         IFEQ      *ON
+161000020919     C                   Z-ADD     1             §KUT
+161100960926     C                   MOVEL     '1A'          §COD
+161200960926     C                   MOVEL     *BLANKS       §KEY
+161300960926     C                   MOVEL     *BLANKS       §DES
+161400960926     C                   CALL      'X§TABER'
+161500960926     C                   PARM                    §KUT              1 0
+161600960926     C                   PARM                    §COD              2
+161700960926     C                   PARM                    §KEY              8
+161800960926     C                   PARM                    §DES             30
+161900960926     C                   MOVEL     §KEY          WTIC
+162000960926     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+162100960926E   1C                   ENDIF
+162200960926     C*
+162300010823     C* CONTROLLA ESISTENZA CODICE
+162400020919     C                   Z-ADD     1             KTBKUT
+162500960926     C                   MOVEL     '1A'          KTBCOD
+162600960926     C                   MOVEL(P)  WTIC          KTBKEY
+162700960926     C     KEYTAB        CHAIN     TABEL00F                           99
+162800960926IF  1C     *IN99         IFEQ      *ON
+162900960926     C     TBLFLG        OREQ      '*'
+163000960926     C                   MOVEL     '1'           $ERR
+163100960926X   1C                   ELSE
+163200960926     C                   MOVEL     TBLUNI        DS1A
+163300960926     C                   MOVEL     §1AUDE        WUDE                           *ABILITATO X DIV EST
+163400010823     C                   MOVEL     §1ACDL        WCDL                           *FLAG DATA LIMITE CO
+163500960926E   1C                   ENDIF
+163600010823     C*
+163700010823     C* CONTROLLO INSERIBILITA' TIPO INCASSO RISPETTO ALLA DIVISA
+163800010823     C     $ERR          IFEQ      '0'
+163900010823     C     WDVA          IFNE      'S'
+164000010823     C     WUDE          ANDNE     'S'
+164100010823     C                   MOVEL     '1'           $ERR
+164200010823     C                   MOVEL     MSG(26)       $MSG
+164300010823     C                   EXSR      CARMSG
+164400010823     C                   SETON                                        7374
+164500010823     C                   ELSE
+164600010823     C     WCDL          IFEQ      'S'
+164700010823     C     DSPV1C        IFGT      WDLC
+164800010823     C                   MOVEL     '1'           $ERR
+164900010823     C                   MOVEL     MSG(30)       $MSG
+165000010823     C                   EXSR      CARMSG
+165100010823     C                   SETON                                        7374
+165200010823     C                   ENDIF
+165300010823     C                   ENDIF
+165400010823     C                   ENDIF
+165500010823     C                   ENDIF
+165600960926     C*
+165700960926     C                   ENDSR
+165800960614     C*------------------------------------------------------------------------*
+165900960614     C* CHKKSC - CONTROLLA CODICE CLIENTE
+166000960614     C*------------------------------------------------------------------------*
+166100960614     C     CHKKSC        BEGSR
+166200960614     C*
+166300960614     C     *LIKE         DEFINE    V1CKSC        WKSC
+166400960614     C     *LIKE         DEFINE    V1DKSC        WDKSC
+166500960614     C*
+166600970704     C* RICHIESTO ELENCO
+166700960614     C     '?'           SCAN      WKSC                                   28
+166800960614IF  1C     *IN28         IFEQ      *ON
+166900960614     C                   CLEAR                   DSXC
+167000020919     C                   Z-ADD     DUTKCI        DXCCAP                         *CAPOCONTO
+167100110616     c                   eval      dxcaut = otaa1cabi
+167200960614     C                   CALL      'XCLIR'
+167300960614     C                   PARM                    DSXC
+167400960614     C* SCOMPATTA
+167500960614     C                   MOVEA     DXCKSC        KSA                            *DS INPUT -> SCH ALF
+167600960614DO  2C     1             DO        30            J                 4 0
+167700960614     C                   MOVE      KSA(J)        DSKSA                          *SCH ALF -> DS ALF
+167800960614     C                   Z-ADD     DSKSN         KSC(J)                         *DS NUM -> SCH NUM
+167900960614E   2C                   ENDDO
+168000960614     C                   MOVEL     KSC(1)        WKSC
+168100960614     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+168200960614E   1C                   ENDIF
+168300960614     C*
+168400970704     C* CONTROLLA ESISTENZA CODICE
+168500960617IF  1C     WKSC          IFLE      *ZEROS                                       *SOLO VALORE NUMERIC
+168600960614     C                   MOVEL     '1'           $ERR
+168700960614X   1C                   ELSE
+168800020919     C                   Z-ADD     1             KACKUT
+168900020919     C                   Z-ADD     DUTKCI        KACKCC
+169000960614     C                   MOVEL     WKSC          KACKSC
+169100960614     C     KEYACO        CHAIN     CNACO00F                           99
+169200960614IF  2C     *IN99         IFEQ      *ON                                          *CLIENTE INESISTENTE
+169300960614     C     ACOFLG        ORNE      *BLANKS                                      *ANNULLATO
+169400960614     C                   MOVEL     '1'           $ERR
+169500960618X   2C                   ELSE                                                   *CLIENTE VALIDO
+169600960618     C*
+169700960618     C* CLIENTE DI FILIALE IN GESTIONE
+169800020925     C                   MOVEL     WKSC          W003              3            *FIL+XXXX
+169900020925IF  3C     W003          IFNE      '888'
+170000100406     C**                 SETOFF                                           28
+170100100406     C**   W003          LOOKUP    L1                                     28
+170200100406IF  4C**   *IN28         IFEQ      *OFF
+170300100406     C**                 MOVEL     '1'           $ERR
+170400100406E   3C**                 ENDIF
+170500100406     c                   clear                   tntaa1ds
+170600100406     c                   eval      itaa1caut='§utegtc'
+170700100406     c                   eval      itaa1ksc=%int(wksc)
+170800100406     c                   clear                   kpjbu
+170900100406     c                   movel     tntaa1ds      kpjbu
+171000100406     c                   call      'TNTAA1C'
+171100100406     c                   parm                    kpjba
+171200100406     c                   movel     kpjbu         tntaa1ds
+171300100406     c
+171400100406    4c                   if        otaa1fabi='N'
+171500100406     C                   MOVEL     '1'           $ERR
+171600100406E   4C                   ENDIF
+171700100406E   3C                   ENDIF
+171800960618     C*
+171900960614E   2C                   ENDIF
+172000960614E   1C                   ENDIF
+172100960614     C*
+172200960614     C                   ENDSR
+172300110623     C*------------------------------------------------------------------------*
+172400110623     C* CHKINL - CONTROLLA L'INOLTRO
+172500110623     C*------------------------------------------------------------------------*
+172600110623     C     CHKINL        BEGSR
+172700110623     C*
+172800110623     C     *LIKE         DEFINE    V1cISO        WINL
+172900110623     C     *LIKE         DEFINE    V1DISO        WDINL
+173000110623     C*
+173100110623     C* RICHIESTO ELENCO
+173200110623     C                   SETOFF                                           28
+173300110623     C     '?'           SCAN      WINL                                   28
+173400110623IF  1C     *IN28         IFEQ      *ON
+173500110623     C                   Z-ADD     1             §KUT              1 0
+173600110623     C                   MOVEL     '9A'          §COD              2
+173700110623     C                   MOVEL     *BLANKS       §KEY              8
+173800110623     C                   MOVEL     *BLANKS       §DES             30
+173900110623     C                   CALL      'X§TABER'
+174000110623     C                   PARM                    §KUT
+174100110623     C                   PARM                    §COD
+174200110623     C                   PARM                    §KEY
+174300110623     C                   PARM                    §DES
+174400110623     C                   MOVEL     §KEY          WINL
+174500110623     C                   MOVEL     §DES          WDINL
+174600110623     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+174700110623E   1C                   ENDIF
+174800110623     C*
+174900110623     C* CONTROLLA ESISTENZA CODICE
+175000110623     C                   MOVEL     1             KTBKUT
+175100110623     C                   MOVEL     '9A'          KTBCOD
+175200110623     C                   MOVEL(P)  WINL          KTBKEY
+175300110623     C     KEYTAB        CHAIN     TABEL00F                           99
+175400110623IF  1C     *IN99         IFEQ      *OFF
+175500110623     C     TBLFLG        ANDEQ     *BLANKS
+175600110623     C                   MOVEL     TBLUNI        DS9A
+175700110623     C                   MOVEL     §9ADES        WDINL
+175800110623X   1C                   ELSE
+175900110623     C                   MOVEL     '1'           $ERR
+176000110623E   1C                   ENDIF
+176100110627     c*
+176200110627     c                   if        $err='0' and §9autiop='N'
+176300110627     C                   MOVEL     '1'           $ERR
+176400110627E   1C                   ENDIF
+176500110623     C*
+176600110623     C                   ENDSR
+176700960614     C*------------------------------------------------------------------------*
+176800960614     C* CHKCTR - CONTROLLA TARIFFA CLIENTE
+176900960614     C*------------------------------------------------------------------------*
+177000960614     C     CHKCTR        BEGSR
+177100960614     C*
+177200960614     C     *LIKE         DEFINE    V1CCTR        WCTR
+177300960617     C                   MOVEL     '0'           $CTR              1            *VALIDITA' TARIFFA
+177400090429     C* RICERCA
+177500090429     C     '?'           SCAN      v1cctr                                 30
+177600090429     C*
+177700090429    0C     *IN30         IFEQ      *ON
+177800090429     C                   CLEAR                   PARAM4
+177900090429     C                   MOVEL     v1cksc        PA4COD
+178000090429     C                   Z-ADD     dutkci        PA4CCC
+178100090429     c                   movel     '2'           pa4vpr
+178200090429     c                   move      dspv1c        pa4dtr
+178300090429     C                   MOVEL     PARAM4        KPJBU
+178400090429     C                   CALL      'TNTA36R'
+178500090429     C                   PARM                    KPJBA
+178600090429     c* per riemettere videata
+178700090429     C                   MOVEL     '1'           $ERR
+178800090429     C                   MOVEL     '1'           $TESVD                         *RIEMETTERE TESTATA
+178900090429     C                   MOVEL     KPJBU         PARAM4
+179000090429     c                   seton                                        71
+179100090429     c
+179200090429     C* SE TROVATO METTO QUELLO SCELTO
+179300090429    1C     PA4CTR        IFNE      *BLANKS
+179400090429     C                   MOVE      PA4CTR        v1cctr
+179500090429     C                   MOVE      PA4dcv        v1dctr
+179600090429   X1C                   ELSE
+179700090429     c* Se non scelto lo abblanco
+179800090429     C                   MOVEL     *blanks       v1cctr
+179900090429     C                   MOVEL     *blanks       v1dctr
+180000090429    1C                   END
+180100090429     C*
+180200090429   x0c                   else
+180300960617     C*
+180400970704     C* CONTROLLA ESISTENZA CODICE
+180500960618IF  1C     WCTR          IFLT      *ZEROS                                       *SOLO VALORE NUMERIC
+180600960617     C                   MOVEL     '1'           $ERR
+180700090429     C                   MOVEL     MSG(21)       $MSG
+180800090429     C                   EXSR      CARMSG
+180900090429     C                   SETON                                        71
+181000090429     c
+181100960617X   1C                   ELSE
+181200981214     C                   MOVEL     V1CKSC        KAMKSC
+181300981214     C                   MOVEL     WCTR          KAMCTR
+181400981214     C                   Z-ADD     999           KAMPRG
+181500960617     C     KEYTAM        SETLL     TNTAM01L
+181600960617     C     KE2TAM        READPE    TNTAM01L                               99
+181700960617DO  2C     *IN99         DOWEQ     *OFF
+181800960617IF  3C     TAMATB        IFEQ      *BLANKS
+181900130108     c     tamddt        andle     dspv1c
+182000130108     c
+182100960703     C*---       TAMDST    ANDGEDSPV1C
+182200021106     C*
+182300021107     C* SE VUOTO IMPOSTO IL CAMPO A VIDEO RELATIVO AL DDT CON QUANTO PRESENTE SULLA TARIFFA
+182400021107     C                   IF        V1CDDT = *BLANKS
+182500021106     C                   MOVEL     TAMBAM        V1CDDT
+182600021107     C                   ENDIF
+182700960617     C                   MOVEL     '1'           $CTR
+182800090429     c                   movel     tamdcv        v1dctr
+182900960617     C                   SETON                                            99
+183000960617E   3C                   ENDIF
+183100960617     C  N99KE2TAM        READPE    TNTAM01L                               99
+183200960617E   2C                   ENDDO
+183300960617IF  2C     $CTR          IFEQ      '0'
+183400960617     C                   MOVEL     '1'           $ERR
+183500090429     C                   MOVEL     MSG(21)       $MSG
+183600090429     C                   EXSR      CARMSG
+183700090429     C                   SETON                                        71
+183800090429   x2c                   else
+183900090429     c
+184000090429    3c                   if        (v1cksc<>savksc)  or (v1cctr<>savctr)
+184100090429     c                   movel     v1cksc        savksc
+184200090429     c                   movel     v1cctr        savctr
+184300090429     c                   clear                   forzaBLO
+184400090429     c                   clear                   forzaPA
+184500090506     c                   clear                   forzaIE
+184600090429    3c                   endif
+184700090429     c
+184800090429     c* Altrimenti controllo se tariffa corretta
+184900090615    3c  n71              if        tambap='B'   and forzaBLO=' '
+185000090429     C                   MOVEL     '1'           forzaBLO
+185100090429     C                   MOVEL     '1'           $ERR
+185200090429     C                   MOVEL     MSG(37)       $MSG
+185300090429     C                   EXSR      CARMSG
+185400090429     C                   SETON                                        71
+185500090429    3c                   endif
+185600090615    3c  n71              if        tambap='A' and v1ctpo='F' and forzaPA=' '
+185700090429     C                   MOVEL     '1'           forzaPA
+185800090429     C                   MOVEL     '1'           $ERR
+185900090429     C                   MOVEL     MSG(39)       $MSG
+186000090429     C                   EXSR      CARMSG
+186100090429     C                   SETON                                        71
+186200090429    3c                   endif
+186300090615    3c  n71              if        tambap='P' and v1ctpo='A'  and forzaPA=' '
+186400090429     C                   MOVEL     '1'           forzaPA
+186500090429     C                   MOVEL     '1'           $ERR
+186600090429     C                   MOVEL     MSG(38)       $MSG
+186700090429     C                   EXSR      CARMSG
+186800090429     C                   SETON                                        71
+186900090429    3c                   endif
+187000090506     c* Tariffa italia/estero
+187100090506     c                   movel     tamflo        dsta01
+187200090615     c  n71              if        §tadpd='S' and  v1cntw<>'DPD' and forzaIE=' '
+187300120509     c                             and §ogntw<>'DPD'
+187400090506     C                   MOVEL     '1'           forzaIE
+187500090506     C                   MOVEL     '1'           $ERR
+187600090506     C                   MOVEL     MSG(40)       $MSG
+187700090506     C                   EXSR      CARMSG
+187800090506     C                   SETON                                        71
+187900090506    3c                   endif
+188000090615     c  n71              if        §taFED='S' and  v1cntw<>'FED' and forzaIE=' '
+188100090506     C                   MOVEL     '1'           forzaIE
+188200090506     C                   MOVEL     '1'           $ERR
+188300090506     C                   MOVEL     MSG(40)       $MSG
+188400090506     C                   EXSR      CARMSG
+188500090506     C                   SETON                                        71
+188600090506    3c                   endif
+188700090615     c  n71              if        §taFED=' ' and v1cntw<>'EEX' and forzaIE=' '
+188800120509     c                             and tamfie='E' and §ogntw<>'EEX'
+188900090506     C                   MOVEL     '1'           forzaIE
+189000090506     C                   MOVEL     '1'           $ERR
+189100090506     C                   MOVEL     MSG(40)       $MSG
+189200090506     C                   EXSR      CARMSG
+189300090506     C                   SETON                                        71
+189400090506    3c                   endif
+189500120509     c  n71              if        §tadpd=' '  and forzaIE=' '
+189600120509     c                             and tamfie='I' and (v1cntw<>'   ' or
+189700120509     c                              §ogntw='EEX' or §ogntw='FED' or
+189800120509     c                              §ogntw='DPD')
+189900090506     C                   MOVEL     '1'           forzaIE
+190000090506     C                   MOVEL     '1'           $ERR
+190100090506     C                   MOVEL     MSG(40)       $MSG
+190200090506     C                   EXSR      CARMSG
+190300090506     C                   SETON                                        71
+190400090506    3c                   endif
+190500090429     c
+190600960617E   2C                   ENDIF
+190700960617E   1C                   ENDIF
+190800090429E   0C                   ENDIF
+190900960614     C*
+191000960614     C                   ENDSR
+191100000000     C*------------------------------------------------------------------------*
+191200000000     C* IMPVID  - IMPOSTAZIONI INIZIALI VIDEO
+191300000000     C*------------------------------------------------------------------------*
+191400000000     C     IMPVID        BEGSR
+191500960528     C***
+191600960528     C* SIMULAZIONE DELIVERY
+191700960528     C***
+191800000103     C                   TIME                    N14              14 0          *ORA (6)+ DATA (8)
+191900000103     C                   MOVE      N14           V1CDSP                         *DATA SPEDIZIONE
+192000020919     C                   MOVEL     DUTPOU        V1CLNP                         *FILIALE PARTENZA
+192100960704     C                   MOVEL     *BLANKS       V1CNAR                         *NAZIONE
+192200960704     C                   MOVEL     'C'           V1CTSP                         *TIPO SERVIZIO
+192300971126     C                   MOVEL     'F'           V1CTPO                         *TIPO PORTO
+192400980116     C                   MOVEL     'N'           V1CFFD                         *FERMO DEPOSITO
+192500000919     C                   MOVEL     'N'           V1CFDN                         *MERCE A MAGAZZINO
+192600110817     C                   MOVEL     'N'           V1Cemd                         *email al destinat.
+192700050413     c                   clear                   v1ctc1
+192800050413     c                   clear                   v1ctc2
+192900960528     C***
+193000960528     C* SIMULAZIONE TASSAZIONE
+193100960528     C***
+193200960729     C                   Z-ADD     1             V1CNCL                         *COLLI
+193300960528     C                   Z-ADD     1             V1CPKB                         *PESO
+193400020313     C                   Z-ADD     0,005         V1CVLF                         *VOLUME
+193500960703     C                   MOVEL     *ZEROS        V1CKSC                         *CODICE CLIENTE
+193600960703     C                   MOVEL     *BLANKS       V1DKSC                         *DESCRIZIONE CLIENTE
+193700960703     C                   MOVEL     *ZEROS        V1CCTR                         *CODICE TARIFFA
+193800960926     C                   Z-ADD     *ZEROS        V1CCAS                         *IMPORTO C/ASSEGNO
+193900960926     C                   MOVEL     *BLANKS       V1CVCA                         *VALUTA  C/ASSEGNO
+194000960926     C                   MOVEL     *BLANKS       V1CTIC                         *INCASSO C/ASSEGNO
+194100960926     C                   Z-ADD     *ZEROS        V1CIAS                         *IMPORTO ASSICURAZ.N
+194200960926     C                   MOVEL     *BLANKS       V1CVAS                         *VALUTA  ASSICURAZ.N
+194300020813     C                   Z-ADD     *ZEROS        V1CSCO                         *% DI SCONTO
+194400050415     C                   Z-ADD     *ZEROS        V1Cqft                         *% DI SCONTO
+194500090616     c                   clear                   forzaCAPuti
+194600090616     c                   clear                   forzaIE
+194700090616     c                   clear                   forzaBLO
+194800090616     c                   clear                   forzaPA
+194900120608     c                   clear                   savpkb
+195000120608     c                   clear                   savtsp
+195100960704     C*
+195200001121     C* RICHIAMO LA ROUTINE SEGUENTE PER GESTIRE LE CHIAMATE DALLA PROCEDURA "ORM"
+195300001115     C                   EXSR      TSTPAR
+195400001115     C*
+195500000000     C                   ENDSR
+195600001115     C*------------------------------------------------------------------------*
+195700001115     C* TSTPAR - TEST DEI PARAMETRI IN INGRESSO PER VALORIZZAZIONE VIDEO DA CHIAMANTE
+195800001115     C*------------------------------------------------------------------------*
+195900001115     C     TSTPAR        BEGSR
+196000001115     C*
+196100001115     C* VERIFICA PARAMETRI
+196200001116     C                   MOVEL     KPJBU         DSSI92
+196300001116     C     D92OP0        IFEQ      'ORM'
+196400001115     C     D92LNP        IFGT      *ZEROS
+196500001115     C                   MOVEL     D92LNP        V1CLNP
+196600001115     C                   ENDIF
+196700001115     C     D92NAR        IFGT      *BLANKS
+196800001115     C                   MOVEL     D92NAR        V1CNAR
+196900001115     C                   ENDIF
+197000001115     C     D92CAD        IFGT      *BLANKS
+197100001115     C                   MOVEL     D92CAD        V1CCAD
+197200001115     C                   ENDIF
+197300001115     C     D92LOD        IFGT      *BLANKS
+197400001115     C                   MOVEL     D92LOD        V1CLOD
+197500001115     C                   ENDIF
+197600001115     C     D92FFD        IFGT      *BLANKS
+197700001115     C                   MOVEL     D92FFD        V1CFFD
+197800001115     C                   ENDIF
+197900001115     C     D92NCL        IFGT      *ZEROS
+198000001115     C                   Z-ADD     D92NCL        V1CNCL
+198100001115     C                   ENDIF
+198200001115     C     D92PKB        IFGT      *ZEROS
+198300001115     C                   Z-ADD     D92PKB        V1CPKB
+198400001115     C                   ENDIF
+198500001115     C     D92VLF        IFGT      *ZEROS
+198600001115     C                   Z-ADD     D92VLF        V1CVLF
+198700001115     C                   ENDIF
+198800001115     C     D92KSC        IFGT      *ZEROS
+198900001115     C                   MOVEL     D92KSC        V1CKSC
+199000001115     C                   ENDIF
+199100001115     C     D92CTR        IFGT      *ZEROS
+199200001115     C                   MOVEL     D92CTR        V1CCTR
+199300001115     C                   ENDIF
+199400001115     C                   ENDIF
+199500001115     C*
+199600001115     C                   ENDSR
+199700020225     C*------------------------------------------------------------------------*
+199800020225     C* CARTAR - CARICA LE TARIFFE DI CARTELLO
+199900020225     C*------------------------------------------------------------------------*
+200000020225     C     CARTAR        BEGSR
+200100020225     C*---
+200200020225     C* TARIFFA DI CARTELLO
+200300020225     C*---
+200400020225     C                   CLEAR                   TRUL27DS
+200500020225     C                   EVAL      I27TLA = 'L'
+200600020226     C                   EVAL      I27NTW = V1CNTW
+200700020225     C                   MOVEL     V1CLNP        I27LNP
+200800020225     C                   EVAL      I27TSP = V1CTSP
+200900020225     C                   EVAL      I27DTA = DATEU
+201000120608     c                   eval      i27pkg=v1cpkb
+201100020225     C                   CALL      'TRUL27R'
+201200020225     C                   PARM                    TRUL27DS
+201300020225     C*
+201400020225     C                   ENDSR
+201500020925     C*--------------------------------------------------------------------------------------------*
+201600020925     C* REPERISCE DATI UTENTE
+201700020925     C*--------------------------------------------------------------------------------------------*
+201800020925     C     REPDATIUTE    BEGSR
+201900020925     C*
+202000020925     C* REimposta le variabili di lavoro
+202100020925     C                   CLEAR                   TIBS34DS
+202200020925     C                   CLEAR                   AZUTEDS
+202300020925     C                   CLEAR                   DDATIUTE
+202400100406     C**                 CLEAR                   WABI              2
+202500100406     C**                 CLEAR                   DLAT
+202600020925     C*
+202700020925     C* Reperisce i dati del profilo in ingresso
+202800020925     C     *DTAARA       DEFINE    §AZUTE        AZUTEDS
+202900020925     C     *DTAARA       DEFINE    §DATIUTE      DDATIUTE
+203000020925     C                   IN(E)     *DTAARA
+203100020925     C                   IF        %Error                                       *NO errori
+203200020925     C                   EVAL      I34TLA = 'L'
+203300020925     C                   CALL      'TIBS34R'
+203400020925     C                   PARM                    TIBS34DS
+203500020925     C                   IN        *DTAARA
+203600020925     C                   ENDIF
+203700100406     c
+203800100406     c* Richiamo solo per avere codice di abilitazione
+203900100406     c                   clear                   tntaa1ds
+204000100406     c                   eval      itaa1caut='§utegtc'
+204100100406     c                   clear                   kpjbu
+204200100406     c                   movel     tntaa1ds      kpjbu
+204300100406     c                   call      'TNTAA1C'
+204400100406     c                   parm                    kpjba
+204500100406     c                   movel     kpjbu         tntaa1ds
+204600100406     c
+204700100406     c* Utente non abilitato alla gestione tariffe
+204800100406     c                   if        otaa1fabi='N'
+204900100406     C                   EVAL      $ERR  = '1'
+205000100406     C                   EVAL      $FINE = '1'
+205100100406     C                   ENDIF
+205200020925     C*
+205300020925     C* Se ci sono degli errori sull'abilitazione utente, esce
+205400100406     C**                 SELECT
+205500100406     C**                 WHEN      DUTERR = 'E'
+205600100406     C**                 EVAL      $ERR  = '1'
+205700100406     C**                 EVAL      $FINE = '1'
+205800020925     C*
+205900020925     C* NON siamo in sede (filiale remota o filiale locale)
+206000020925     C* --> se 1° livello, abilitazioni al terminal
+206100020925     C*     se 2° livello, abilitazioni al punto operativo
+206200100406     C**                 WHEN      UTEAUT = *blanks
+206300100406     C**                 IF        DUTLPO = '1'                                 *1° LIVELLO
+206400100406     C**                 EVAL      WABI   = 'TP'
+206500100406     C**                 ENDIF
+206600100406     C**                 IF        DUTLPO = '2'                                 *2° LIVELLO
+206700100406     C**                 EVAL      WABI   = 'PO'
+206800100406     C**                 ENDIF
+206900020925     C*
+207000020925     C* siamo in sede
+207100020925     C* --> carica le abilitazioni proprie dell'appicazione "statistiche", o in mancanza
+207200020925     C*     carica le abilitazioni proprie del profilo
+207300100406     C**                 OTHER
+207400100406     C**                 MOVEL     UTEFAF        DUTE01
+207500100406     C**                 IF        §UTEIST <> *blanks                           *esiste specifica
+207600100406     C**                 EVAL      WABI = §UTEIST
+207700100406     C**                 ELSE                                                   *NON esiste specific
+207800100406     C**                 EVAL      WABI = UTEAUT
+207900100406     C**                 ENDIF
+208000100406     C**                 ENDSL
+208100020925     C*
+208200020925     C* controlla se l'abilitazione dell'utente -anche quella forzata- sia valida
+208300100406     C**                 CLEAR                   TIBS02DS
+208400100406     C*+                 MOVEL     'C'           T02MOD
+208500100406     C**                 MOVEL     KNSIF         T02SIF
+208600100406     C**                 MOVEL     'LAT'         T02COD
+208700100406     C**                 MOVEL(P)  WABI          T02KE1
+208800100406     C**                 EVAL      DEPKPJBU = KPJBU                             *deposito KPJ
+208900100406     C**                 CALL      'TIBS02R'
+209000100406     C**                 PARM                    KPJBA
+209100100406     C**                 PARM                    TIBS02DS
+209200100406     c**
+209300100406     C**                 EVAL      KPJBU = DEPKPJBU                             *RIdeposito KPJ
+209400100406     C**                 IF        T02ERR = *blanks
+209500100406     C**                 MOVEL     T02UNI        DLAT
+209600100406     C**                 ENDIF
+209700100406     C**                 IF        T02ERR <> *blanks OR
+209800100406     C**                           §LATABI = 'S'
+209900100406     C**                 EVAL      $ERR  = '1'
+210000100406     C**                 EVAL      $FINE = '1'
+210100100406     C**                 ENDIF
+210200100406     C**
+210300100406     C**Reperisce i P.O. gestibili dall'utente
+210400100406     C**                 IF        $ERR <> '1'                                  *NO errori
+210500100406     C**                 CLEAR                   TRUL31DS
+210600100406     C**                 EVAL      I31ABI   = WABI
+210700100406     C**                 EVAL      I31CDI   = DUTDIS
+210800100406     C**                 EVAL      I31CAR   = DUTARE
+210900100406     C**                 EVAL      I31CPO   = DUTPOU
+211000100406     C**                 EVAL      DEPKPJBU = KPJBU                             *deposito KPJ
+211100100406     C**                 CALL      'TRUL31R'
+211200100406     C**                 PARM                    KPJBA
+211300100406     C**                 PARM                    TRUL31DS
+211400100406     C**                 EVAL      KPJBU = DEPKPJBU                             *RIdeposito KPJ
+211500100406if  2C**                 IF        O31POG > *zeros
+211600100406     C**                 MOVEA     O31POG        L1
+211700100406x   2C**                 ELSE
+211800100406     C**                 EVAL      $ERR  = '1'
+211900100406     C**                 EVAL      $FINE = '1'
+212000100406e   2C**                 ENDIF
+212100100406e   1C**                 ENDIF
+212200020925     C*
+212300020925     C* ASSEGNO LA DESCRIZIONE DEL S.I./UTENTE AL CAMPO DEL VIDEO
+212400020925     C                   MOVEL(P)  RSUT          DSFIRS           20
+212500020925     C*
+212600020925     C                   ENDSR
+212700000000     C*------------------------------------------------------------------------*
+212800000000     C* *INZSR  - ROUTINE INIZIALE
+212900000000     C*------------------------------------------------------------------------*
+213000000000     C     *INZSR        BEGSR
+213100000000     C*--------------------
+213200000000     C* RICEVIMENTO PARAMETRI
+213300000000     C*--------------------
+213400000000     C     *ENTRY        PLIST
+213500000000     C                   PARM                    KPJBA
+213600000000     C*--------------------
+213700000000     C* CAMPI RIFERITI AL DATA BASE
+213800000000     C*--------------------
+213900000000     C     *LIKE         DEFINE    ORGFIL        KORFIL                         *AZORG01L
+214000000000     C     *LIKE         DEFINE    TBLKUT        KTBKUT                         *TABEL00F
+214100000000     C     *LIKE         DEFINE    TBLCOD        KTBCOD
+214200000000     C     *LIKE         DEFINE    TBLKEY        KTBKEY
+214300960614     C     *LIKE         DEFINE    ACOKUT        KACKUT                         *CNACO00F
+214400960614     C     *LIKE         DEFINE    ACOKCC        KACKCC
+214500960614     C     *LIKE         DEFINE    ACOKSC        KACKSC
+214600981214     C     *LIKE         DEFINE    TAMKSC        KAMKSC                         *TNTAM00F
+214700981214     C     *LIKE         DEFINE    TAMCTR        KAMCTR
+214800981214     C     *LIKE         DEFINE    TAMPRG        KAMPRG
+214900020925     C     *LIKE         DEFINE    KPJBU         DEPKPJBU                       *depositi
+215000000000     C*--------------------
+215100000000     C* CHIAVI DI LETTURA
+215200000000     C*--------------------
+215300000000     C* LETTURA AZORG01L - COMPLETA
+215400000000     C     KEYORG        KLIST
+215500000000     C                   KFLD                    KORFIL
+215600000000     C* LETTURA TABEL00F - COMPLETA
+215700000000     C     KEYTAB        KLIST
+215800000000     C                   KFLD                    KTBKUT
+215900000000     C                   KFLD                    KTBCOD
+216000000000     C                   KFLD                    KTBKEY
+216100960614     C* LETTURA CNACO00F - COMPLETA
+216200960614     C     KEYACO        KLIST
+216300960614     C                   KFLD                    KACKUT
+216400960614     C                   KFLD                    KACKCC
+216500960614     C                   KFLD                    KACKSC
+216600960617     C* LETTURA TNTAM01L - COMPLETA
+216700960617     C     KEYTAM        KLIST
+216800981214     C                   KFLD                    KAMKSC
+216900981214     C                   KFLD                    KAMCTR
+217000981214     C                   KFLD                    KAMPRG
+217100960617     C* LETTURA TNTAM01L - PARZIALE
+217200960617     C     KE2TAM        KLIST
+217300981214     C                   KFLD                    KAMKSC
+217400981214     C                   KFLD                    KAMCTR
+217500020225     C*
+217600020225     C* DATA CORRENTE
+217700020225     C                   TIME                    WTIME            14 0          ORA E DATA
+217800020225     C                   MOVE      WTIME         DATEU             8 0          GG/MM/AAAA
+217900020225     C     *EUR          MOVEL     DATEU         DATA_EUR
+218000020225     C     *ISO          MOVEL     DATA_EUR      DATEU                          AAAA/MM/GG
+218100120509     c
+218200120509     c* carico tabella DPD
+218300120509     C                   CLEAR                   DS3IDP
+218400120509     C                   MOVEL     1             KTBKUT
+218500120509     C                   MOVEL     '3I'          ktbcod
+218600120509     C                   MOVEL(P)  'DPD'         ktbkey
+218700120509     C     KEYTAB        CHAIN     TABEL00F
+218800120509     c                   if        %found(tabel00f) and tblflg=*blanks
+218900120509     C                   MOVEL     TBLUNI        DS3IDP
+219000120509     c                   endif
+219100960617     C*
+219200000000     C* ESEGUE OPERAZIONI INIZIALI STANDARD
+219300000000     C                   EXSR      INZSTD
+219400981214     C*
+219500000000     C* IMPOSTAZIONI INIZIALI VIDEO
+219600000000     C                   EXSR      IMPVID
+219700000000     C*
+219800000000     C* EMETTO FORMATO VIDEO
+219900000000     C                   EXSR      CARV1                                        *EMISSIONE VIDEO
+220000000000     C*
+220100000000     C                   ENDSR
+220200000000     C*------------------------------------------------------------------------*
+220300000000     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+220400000000     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+220500000000     C* LA PARTE DI SPECIFICHE "C" SOTTOSTANTE SI RIFA'  A PARTICOLARI STANDARDS
+220600000000     C* DI  PROGRAMMAZIONE  E  NELLA  MAGGIOR PARTE DEI  CASI NON E'  NECESSARIO
+220700000000     C* MODIFICARLA, NEL CASO FARE ATTENZIONE.
+220800000000     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+220900000000     C* §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+221000000000     C*------------------------------------------------------------------------*
+221100000000     C* INZSTD - ROUTINE INIZIALE STANDARD
+221200000000     C*------------------------------------------------------------------------*
+221300000000     C     INZSTD        BEGSR
+221400000000     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+221500000000     C                   CALL      'XKEYS'
+221600000000     C                   PARM                    DSKEYS
+221700000000     C                   MOVEA     KEYRIG        KEYS                           *CARICA SCHIERA FUNZ
+221800000000     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+221900000000     C     XMSGPA        PLIST
+222000000000     C                   PARM                    DSMSMS
+222100000000     C                   PARM                    DSMSPG
+222200000000     C                   PARM                    DSMSKE
+222300000000     C                   PARM                    DSMSER
+222400000000     C* IMPOSTA PER CL=XMSG (MESSAGGI ALLA CODA PGM), FISSI IN TUTTO IL PGM
+222500970707     C                   MOVEL     'TISI92R'     DSMSPG                         *NOME PGM CHIAMANTE
+222600970707     C                   MOVEL     'TISI92R'     VMCQUE                         *CODA MESSAGGI DESTI
+222700000000     C                   MOVEL     *BLANKS       VMCKEY                         *CHIAVE MESSAGGIO
+222800000000     C                   MOVEL     *BLANKS       DSMSMS                         *MESSAGGIO
+222900000000     C* INIZIALIZZO FLAG CONTROLLO PGM
+223000000000     C                   MOVEL     '0'           $ERR              1            *ERRORE
+223100000000     C                   MOVEL     '0'           $F03              1            *PREMUTO TASTO F03
+223200000000     C                   MOVEL     *BLANKS       $GES              2            *GESTIONE VIDEO
+223300000000     C                   MOVEL     *BLANKS       $MSG             80            *MESSAGGI
+223400000000     C                   MOVEL     '0'           $FINE             1            *FINE PGM
+223500000000     C                   MOVEL     '1'           $TESVD            1            *1=RIEMETT.TEST.VIDE
+223600000000     C                   MOVEL     'G'           $TGES             1            *I=INTER. G=GESTIONE
+223700000000     C* LANCIO ROUTINE PER VERIFICARE SE
+223800000000     C* SONO IN SEDE, IN FILIALE DI 1° LIVELLO O IN FILIALE DI 2° LIVELLO
+223900000000     C* E PER RECUPERARE LA RAGIONE SOCIALE DELL'UTENTE
+224000020919     C                   EXSR      REPDATIUTE
+224100000000     C* POSIZIONE MINIMA E MASSIMA DEL CURSORE PER GESTIONE MESSAGGI
+224200000000     C                   BITOFF    '01234567'    POSMI1            1
+224300000000     C                   BITOFF    '01234567'    POSMI2            1
+224400000000     C                   BITOFF    '01234567'    POSMA1            1
+224500000000     C                   BITOFF    '01234567'    POSMA2            1
+224600000000     C                   BITON     '34'          POSMI1            1            *18
+224700000000     C                   BITON     '7'           POSMI2            1            *01
+224800000000     C                   BITON     '34'          POSMA1            1            *18
+224900000000     C                   BITON     '0'           POSMA2            1            *80
+225000000000     C                   MOVE      POSMI2        POSMIN            2
+225100000000     C                   MOVEL     POSMI1        POSMIN
+225200000000     C                   MOVE      POSMA2        POSMAX            2
+225300000000     C                   MOVEL     POSMA1        POSMAX
+225400000000     C                   ENDSR
+225500000000     C*------------------------------------------------------------------------*
+225600000000     C* FUNSTD - LANCIA SUBROUTINE STANDARD
+225700000000     C*------------------------------------------------------------------------*
+225800000000     C     FUNSTD        BEGSR
+225900000000     C                   SELECT
+226000000000     C     KEY           WHENEQ    F3
+226100000000     C                   EXSR      F03STD
+226200000000     C     KEY           WHENEQ    F12
+226300000000     C                   EXSR      F12STD
+226400000000     C     KEY           WHENEQ    F24
+226500000000     C                   EXSR      F24STD
+226600000000     C                   OTHER
+226700000000     C                   MOVEL     MSG(2)        $MSG
+226800000000     C                   EXSR      CARMSG
+226900000000     C                   ENDSL
+227000000000     C                   ENDSR
+227100000000     C*------------------------------------------------------------------------*
+227200000000     C* F03STD - GEST. TASTO FUNZ. F03 STANDARD ==> FINE
+227300000000     C*------------------------------------------------------------------------*
+227400000000     C     F03STD        BEGSR
+227500000000     C*
+227600000000     C* IMPOSTO FLAG DI PREMUTO TASTO F03 (A LIVELLO PROCEDURA)
+227700000000     C                   MOVEL     '1'           $F03
+227800000000     C*
+227900000000     C* IMPOSTO FLAG DI FINE PROGRAMMA
+228000000000     C                   MOVEL     '1'           $FINE
+228100000000     C*
+228200000000     C                   ENDSR
+228300000000     C*------------------------------------------------------------------------*
+228400000000     C* F12STD - GEST. TASTO FUNZ. F12 STANDARD ==> FINE
+228500000000     C*------------------------------------------------------------------------*
+228600000000     C     F12STD        BEGSR
+228700000000     C*
+228800000000     C* IMPOSTO FLAG DI FINE PROGRAMMA
+228900000000     C                   MOVEL     '1'           $FINE
+229000000000     C*
+229100000000     C                   ENDSR
+229200000000     C*------------------------------------------------------------------------*
+229300000000     C* F24STD - GEST. TASTO FUNZ. F24 STANDARD ==> ALTRI TASTI
+229400000000     C*------------------------------------------------------------------------*
+229500000000     C     F24STD        BEGSR
+229600000000     C*
+229700000000     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+229800000000     C                   EXSR      OUTFUN
+229900000000     C*
+230000000000     C                   ENDSR
+230100000000     C*------------------------------------------------------------------------*
+230200000000     C* CARMSG - CARICA MESSAGGIO NEL SUBFILE MESSAGGI E LO INVIA ALLA
+230300000000     C*          CODA MESSAGGI DEL PGM
+230400000000     C*------------------------------------------------------------------------*
+230500000000     C     CARMSG        BEGSR
+230600000000     C* SE QUELLO CHE STO PER CARICARE E' IL PRIMO MESSAGGIO
+230700000000     C* PULISCO SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+230800000000     C     MSGULT        IFEQ      0
+230900000000     C                   MOVEL     '1'           *IN40
+231000970707     C                   WRITE     SI92DVK
+231100000000     C                   MOVEL     '0'           *IN40
+231200000000     C                   ENDIF
+231300000000     C* INVIA MESSAGGIO ALLA CODA DEL PGM
+231400000000     C                   MOVEL     $MSG          DSMSMS
+231500000000     C                   CALL      'XMSG'        XMSGPA
+231600000000     C     DSMSER        IFEQ      0
+231700000000     C                   MOVEL     DSMSKE        VMCKEY                         *CHIAVE DEL MESSAGGI
+231800000000     C                   ENDIF
+231900000000     C* CARICA IL MESSAGGIO NEL SUBFILE MESSAGGI
+232000000000     C                   ADD       1             MSGULT            4 0          *CHIAVE SFL MESS
+232100970707     C                   WRITE     SI92DVM                                      *SFL MESS
+232200000000     C* PULISCO CAMPO MESSAGGIO APPENA CARICATO
+232300000000     C                   MOVEL     *BLANKS       $MSG
+232400000000     C                   ENDSR
+232500000000     C*------------------------------------------------------------------------*
+232600000000     C* OUTMSG - EMETTE A VIDEO IL SUBFILE MESSAGGI
+232700000000     C*------------------------------------------------------------------------*
+232800000000     C     OUTMSG        BEGSR
+232900000000     C* VISUALIZZAZIONE MESSAGGIO
+233000000000     C                   MOVEL     '1'           *IN44                          *SFLEND (+)
+233100970707     C                   WRITE     SI92DVK                                      *CONTR MESS
+233200000000     C* AZZERO LA CHIAVE DEL SUBFILE MESSAGGI
+233300000000     C                   Z-ADD     *ZEROS        MSGULT
+233400000000     C                   ENDSR
+233500000000     C*------------------------------------------------------------------------*
+233600000000     C* CARFUN - CARICA LE SCHIERE PER LA GESTIONE DEI TASTI FUNZIONALI
+233700000000     C*          INPUT:  - FUN    (SCHIERA TASTI ABILITATI PER IL VIDEO ATTUALE)
+233800000000     C*          OUTPUT: - FFU    (SCHIERA FUNZIONI)
+233900000000     C*                  - FDE    (SCHIERA DESCRIZIONI FUNZIONI)
+234000000000     C*                  - FAT    (SCHIERA FLAG DI FUNZIONE ATTIVA S/N)
+234100000000     C*------------------------------------------------------------------------*
+234200000000     C     CARFUN        BEGSR
+234300000000     C                   Z-ADD     *ZEROS        FUNULT            5 0          *ULTIMA FUNZ. VISUAL
+234400000000     C     1             DO        31            I                 5 0          --- 1 -->
+234500000000     C                   MOVEL     FUN(I)        FUNRIG                         *DS RIGA FUNZIONI
+234600000000     C                   MOVEL     FUNFUN        FFU(I)                         *FUNZIONE
+234700000000     C                   MOVEL     FUNDES        FDE(I)                         *DESCRIZIONE
+234800020919     C     DUTLPO        IFEQ      'S'                                          --- 2 --> *SEDE
+234900000000     C     $TGES         IFEQ      'G'                                          *GESTIONE
+235000000000     C                   MOVEL     FUNASG        FAT(I)                         *FUNZIONE ATTIVA S/N
+235100000000     C                   ELSE                                                   *INTERROG.
+235200000000     C                   MOVEL     FUNASI        FAT(I)
+235300000000     C                   ENDIF
+235400000000     C                   ELSE                                                   <-- 2 --> *FILIALE
+235500000000     C     $TGES         IFEQ      'G'                                          *GESTIONE
+235600000000     C                   MOVEL     FUNAFG        FAT(I)
+235700000000     C                   ELSE                                                   *INTERROG.
+235800000000     C                   MOVEL     FUNAFI        FAT(I)
+235900000000     C                   ENDIF
+236000000000     C                   ENDIF                                                  <-- 2 ---
+236100000000     C     FAT(I)        IFEQ      'E'                                          *FLAG 'E'->SOLO EDP
+236200000000     C                   MOVEL     USER          WEDP              3            *PROFILO
+236300000000     C     WEDP          IFEQ      'EDP'                                        *SE PROFILO EDPXX
+236400000000     C                   MOVEL     'S'           FAT(I)                         *ABILITO
+236500000000     C                   ELSE
+236600000000     C                   MOVEL     'N'           FAT(I)                         *NON ABILITO
+236700000000     C                   ENDIF
+236800000000     C                   ENDIF
+236900000000     C                   ENDDO                                                  <-- 1 ---
+237000000000     C                   ENDSR
+237100000000     C*------------------------------------------------------------------------*
+237200000000     C* OUTFUN - EMETTE A VIDEO LE FUNZIONI ABILITATE
+237300000000     C*          INPUT:  - FUNULT (ULTIMA FUNZIONE EMESSA NEL VIDEO PRECEDENTE)
+237400000000     C*          OUTPUT: - VFD001-008 (CAMPI FUNZIONI A VIDEO)
+237500000000     C*                  - FUNULT (ULTIMA FUNZIONE EMESSA A VIDEO)
+237600000000     C*------------------------------------------------------------------------*
+237700000000     C     OUTFUN        BEGSR
+237800000000     C     1             DO        8             I                              *PULIZIA FUNZIONI A
+237900000000     C                   MOVEL     *BLANKS       FUV(I)                         *VIDEO
+238000000000     C                   ENDDO
+238100000000     C* CONTROLLO QUANTE FUNZIONI ATTIVE DA EMETTERE A VIDEO CI SONO
+238200000000     C                   Z-ADD     *ZEROS        FUNNAT            2 0          *N.FUNZIONI ATTIVE
+238300000000     C     1             DO        31            I
+238400000000     C     FAT(I)        IFEQ      'S'                                          *FUNZIONE ATTIVA
+238500000000     C     FDE(I)        ANDNE     *BLANKS                                      *DESCRIZIONE FUNZION
+238600000000     C                   ADD       1             FUNNAT
+238700000000     C                   ENDIF
+238800000000     C                   ENDDO
+238900000000     C* SE VI SONO PIU' DI 8 FUNZIONI ATTIVO IL TASTO F24
+239000000000     C     FUNNAT        IFGT      8
+239100000000     C                   MOVEL     'S'           FAT(24)                        *FLAG ATTIVITA' FUNZ
+239200000000     C                   ENDIF
+239300000000     C* IMPOSTO IL N.DI FUNZIONI VISUALIZZABILI A 8, E SE SONO ATTIVE F23 E F24
+239400000000     C* (SE ATTIVE DA VISUALIZZARE SEMPRE) DIVENTANO 6
+239500000000     C                   Z-ADD     8             FUNVIS            5 0
+239600000000     C     FAT(23)       IFEQ      'S'
+239700000000     C                   SUB       1             FUNVIS
+239800000000     C                   ENDIF
+239900000000     C     FAT(24)       IFEQ      'S'
+240000000000     C                   SUB       1             FUNVIS
+240100000000     C                   ENDIF
+240200000000     C* AGGIUNGO UNO ALL'ULTIMA FUNZIONE VISUALIZZATA PER AVERE LA 1A DA VISUALI
+240300000000     C                   Z-ADD     *ZEROS        W                 5 0
+240400000000     C                   ADD       1             FUNULT
+240500000000     C     FUNULT        IFGT      31
+240600000000     C                   Z-ADD     1             FUNULT
+240700000000     C                   ENDIF
+240800000000     C* RICERCO LE OPZIONI ATTIVE E LE EMETTO A VIDEO
+240900000000     C     FUNULT        DO        31            I                              --- 1 -->
+241000000000     C* SE HO GIA' RAGGIUNTO IL NUMERO DI FUNZIONI VISUALIZZABILI VADO A FINE
+241100000000     C     W             IFLT      FUNVIS                                       --- 2 -->
+241200000000     C* SE OPZIONE ATTIVA ED ESISTE LA DESCRIZIONE EMETTO A VIDEO
+241300000000     C     FAT(I)        IFEQ      'S'                                          --- 3 -->
+241400000000     C     FDE(I)        ANDNE     *BLANKS
+241500000000     C     I             IFEQ      23                                           *TOLGO F23
+241600000000     C     I             OREQ      24                                           *E F24
+241700000000     C                   ELSE
+241800000000     C                   ADD       1             W
+241900000000     C                   MOVEL     FDE(I)        FUV(W)
+242000000000     C                   ENDIF
+242100000000     C                   ENDIF                                                  <-- 3 ---
+242200000000     C* MEMORIZZO L'ULTIMO INDICE TRATTATO
+242300000000     C                   Z-ADD     I             FUNULT
+242400000000     C                   ENDIF                                                  <-- 2 ---
+242500000000     C                   ENDDO                                                  <-- 1 ---
+242600000000     C* TRASFERISCO LE OPZIONI DALLA SCHIERA AI CAMPI VIDEO
+242700000000     C                   MOVEL     FUV(1)        VFD001
+242800000000     C                   MOVEL     FUV(2)        VFD002
+242900000000     C                   MOVEL     FUV(3)        VFD003
+243000000000     C                   MOVEL     FUV(4)        VFD004
+243100000000     C                   MOVEL     FUV(5)        VFD005
+243200000000     C                   MOVEL     FUV(6)        VFD006
+243300000000     C     FAT(23)       IFEQ      'N'                                          --- 1 -->
+243400000000     C     FAT(24)       ANDEQ     'N'
+243500000000     C                   MOVEL     FUV(7)        VFD007
+243600000000     C                   MOVEL     FUV(8)        VFD008
+243700000000     C                   ELSE                                                   <-- 1 -->
+243800000000     C     FAT(23)       IFEQ      'S'                                          --- 2 -->
+243900000000     C     FAT(24)       ANDEQ     'S'
+244000000000     C                   MOVEL     FDE(23)       VFD007
+244100000000     C                   MOVEL     FDE(24)       VFD008
+244200000000     C                   ELSE                                                   <-- 2 -->
+244300000000     C                   MOVEL     FUV(7)        VFD007
+244400000000     C     FAT(23)       IFEQ      'S'
+244500000000     C                   MOVEL     FDE(23)       VFD008
+244600000000     C                   ELSE
+244700000000     C                   MOVEL     FDE(24)       VFD008
+244800000000     C                   ENDIF
+244900000000     C                   ENDIF                                                  <-- 2 ---
+245000000000     C                   ENDIF                                                  <-- 1 ---
+245100000000     C                   MOVEL     '0'           $TESVD                         *REIMPOSTA EMIS TEST
+245200000000     C                   ENDSR
+245300000000     C*------------------------------------------------------------------------*
+245400000000     C* CONFUN - CONTROLLA SE LA FUNZIONE SCELTA E' ATTIVA
+245500000000     C*           INPUT:  - KEY    (FUNZIONE PREMUTA - DA INFDS)
+245600000000     C*           OUTPUT: - FUNOK  (OPZIONE OK S/N)
+245700000000     C*                   - ERRORE SE FUNZIONE NON ATTIVA
+245800000000     C*------------------------------------------------------------------------*
+245900000000     C     CONFUN        BEGSR
+246000000000     C* RICERCA FUNZIONE SCELTA IN TABELLA FUNZIONI
+246100000000     C     1             DO        31            I                              --- 1 -->
+246200000000     C     KEY           IFEQ      KEYS(I)                                      --- 2 -->
+246300000000     C* CONTROLLO SE IL TASTO E' ATTIVO
+246400000000     C     FAT(I)        IFNE      'S'                                          --- 3 -->
+246500000000     C                   MOVEL     MSG(1)        $MSG                           *FUNZ.NON ACCETTABIL
+246600000000     C                   EXSR      CARMSG
+246700000000     C                   MOVEL     '1'           $ERR
+246800000000     C                   ENDIF                                                  <-- 3 ---
+246900000000     C                   ENDIF                                                  <-- 2 ---
+247000000000     C                   ENDDO                                                  <-- 1 ---
+247100000000     C                   ENDSR
+247200000000     C*------------------------------------------------------------------------*
+247300000000** -MSG- MESSAGGI
+247400970707TISI92R- Tasto funzionale non valido.                                          1
+247500970707TISI92R- Tasto funzionale abilitato ma non gestito. Avvertire CED.             2
+247600970707TISI92R- Opzione non valida.                                                   3
+247700970707TISI92R- Opzione abilitata ma non gestita. Avvertire CED.                      4
+247800970707TISI92R- Inizio elenco.                                                        5
+247900970707TISI92R- Fine elenco.                                                          6
+248000970707TISI92R- Data errata                                                           7
+248100970707TISI92R- Punto operativo errato                                                8
+248200970707TISI92R- Tipo servizio errato                                                  9
+248300970707TISI92R- Nazione errata                                                       10
+248400090615TISI92R- CAP errato per la nazione indicata                                   11
+248500110627TISI92R- Tipo inoltro forzato errato o non utilizzabile                       12
+248600971126TISI92R- Tipo porto errato                                                    13
+248700970714TISI92R- Località inesistente in questo cap: immettere '?' per la scelta      14
+248800980116TISI92R- Immettere uno dei valori possibili                                   15
+248900020225TISI92R- Impossibile specificare network per nazione Italia.                  16
+249000970707TISI92R- Immettere il numero dei colli                                        17
+249100970707TISI92R- Immettere il peso   (in Kg)                                          18
+249200970707TISI92R- Immettere il volume (in Mc)                                          19
+249300970707TISI92R- Codice cliente errato o non in gestione                              20
+249400970707TISI92R- Codice tariffa errato                                                21
+249500010823TISI92R- Divisa errata                                                        22
+249600970707TISI92R- Tipo incasso C/Assegno errato                                        23
+249700970707TISI92R- C/Assegno obbligatorio se immesso la valuta o il tipo incasso        24
+249800970707TISI92R- Non sono ammessi decimali per la valuta indicata                     25
+249900010820TISI92R- Tipo incasso non utilizzabile per la divisa indicata                 26
+250000970707TISI92R- Importo assicurazione obbligatorio se immessa la valuta              27
+250100980703TISI92R- Lasciare vuoti i dati del mittente se porto franco                   28
+250200980703TISI92R- Immettere i dati del mittente se porto assegnato                     29
+250300010823TISI92R- Divisa non più accettabile                                           30
+250400020226TISI92R- Network indicato inaccettabile per estero                            31
+250500020514TISI92R- Nazione e Network incompatibili.                                     32
+250600030320ATTENZIONE!! Volume troppo alto. Ricalcolare.                                 33
+250700050413Consegna particolare errata                                                   34
+250800050413Non è possibile impostare la stessa consegna particolare 2 volte              35
+250900050428Se FERMO DEPOSITO, Inoltro non forzabile                                      36
+251000090429E' stata immessa una tariffa BLOCCATA. Enter forza                            37
+251100090429Tariffa valida solo in Partenza non corretta per porti Assegnati.enter forza  38
+251200090429Tariffa valida solo in Arrivo  non corretta per porti franco.enter forza      39
+251300090615Tariffa incongruente col Network selezionato. Enter forza                     40
+251400090617Network non utilizzabile per tutte le spedizioni:ENTER forza                  41
+251500090617Network non utilizzabile per spedizioni con C/Assegno:ENTER forza             42
+251600090617Network non utilizzabile per spedizioni in P.Assegnato:ENTER forza            43
+251700090617Network non utilizzabile per spedizioni in P.Ass.o C/ASS:ENTER forza          44
+251800090617Assegnato export per il network solo con ORM reale commissionato.ENTR forza   45
+251900110923Superati i limiti per tipo servizio. Enter Forza                              46
+252000120509Spedizione D.P.D. : deve essere di 1 collo                                    47
+252100120509Spedizione D.P.D. : non ammesso un peso superiore a                           48
+252200000000** FUN  (PARAMETRI)       SEDE:GI FIL:GI   (G=GESTIONE,I=INTERROG.)
+252300000000F1    -                   -    NN     NN
+252400000000F2    -                   -    NN     NN
+252500000000F3    -F3=Fine            -    SS     SS
+252600000000F4    -                   -    NN     NN
+252700000000F5    -                   -    NN     NN
+252800000000F6    -F6=Lancio          -    SN     SN
+252900000000F7    -                   -    NN     NN
+253000000000F8    -                   -    NN     NN
+253100000000F9    -                   -    NN     NN
+253200000000F10   -                   -    NN     NN
+253300030320F11   -F11=Volume         -    SN     SN
+253400000000F12   -F12=Ritorno        -    SS     SS
+253500000000F13   -                   -    NN     NN
+253600000000F14   -                   -    NN     NN
+253700000000F15   -                   -    NN     NN
+253800000000F16   -                   -    NN     NN
+253900000000F17   -                   -    NN     NN
+254000000000F18   -                   -    NN     NN
+254100000000F19   -                   -    NN     NN
+254200000000F20   -                   -    NN     NN
+254300000000F21   -                   -    NN     NN
+254400000000F22   -                   -    NN     NN
+254500000000F23   -                   -    NN     NN
+254600000000F24   -F24=Altri tasti    -    NN     NN
+254700000000ENTER -                   -    SS     SS
+254800000000ROLLUP-                   -    NN     NN
+254900000000ROLLDN-                   -    NN     NN
+255000000000HELP  -                   -    NN     NN
+255100000000PRINT -                   -    NN     NN
+255200000000BSPACE-                   -    NN     NN
+255300000000CLEAR -                   -    NN     NN

@@ -1,0 +1,39 @@
+000100120731/*PARMS DFTACTGRP(*NO) ACTGRP(FICNY1)         */
+000200120731/*                                            */
+000300020322             PGM        PARM(&KPJBA)
+000400120727
+000500120727             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600120727             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000700120727
+000800120727/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+000900120727/* procedura/programma fosse finita in maniera anomala occorre */
+001000120727/* parare il colpo riducendo il male al male minore ossia      */
+001100120727/* con un rollback chiudere le precedenti transazioni fatte a  */
+001200120727/* metà piuttosto che confermarle. E ripartendo da una         */
+001300120727/* situazione pulita.                                          */
+001400120727             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001500120727             MONMSG     MSGID(CPF8351) EXEC(DO)
+001600120727             ENDCMTCTL
+001700120727             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+001800120727             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001900120727             ENDDO
+002000120727
+002100120727/* richiamo programma di lancio Conversione        */
+002200120727             CALL       PGM(FICNY1R) PARM(&KPJBA)
+002300120727             MONMSG     MSGID(CPF0000) EXEC(DO)
+002400120727             ROLLBACK
+002500120727             SNDBRKMSG  MSG('ERRORE La Conversione è terminata in +
+002600120727                          modo anomalo. Segnalare il problema alla +
+002700120727                          persona responsabile della manutenzione +
+002800120727                          del programma.') TOMSGQ(&DSP)
+002900120727             RCLRSC     LVL(*CALLER)
+003000120727             ENDDO
+003100120727
+003200120727
+003300120727 /* se per qualsiasi motivo il programma si è interrotto in modo */
+003400120727 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+003500120727 /* in modo pulito senza lasciare transazioni a metà.            */
+003600120727             ENDCMTCTL
+003700120727
+003800030428fine:
+003900000000             ENDPGM

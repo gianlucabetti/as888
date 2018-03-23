@@ -1,0 +1,224 @@
+000100980612     H*------------------------------------------------------------------------*
+000200980612     H* SISTEMA IL FLAG ESISTENZA ECCEZIONI PER LOCALITA' NEI CAP
+000300980616     H* SISTEMA IL FLAG ESISTENZA ECCEZIONI PER LINEA/ZONA NEI CAP
+000400980612     H* SISTEMA IL FLAG ESISTENZA SINONIMI NELLE LOCALITA'
+000500980612     H*------------------------------------------------------------------------*
+000600980612     H              J
+000700980612     F*------------------------------------------------------------------------*
+000800980612     F* DATA BASE
+000900980612     F*------------------------------------------------------------------------*
+001000980612     FAZCPC01LUF  E           K        DISK
+001100980612     FAZCPL01LUF  E           K        DISK
+001200980616     FAZCPE01LIF  E           K        DISK
+001300980616     FAZCPS01LIF  E           K        DISK
+001400980612     FQSYSPRT O   F     132     OF     PRINTER
+001500980612     E*------------------------------------------------------------------------*
+001600980612     E* SCHIERE
+001700980612     E*------------------------------------------------------------------------*
+001800980612     E*---
+001900980612     E* RIGHE DI STAMPA
+002000980612     E*---
+002100980612     E                    STA     1   5 66
+002200980612     E*---
+002300980612     E* MESSAGGI
+002400980612     E*---
+002500980612     E                    MSG     1   5 66
+002600980612     I*------------------------------------------------------------------------*
+002700980612     I* INPUT
+002800980612     I*------------------------------------------------------------------------*
+002900980612     I*---
+003000980612     I* DS PARAMETRI DI LANCIO
+003100980612     I*---
+003200980612     IPARAM       DS
+003300980612     I                                        1   50PARVER
+003400980612     I*---
+003500980612     I* ARCHITETTURA
+003600980612     I*---
+003700980612     IKPJBA     E DS
+003800980612     C*------------------------------------------------------------------------*
+003900980612     C* MAIN LINE
+004000980612     C*------------------------------------------------------------------------*
+004100980612     C*
+004200980612     C* STAMPA TESTATA
+004300980616     C                     EXCPTTES
+004400980616     C*---
+004500980616     C* CAP
+004600980616     C*---
+004700980612     C                     Z-ADDPARVER    KPCVER
+004800980612     C           KEYCPC    SETLLAZCPC01L
+004900980612     C           KEYCPC    READEAZCPC01L                 99
+005000980612DO  1C           *IN99     DOWEQ*OFF
+005100980616     C*
+005200980616     C* FLAG ESISTENZA ECCEZIONI PER LOCALITA'
+005300980612     C                     MOVEL'N'       WESL             *NO ECCEZIONI
+005400980612     C                     Z-ADDCPCVER    KPLVER
+005500980612     C                     MOVELCPCNAR    KPLNAR
+005600980612     C                     MOVELCPCCAP    KPLCAP
+005700980612     C           KEYCPL    SETLLAZCPL01L
+005800980612     C           KEYCPL    READEAZCPL01L            N    98
+005900980612DO  2C           *IN98     DOWEQ*OFF
+006000980615IF  3C           CPLATB    IFEQ *BLANKS
+006100980615IF  4C           CPLLIV    IFEQ 'L'
+006200980612     C                     MOVEL'S'       WESL             *SI ECCEZIONI
+006300980616     C                     LEAVE                           *USCITA CICLO
+006400980615E   4C                     ENDIF
+006500980615E   3C                     ENDIF
+006600980612     C           KEYCPL    READEAZCPL01L            N    98
+006700980612E   2C                     ENDDO                           *FINE LOCALITA'
+006800980616     C*
+006900980616     C* FLAG ESISTENZA ECCEZIONI PER LINEA/ZONA
+007000980616     C                     MOVEL'N'       WESE             *NO ECCEZIONI
+007100980616     C                     Z-ADDCPCVER    KPEVER
+007200980616     C                     MOVELCPCNAR    KPENAR
+007300980616     C                     MOVELCPCCAP    KPECAP
+007400980616     C           KEYCPE    SETLLAZCPE01L
+007500980616     C           KEYCPE    READEAZCPE01L                 98
+007600980616DO  2C           *IN98     DOWEQ*OFF
+007700980616IF  3C           CPEATB    IFEQ *BLANKS
+007800980616     C                     MOVEL'S'       WESE             *SI ECCEZIONI
+007900980616     C                     LEAVE                           *USCITA CICLO
+008000980616E   3C                     ENDIF
+008100980616     C           KEYCPE    READEAZCPE01L                 98
+008200980616E   2C                     ENDDO                           *FINE LOCALITA'
+008300980616     C* AGGIORNA
+008400980612     C                     MOVELWESL      CPCESL
+008500980616     C                     MOVELWESE      CPCESE
+008600980612     C                     MOVEL*BLANKS   CPCFTR
+008700980612     C                     EXCPTAGGCPC                      *AGGIORNA
+008800980612     C                     EXCPTCAP                         *STAMPA DETTAGLIO
+008900980612     C           KEYCPC    READEAZCPC01L                 99
+009000980612E   1C                     ENDDO                           *FINE CAP
+009100980616     C*---
+009200980616     C* LOCALITA'
+009300980616     C*---
+009400980612     C                     Z-ADDPARVER    KPLVER
+009500980612     C           KE2CPL    SETLLAZCPL01L
+009600980612     C           KE2CPL    READEAZCPL01L                 99
+009700980612DO  1C           *IN99     DOWEQ*OFF
+009800980616     C*
+009900980616     C* LOCALITA' -> FLAG ESISTENZA SINONIMI
+010000980612     C                     MOVEL'N'       WESS             *NO SINONIMI
+010100980612     C                     Z-ADDCPLVER    KPSVER
+010200980612     C                     MOVELCPLNAR    KPSNAR
+010300980612     C                     MOVELCPLCAP    KPSCAP
+010400980612     C                     MOVELCPLLOC    KPSLOC
+010500980612     C           KEYCPS    SETLLAZCPS01L
+010600980612     C           KEYCPS    READEAZCPS01L                 98
+010700980612DO  2C           *IN98     DOWEQ*OFF
+010800980612IF  3C           CPSATB    IFEQ *BLANKS                    *NO ANNULLATI
+010900980612     C                     MOVEL'S'       WESS             *SI SINONIMI
+011000980616     C                     LEAVE                           *USCITA CICLO
+011100980612E   3C                     ENDIF
+011200980612     C           KEYCPS    READEAZCPS01L                 98
+011300980612E   2C                     ENDDO                           *FINE SINONIMI
+011400980616     C* AGGIORNA
+011500980612     C                     MOVELWESS      CPLESS
+011600980616     C                     MOVEL*BLANKS   CPLFTR
+011700980612     C                     EXCPTAGGCPL                      *AGGIORNA
+011800980612     C                     EXCPTLOC                         *STAMPA DETTAGLIO
+011900980612     C           KE2CPL    READEAZCPL01L                 99
+012000980612E   1C                     ENDDO                           *FINE LOCALITA'
+012100980612     C*
+012200980612     C                     SETON                         LR
+012300980612     C*------------------------------------------------------------------------*
+012400980612     C* *INZSR - ROUTINE INIZIALE
+012500980612     C*------------------------------------------------------------------------*
+012600980612     C           *INZSR    BEGSR
+012700980612     C*
+012800980612     C* RICEVIMENTO PARAMETRI
+012900980612     C           *ENTRY    PLIST
+013000980612     C                     PARM           KPJBA
+013100980612     C                     MOVELKPJBU     PARAM
+013200980612     C*
+013300980612     C* VARIABILI RIFERITE AL DATABASE
+013400980612     C           *LIKE     DEFN CPCVER    KPCVER           *AZCPC00F
+013500980612     C           *LIKE     DEFN CPLVER    KPLVER           *AZCPL00F
+013600980612     C           *LIKE     DEFN CPLNAR    KPLNAR
+013700980612     C           *LIKE     DEFN CPLCAP    KPLCAP
+013800980616     C           *LIKE     DEFN CPEVER    KPEVER           *AZCPE00F
+013900980616     C           *LIKE     DEFN CPENAR    KPENAR
+014000980616     C           *LIKE     DEFN CPECAP    KPECAP
+014100980612     C           *LIKE     DEFN CPSVER    KPSVER           *AZCPS00F
+014200980612     C           *LIKE     DEFN CPSNAR    KPSNAR
+014300980612     C           *LIKE     DEFN CPSCAP    KPSCAP
+014400980612     C           *LIKE     DEFN CPSLOC    KPSLOC
+014500980612     C*
+014600980612     C* CHIAVI DI LETTURA
+014700980612     C           KEYCPC    KLIST                           *AZCPC01L
+014800980612     C                     KFLD           KPCVER            -VERSIONE
+014900980612     C           KEYCPL    KLIST                           *AZCPL01L
+015000980612     C                     KFLD           KPLVER            -VERSIONE
+015100980612     C                     KFLD           KPLNAR            -NAZIONE
+015200980612     C                     KFLD           KPLCAP            -CAP
+015300980612     C           KE2CPL    KLIST                           *AZCPL01L
+015400980612     C                     KFLD           KPLVER            -VERSIONE
+015500980616     C           KEYCPE    KLIST                           *AZCPE01L
+015600980616     C                     KFLD           KPEVER            -VERSIONE
+015700980616     C                     KFLD           KPENAR            -NAZIONE
+015800980616     C                     KFLD           KPECAP            -CAP
+015900980612     C           KEYCPS    KLIST                           *AZCPS01L
+016000980612     C                     KFLD           KPSVER            -VERSIONE
+016100980612     C                     KFLD           KPSNAR            -NAZIONE
+016200980612     C                     KFLD           KPSCAP            -CAP
+016300980612     C                     KFLD           KPSLOC            -LOCALITA'
+016400980612     C*
+016500980612     C* VARIABILI DI CONTROLLO
+016600980612     C                     MOVEL'N'       WESL    1        *ECCEZIONI X LOCALITA
+016700980616     C                     MOVEL'N'       WESE    1        *ECCEZIONI X LINEA
+016800980612     C                     MOVEL'N'       WESS    1        *ESISTENZA SINONIMI
+016900980612     C*
+017000980612     C                     ENDSR
+017100980612     O*------------------------------------------------------------------------*
+017200980612     OAZCPC000E                AGGCPC
+017300980616     O                         CPCESE
+017400980616     O                         CPCESL
+017500980612     O                         CPCFTR
+017600980612     O*------------------------------------------------------------------------*
+017700980612     OAZCPL000E                AGGCPL
+017800980612     O                         CPLESS
+017900980612     O                         CPLFTR
+018000980612     O*------------------------------------------------------------------------*
+018100980612     O* STAMPA DEI CODICI AGENTI INESISTENTI O ANNULLATI DA INSERIRE IN SEDE   *
+018200980612     O*------------------------------------------------------------------------*
+018300980612     OQSYSPRT E   02           TES
+018400980612     O                         STA,1     66
+018500980612     O                         STA,2    132
+018600980612     O                         UDATE    115 '  /  /  '
+018700980612     O                         PAGE  Z  132
+018800980612     O*------------------------
+018900980612     O        E   03           TES
+019000980612     O                         STA,3     66
+019100980612     O                         STA,3    132
+019200980612     O*------------------------
+019300980612     O        E   04           TES
+019400980612     O                         STA,4     66
+019500980612     O*------------------------
+019600980612     O        E   05           TES
+019700980612     O                         STA,3     66
+019800980612     O                         STA,3    132
+019900980612     O*------------------------
+020000980612     O        E 1              CAP
+020100980612     O                         CPCVERZ    5
+020200980612     O                         CPCNAR     9
+020300980612     O                         CPCCAP    19
+020400980612     O                         MSG,1    132
+020500980612     O*------------------------
+020600980612     O        E 1              LOC
+020700980612     O                         CPLVERZ    5
+020800980612     O                         CPLNAR     9
+020900980612     O                         CPLCAP    19
+021000980612     O                         CPLLOC    55
+021100980612     O                         MSG,2    132
+021200980612     O*------------------------------------------------------------------------*
+021300980612** STA
+021400980612TNVR95R   * SISTEMA FLAG ESISTENZA ECCEZIONI PER LOCALITA -CAP- E 1
+021500980612ESISTEENZA SINONIMI -LOCALITA'- *        99/99/99         PAG.99992
+021600980612------------------------------------------------------------------3
+021700980612VER   NAZ CAP       LOCALITA'                                     4
+02180098061299999 XXX XXXXXXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX           5
+021900980612** MSG
+022000980612CAMBIATO FLAG NEL CAP                                             1
+022100980612CAMBIATO FLAG NELLA LOCALITA'                                     2
+0222009806123
+0223009806124
+0224009806125

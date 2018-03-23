@@ -1,0 +1,74 @@
+000100980323     H              J
+000200980323     H*------------------------------------------------------------------------*
+000300991012     H* SFLAGGO PER LA TRASMISSIONE TUTTE LE TARIFFE PARTICOLARI CON FTC = 'C' *
+000400991012     H* E TIPO MANDATO = A 'F'                                                 *
+000500990907     H*
+000600980323     H*------------------------------------------------------------------------*
+000700980323     F*
+000800990907     FTITPT01LUF  E           K        DISK
+000900980323     F*
+001000980323     E* SCHIERE PER CARICAMENTO L1
+001100980323     E                    L1         30  3 0             FIL.GESTITE
+001200980323     E                    LIN        30  3 0             SKI COMODO
+001300980323      *
+001400990611     IKPJBA     E DS
+001500980323     ICNCR80    E DS
+001600980323     IUT§DSE    E DSUT§DSE0F
+001700980323     I* DS PER TRUL06R - CARICAMENTO £1
+001800980323     IDSUL06    E DSTRUL06DS
+001900980323     I                                        1  900LIN
+002000980323     I*
+002100980323      *
+002200980323     C                     Z-ADD1         CODUT
+002300980323     C                     CALL 'X§PARUT'
+002400980323     C                     PARM           UT§DSE
+002500980323     C                     MOVELREC80     CNCR80
+002600980323     C***
+002700980323     C** DEFINIZIONE CAMPI
+002800980323     C***
+002900980323     C*
+003000991012     C*  CARICO TABELLA L1
+003100980323     C                     EXSR CARTAB
+003200980323     C*
+003300991012     C           *LOVAL    SETLLTITPT01L
+003400991012     C                     READ TITPT01L                 30
+003500980323     C*
+003600980323     C           *IN30     DOWEQ*OFF
+003700991012     C* CONTROLLO SE SI TRATTA DI UNA TARIFFA FTC = 'C' E TIPO MANDATO = 'F'
+003800980323     C* CONTROLLO SE E' UN CLIENTE GESTITO DALLA FILIALE
+003900991012     C           TPTFTC    IFEQ 'C'
+004000991012     C           TPTTMA    ANDEQ'F'
+004100991012     C*
+004200991012     C                     MOVELTPTKSC    W0030   30
+004300990611     C* MODIFICO LA TARIFFA MA NON LA SFLAGGO SE NON E' UN CLIENTE DELLA FILIALE
+004400980323     C           W0030     LOKUPL1                       35
+004500991012     C*
+004600991012     C           *IN35     IFEQ *ON
+004700990907     C* FLAG DI TRASMISSIONE
+004800991012     C                     CLEARTPTFTR
+004900991012     C                     CLEARTPTDTR
+005000990907     C* AGGIORNO IL RECORD
+005100990907     C                     UPDATTITPT000
+005200980324     C*
+005300980324     C                     ENDIF
+005400991012     C                     ENDIF
+005500990907     C*
+005600991012     C                     READ TITPT01L                 30
+005700990907     C                     ENDDO
+005800980323     C*
+005900980323     C                     SETON                     LR
+006000990611     C*
+006100980323     C*--- CARICAMENTO TABELLE ---------------------------------------*
+006200980323     C           CARTAB    BEGSR
+006300980323     C*
+006400980323     C****  CARICO TABELLA FILIALI GESTITE £1  ****
+006500980323     C                     CLEARDSUL06
+006600980323     C                     MOVE '£1'      D06COD
+006700980323     C                     MOVELSIMFEL    D06KEY
+006800980323     C                     MOVELDSUL06    KPJBU
+006900980323     C                     CALL 'TRUL06R'
+007000980323     C                     PARM           KPJBA
+007100980323     C                     MOVELKPJBU     DSUL06
+007200980323     C                     MOVEALIN       L1
+007300980323     C*
+007400980323     C                     ENDSR

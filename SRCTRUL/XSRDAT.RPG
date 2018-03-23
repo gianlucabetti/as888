@@ -1,0 +1,107 @@
+000100000000     H*------------------------------------------------------------------GBRM20
+000200000000     H*   ROUTINE GENERALIZZATA DI CONTROLLO DELLA DATA                  GBRM20
+000300900423     H*   + INVERSIONE DELLA STESSA                                      GBRM20
+000400900423     H*   + CALCOLO N. ASSOLUTO GIORNI DELLA DATA                        GBRM20
+000500000000     H*------------------------------------------------------------------GBRM20
+000600991218     H* CAMPO G02DAT - DEVE CONTENERE LA DATA IN ESAME -GGMMAA-        GBR  M20
+000700991218     H*       G02INV - CONTIENE LA DATA INVERTITA -AAMMGG-             GBR  M20
+000800991218     H*       G02ERR - EQ 0 SE DATA CORRETTA - EQ 1 SE DATA ERRATA     GBR  M20
+000900991218     H*       G02TGI - CONTIENE LA DATA ESPRESSA IN GIORNI DAL 1/1/XX
+001000991218     H*                SE ANNO 0 CALCOLA I GIORNI MA ATTENZIONE A XSRGIO
+001100991218     H*       G02ERR - EQ 3 SIGNIFICA CHE LA DATA E' STATA PASSATA     GBR  M20
+001200991218     H*                NEL FORMATO AAMMGG NEL CAMPO G02INV             GBR  M20
+001300991218     H*
+001400991218     H* L'ANNO 00 E' ACCETTATO !!!!!!!!!!
+001500991218     H*
+001600820824     H*------------------------------------------------------------------GBRM20
+001700820824     H*
+001800850704     E                    MES    12  12  2 0             GIORNI DEL MESE
+001900900423     IWLBDAT      DS
+002000850704     I                                        1   60G02DAT
+002100850704     I                                        7  120G02INV
+002200850704     I                                       13  13 G02ERR
+002300850704     I                                       14  180G02TGI
+002400000000     C           *ENTRY    PLIST                                         GBRM20
+002500900423     C                     PARM           WLBDAT
+002600000000     C*                                                                  GBRM20
+002700850704     C                     Z-ADD31        G02SUP  20                     GBRM20
+002800900423     C           G02ERR    IFNE '3'
+002900900423     C                     Z-ADDG02DAT    G02DTA                         GBRM20
+003000900423     C                     EXSR SR01
+003100900423     C                     Z-ADDG02DTA    G02INV
+003200900423     C                     ELSE
+003300900423     C                     Z-ADDG02INV    G02DTA                         GBRM20
+003400900423     C                     EXSR SR01
+003500900423     C                     Z-ADDG02DTA    G02DAT
+003600900423     C                     END
+003700900423     C*                                                                  GBRM20
+003800900423     C                     MOVE G02DAT    G02QUA  40                     GBRM20
+003900900423     C                     MOVE G02DAT    AA      20                     GBRM20
+004000900423     C                     MOVELG02QUA    MM      20                     GBRM20
+004100900423     C                     MOVELG02DAT    GG      20                     GBRM20
+004200900423     C*
+004300900423     C                     MOVE '0'       G02ERR                         GBRM20
+004400900423     C*
+004500991218     C*
+004600991218     C**
+004700991218     C           AA        IFEQ *ZERO
+004800991218     C                     MOVE *ZERO     G02QUA                            M20
+004900991218     C                     MOVE *ZERO     G02RES                            M20
+005000991218     C                     ELSE
+005100850704     C           AA        DIV  4         G02QUA                         GBRM20
+005200850704     C                     MVR            G02RES  10                     GBRM20
+005300991218     C                     ENDIF
+005400991218     C*
+005500991218     C***        AA        COMP 0                        72
+005600991218     C***72                MOVE '1'       G02ERR                         GBRM20
+005700991218     C***72                GOTO FINE
+005800991218     C**
+005900991218     C**
+006000850704     C*****  - ESAME MESE                                                GBRM20
+006100850704     C           MM        COMP 1                      72                GBRM20
+006200850704     C  N72      MM        COMP 12                   72                  GBRM20
+006300850704     C*****  - MESE FUORI LIMITI                                         GBRM20
+006400850704     C   72                MOVE '1'       G02ERR                         GBRM20
+006500850704     C   72                GOTO FINE
+006600850704     C           G02RES    COMP 0                        73            5 GBRM20
+006700850704     C   73                MOVEL29        MES,2
+006800850704     C*****  - ESAME GIORNO                                              GBRM20
+006900850704     C           GG        COMP 1                      72                GBRM20
+007000850704     C  N72      MM        IFGT 0
+007100850704     C           GG        COMP MES,MM               72                  GBRM20
+007200850704     C                     END
+007300850704     C*****  - GIORNO FUORI LIMITI                                       GBRM20
+007400850704     C   72                MOVE '1'       G02ERR                         GBRM20
+007500850704     C   72                GOTO FINE
+007600850704     C*****  - DETERMINAZIONE GIORNI
+007700850704     C                     MOVE 28        MES,2
+007800071211     C           AA        MULT 365       G02TGW  60
+007900071211     C                     ADD  G02QUA    G02TGW
+008000071211     C                     ADD  GG        G02TGW
+008100850704     C           MM        SUB  1         MC      30
+008200850704     C                     DO   MC        WX      30
+008300071211     C                     ADD  MES,WX    G02TGW
+008400850704     C                     END
+008500850704     C   73      MM        IFLE 2
+008600071211     C                     SUB  1         G02TGW
+008700850704     C                     END
+008800071211     C           G02TGW    IFGT 99999
+008900071211     C                     Z-ADD99999     G02TGI
+009000071211     C                     ELSE
+009100071211     C                     Z-ADDG02TGW    G02TGI
+009200071211     C                     ENDIF
+009300850704     C*------------------------------------------------------------------GBRM20
+009400850704     C           FINE      TAG
+009500900423     C                     SETON                     LR                  GBRM20
+009600900423     C/SPACE 005
+009700900423     C*________________________________________________
+009800900423     C* GIRA DATA                                     *
+009900900423     C*------------------------------------------------
+010000900423     C           SR01      BEGSR
+010100900423     C                     MOVE G02DTA    G02DX   20                     GBRM20
+010200900423     C                     MOVELG02DTA    G02SX   20                     GBRM20
+010300900423     C                     MOVELG02DX     G02DTA                         GBRM20
+010400900423     C                     MOVE G02SX     G02DTA  60                     GBRM20
+010500900423     C                     ENDSR
+010600850704**
+010700850704312831303130313130313031

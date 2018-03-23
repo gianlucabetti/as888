@@ -1,0 +1,298 @@
+000100941109     H*------------------------------------------------------------------------*
+000200941109     H* STAMPA TEMPI DI TRAZIONE - ESEGUE                                      *
+000300941109     H*------------------------------------------------------------------------*
+000400930128     H              J
+000500941109     F*------------------------------------------------------------------------*
+000600941109     F* DATA BASE
+000700941109     F*------------------------------------------------------------------------*
+000800930720     F* TEMPI ORDINATI PER LNP+LNA+DDE
+000900941109     FAZCAS01LIF  E           K        DISK
+001000930720     F* TEMPI ORDINATI PER LNA+LNP+DDE
+001100941109     FAZCAS02LIF  E           K        DISK
+001200941109     F            AZCAS000                          KRENAMEAZCAS2
+001300930129     FAZORG01LIF  E           K        DISK
+001400941109     FTABEL00FIF  E           K        DISK
+001500000000     FQSYSPRT O   F     132     OF    LPRINTER
+001600941109     L*------------------------------------------------------------------------*
+001700000000     LQSYSPRT  66FL 60OL
+001800941109     E*------------------------------------------------------------------------*
+001900941109     E* SCHIERE
+002000941109     E*------------------------------------------------------------------------*
+002100930129     E                    TES     1  10 66
+002200941109     I*------------------------------------------------------------------------*
+002300941109     I* INPUT
+002400941109     I*------------------------------------------------------------------------*
+002500941109     I*-------------------
+002600930210     I* DS PARAMETRI DI LANCIO PGM
+002700941109     I*-------------------
+002800970619     IPARAM       DS
+002900970619     I                                        1   1 PARTOR
+003000970619     I                                        2   2 PARPTA
+003100970619     I                                        3   50PARLP1
+003200970619     I                                        6   80PARLP2
+003300970619     I                                        9  110PARLA1
+003400970619     I                                       12  140PARLA2
+003500941109     I*-------------------
+003600941109     I* DS CONTROLLO DATE
+003700941109     I*-------------------
+003800930129     IG02PAR      DS
+003900941109     I                                        1   80G02DAT
+004000941109     I                                        9  160G02INV
+004100941109     I                                       17  17 G02ERR
+004200941109     I                                       18  220G02TGI
+004300941109     I*-------------------
+004400941109     I* DS TIPI SERVIZIO
+004500941109     I*-------------------
+004600941109     IDS5E      E DS
+004700941109     I*-------------------
+004800941109     I* ARCHITETTURA
+004900941109     I*-------------------
+005000000000     IKPJBA     E DS
+005100930129     IUTEDSE    E DSUTEDSE0F
+005200941109     C*------------------------------------------------------------------------*
+005300941109     C* MAIN LINE
+005400941109     C*------------------------------------------------------------------------*
+005500930128     C*
+005600930128     C* STAMPA INTESTAZIONE STAMPA
+005700930128     C                     EXCPTTESTA
+005800000000     C*
+005900930129     C* POSIZIONAMENTO SUL FILE E PRIMA LETTURA
+006000941109     C                     MOVEL*BLANKS   KCAPTA
+006100941109     C                     Z-ADD*ZEROS    KCALNP
+006200941109     C                     Z-ADD*ZEROS    KCALNA
+006300941109     C                     MOVEL*BLANKS   KCATSP
+006400970619     C                     Z-ADD*ZEROS    KCADDE
+006500970619     C           PARTOR    IFEQ 'P'                        *PER LINEA PARTENZA
+006600941109     C           KEYCAS    SETLLAZCAS01L             98
+006700941109     C  N98                READ AZCAS01L                 98
+006800930720     C                     ELSE                            *PER LINEA ARRIVO
+006900941109     C           KEYCAS    SETLLAZCAS02L             98
+007000941109     C  N98                READ AZCAS02L                 98
+007100930720     C                     END
+007200930128     C*
+007300930128     C* CICLO FINO A FINE FILE
+007400930129     C           *IN98     DOWEQ'0'                        --- 1 -->
+007500930210     C*
+007600930210     C* CONTROLLA SE IL RECORD E' DA STAMPARE
+007700930210     C                     EXSR CHKREC
+007800930129     C*
+007900930129     C* STAMPA RIGA DI DETTAGLIO TEMPI
+008000930210     C           WSALTA    IFEQ 'N'
+008100930129     C                     EXSR STARIG
+008200930210     C                     END
+008300000000     C*
+008400930128     C* LEGGE IL RECORD SUCCESSIVO
+008500970619     C           PARTOR    IFEQ 'P'
+008600941109     C                     READ AZCAS01L                 98
+008700930720     C                     ELSE
+008800941109     C                     READ AZCAS02L                 98
+008900930720     C                     END
+009000930128     C*
+009100930128     C                     END                             <-- 1 ---
+009200000000     C*
+009300930128     C* STAMPA RIGA DI FINE STAMPA
+009400000000     C                     EXCPTSTAFIN
+009500000000     C*
+009600000000     C                     SETON                     LR
+009700941109     C*------------------------------------------------------------------------*
+009800930210     C*? CHKREC - CONTROLLA SE IL RECORD E' DA CONSIDERARE O NO
+009900941109     C*------------------------------------------------------------------------*
+010000930210     C           CHKREC    BEGSR
+010100930210     C*
+010200930210     C* IMPOSTA A NO IL FLAG PER LA GESTIONE DEL RECORD
+010300930210     C                     MOVEL'N'       WSALTA  1
+010400930210     C*
+010500930210     C* CONTROLLA SE IL RECORD E ANNULLATO
+010600941109     C           CASATB    IFEQ 'A'
+010700930210     C                     MOVEL'S'       WSALTA
+010800930210     C                     END
+010900941109     C*
+011000941109     C* CONTROLLA SE IL RECORD LETTO RIENTRA NEL TIPO TEMPO RICHIESTO
+011100941109     C           PARPTA    IFNE *BLANKS
+011200941109     C           CASPTA    ANDNEPARPTA
+011300941109     C                     MOVEL'S'       WSALTA
+011400941109     C                     END
+011500930210     C*
+011600930210     C* CONTROLLA SE IL RECORD LETTO RIENTRA NEL RANGE DELLE LINEE PARTENZA
+011700970619     C           PARLP1    IFGT *ZEROS
+011800941109     C           CASLNP    IFLT PARLP1
+011900941109     C           CASLNP    ORGT PARLP2
+012000930210     C                     MOVEL'S'       WSALTA
+012100930210     C                     END
+012200970619     C                     END
+012300930210     C*
+012400930210     C* CONTROLLA SE IL RECORD LETTO RIENTRA NEL RANGE DELLE LINEE ARRIVO
+012500970619     C           PARLA1    IFGT *ZEROS
+012600941109     C           CASLNA    IFLT PARLA1
+012700941109     C           CASLNA    ORGT PARLA2
+012800930210     C                     MOVEL'S'       WSALTA
+012900930210     C                     END
+013000970619     C                     END
+013100930210     C*
+013200930210     C                     ENDSR
+013300941109     C*------------------------------------------------------------------------*
+013400941109     C*? STARIG - STAMPA UNA RIGA
+013500941109     C*------------------------------------------------------------------------*
+013600930129     C           STARIG    BEGSR
+013700930129     C*
+013800930129     C* SE FINE PAGINA STAMPA TESTATA SU FOGLIO SUCCESSIVO
+013900930129     C           *INOF     IFEQ '1'
+014000930129     C                     EXCPTTESTA
+014100930129     C                     SETOF                     OF
+014200930129     C                     END
+014300930129     C*
+014400930129     C* INVERTO LA DATA DI DECORRENZA
+014500941109     C                     Z-ADDCASDDE    G02INV
+014600941109     C                     Z-ADD*ZEROS    G02DAT
+014700941109     C                     MOVEL'3'       G02ERR
+014800941109     C                     CALL 'XSRDA8'
+014900930129     C                     PARM           G02PAR
+015000941109     C                     Z-ADDG02DAT    WSDDEI
+015100930129     C*
+015200930129     C* DECODIFICO LINEA PARTENZA
+015300941109     C                     MOVELCASLNP    KORFIL
+015400941109     C           KEYORG    CHAINAZORG01L             99
+015500941109     C           *IN99     IFEQ *OFF
+015600930129     C                     MOVELORGDES    WSDLNP 20
+015700930129     C                     ELSE
+015800930129     C                     MOVEL*BLANKS   WSDLNP
+015900930129     C                     END
+016000930129     C*
+016100930129     C* DECODIFICO LINEA ARRIVO
+016200941109     C                     MOVELCASLNA    KORFIL
+016300941109     C           KEYORG    CHAINAZORG01L             99
+016400930129     C           *IN99     IFEQ '0'
+016500930129     C                     MOVELORGDES    WSDLNA 20
+016600930129     C                     ELSE
+016700930129     C                     MOVEL*BLANKS   WSDLNA
+016800930129     C                     END
+016900941109     C*
+017000941109     C* DECODIFICO IL TIPO SERVIZIO
+017100941109     C                     Z-ADD1         KTBKUT
+017200941109     C                     MOVEL'5E'      KTBCOD
+017300941109     C                     MOVELCASTSP    KTBKEY
+017400941109     C           KEYTAB    CHAINTABEL00F             99
+017500941109     C           *IN99     IFEQ *OFF
+017600941109     C                     MOVELTBLUNI    DS5E
+017700941109     C                     MOVEL§5EDES    WSDTSP 20
+017800941109     C                     ELSE
+017900941109     C                     MOVEL*BLANKS   WSDTSP
+018000941109     C                     END
+018100930129     C*
+018200930129     C* STAMPA RIGA DI DETTAGLIO TEMPI
+018300930129     C                     EXCPTRIGA
+018400930129     C*
+018500930129     C                     ENDSR
+018600941109     C*------------------------------------------------------------------------*
+018700941109     C*?*INZSR -  ROUTINE INIZIALE
+018800941109     C*------------------------------------------------------------------------*
+018900941109     C           *INZSR    BEGSR
+019000000000     C*
+019100930129     C* PARAMETRI IN INPUT AL PGM
+019200000000     C           *ENTRY    PLIST
+019300000000     C                     PARM           KPJBA
+019400970619     C                     MOVELKPJBU     PARAM
+019500930129     C*
+019600930129     C* DEFINISCE LE VARIABILI DI PROGRAMMA
+019700941109     C           *LIKE     DEFN CASPTA    KCAPTA           *AZCAS00F
+019800941109     C           *LIKE     DEFN CASLNP    KCALNP
+019900941109     C           *LIKE     DEFN CASLNA    KCALNA
+020000941109     C           *LIKE     DEFN CASTSP    KCATSP
+020100941109     C           *LIKE     DEFN CASDDE    KCADDE
+020200941109     C           *LIKE     DEFN ORGFIL    KORFIL           *AZORG01L
+020300941109     C           *LIKE     DEFN TBLKUT    KTBKUT           *TABEL00F
+020400941109     C           *LIKE     DEFN TBLCOD    KTBCOD
+020500941109     C           *LIKE     DEFN TBLKEY    KTBKEY
+020600941109     C           *LIKE     DEFN CASDDE    WSDDEI
+020700930129     C*
+020800941109     C* CHIAVE LETTURA AZCAS01L/02L - COMPLETA
+020900941109     C           KEYCAS    KLIST
+021000941109     C                     KFLD           KCAPTA
+021100941109     C                     KFLD           KCALNP
+021200941109     C                     KFLD           KCALNA
+021300941109     C                     KFLD           KCATSP
+021400941109     C                     KFLD           KCADDE
+021500930129     C*
+021600930129     C* CHIAVE LETTURA AZORG01L - COMPLETA
+021700930129     C           KEYORG    KLIST
+021800930129     C                     KFLD           KORFIL
+021900941109     C*
+022000941109     C* CHIAVE LETTURA TABEL00F - COMPLETA
+022100941109     C           KEYTAB    KLIST
+022200941109     C                     KFLD           KTBKUT
+022300941109     C                     KFLD           KTBCOD
+022400941109     C                     KFLD           KTBKEY
+022500930129     C*
+022600930129     C* RECUPERO IL CODICE DELL'AZIENDA
+022700930129     C                     Z-ADD1         CODUT
+022800930129     C                     CALL 'XPARUT'
+022900930129     C                     PARM           UTEDSE
+023000930129     C                     MOVELRAGUT     RSUT   25
+023100000000     C*
+023200930129     C* RECUPERO LA DATA E L'ORA
+023300930129     C                     Z-ADDUDATE     DATA    60
+023400930129     C                     TIME           ORA     60
+023500930720     C*
+023600930720     C* IMPOSTO ORDINAMENTO PER TESTATA
+023700970619     C           PARTOR    IFEQ 'P'
+023800930720     C                     MOVEL'X PARTEN'DESPA  10
+023900930720     C                     MOVE 'ZA'      DESPA
+024000930720     C                     ELSE
+024100930720     C                     MOVEL'X ARRIVO'DESPA
+024200930720     C                     MOVE '  '      DESPA
+024300930720     C                     END
+024400000000     C*
+024500000000     C                     ENDSR
+024600941109     O*------------------------------------------------------------------------*
+024700941109     O*                 *** STAMPA TEMPI DI TRAZIONE  ***
+024800941109     O*------------------------------------------------------------------------*
+024900930128     OQSYSPRT E  102           TESTA
+025000970619     O                                    8 'TISI26R '
+025100930129     O                         RSUT      40
+025200970619     O                                   72 '*STAMPA TEMPI TRAZIONE*'
+025300930720     O                         DESPA     85
+025400930129     O                                   95 'Data:'
+025500930129     O                         DATA     104 '  /  /  '
+025600930129     O                                  110 'Ora:'
+025700930129     O                         ORA      119 '  .  .  '
+025800930128     O                                  128 'Pagina:'
+025900930128     O                         PAGE  Z  132
+026000941109     O*-------
+026100930129     O        E 21             TESTA
+026200930129     O                         TES,2     66
+026300930129     O                         TES,4    132
+026400941109     O*-------
+026500930129     O        E  1             TESTA
+026600930129     O                         TES,3     66
+026700930129     O                         TES,5    132
+026800941109     O*-------
+026900930129     O        E  1             TESTA
+027000930129     O                         TES,1     66
+027100930129     O                         TES,1    132
+027200941109     O*------------------------
+027300930128     O        E  1             RIGA
+027400941109     O                         CASPTA     3
+027500941109     O                         CASLNP    12
+027600941109     O                         WSDLNP    34
+027700941109     O                         CASLNA    43
+027800941109     O                         WSDLNA    65
+027900941109     O                         WSDDEI    79 '  /  /    '
+028000941109     O                         CASTSP    83
+028100941109     O                         WSDTSP   105
+028200941109     O                         CASTINZ  114
+028300941109     O                         CASTCNZ  125
+028400941109     O*------------------------
+028500000000     O        E   60           STAFIN
+028600941109     O                                   89 ' F I N E   S T A M P A '
+028700000000     O*----------------------------------------------------------------
+028800941109**
+028900941109------------------------------------------------------------------1
+029000941109P/T/A    TERMINAL / LINEA DI            TERMINAL / LINEA DI       2
+029100941109           P A R T E N Z A                   A R R I V O          3
+029200941109      DATA         T I P O                  TEMPO      TEMPO      4
+029300941109   DECORRENZA   S E R V I Z I O            INTERNO    CLIENTE     5
+029400941109  X      999  XXXXXXXXXXXXXXXXXXXX      999  XXXXXXXXXXXXXXXXXXXX A
+029500941109   99/99/9999   X  XXXXXXXXXXXXXXXXXXXX      999        999       B
+0296009411098
+0297009411099
+02980094110910

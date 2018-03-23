@@ -1,0 +1,92 @@
+000100000000     F* TAADBFBR - Check DB file - called by TAADBFBC
+000200000000     F*  Record length is 528 to allow save file to be opened
+000300000000     FINPUTA  IF  F     528            DISK         KINFDS FILDSA     UC
+000400000000     FINPUTK  IF  F     528  1AI     1 DISK         KINFDS FILDSK     UC
+000500000000     IINPUTA  AA  01
+000600000000     I                                        1  10 DATA
+000700000000     IINPUTK  AB  02
+000800000000     I                                        1  10 DATA
+000900000000     IFILDSA      DS
+001000000000     I                                       46  52 MSGDSA
+001100000000     I                                       81  82 ODPDSA
+001200000000     I                                       93 102 LIBDSA
+001300000000     I                                    B 125 1260LENDSA
+001400000000     I                                      129 138 MBRDSA
+001500000000     I                                    B 156 1590NBRDSA
+001600000000     I                                      160 161 ACCDSA
+001700000000     I                                      162 162 DUPDSA
+001800000000     I                                      163 163 SRCDSA
+001900000000     I                                      196 196 BYTE1A
+002000000000     I                                    B 211 2120NPHYSA
+002100000000     IFILDSK      DS
+002200000000     I                                       46  52 MSGDSK
+002300000000     I                                       81  82 ODPDSK
+002400000000     I                                       93 102 LIBDSK
+002500000000     I                                    B 125 1260LENDSK
+002600000000     I                                      129 138 MBRDSK
+002700000000     I                                    B 156 1590NBRDSK
+002800000000     I                                      160 161 ACCDSK
+002900000000     I                                      162 162 DUPDSK
+003000000000     I                                      163 163 SRCDSK
+003100000000     I                                      196 196 BYTE1K
+003200000000     I                                    B 211 2120NPHYSK
+003300000000     C           *ENTRY    PLIST                           Parm list
+003400000000     C                     PARM           PROCSS  8        Process type
+003500000000     C                     PARM           MSGID   7        MSGID fld
+003600000000     C                     PARM           LIB    10        Library
+003700000000     C                     PARM           MBR    10        Member
+003800000000     C                     PARM           SRCFIL  1        Src file
+003900000000     C                     PARM           FILTYP  1        File type
+004000000000     C                     PARM           RCDCNT 110       Rcd cnt
+004100000000     C                     PARM           RCDLEN  50       Rcd len
+004200000000     C                     PARM           NBRPHY  50       Nbr of phys
+004300000000     C                     PARM           ODP     2        ODP type
+004400000000     C                     PARM           ACCESS  2        Access type
+004500000000     C                     PARM           DUPKEY  1        Dupkey allwd
+004600000000     C* Open file for arrival and check for errors
+004700000000     C           PROCSS    IFEQ '*ARRIVAL'                 *ARRIVAL
+004800000000     C                     OPEN INPUTA                 20  Open
+004900000000     C   20                MOVE MSGDSA    MSGID            Move to rtn
+005000000000     C   20                GOTO ENDPGM                     If error
+005100000000     C* Move from open feedback area
+005200000000     C                     MOVE LIBDSA    LIB              Library
+005300000000     C                     MOVE MBRDSA    MBR              Member
+005400000000     C                     MOVE SRCDSA    SRCFIL           Src file
+005500000000     C                     MOVE 'P'       FILTYP           Assume phy
+005600000000     C                     TESTB'4'       BYTE1A         20 Tst 5th bit
+005700000000     C   20                MOVE 'L'       FILTYP           Set for lgl
+005800000000     C                     Z-ADDNBRDSA    RCDCNT           Nbr of rcds
+005900000000     C                     Z-ADDLENDSA    RCDLEN           Rcd length
+006000000000     C                     Z-ADDNPHYSA    NBRPHY           Nbr phy mbrs
+006100000000     C                     MOVE ODPDSA    ODP              ODP type
+006200000000     C                     MOVE ACCDSA    ACCESS           Access type
+006300000000     C                     MOVE *BLANK    DUPKEY           Dupkey allwd
+006400000000     C* Read and ignore errors and end of file
+006500000000     C                     READ INPUTA                 2021 Read 1st
+006600000000     C                     MOVE MSGDSA    MSGID            Move to rtn
+006700000000     C                     END                             *ARRIVAL
+006800000000     C           PROCSS    IFEQ '*KEYED  '                 *KEYED
+006900000000     C                     OPEN INPUTK                 20  Open
+007000000000     C   20                MOVE MSGDSK    MSGID            Move to rtn
+007100000000     C* Move from open feedback area
+007200000000     C                     MOVE LIBDSK    LIB              Library
+007300000000     C                     MOVE MBRDSK    MBR              Member
+007400000000     C                     MOVE SRCDSK    SRCFIL           Src file
+007500000000     C                     MOVE 'P'       FILTYP           Assume phy
+007600000000     C                     TESTB'4'       BYTE1K         20 Tst 5th bit
+007700000000     C   20                MOVE 'L'       FILTYP           Set for lgl
+007800000000     C                     Z-ADDNBRDSK    RCDCNT           Nbr of rcds
+007900000000     C                     Z-ADDLENDSK    RCDLEN           Rcd length
+008000000000     C                     Z-ADDNPHYSK    NBRPHY           Nbr phy mbrs
+008100000000     C                     MOVE ODPDSK    ODP              ODP type
+008200000000     C                     MOVE ACCDSK    ACCESS           Access type
+008300000000     C                     MOVE DUPDSK    DUPKEY           Dupkey allwd
+008400000000     C* Try to chain using a single blank char as the key and
+008500000000     C*   ignore any not found condition by blanking the MSGID
+008600000000     C           ' '       CHAININPUTK               2120  Chain
+008700000000     C                     MOVE MSGDSK    MSGID            Move to rtn
+008800000000     C   21                MOVE *BLANKS   MSGID            Blank MSGID
+008900000000     C                     END                             *KEYED
+009000000000     C           ENDPGM    TAG                             END tag
+009100000000     C                     SETON                     LR    Set LR
+009200000000     C                     RETRN                           Return

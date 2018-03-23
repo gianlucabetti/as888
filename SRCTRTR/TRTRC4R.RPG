@@ -1,0 +1,185 @@
+000100000000     H              J
+000200000000     F* TRTRC4R  *---------------------------------------------------*
+000300000000     F*------------------*                                           *
+000400941214     F* - AGGIORNA IL FILE CALENDARIO BARTOLINI RICEVUTO             *
+000500000000     F*--------------------------------------------------------------*
+000600941214     FAZCLN00RUF  E                    DISK                           UC
+000700941214     F            AZCLN000                          KRENAMEAZCLNR
+000800941214     FAZCLN01LUF  E           K        DISK                      A
+000900000000     FCMRIC01LUF  E           K        DISK
+001000000000     E                    FILA       29  3               FIL TBLUNI    TE
+001100000000     E                    CMD1    1   1 55
+001200000000     E                    CMD2    1   1 55
+001300000000     E                    CMD3    1   1 55
+001400000000     E                    CMD5    1   1 55
+001500941214     IAZCLNR
+001600941214     I              CLNTFP                          RSTTFP
+001700941214     I              CLNTFA                          RSTTFA
+001800941214     I              CLNANN                          RSTANN
+001900941214     I              CLNMES                          RSTMES
+002000941214     I              CLNMAT                          RSTMAT
+002100941214     I              CLNPOM                          RSTPOM
+002200941214     I              CLNFTR                          RSTFTR
+002300941214     I              CLNDTR                          RSTDTR
+002400941214     I              CLNATB                          RSTATB
+002500000000     IKPJBA     E DS
+002600000000     I                                       92 101 LIBSYS
+002700000000     I                                      483 492 LEGFIL
+002800000000     I                                      493 502 MBRFIL
+002900000000     I/SPACE 3
+003000000000     C*
+003100000000     C                     EXSR DEFCAM
+003200000000     C*
+003300000000     C                     DO   *HIVAL
+003400941214     C                     READ AZCLN00R                 21
+003500000000     C  N21                DO
+003600941228     C           KCLN      CHAINAZCLN01L             54
+003700941214     C                     Z-ADDRSTTFP    CLNTFP
+003800941214     C                     Z-ADDRSTTFA    CLNTFA
+003900941214     C                     Z-ADDRSTANN    CLNANN
+004000941214     C                     Z-ADDRSTMES    CLNMES
+004100941214     C                     MOVELRSTMAT    CLNMAT
+004200941214     C                     MOVELRSTPOM    CLNPOM
+004300941214     C                     MOVELRSTATB    CLNATB
+004400941214     C                     Z-ADDNUMTRA    CLNDTR
+004500941214     C                     MOVE 'R'       CLNFTR
+004600000000     C           *IN,54    IFEQ '1'
+004700000000     C           RSTATB    IFNE 'A'
+004800941214     C                     WRITEAZCLN000
+004900000000     C                     END
+005000941214     C                     DELETAZCLNR
+005100000000     C                     ADD  1         NUMREC  70
+005200000000     C                     ELSE
+005300000000     C           RSTATB    IFEQ 'A'
+005400941214     C                     DELETAZCLN000
+005500000000     C                     ELSE
+005600941214     C                     UPDATAZCLN000
+005700000000     C                     END
+005800941214     C                     DELETAZCLNR
+005900000000     C                     ADD  1         NUMREC
+006000000000     C                     END
+006100000000     C                     END
+006200000000     C  N21                END
+006300000000     C*
+006400000000     C*
+006500000000     C* CHIUSURA E RIORGANIZZAZIONE MEMBRO TRASCODIFICATO
+006600000000     C*
+006700000000     C                     EXSR CAEXB
+006800000000     C*
+006900000000     C* AGGIORNA ARCHIVIO DI LOG
+007000000000     C           LEGFIL    CHAINCMRIC01L             20
+007100000000     C  N20                Z-ADDNUMREC    RICNR1
+007200000000     C  N20                MOVE '1'       RICFL2            AGG.TO
+007300000000     C  N20                UPDATCMRIC000
+007400000000     C           STOP      TAG
+007500000000     C                     SETON                     LR
+007600000000     C*
+007700000000     C*---------------------------------------------------------------*
+007800000000     C           DEFCAM    BEGSR
+007900000000     C*---------------------------------------------------------------*
+008000000000     C           *ENTRY    PLIST
+008100000000     C                     PARM           KPJBA
+008200000000     C* SE IL MEMBRO DA TRASCODIFICARE NON E' STATO PASSATO
+008300000000     C* ASSUMO IL PRIMO MEMBRO DEL FILE
+008400000000     C           MBRFIL    IFEQ *BLANK
+008500000000     C                     MOVEL'*FIRST'  MBRFIL
+008600000000     C                     END
+008700020902     C*
+008800020902     C                     Z-ADD1         CODUT   10
+008900000000     C*
+009000000000     C* KLIST
+009100000000     C*
+009200000000     C           KTAB      KLIST
+009300000000     C                     KFLD           CODUT
+009400000000     C                     KFLD           COD     2
+009500941228     C           KCLN      KLIST
+009600000000     C                     KFLD           RSTTFP
+009700000000     C                     KFLD           RSTTFA
+009800000000     C                     KFLD           RSTANN
+009900000000     C                     KFLD           RSTMES
+010000000000     C*
+010100000000     C* APERTURA MEMBRO DA TRASCODIFICARE
+010200000000     C                     EXSR CAEXA
+010300941214     C*
+010400941214     C                     Z-ADDUDATE     DATA    60
+010500941214     C                     MOVELUYEAR     DATA
+010600941214     C                     MOVE UDAY      DATA
+010700941214     C                     Z-ADDDATA      NUMTRA
+010800941214     C                     MOVEL19        NUMTRA  80       *AGGIUNTO XX SECOLO
+010900000000     C*NUMERO TRASMISSIONE = UDATE USA
+011000000000     C           FINE      ENDSR
+011100000000     C/SPACE
+011200000000     C**---------------------------------------------------------
+011300941214     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI AZCLN00R      -
+011400000000     C**---------------------------------------------------------
+011500000000     C           CAEXA     BEGSR
+011600000000     C                     MOVE ')'       VAR11  11
+011700000000     C                     MOVELMBRFIL    VAR11
+011800000000     C                     MOVE '))'      VAR12  12
+011900000000     C                     MOVELMBRFIL    VAR12
+012000000000     C                     Z-ADD55        LUNG   155
+012100000000     C*
+012200000000     C                     SETOF                     20
+012300000000     C                     MOVE VAR11     CMD1
+012400000000     C                     MOVEL*BLANKS   COMMAN
+012500000000     C                     MOVEACMD1,1    COMMAN 80
+012600000000     C                     CALL 'QCMDEXC'              20
+012700000000     C                     PARM           COMMAN
+012800000000     C                     PARM           LUNG
+012900000000     C   20                GOTO STOP
+013000000000     C** CONTROLLO SE ESISTE IL MEMBRO
+013100000000     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+013200000000     C                     SETOF                     20
+013300000000     C                     MOVE VAR12     CMD2
+013400000000     C                     MOVEL*BLANKS   COMMAN
+013500000000     C                     MOVEACMD2,1    COMMAN
+013600000000     C                     CALL 'QCMDEXC'              20
+013700000000     C                     PARM           COMMAN
+013800000000     C                     PARM           LUNG
+013900000000     C   20                GOTO STOP
+014000000000     C** ALLOCO MEMBRO
+014100000000     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+014200000000     C                     SETOF                     20
+014300000000     C                     MOVE VAR11     CMD3
+014400000000     C                     MOVEL*BLANKS   COMMAN
+014500000000     C                     MOVEACMD3,1    COMMAN
+014600000000     C                     CALL 'QCMDEXC'              20
+014700000000     C                     PARM           COMMAN
+014800000000     C                     PARM           LUNG
+014900000000     C   20                GOTO STOP
+015000000000     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+015100000000     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+015200941214     C                     OPEN AZCLN00R
+015300000000     C                     ENDSR
+015400000000     C/SPACE 005
+015500000000     C**---------------------------------------------------------
+015600941214     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI AZCLN00R      -
+015700000000     C**---------------------------------------------------------
+015800000000     C           CAEXB     BEGSR
+015900000000     C                     MOVE ')'       VAR11  11
+016000000000     C                     MOVELMBRFIL    VAR11
+016100000000     C                     MOVE '))'      VAR12  12
+016200000000     C                     MOVELMBRFIL    VAR12
+016300000000     C                     Z-ADD55        LUNG   155
+016400000000     C*
+016500941214     C                     CLOSEAZCLN00R               20
+016600000000     C                     SETOF                     20
+016700000000     C  N20                DO
+016800000000     C                     MOVE VAR12     CMD5
+016900000000     C                     MOVEL*BLANKS   COMMAN
+017000000000     C                     MOVEACMD5,1    COMMAN
+017100000000     C                     CALL 'QCMDEXC'
+017200000000     C                     PARM           COMMAN
+017300000000     C                     PARM           LUNG
+017400000000     C                     END
+017500000000     C** DISALLOCA IL MEMBRO AGG.TO
+017600000000     C                     ENDSR
+017700000000     C/SPACE 005
+017800000000**         CMD1
+017900941214CHKOBJ OBJ(AZCLN00R) OBJTYPE(*FILE)     MBR(M234567890)
+018000000000**         CMD2
+018100941214ALCOBJ OBJ((AZCLN00R *FILE *EXCL           M234567890))
+018200000000**         CMD3
+018300941214OVRDBF FILE(AZCLN00R)                   MBR(M234567890)
+018400000000**         CMD5
+018500941214DLCOBJ OBJ((AZCLN00R *FILE *EXCL           M234567890))

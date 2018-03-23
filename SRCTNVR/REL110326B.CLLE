@@ -1,0 +1,117 @@
+000100110322             PGM        /* PARM(&ESITO) */
+000200100921
+000300100921             DCL        VAR(&ESITO) TYPE(*DEC) LEN(15 5)
+000400100921             DCL        VAR(&LIBBTLNEW) TYPE(*CHAR) LEN(10) VALUE('EDPWKSE')
+000500100921             DCL        VAR(&LIBBTLOBJ) TYPE(*CHAR) LEN(10) VALUE('GAITRAOBJ')
+000600100921             DCL        VAR(&LIBBTLSAV) TYPE(*CHAR) LEN(10) VALUE('EDPDC')
+000700110322             DCL        VAR(&LIBPJNEW)  TYPE(*CHAR) LEN(10) VALUE('EDPDCINTRA')
+000800100921             DCL        VAR(&LIBPJDTAG) TYPE(*CHAR) LEN(10) VALUE('PJBARGRU')
+000900100921             DCL        VAR(&LIBPJDTAS) TYPE(*CHAR) LEN(10) VALUE('PJBARSOC')
+001000100921             DCL        VAR(&LIBPJOBJA) TYPE(*CHAR) LEN(10) VALUE('PJAI1O3')
+001100100921             DCL        VAR(&LIBPJOBJC) TYPE(*CHAR) LEN(10) VALUE('PJCI1O3')
+001200100921
+001300100921             MONMSG     MSGID(CPF0000)
+001400100921
+001500110314             IF         COND(&ESITO = 1) THEN(CALLSUBR SUBR(SET_TEST))
+001600100921
+001700100921/******************************************************************************/
+001800100921/*                                                                            */
+001900100921/*           Oggetti da spostare in PJBARSOC.                                 */
+002000100921/*                                                                            */
+002100100921/******************************************************************************/
+002200100921
+002300110322             MOVOBJ     OBJ(&LIBPJNEW/ISANS00F) OBJTYPE(*FILE) TOLIB(&LIBPJDTAS)
+002400110322             MOVOBJ     OBJ(&LIBPJNEW/ISANS01L) OBJTYPE(*FILE) TOLIB(&LIBPJDTAS)
+002500110322
+002600110322/******************************************************************************/
+002700110322/*                                                                            */
+002800110322/*           I messaggi li devo copiare 2 volte.                              */
+002900110322/*                                                                            */
+003000110322/******************************************************************************/
+003100110322
+003200110322             MRGMSGF    FROMMSGF(&LIBPJNEW/PROMSG) TOMSGF(&LIBBTLOBJ/PROMSG)
+003300110322             MRGMSGF    FROMMSGF(&LIBPJNEW/PROMSG) TOMSGF(&LIBPJOBJA/PROMSG)
+003400110322             DLTMSGF    MSGF(&LIBPJNEW/PROMSG)
+003500110322
+003600110322/******************************************************************************/
+003700110322/*                                                                            */
+003800110322/*           Oggetti da spostare in PJCI1O3.                                  */
+003900110322/*                                                                            */
+004000110322/******************************************************************************/
+004100110322
+004200110322             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBPJNEW &LIBPJOBJC 'ND*       ')
+004300100921
+004400100921/******************************************************************************/
+004500100921/*                                                                            */
+004600100921/*           Oggetti da spostare in PJAI1O3.                                  */
+004700100921/*                                                                            */
+004800100921/******************************************************************************/
+004900110315
+005000110322             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBPJNEW &LIBPJOBJA '*ALL      ')
+005100110314
+005200110314/******************************************************************************/
+005300110314/*                                                                            */
+005400110314/*           Oggetti da spostare in GAITRAOBJ.                                */
+005500110314/*                                                                            */
+005600110314/******************************************************************************/
+005700110314
+005800110321/*           CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBBTLOBJ '*ALL     ')            */
+005900110314
+006000110314/******************************************************************************/
+006100110314/*                                                                            */
+006200110314/*           Imposta ambiente per test.                                       */
+006300110314/*                                                                            */
+006400110314/******************************************************************************/
+006500110314
+006600110314             SUBR       SUBR(SET_TEST)
+006700110314                CHGVAR     VAR(&LIBBTLNEW) VALUE('EDPDCWKSE')
+006800110322                CHGVAR     VAR(&LIBPJNEW)  VALUE('EDPDCWKSE')
+006900110314                CHGVAR     VAR(&LIBBTLOBJ) VALUE('EDPDCOBJ')
+007000110314                CHGVAR     VAR(&LIBBTLSAV) VALUE('EDPDCSAV')
+007100110314                CHGVAR     VAR(&LIBPJDTAG) VALUE('EDPDCPJGRU')
+007200110314                CHGVAR     VAR(&LIBPJDTAS) VALUE('EDPDCPJSOC')
+007300110314                CHGVAR     VAR(&LIBPJOBJA) VALUE('EDPDCPJA')
+007400110314                CHGVAR     VAR(&LIBPJOBJC) VALUE('EDPDCPJC')
+007500110314             ENDSUBR
+007600100921
+007700100921/******************************************************************************/
+007800100921/*                                                                            */
+007900110314/*           Se arrivo qui non è detto che tutto sia andato bene.             */
+008000100921/*                                                                            */
+008100100921/******************************************************************************/
+008200110322
+008300110322
+008400110322
+008500110322/* ____  Installazione C.R.M. --> CALDO ____ */
+008600110322
+008700110322/* _ Cancello i file di work delle statistiche _ */
+008800110322             DLTF       FILE(FILTRAGRU/WFRCT00F)
+008900110322             DLTF       FILE(GAITRAGRU/WFRPA00F)
+009000110322             DLTF       FILE(GAITRAGRU/WFRCA00F)
+009100110322
+009200110322/* _ Ricreo i file di work delle statistiche _ */
+009300110322             CRTDUPOBJ  OBJ(WFRCT00F) FROMLIB(EDPWKSE) +
+009400110322                          OBJTYPE(*FILE) TOLIB(FILTRAGRU)
+009500110322             CRTDUPOBJ  OBJ(WFRPA00F) FROMLIB(EDPWKSE) +
+009600110322                          OBJTYPE(*FILE) TOLIB(GAITRAGRU)
+009700110322             CRTDUPOBJ  OBJ(WFRCA00F) FROMLIB(EDPWKSE) +
+009800110322                          OBJTYPE(*FILE) TOLIB(GAITRAGRU)
+009900110323
+010000110323/* _ Cancello file dalla EDPWKSE _ */
+010100110323             DLTF       FILE(EDPWKSE/WFRCT00F)
+010200110323             DLTF       FILE(EDPWKSE/WFRPA00F)
+010300110323             DLTF       FILE(EDPWKSE/WFRCA00F)
+010400110322
+010500110322/* _ Richiamo pgm x sistemare statistiche e info + SIC storico _ */
+010600110322             CALL       PGM(EDPWKSE/TNVRCRM9)
+010700110323
+010800110323/* _ Cancello pgm di work dalla EDPWKSE _ */
+010900110323             DLTPGM     PGM(EDPWKSE/TNVRCRM9)
+011000110323
+011100110323/* _ Spostamento oggetti dalla EDPWKSE alla GAITRAGRU _ */
+011200110323             call       pgm(GAITRAOBJ/TNSYMVC) +
+011300110323                        parm('EDPWKSE   ' 'GAITRAOBJ' '*ALL     ')
+011400110323
+011500110323/* _ Copia tabelle modificate e nuove in TNTBE _ */
+011600100921
+011700100921             ENDPGM

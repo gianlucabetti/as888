@@ -1,0 +1,108 @@
+000100891011     H        1     J
+000200930722     H* CNC0M1R  *----------------------------------------------------*
+000300930722     H*------------------*                                            *
+000400930722     H*             - RICERCA ALFABETICA SPEDIZIONIERI -              *
+000500930722     H*---------------------------------------------------------------*
+000600970804     FFNSPE02LIF  E           K        DISK
+000700930722     FCNC0M1D CF  E                    WORKSTN
+000800891122     F                                        REC1  KSFILE C0M1SF1
+000900930722     I*------------------
+001000930722     I* DS RICERCA PARAMETRI UTENTE
+001100930722     I*------------------
+001200930722     IUT§DSE    E DSUT§DSE0F
+001300930723     C*---------------------------------------------------------------*
+001400930723     C*                    MAIN                                       *
+001500930723     C* PROGRAMMA PRINCIPALE RICERCA ALFABETICA SPEDIZIONIERI         *
+001600930723     C*---------------------------------------------------------------*
+001700930722     C*
+001800930722     C* DEFINIZIONE VARIABILI, KLIST E PLIST
+001900930722     C                     EXSR DEFVAR
+002000930722     C*
+002100930723     C* CARICAMENTO SPEDIZIONIERI
+002200930723     C                     EXSR CARSFL
+002300930722     C*
+002400930722     C* EMISSIONE SFILE
+002500930723     C           INIZIO    TAG
+002600930723     C                     WRITEC0M1D1
+002700930723     C                     EXFMTC0M1SC1
+002800930722     C*
+002900930727     C* CM12 - FINE LAVORO
+003000930727     C   KL                MOVEL*BLANKS   DESPED
+003100930727     C   KL                GOTO FINE
+003200930722     C*
+003300930722     C* LETTURA RECORD VARIATI PER RECOR SELEZIONATO
+003400930722     C                     Z-ADD1         REC1
+003500930722     C   61                READCC0M1SF1                  60
+003600930722DO  3C   61      *IN60     DOWEQ'0'
+003700930722     C*
+003800930722     C* RECORD SELEZIONATO
+003900930723     C                     MOVELSPECLI    CODCLI
+004000930722     C                     MOVELSPECOD    CODSPE
+004100930722     C                     MOVELSPERAG    DESPED
+004200930722     C                     GOTO FINE
+004300930723     C                     READCC0M1SF1                  60
+004400930722E   3C                     ENDDO
+004500930722     C*
+004600930722     C* ENTER - RIMANE NELLA VIDEATA
+004700930722     C                     GOTO INIZIO
+004800930722     C*
+004900930722     C           FINE      TAG
+005000930722     C                     SETON                         LR
+005100930722     C*---------------------------------------------------------------*
+005200930722     C*                    CARSFL                                     *
+005300930722     C* ROUTINE DI CARICAMENTO SUBFIL                                 *
+005400930722     C*---------------------------------------------------------------*
+005500930722     C           CARSFL    BEGSR
+005600930722     C*
+005700930722     C* PULIZIA SFILE
+005800930722     C                     SETOF                     6162
+005900930722     C                     SETON                     63
+006000930722     C                     WRITEC0M1SC1
+006100930722     C                     SETOF                     63
+006200930722     C*
+006300930722     C* CARICAMENTO SFILE
+006400930722     C                     Z-ADD0         REC1    30
+006500930722     C*
+006600970804     C           *LIKE     DEFN SPEFLS    KFLS
+006700970804     C           *LIKE     DEFN SPERAG    KDES
+006800970804     C           KEY       KLIST
+006900970804     C                     KFLD           KFLS
+007000970804     C                     KFLD           KDES
+007100970804     C*
+007200970804     C                     MOVEL'S'       KFLS
+007300970804     C                     MOVELDESPED    KDES
+007400970804     C           KEY       SETLLFNSPE02L
+007500970804     C*
+007600970804     C           KFLS      READEFNSPE02L                 30
+007700970804DO  1C           *IN30     DOWEQ*OFF
+007800970804     C                     MOVEL*BLANKS   SCELTA
+007900930722     C                     ADD  1         REC1
+008000930723     C                     WRITEC0M1SF1
+008100930722     C*
+008200970804     C                     READ FNSPE02L                 30
+008300930722E   1C                     ENDDO
+008400930722     C*
+008500930722     C* EMISSIONE CTL
+008600930723     C                     SETON                     62
+008700930722     C* EMISSIONE SFL
+008800930722     C           REC1      COMP 0                    61
+008900930722     C*
+009000930723     C                     ENDSR
+009100930722     C*---------------------------------------------------------------*
+009200930722     C*                    DEFVAR                                     *
+009300930722     C* ROUTINE DI DEFINIZIONE VARIABILI, KLIST E PLIST               *
+009400930722     C*---------------------------------------------------------------*
+009500930722     C           DEFVAR    BEGSR
+009600930722     C*
+009700930722     C           *ENTRY    PLIST
+009800930723     C                     PARM           CODCLI  70
+009900930723     C                     PARM           CODSPE  3
+010000930722     C                     PARM           DESPED 30
+010100930723     C*
+010200930723     C* RICERCA FILIALE IN GESTIONE
+010300930723     C                     Z-ADD1         CODUT   10
+010400930723     C                     CALL 'X§PARUT'
+010500930723     C                     PARM           UT§DSE
+010600930723     C                     MOVELRAGUT     RSUT   20
+010700930722     C*
+010800930722     C                     ENDSR

@@ -1,0 +1,37 @@
+000100100326             PGM        PARM(&LIBPARZ)
+000200100325             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000300100325             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000400100326             DCL        VAR(&LIBparz) TYPE(*CHAR) LEN(10)
+000500100325             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+000600100326
+000700100326/* Se vuota -->  imposto ZUNIPARZ'     */
+000800100326             IF         COND(&LIBPARZ = '          ') THEN(CHGVAR +
+000900100326                          VAR(&LIBPARZ) VALUE('ZUNIPARZ  '))
+001000100326
+001100100326             RTVJOBA    JOB(&DSP)
+001200100326
+001300100326/* Creo libreria in cui mettere i file vecchi    */
+001400100326             CRTLIB     LIB(ZUNIOLD) TEXT('AS888:libreria per dati +
+001500100326                          OLD')
+001600100326
+001700100326             MONMSG     MSGID(CPF2111) EXEC(do)
+001800100326             SNDBRKMSG  MSG(('Esiste già la libreria ZUNIOLD')     +
+001900100326                          *CAT (': impossibile eseguire il +
+002000100326                          caricamento dei dati di test. +
+002100100326                          Verificare e cancellare la libreria prima +
+002200100326                          di riproporre il lancio.')) TOMSGQ(&DSP)
+002300100326             goto       fine
+002400100326             enddo
+002500100326
+002600100325
+002700100326/* creo LF   la libreria la imposto solo quando cambia   */
+002800100326/* file in UNITRAGRP                                    */
+002900100326
+003000100326             CHGVAR     VAR(&LIB ) VALUE('UNITRAGRP ')
+003100100326
+003200100326/* PdC         */
+003300100326             CHGVAR     VAR(&FILE) VALUE('CNACO*    ')
+003400100326             CALL       PGM(FITS63C) PARM(&FILE &LIB &LIBPARZ)
+003500100325
+003600021009             DSPJOBLOG  OUTPUT(*PRINT)
+003700100325 FINE:       ENDPGM

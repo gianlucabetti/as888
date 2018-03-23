@@ -1,0 +1,141 @@
+000100921021     H              J
+000200941027     H* FNLV50R  *---------------------------------------------------*
+000300941027     H*     CONTROLLO FILIALE GESTIONE                               *
+000400921021     H*--------------------------------------------------------------*
+000500941027     E                    MSG     1   2 78               MSG DI ERRORE
+000600941027     e*
+000700941027     E                    L1         30  3 0             FIL GESTITE
+000800941027     E                    L6S        30  3 0             FIL GEST DA ALTR
+000900941027     E                    LIN        30  3 0             SKI COMODO
+001000940218      *
+001100941027     I* DS PER FNLV50R - DS DEI CAMPI PER CONTROLLO FILIALE GESTIONE
+001200941027     IDSLV50    E DSFNLV50DS
+001300941027     I* INIZIO DEL PROFILO UTENTE
+001400941027     I                                        2   4 REM
+001500941027     I                                        5   7 REMFIL
+001600941027     I*
+001700941027     I* DS PER TRUL06R - CARICAMENTO £X
+001800941027     IDSUL06    E DSTRUL06DS
+001900941027     I                                        1  900LIN
+002000941027     ICNCR80    E DS
+002100941027     IUT§DSE    E DSUT§DSE0F
+002200941027     IKPJBA     E DS
+002300921021     C*---------------------------------------------------------------*
+002400921021     C           *ENTRY    PLIST
+002500941027     C                     PARM           DSLV50
+002600000000     C*---------------------------------------------------------------*
+002700941027     C* TIPO LANCIO, D50TLA "C" -           CHIUSO CON LR
+002800941027     C* TIPO LANCIO, D50TLA "L" - ELABORO E CHIUDO CON LR
+002900941027     C* TIPO LANCIO, D50TLA " " - ELABORO E CHIUDO IN RETRN
+003000941027    1C           D50TLA    IFNE 'C'
+003100941027     C*
+003200941027     C                     CLEARD50ERR
+003300941027     C                     CLEARD50MSG
+003400941027     C                     SETOF                     90
+003500941027     C*
+003600941027     C* OPERAZIONI INIZIALI
+003700941027    2C           WFLG1     IFEQ ' '
+003800941027     C                     EXSR INIZIO
+003900941027     C                     MOVEL'1'       WFLG1   1
+004000941027    2C                     ENDIF
+004100941027     C*
+004200941027     C* CONTROLLO SE SONO SIMFEL O REMOTO
+004300941027     C                     EXSR CTRREM
+004400941027     C*
+004500941027     C* SE SONO REM POSSO ESSERE SOLO ME STESSO
+004600941027     C* OSE E' A 0 ERRATA
+004700941027    2C           WFGS      IFNE SIMFEL
+004800941027    2C           D50FGS    ANDNEWFGS
+004900941027     C           D50FGS    OREQ 0
+005000941027     C                     MOVEL'1'       D50ERR
+005100941027     C                     MOVELMSG,1     D50MSG
+005200941027     C                     SETON                     90
+005300941027    2C                     ENDIF
+005400941027     C*
+005500941027     C* SE SONO SIMFEL NON PUO' ESSERE FIL GESTITA DA ALTRE
+005600941027    2C  N90      WFGS      IFEQ SIMFEL
+005700941027     C           D50FGS    ANDNESIMFEL
+005800941027     C* CARICO LE TABELLE
+005900941027    3C           WFLG2     IFEQ ' '
+006000941027     C                     EXSR CARTAB
+006100941027     C                     MOVEL'1'       WFLG2   1
+006200941027    3C                     ENDIF
+006300941027     C*
+006400941027     C*
+006500941027     C* DEVE APPARTENERE ALLA L1
+006600941027     C           D50FGS    LOKUPL1                       30
+006700941027    3C           *IN30     IFEQ *OFF
+006800941027     C                     MOVEL'1'       D50ERR
+006900941027     C                     MOVELMSG,1     D50MSG
+007000941027     C                     SETON                     90
+007100941027    3C                     ENDIF
+007200941027     C*
+007300941027     C* NON DEVE ESSERE GESTITA DA ALTRE FILIALI
+007400941027    3C           *IN90     IFEQ *OFF
+007500941027     C           D50FGS    LOKUPL6S                      30
+007600941027    4C           *IN30     IFEQ *ON
+007700941027     C                     MOVEL'2'       D50ERR
+007800941027     C                     MOVELMSG,2     D50MSG
+007900941027     C                     SETON                     90
+008000941027    4C                     ENDIF
+008100941027    3C                     ENDIF
+008200941027    2C                     ENDIF
+008300941027    1C                     ENDIF
+008400941025     C*
+008500941025     C* CHIUSURA PGM
+008600941027    1C           D50TLA    IFEQ ' '
+008700941025     C                     RETRN
+008800941025     C                     ELSE
+008900941025     C                     SETON                     LR
+009000941025    1C                     ENDIF
+009100941024     C*
+009200941027     C* OPERAZIONI CHE ESEGUO AD APERTURA PGM ------------------------*
+009300941027     C           INIZIO    BEGSR
+009400941027     C                     Z-ADD1         CODUT
+009500941027     C                     CALL 'X§PARUT'
+009600941027     C                     PARM           UT§DSE
+009700941027     C                     MOVELREC80     CNCR80
+009800941027     C                     ENDSR
+009900941027     C*
+010000941027     C* CARICO LE TABELLE --------------------------------------------*
+010100941027     C* OPERAZIONI CHE ESEGUO SOLO SE FIL GESTIONE NON E' SIMFEL
+010200941027     C           CARTAB    BEGSR
+010300941027     C***
+010400941027     C* CARICO TUTTE LE  FILIALI GESTITE DA ALTRE (DA £6)
+010500941027     C***
+010600941027     C                     CLEARDSUL06
+010700941027     C                     MOVE '£6'      D06COD
+010800941027     C                     MOVEL'S'       D06ESC
+010900941027     C                     MOVELDSUL06    KPJBU
+011000941027     C                     CALL 'TRUL06R'
+011100941027     C                     PARM           KPJBA
+011200941027     C                     MOVELKPJBU     DSUL06
+011300941027     C                     MOVEALIN       L6S
+011400941027     C***
+011500941027     C* CARICO TABELLA FILIALI GESTITE £1
+011600941027     C***
+011700941027     C                     CLEARDSUL06
+011800941027     C                     MOVE '£1'      D06COD
+011900941027     C                     MOVELSIMFEL    D06KEY
+012000941027     C                     MOVEL'L'       D06TLA
+012100941027     C                     MOVELDSUL06    KPJBU
+012200941027     C*
+012300941027     C                     CALL 'TRUL06R'
+012400941027     C                     PARM           KPJBA
+012500941027     C                     MOVELKPJBU     DSUL06
+012600941027     C                     MOVEALIN       L1
+012700941027     C*
+012800941027     C                     ENDSR
+012900941027     C*
+013000941027     C* VEDO SE SONO SIMFEL O REMOTO ---------------------------------*
+013100941027     C           CTRREM    BEGSR
+013200941027     C           REM       IFEQ 'REM'
+013300941027     C           REMFIL    ANDGT*ZEROS
+013400941027     C                     MOVELREMFIL    WFGS
+013500941027     C                     ELSE
+013600941027     C                     MOVELSIMFEL    WFGS    30
+013700941027     C                     END
+013800941027     C                     ENDSR
+013900941027**
+014000941027Filiale in Gestione errata
+014100941027Filiale in Gestione ad altra filiale: cambio non effettuabile

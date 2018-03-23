@@ -1,0 +1,502 @@
+000100890828     H            Y                                                       CN0500
+000200890828     F*--------------------------------------------------------------*
+000300890828     F* MANUTENZIONE ANAGRAFICA SOSTITUTO D'IMPOSTA                  *
+000400891027     F* UTILIZZA 4 DS ESTERNE:                                       *
+000500890828     F*                       - CNCR40                               *
+000600890828     F*                       - CNCR41                               *
+000700890828     F*                       - CNCR42                               *
+000800891027     F*                       - CNCR80                               *
+000900891027     F* CHE RIDEFINISCONO 4   RECORD DEL PARUT00F CON PARTIP = 40    *
+001000890828     F*                                                        41    *
+001100890828     F*                                                        42    *
+001200891027     F*                                                        80    *
+001300890828     F*----------------------* USO DEGLI INDICATORI *----------------*
+001400890828     F*  01        INSERIMENTO                                       *
+001500890828     F*  02        VARIAZIONE                                        *
+001600930825     F*  12        RITORNO SENZA AGGIORNAMENTO                       *
+001700930825     F*  03        FINE LAVORO                                       *
+001800890828     F*  20        DI LAVORO                                         *
+001900890828     F*----------------------* INDICATORI ERRORI *-------------------*
+002000890828     F*  30        ERRORE CODICE FISCALE                             *
+002100890828     F*  31        ERRORE PARTITA IVA                                *
+002200890828     F*  32        ERRORE STATO AMMINISTRATIVO SOCIETA'              *
+002300890828     F*  33        ERRORE NATURA GIURIDICA SOCIETA'                  *
+002400890828     F*  34        ERRORE CODICE ATTIVITA'                           *
+002500890828     F*  35        ERRORE DATA ULTIMA APPROVAZIONE BILANCIO          *
+002600890828     F*  36        ERRORE DATA SCADENZA PROSSIMA APPROV.BILANCIO     *
+002700890828     F*  37        ERRORE DATA ISCRIZIONE C.C.I.A.A.                 *
+002800890828     F*  38        CODICE FISCALE E PARTITA IVA NON DIGITATI         *
+002900891027     F*  50        SE FLAG BOLLO VIRTUALE = SI I CAMPI N.RO AUTORIZZ.*
+003000891027     F*            DATA E UFFICIO POSTALE SONO OBBLIGATORI           *
+003100891027     F*  51        DATA AUTORIZZ.ERRATA                              *
+003200891027     E*-                                                             *
+003300890828     F*  40        NON TROVATO TIPO RECORD '40' SU PARUT00F          *
+003400890828     F*  41        NON TROVATO TIPO RECORD '41' SU PARUT00F          *
+003500890828     F*  42        NON TROVATO TIPO RECORD '42' SU PARUT00F          *
+003600891027     F*  80        NON TROVATO TIPO RECORD '80' SU PARUT00F          *
+003700890828     F*  99        ERRORE GENERICO                                   *
+003800890828     F*--------------------------------------------------------------*
+003900890828     FCNC070D CF  E                    WORKSTN
+004000021011     F*TABEL00FIF  E           K        DISK
+004100900605     FAZORG01LIF  E           K        DISK
+004200890828     FPARUT00FUF  E           K        DISK                      A
+004300890828     E*--------------------------------------------------------------*
+004400890828     E*                        T A B E L L E                         *
+004500890828     E*--------------------------------------------------------------*
+004600890828     E*-
+004700890828     E                    XDTF   12  12  2 0             CONTROLLO DATA
+004800890828     I*--------------------------------------------------------------*
+004900890828     I*                        I N P U T                             *
+005000890828     I*--------------------------------------------------------------*
+005100890828     ICNCR40    E DS
+005200890828     ICNCR41    E DS
+005300890828     ICNCR42    E DS
+005400891027     ICNCR80    E DS
+005500890828     IKPJBA     E DS
+005600890828     IPARUTD    E DSUTEDSE0F
+005700890828     I          E DSPARUT00F
+005800890828     I                                       14 163 WPAR
+005900890828     IPARAM       DS
+006000890828     I                                    P   1   30WCCTO
+006100890828     I                                    P   4   70WSCTO
+006200890828     I*--------------------------------------------------------------*
+006300890828      /EJECT
+006400890828     C*----------------------------------------------------*
+006500890828     C*                  M A I N   L I N E                 *
+006600890828     C*----------------------------------------------------*
+006700890828     C                     EXSR DEFCAM                     *
+006800890828     C*-                                                   *
+006900890828     C                     MOVE KNRAZ     NRJOB            *
+007000890828     C                     Z-ADD1         CODUT            *
+007100890828     C                     CALL 'XPARUT'                   *
+007200890828     C                     PARM           PARUTD           *
+007300890828     C           CODUT     CABEQ-1        FINE             *
+007400890828     C                     Z-ADDCODUT     PARKUT           *
+007500890828     C                     MOVELRAGUT     RSUT             *
+007600890828     C*-                                                   *
+007700890828     C                     Z-ADD40        PARTIP           *
+007800890828     C           KPARUT    CHAINPARUT                40    *
+007900890828     C  N40                MOVELWPAR      CNCR40           *
+008000890828     C*-                                                   *
+008100890828     C                     Z-ADD41        PARTIP           *
+008200890828     C           KPARUT    CHAINPARUT                41    *
+008300890828     C  N41                MOVELWPAR      CNCR41           *
+008400890828     C*-                                                   *
+008500890828     C                     Z-ADD42        PARTIP           *
+008600890828     C           KPARUT    CHAINPARUT                42    *
+008700890828     C  N42                MOVELWPAR      CNCR42           *
+008800890828     C*-                                                   *
+008900891027     C                     Z-ADD80        PARTIP           *
+009000891027     C           KPARUT    CHAINPARUT                80    *
+009100891027     C  N80                MOVELWPAR      CNCR80           *
+009200891027     C*-                                                   *
+009300891030     C   80                Z-ADD0         SIMDBV
+009400891030     C   80                Z-ADD0         SIMCSO
+009500891207     C   80                Z-ADD0         SIMFEL
+009600890828     C           *IN40     IFEQ '1'                        *
+009700890828     C           *IN41     ANDEQ'1'                        *
+009800890828     C           *IN42     ANDEQ'1'                        *
+009900891027     C           *IN80     ANDEQ'1'
+010000890828     C                     SETON                     01    *IMMISSIONE
+010100890828     C                     Z-ADD0         SIMDTI           0 !
+010200890828     C                     Z-ADD0         SIMCAS           0 !
+010300890828     C                     Z-ADD0         SIMCAP           0 !--> VIDEO
+010400890828     C                     Z-ADD0         SIMDAP           0 !
+010500890828     C                     Z-ADD0         SIMDSA           0 !
+010600890828     C                     ELSE                            *
+010700890828     C           *IN40     IFEQ '0'                        *
+010800890828     C           *IN41     ANDEQ'0'                        *
+010900890828     C           *IN42     ANDEQ'0'                        *
+011000890828     C                     SETON                     02    *VARIAZIONE
+011100890828     C                     EXSR RIEMPI                     *
+011200890828     C                     ELSE                            *
+011300890828     C                     EXFMTC070D2
+011400890828     C                     GOTO FINE                       *ERRORE
+011500890828     C                     END                             *
+011600890828     C                     END                             *
+011700890828     C*-                                                   *
+011800890828     C*- GESTIONE IMMISSIONE/VARIAZIONE--------------------*
+011900890828     C*-                                                   *
+012000890828     C                     DO   *HIVAL                     *
+012100890828     C*-                                                   *
+012200890828     C                     EXFMTC070D1                     *
+012300890828     C                     SETOF                     303132*
+012400890828     C                     SETOF                     333435*
+012500890828     C                     SETOF                       3637*
+012600891027     C                     SETOF                       5051*
+012700890828     C                     SETOF                       9899*
+012800930825     C  NKL                EXSR CNTFMT                     *CONTROLLI
+012900890828     C*-                                                   *
+013000930825     C  NKLN99             DO                              *
+013100890828     C   01                EXSR IMMISS                     *IMMISSIONE
+013200890828     C   02                EXSR VARIAZ                     *VARIAZIONE
+013300890828     C   98                EXFMTC070D1                     *ERRORI AGG.
+013400890828     C                     END                             *
+013500890828     C*-                                                   *
+013600890828     C      99             END                             *
+013700890828     C*-                                                   *
+013800890828     C           FINE      TAG                             *
+013900890828     C                     SETON                     LR    *
+014000890828     C*----------------------------------------------------*
+014100890828      /EJECT
+014200890828     C*----------------------------------------------------*
+014300890828     C*         D E F I N I Z I O N E    C A M P I         *
+014400890828     C*----------------------------------------------------*
+014500890828     C           DEFCAM    BEGSR                           *
+014600890828     C*-                                                   *
+014700890828     C           *ENTRY    PLIST                           *
+014800890828     C                     PARM           KPJBA            *
+014900890828     C*-----CHIAVE PARUT00F                                *
+015000890828     C           KPARUT    KLIST                           *
+015100890828     C                     KFLD           PARKUT           *
+015200890828     C                     KFLD           PARTIP           *
+015300890828     C*-----CHIAVE TABEL00F                                *
+015400021011     C*          KEYTAB    KLIST                           *
+015500021011     C*                    KFLD           PARKUT           *
+015600021011     C*                    KFLD           TBLCOD           *
+015700021011     C*                    KFLD           TBLKEY           *
+015800890828     C*-                                                   *
+015900890828     C                     MOVE *BLANKS   WIVA   11        *
+016000890828     C                     MOVE *BLANKS   WRIVA   5        *
+016100890828     C                     Z-ADD0         WIVAP  110       *
+016200890828     C                     Z-ADD0         XSTATO  10
+016300890828     C*-                                                   *
+016400890828     C                     ENDSR                           *
+016500890828     C*----------------------------------------------------*
+016600890828      /EJECT
+016700890828     C*----------------------------------------------------*
+016800890828     C*              RIEMPIMENTO FORMATO VARIAZIONE        *
+016900890828     C*----------------------------------------------------*
+017000890828     C           RIEMPI    BEGSR                           *
+017100890828     C*-                                                   *
+017200890828     C           SIMDAP    IFNE 0                          *
+017300890828     C                     Z-ADD1         XDTSTA           *
+017400890828     C                     Z-ADDSIMDAP    XDTAMG           *
+017500890828     C                     EXSR CNTDAT                     *
+017600890828     C           XDTSTA    IFLT 0                          *
+017700890828     C                     Z-ADD999999    SIMDAP           *
+017800890828     C                     ELSE                            *
+017900890828     C                     Z-ADDXDTGMA    SIMDAP           *
+018000890828     C                     END                             *
+018100890828     C                     END                             *
+018200890828     C*-                                                   *
+018300890828     C           SIMDSA    IFNE 0                          *
+018400890828     C                     Z-ADD1         XDTSTA           *
+018500890828     C                     Z-ADDSIMDSA    XDTAMG           *
+018600890828     C                     EXSR CNTDAT                     *
+018700890828     C           XDTSTA    IFLT 0                          *
+018800890828     C                     Z-ADD999999    SIMDSA           *
+018900890828     C                     ELSE                            *
+019000890828     C                     Z-ADDXDTGMA    SIMDSA           *
+019100890828     C                     END                             *
+019200890828     C                     END                             *
+019300891030     C           SIMDBV    IFNE 0                          *
+019400891030     C                     Z-ADD1         XDTSTA           *
+019500891030     C                     Z-ADDSIMDBV    XDTAMG           *
+019600891030     C                     EXSR CNTDAT                     *
+019700891030     C           XDTSTA    IFLT 0                          *
+019800891030     C                     Z-ADD999999    SIMDBV           *
+019900891030     C                     ELSE                            *
+020000891030     C                     Z-ADDXDTGMA    SIMDBV           *
+020100891030     C                     END                             *
+020200891030     C                     END                             *
+020300891027     C*-                                                   *
+020400890828     C                     ENDSR                           *
+020500890828     C*----------------------------------------------------*
+020600890828      /EJECT
+020700890828     C*----------------------------------------------------*
+020800890828     C*              CONTROLLO IMMISSIONE/VARIAZIONE       *
+020900890828     C*----------------------------------------------------*
+021000890828     C           CNTFMT    BEGSR                           *CONTROLLI
+021100890828     C*-                                                   *
+021200890828     C*-                                                   *
+021300890828     C           SIMCDF    IFEQ *BLANKS                    *
+021400890828     C           SIMIVA    ANDEQ*BLANKS                    *
+021500890828     C                     SETON                       3899*
+021600890828     C                     ELSE                            *
+021700890828     C           SIMIVA    IFNE *BLANKS                    *
+021800981124     C                     CALL 'XPARIVAO'                  *
+021900890828     C                     PARM           SIMIVA           *
+022000890828     C                     PARM           XSTATO  10
+022100890828     C           XSTATO    IFLT 0                          *
+022200890828     C                     SETON                       3199*
+022300890828     C                     END                             *
+022400890828     C                     END                             *
+022500890828     C                     END                             *
+022600890828     C*-                                                   *
+022700890828     C           SIMDTI    IFNE 0                          *
+022800890828     C                     Z-ADD3         XDTSTA           *
+022900890828     C                     Z-ADDSIMDTI    XDTGMA           *
+023000890828     C                     EXSR CNTDAT                     *
+023100890828     C           XDTSTA    IFLT 0                          *
+023200890828     C                     SETON                       3799*
+023300890828     C                     END                             *
+023400890828     C                     END                             *
+023500890828     C*-                                                   *
+023600890828     C           SIMDAP    IFNE 0                          *
+023700890828     C                     Z-ADD3         XDTSTA           *
+023800890828     C                     Z-ADDSIMDAP    XDTGMA           *
+023900890828     C                     EXSR CNTDAT                     *
+024000890828     C           XDTSTA    IFLT 0                          *
+024100890828     C                     SETON                       3599*
+024200890828     C                     END                             *
+024300890828     C                     END                             *
+024400890828     C*-                                                   *
+024500890828     C           SIMDSA    IFNE 0                          *
+024600890828     C                     Z-ADD3         XDTSTA           *
+024700890828     C                     Z-ADDSIMDSA    XDTGMA           *
+024800890828     C                     EXSR CNTDAT                     *
+024900890828     C           XDTSTA    IFLT 0                          *
+025000890828     C                     SETON                       3699*
+025100890828     C                     END                             *
+025200890828     C                     END                             *
+025300890828     C*-                                                   *
+025400021011     C*          SIMNGR    IFNE *BLANKS                    *
+025500021011     C*                    MOVEL'NG'      TBLCOD           *           G
+025600021011     C*                    MOVE *BLANKS   TBLKEY           *           G
+025700021011     C*                    MOVELSIMNGR    TBLKEY           *           G
+025800021011     C*          KEYTAB    CHAINTABEL00F             33    *
+025900021011     C*  33                SETON                       99  *
+026000021011     C*                    END                             *
+026100890828     C*-                                                   *
+026200891027     C           SIMFBV    IFEQ 'S'                        *
+026300891027     C           SIMNBV    ANDEQ*BLANKS                    *
+026400891027     C                     SETON                     5099
+026500891027     C                     END
+026600891027     C           SIMFBV    IFEQ 'S'                        *
+026700891027     C           SIMDBV    ANDEQ0                          *
+026800891027     C                     SETON                     5299
+026900891027     C                     END
+027000891027     C           SIMFBV    IFEQ 'S'                        *
+027100891027     C           SIMUBV    ANDEQ*BLANKS                    *
+027200891027     C                     SETON                     5399
+027300891027     C                     END
+027400891027     C*-                                                   *
+027500891027     C           SIMDBV    IFNE 0                          *
+027600891027     C                     Z-ADD3         XDTSTA           *
+027700891027     C                     Z-ADDSIMDBV    XDTGMA           *
+027800891027     C                     EXSR CNTDAT                     *
+027900891027     C           XDTSTA    IFLT 0                          *
+028000891027     C                     SETON                       5199*
+028100891027     C                     END                             *
+028200891027     C                     END                             *
+028300891027     C*-                                                   *
+028400891207     C           SIMFEL    IFNE 0                          *
+028500900605     C           SIMFEL    CHAINAZORG                39    *
+028600891207     C   39                SETON                     99    *
+028700891207     C                     END                             *
+028800891207     C*-                                                   *
+028900890828     C           EXCNT     TAG                             *
+029000890828     C                     ENDSR                           *
+029100890828     C*----------------------------------------------------*
+029200890828      /EJECT
+029300890828     C*----------------------------------------------------*
+029400890828     C*              I M M I S S I O N E                   *
+029500890828     C*----------------------------------------------------*
+029600890828     C           IMMISS    BEGSR                           *
+029700890828     C*-                                                   *
+029800890828     C                     Z-ADD3         XDTSTA           *
+029900890828     C                     Z-ADDSIMDAP    XDTGMA           *
+030000890828     C                     EXSR CNTDAT                     *
+030100890828     C           XDTSTA    IFLT 0                          *
+030200890828     C                     SETON                       3599*
+030300890828     C                     ELSE                            *
+030400890828     C                     Z-ADDXDTAMG    SIMDAP           *
+030500890828     C                     END                             *
+030600890828     C*-                                                   *
+030700890828     C                     Z-ADD3         XDTSTA           *
+030800890828     C                     Z-ADDSIMDSA    XDTGMA           *
+030900890828     C                     EXSR CNTDAT                     *
+031000890828     C           XDTSTA    IFLT 0                          *
+031100890828     C                     SETON                       3699*
+031200890828     C                     ELSE                            *
+031300890828     C                     Z-ADDXDTAMG    SIMDSA           *
+031400890828     C                     END                             *
+031500890828     C*-                                                   *
+031600891027     C           SIMDBV    IFNE 0
+031700891027     C                     Z-ADD3         XDTSTA           *
+031800891027     C                     Z-ADDSIMDBV    XDTGMA           *
+031900891027     C                     EXSR CNTDAT                     *
+032000891027     C           XDTSTA    IFLT 0                          *
+032100891027     C                     SETON                       5199*
+032200891027     C                     ELSE                            *
+032300891027     C                     Z-ADDXDTAMG    SIMDBV           *
+032400891027     C                     END                             *
+032500891027     C                     END
+032600891027     C*-                                                   *
+032700890828     C  N99                DO                              *
+032800890828     C*-                                                   *
+032900890828     C*-TIPO RECORD "40"-                                  *
+033000890828     C                     MOVE *BLANKS   TRB02            *
+033100890828     C                     MOVE *BLANKS   ATB02            *
+033200890828     C                     Z-ADDKNRAZ     NRJOB            *
+033300890828     C                     Z-ADD40        PARTIP           *
+033400890828     C                     MOVELCNCR40    WPAR             *
+033500890828     C                     WRITEPARUT                  98  * 98 ERR IN WR
+033600890828     C           *IN98     IFNE '1'                        *
+033700890828     C*-                                                   *
+033800890828     C*-TIPO RECORD "41"-                                  *
+033900890828     C                     Z-ADD41        PARTIP           *
+034000890828     C                     MOVELCNCR41    WPAR             *
+034100890828     C                     WRITEPARUT                  98  * 98 ERR IN WR
+034200890828     C           *IN98     IFNE '1'                        *
+034300890828     C*-                                                   *
+034400890828     C*-TIPO RECORD "42"-                                  *
+034500890828     C                     Z-ADD42        PARTIP           *
+034600890828     C                     MOVELCNCR42    WPAR             *
+034700890828     C                     WRITEPARUT                  98  * 98 ERR IN WR
+034800890828     C*-                                                   *
+034900891027     C*-TIPO RECORD "80"-                                  *
+035000891027     C                     Z-ADD80        PARTIP           *
+035100891027     C                     MOVELCNCR80    WPAR             *
+035200891027     C                     WRITEPARUT                  98  * 98 ERR IN WR
+035300891027     C*-                                                   *
+035400890828     C                     END                             *
+035500890828     C                     END                             *
+035600890828     C*-                                                   *
+035700890828     C                     END                             *
+035800890828     C*-                                                   *
+035900890828     C                     ENDSR                           *
+036000890828     C*----------------------------------------------------*
+036100890828      /EJECT
+036200890828     C*----------------------------------------------------*
+036300890828     C*              V A R I A Z I O N E                   *
+036400890828     C*----------------------------------------------------*
+036500890828     C           VARIAZ    BEGSR                           *
+036600890828     C*-                                                   *
+036700890828     C                     Z-ADD3         XDTSTA           *
+036800890828     C                     Z-ADDSIMDAP    XDTGMA           *
+036900890828     C                     EXSR CNTDAT                     *
+037000890828     C           XDTSTA    IFLT 0                          *
+037100890828     C                     SETON                       3599*
+037200890828     C                     ELSE                            *
+037300890828     C                     Z-ADDXDTAMG    SIMDAP           *
+037400890828     C                     END                             *
+037500890828     C*-                                                   *
+037600890828     C                     Z-ADD3         XDTSTA           *
+037700890828     C                     Z-ADDSIMDSA    XDTGMA           *
+037800890828     C                     EXSR CNTDAT                     *
+037900890828     C           XDTSTA    IFLT 0                          *
+038000890828     C                     SETON                       3699*
+038100890828     C                     ELSE                            *
+038200890828     C                     Z-ADDXDTAMG    SIMDSA           *
+038300890828     C                     END                             *
+038400890828     C*-                                                   *
+038500891027     C           SIMDBV    IFNE 0
+038600891027     C                     Z-ADD3         XDTSTA           *
+038700891027     C                     Z-ADDSIMDBV    XDTGMA           *
+038800891027     C                     EXSR CNTDAT                     *
+038900891027     C           XDTSTA    IFLT 0                          *
+039000891027     C                     SETON                       5199*
+039100891027     C                     ELSE                            *
+039200891027     C                     Z-ADDXDTAMG    SIMDBV           *
+039300891027     C                     END                             *
+039400891027     C                     END
+039500891207     C*-                                                   *
+039600891207     C           SIMFEL    IFNE 0                          *
+039700900605     C           SIMFEL    CHAINAZORG                39    *
+039800891207     C   39                SETON                     99    *
+039900891207     C                     END                             *
+040000891207     C*-                                                   *
+040100890828     C  N99                DO                              *
+040200890828     C*-                                                   *
+040300890828     C*-TIPO RECORD "40"-                                  *
+040400890828     C                     Z-ADDKNRAZ     NRJOB            *
+040500890828     C                     Z-ADD40        PARTIP           *
+040600890828     C           KPARUT    CHAINPARUT                98    *
+040700890828     C  N98                DO                              *VARIAZIONE
+040800890828     C                     MOVELCNCR40    WPAR             *
+040900890828     C                     UPDATPARUT                  98  * 99 ERR IN WR
+041000890828     C                     END                             *
+041100890828     C*-                                                   *
+041200890828     C*-TIPO RECORD "41"-                                  *
+041300890828     C           *IN98     IFNE '1'                        *
+041400890828     C                     Z-ADD41        PARTIP           *
+041500890828     C           KPARUT    CHAINPARUT                98    *
+041600890828     C  N98                DO                              *VARIAZIONE
+041700890828     C                     MOVELCNCR41    WPAR             *
+041800890828     C                     UPDATPARUT                  98  * 99 ERR IN WR
+041900890828     C                     END                             *
+042000891027     C*-                                                   *
+042100891027     C*-TIPO RECORD "42"-                                  *
+042200890828     C           *IN98     IFNE '1'                        *
+042300890828     C                     Z-ADD42        PARTIP           *
+042400890828     C           KPARUT    CHAINPARUT                98    *
+042500890828     C  N98                DO                              *VARIAZIONE
+042600890828     C                     MOVELCNCR42    WPAR             *
+042700890828     C                     UPDATPARUT                  98  * 99 ERR IN WR
+042800890828     C                     END                             *
+042900891027     C*-TIPO RECORD "80"-                                  *
+043000891027     C           *IN98     IFNE '1'                        *
+043100891027     C                     Z-ADD80        PARTIP           *
+043200891027     C           KPARUT    CHAINPARUT                98    *
+043300891027     C                     DO                              *VARIAZIONE
+043400891027     C                     MOVELCNCR80    WPAR             *
+043500891027     C  N80                UPDATPARUT                  98  * 99 ERR IN WR
+043600891027     C   80                WRITEPARUT                  98
+043700891027     C                     END                             *
+043800890828     C                     END                             *
+043900890828     C                     END                             *
+044000891027     C                     END
+044100890828     C*-                                                   *
+044200890828     C                     END                             *
+044300890828     C*-                                                   *
+044400890828     C                     ENDSR                           *
+044500890828     C*----------------------------------------------------*
+044600890828      /EJECT
+044700890828     C*----------------------------------------------------*
+044800890828     C*                CONTROLLO DATA                      *
+044900890828     C*----------------------------------------------------*
+045000890828     C           CNTDAT    BEGSR                           *
+045100890828     C*-                                                   *
+045200890828     C           XDTSTA    CABGT4         XDTERR           *
+045300890828     C           XDTSTA    CABLT1         XDTERR           *
+045400890828     C           XDTSTA    CABGT2         XDTEI            *
+045500890828     C*    GIRA DATA INTERNA IN ESTERNA                    *
+045600890828     C           XDTAMG    DIV  100       XDTMM   20       * M-->XDTMM
+045700890828     C           XDTAMG    DIV  10000     XDTAA   20       * A-->XDTAA
+045800890828     C                     MOVE XDTAMG    XDTGG   20       * G-->XDTGG
+045900890828     C                     MOVE XDTAMG    XDTGMA           * M--> XDTGMA
+046000890828     C                     MOVELXDTGG     XDTGMA  60       * G--> XDTGMA
+046100890828     C                     MOVE XDTAA     XDTGMA           * A--> XDTGMA
+046200890828     C                     GOTO XDTCON                     *
+046300890828     C           XDTEI     TAG                             *
+046400890828     C*    GIRA DATA ESTERNA IN INTERNA                    *
+046500890828     C           XDTGMA    DIV  100       XDTMM            * M--> XDTMM
+046600890828     C           XDTGMA    DIV  10000     XDTGG            * G--> XDTGG
+046700890828     C                     MOVE XDTGMA    XDTAA            * A--> XDTAA
+046800890828     C                     MOVE XDTGMA    XDTAMG  60       * M--> XDTAMG
+046900890828     C                     MOVELXDTAA     XDTAMG           * A--> XDTAMG
+047000890828     C                     MOVE XDTGG     XDTAMG           * G--> XDTAMG
+047100890828     C                     SUB  2         XDTSTA  10       *PREPARA XDTSTA
+047200890828     C*                                                    * PER TEST CONT
+047300890828     C           XDTCON    TAG                             *
+047400890828     C           XDTSTA    CABNE1         XDTOK            * XDTSTA NON 1
+047500890828     C*                                                    *SALTA CONTROL
+047600890828     C*                                                    *
+047700890828     C*    CONTROLLA LA VALIDITA* DELLA DATA               *
+047800890828     C           XDTGG     CABLT1         XDTERR           *
+047900890828     C           XDTMM     CABLT1         XDTERR           *
+048000890828     C           XDTMM     CABGT12        XDTERR           *
+048100890828     C           XDTAA     DIV  4         XDTRES  20       * INDIVIDUA
+048200890828     C                     MVR            XDTRES           * ANNO BISEST.
+048300890828     C           XDTRES    IFEQ 0                          *
+048400890828     C                     Z-ADD29        XDTF,2           * AGGIUSTA
+048500890828     C                     ELSE                            * FINE FEBBRAIO
+048600890828     C                     Z-ADD28        XDTF,2           * IN ARRAY XDTF
+048700890828     C                     END                             *
+048800890828     C           XDTGG     CABGTXDTF,XDTMMXDTERR           * GIORNO DATA >
+048900890828     C*                                                    * FINE MESE
+049000890828     C           XDTOK     TAG                             *
+049100890828     C*    FINE NORMALE                                    *
+049200890828     C                     SUB  XDTSTA    XDTSTA           *
+049300890828     C                     GOTO XDTFIN                     *
+049400890828     C           XDTERR    TAG                             *
+049500890828     C*    DATA O RICHIESTA ERRATA                         *
+049600890828     C                     Z-SUB1         XDTSTA           *
+049700890828     C           XDTFIN    TAG                             *
+049800890828     C*-                                                   *
+049900890828     C                     ENDSR                           *
+050000890828     C*----------------------------------------------------*
+050100890828**
+050200890828312831303130313130313031

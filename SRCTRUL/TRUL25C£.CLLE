@@ -1,0 +1,274 @@
+000100011113/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200011107/*PARMS                                                                       */
+000300011107/*PARMS                                                                       */
+000400011107/*PARMS                                                                       */
+000500011107/*PARMS                                                                       */
+000600011107
+000700011107             PGM        PARM(&TIPOCALL &FILE &LIB &MBR &TESTO +
+000800011113                          &FRATIO1 &OVRSCP &ESITO)
+000900011107
+001000011107/*------------------------------------------------------------------*/
+001100011107/*------ D E F I N I Z I O N E   V A R I A B I L I -----------------*/
+001200011107/*------------------------------------------------------------------*/
+001300011107
+001400011107/* Tipo chiamata                                                     */
+001500011107             DCL        VAR(&TIPOCALL) TYPE(*CHAR) LEN(1)
+001600011107  /* Valori validi : 1= chkobj + addpfm + alcobj + ovrdbf            */
+001700011107  /*                 2= chkobj                                       */
+001800011107  /*                 3= addpfm                                       */
+001900011107  /*                 4= alcobj                                       */
+002000011107  /*                 5= ovrdbf                                       */
+002100020910  /*                 7= dltovr                                       */
+002200020902  /*                 8= dlcobj                                       */
+002300011107  /*                 9= dltovr, dlcobj                               */
+002400011107
+002500011107/* Nome file */
+002600011107             DCL        VAR(&FILE)  TYPE(*CHAR) LEN(10)
+002700011107
+002800011107/* Nome libreria */
+002900011107             DCL        VAR(&LIB)  TYPE(*CHAR) LEN(10)
+003000011107
+003100011107/* Nome membro */
+003200011107             DCL        VAR(&MBR)   TYPE(*CHAR) LEN(10)
+003300011107
+003400011107/* Testo membro */
+003500011107             DCL        VAR(&TESTO) TYPE(*CHAR) LEN(10)
+003600011107
+003700011107/* Force Record Ratio = 1 record                                    */
+003800011107             DCL        VAR(&FRATIO1) TYPE(*CHAR) LEN(1)
+003900011113  /* Valori validi : "S"  aggiornamento del file ad ogni WRITE/UPDATE  */
+004000011113  /*                 " "  aggiornamento gestito dall'AS400 (default) */
+004100011113
+004200011113/* Overscope (ambito della sostituzione) */
+004300011113             DCL        VAR(&OVRSCP) TYPE(*CHAR) LEN(1)
+004400011113  /* Valori validi :  A => *ACTGRPDFN                              */
+004500011113  /*                  C => *CALLLVL                                */
+004600011113  /*                  J => *JOB     (default)                      */
+004700011107
+004800011107/* Esito esecuzione                                                */
+004900011107             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(2)
+005000011107  /* Valori validi :  00 eseguito regolarmente                      */
+005100011107  /*                  01 tipo chiamata non valido                   */
+005200011107  /*                  C1 libreria non trovata - CHKOBJ              */
+005300011107  /*                  C2 file non trovato nella libreria - CHKOBJ   */
+005400011107  /*                  C3 membro non trovato nel file - CHKOBJ       */
+005500011107  /*                  C9 errore generico - CHKOBJ                   */
+005600011107  /*                  A1 membro non aggiunto al file - ADDPFM       */
+005700011107  /*                  K1 oggetto non allocato - ALCOBJ              */
+005800011107  /*                  O1 sostituzione non riuscita - OVRDBF         */
+005900011113  /*                  D1 override non cancellata - DLTOVR           */
+006000011113  /*                  D2 disallocaz. membri non riuscita - DLCOBJ   */
+006100011113
+006200011113/* Variabili di comodo:                                             */
+006300011113             DCL        VAR(&OVRSCOPE) TYPE(*CHAR) LEN(10)
+006400011113             DCL        VAR(&LVL)      TYPE(*CHAR) LEN(10)
+006500011107
+006600011107/*------------------------------------------------------------------*/
+006700011107/*------ I M P O S T O   P A R A M E T R I -------------------------*/
+006800011107/*------------------------------------------------------------------*/
+006900011107
+007000011107/* Se non ricevo libreria imposto '*LIBL'                           */
+007100011107             IF         COND(&LIB = ' ') THEN(CHGVAR VAR(&LIB) +
+007200011107                          VALUE('*LIBL'))
+007300011113/* Se non ricevo ambito di sostituzione imposto '*JOB'              */
+007400011113             IF         COND(&OVRSCP = ' ') THEN(CHGVAR VAR(&OVRSCP) +
+007500011113                          VALUE('J'))
+007600011113/* In base all'ambito della sostituzione richiesta imposto i        */
+007700011113/*  parametri "di lavoro"                                           */
+007800011113             IF         COND(&OVRSCP = 'A') THEN(DO)
+007900011113               CHGVAR     VAR(&OVRSCOPE) VALUE('*ACTGRPDFN')
+008000011113               CHGVAR     VAR(&LVL)      VALUE('*ACTGRPDFN')
+008100011113             ENDDO
+008200011113             IF         COND(&OVRSCP = 'C') THEN(DO)
+008300011113               CHGVAR     VAR(&OVRSCOPE) VALUE('*CALLLVL  ')
+008400011113               CHGVAR     VAR(&LVL)      VALUE('*         ')
+008500011113             ENDDO
+008600011113             IF         COND(&OVRSCP = 'J') THEN(DO)
+008700011113               CHGVAR     VAR(&OVRSCOPE) VALUE('*JOB      ')
+008800011113               CHGVAR     VAR(&LVL)      VALUE('*JOB      ')
+008900011113             ENDDO
+009000011113/* Se non ricevo ambito di sostituzione valido imposto '*JOB'   */
+009100011113             IF         COND(&OVRSCOPE = '      ') THEN(DO)
+009200011113               CHGVAR     VAR(&OVRSCOPE) VALUE('*JOB      ')
+009300011113               CHGVAR     VAR(&LVL)      VALUE('*JOB      ')
+009400011113             ENDDO
+009500011107/* Forzo esito '00'                                                 */
+009600011107             CHGVAR     VAR(&ESITO) VALUE('00')
+009700011107
+009800011107/*------------------------------------------------------------------*/
+009900011107/*------ P O S I Z I O N A M E N T O -------------------------------*/
+010000011107/*------------------------------------------------------------------*/
+010100011107
+010200011107             IF         COND(&TIPOCALL = '1' *OR &TIPOCALL = '2') +
+010300011107                          THEN(GOTO CMDLBL(CHKMBR))
+010400011107
+010500011107             IF         COND(&TIPOCALL = '3') THEN(GOTO +
+010600011107                          CMDLBL(CREAMBR))
+010700011107
+010800011107             IF         COND(&TIPOCALL = '4') THEN(GOTO +
+010900011107                          CMDLBL(ALLOCAMBR))
+011000011107
+011100011107             IF         COND(&TIPOCALL = '5') THEN(GOTO +
+011200011107                          CMDLBL(PUNTAMENTO))
+011300020910
+011400020910             IF         COND(&TIPOCALL = '7') THEN(GOTO +
+011500020910                          CMDLBL(DLCDLTO))
+011600020902
+011700020902             IF         COND(&TIPOCALL = '8') THEN(GOTO +
+011800020902                          CMDLBL(DISALLOCAZ))
+011900011107
+012000011107             IF         COND(&TIPOCALL = '9') THEN(GOTO +
+012100011107                          CMDLBL(DLCDLTO))
+012200011107
+012300011107  /* se tipo chiamata non prevista vado a fine programma */
+012400011107             CHGVAR     VAR(&ESITO) VALUE('01')
+012500011107             GOTO       CMDLBL(FINE)
+012600011107
+012700011107/*------------------------------------------------------------------*/
+012800011107/*------ C O N T R O L L O   E S I S T E N Z A   O G G E T T O -----*/
+012900011107/*------------------------------------------------------------------*/
+013000011107
+013100011107CHKMBR:
+013200011107
+013300011107             IF         COND(&TIPOCALL = '1' *OR &TIPOCALL = '2') +
+013400011107                          THEN(DO)
+013500011107
+013600011107             CHKOBJ     OBJ(&LIB/&FILE) OBJTYPE(*FILE) MBR(&MBR)
+013700011107  /* Controllo errori */
+013800011107             MONMSG     MSGID(CPF9810) EXEC(CHGVAR VAR(&ESITO) +
+013900011107                          VALUE('C1'))
+014000011107
+014100011107             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&ESITO) +
+014200011107                          VALUE('C2'))
+014300011107
+014400011107             MONMSG     MSGID(CPF9815) EXEC(CHGVAR VAR(&ESITO) +
+014500011107                          VALUE('C3'))
+014600011107
+014700011107             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ESITO) +
+014800011107                          VALUE('C9'))
+014900011107
+015000011107  /* se devo proseguire e non esiste il membro passo alla creazione */
+015100011107             IF         COND(&TIPOCALL = '1' *AND &ESITO *EQ 'C3') +
+015200011107                          THEN(DO)
+015300011107             CHGVAR     VAR(&ESITO) VALUE('00')
+015400011107             GOTO       CMDLBL(CREAMBR)
+015500011107             ENDDO
+015600011107  /* se devo proseguire ed esiste il membro passo all'allocazione */
+015700011107             IF         COND(&TIPOCALL = '1' *AND &ESITO *EQ '00') +
+015800011107                          THEN(GOTO CMDLBL(ALLOCAMBR))
+015900011107
+016000011107  /* se non devo proseguire od ho errori bloccanti vado a fine pgm */
+016100011107             GOTO       CMDLBL(FINE)
+016200011107
+016300011107             ENDDO
+016400011107
+016500011107/*------------------------------------------------------------------*/
+016600011107/*------ A G G I U N G O   I L   M E M B R O -----------------------*/
+016700011107/*------------------------------------------------------------------*/
+016800011107
+016900011107CREAMBR:
+017000011107
+017100011107             IF         COND(&TIPOCALL = '1' *OR &TIPOCALL = '3') +
+017200011107                          THEN(DO)
+017300011107
+017400011107             ADDPFM     FILE(&LIB/&FILE) MBR(&MBR) TEXT(&TESTO)
+017500011107
+017600011107  /* se ho errore imposto comando in errore e vado a fine pgm */
+017700011107             MONMSG     MSGID(CPF0000) EXEC(DO)
+017800011107             CHGVAR     VAR(&ESITO) VALUE('A1')
+017900011107             GOTO       CMDLBL(FINE)
+018000011107             ENDDO
+018100011107
+018200011107             ENDDO
+018300011107
+018400011107/*------------------------------------------------------------------*/
+018500011107/*------ A L L O C O   I L   M E M B R O ---------------------------*/
+018600011107/*------------------------------------------------------------------*/
+018700011107
+018800011107ALLOCAMBR:
+018900011107
+019000011107             IF         COND(&TIPOCALL = '1' *OR &TIPOCALL = '4') +
+019100011107                          THEN(DO)
+019200011107
+019300011107             ALCOBJ     OBJ((&LIB/&FILE *FILE *EXCL &MBR))
+019400011107
+019500011107  /* se ho errore imposto comando in errore e vado a fine pgm */
+019600011107             MONMSG     MSGID(CPF0000) EXEC(DO)
+019700011107             CHGVAR     VAR(&ESITO) VALUE('K1')
+019800011107             GOTO       CMDLBL(FINE)
+019900011107             ENDDO
+020000011107
+020100011107             ENDDO
+020200011107
+020300011107/*------------------------------------------------------------------*/
+020400011107/*------ P U N T O   F I L E   E   M E M B R O ---------------------*/
+020500011107/*------------------------------------------------------------------*/
+020600011107
+020700011107PUNTAMENTO:
+020800011107
+020900011107             IF         COND(&TIPOCALL = '1' *OR &TIPOCALL = '5') +
+021000011107                          THEN(DO)
+021100011107
+021200011107 /* con forzatura della scrittura record */
+021300011107             IF         COND(&FRATIO1 = 'S') THEN(DO)
+021400020827             OVRDBF     FILE(&FILE) TOFILE(&LIB/&FILE) MBR(&MBR) +
+021500020827                          FRCRATIO(1) OVRSCOPE(&OVRSCOPE)
+021600011107             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ESITO) +
+021700011107                          VALUE('O1'))
+021800011107             ENDDO
+021900011107
+022000011107 /* senza forzatura della scrittura record */
+022100011107             IF         COND(&FRATIO1 *NE 'S') THEN(DO)
+022200020827             OVRDBF     FILE(&FILE) TOFILE(&LIB/&FILE) MBR(&MBR) +
+022300020827                          OVRSCOPE(&OVRSCOPE)
+022400011107             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&ESITO) +
+022500011107                          VALUE('O1'))
+022600011107             ENDDO
+022700011107
+022800011107  /* se ho errore imposto comando in errore e vado a fine pgm */
+022900011107             IF         COND(&ESITO *NE '00') THEN(DO)
+023000011107             GOTO       CMDLBL(FINE)
+023100011107             ENDDO
+023200011107
+023300011107             ENDDO
+023400011107
+023500011107/*------------------------------------------------------------------*/
+023600011107
+023700011107  /* terminata l'elaborazione vado a fine */
+023800011107             GOTO       CMDLBL(FINE)
+023900011107
+024000011107/*------------------------------------------------------------------*/
+024100011107/*------ D E A L L O C O   E   T O L G O   P U N T A M E N T O -----*/
+024200011107/*------------------------------------------------------------------*/
+024300011107
+024400011107DLCDLTO:
+024500011107
+024600020902/* Cancello override ------------------------------------------------*/
+024700020910             IF         COND(&TIPOCALL = '7' *OR &TIPOCALL = '9') +
+024800020910                          THEN(DO)
+024900011107
+025000011113             DLTOVR     FILE(&FILE) LVL(&LVL)
+025100011113             MONMSG     MSGID(CPF0000) EXEC(DO)
+025200011113             CHGVAR     VAR(&ESITO) VALUE('D1')
+025300011113             GOTO       CMDLBL(FINE)
+025400011113             ENDDO
+025500020902
+025600020902             ENDDO
+025700011107
+025800020902DISALLOCAZ:
+025900020902
+026000020902/* Disalloco i membri -----------------------------------------------*/
+026100020902             IF         COND(&TIPOCALL = '8' *OR &TIPOCALL = '9') +
+026200020902                          THEN(DO)
+026300020902
+026400011107             DLCOBJ     OBJ((&LIB/&FILE *FILE *EXCL &MBR))
+026500011113             MONMSG     MSGID(CPF0000) EXEC(DO)
+026600011113             CHGVAR     VAR(&ESITO) VALUE('D2')
+026700011113             GOTO       CMDLBL(FINE)
+026800011113             ENDDO
+026900011107
+027000011107             ENDDO
+027100011107
+027200011107/*------------------------------------------------------------------*/
+027300011107
+027400011107 FINE:       ENDPGM

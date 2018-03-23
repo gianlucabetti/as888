@@ -1,0 +1,48 @@
+000100961009/********************************************************************/
+000200961009/*                                                                  */
+000300961009/*                 RITORNO DATE DI ARRIVO PER PARTNER               */
+000400961009/*                                                                  */
+000500961009/********************************************************************/
+000600961009             PGM        PARM(&KPJBA)
+000700961009
+000800961009/*  Dichiarazione vaiabili                                          */
+000900961010             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001000961011             DCL        VAR(&JOB)   TYPE(*CHAR) LEN(10)
+001100961011             DCL        VAR(&MSG)   TYPE(*CHAR) LEN(65)
+001200961011
+001300961011             RTVJOBA    JOB(&JOB)
+001400961010
+001500961010/*  Prima di richiamare il pgm principale alloco EDBRV - EDSUM      */
+001600961010             ALCOBJ     OBJ((EDBRV00F *FILE *EXCL))
+001700961010             MONMSG     MSGID(CPF1002) EXEC(DO)
+001800961011             CHGVAR     VAR(&MSG) VALUE('Un altro +
+001900961010                          operatore sta inviando le date arrivo +
+002000961010                          riprova più tardi')
+002100961011             SNDBRKMSG  MSG(&MSG) TOMSGQ(&JOB)
+002200961010             GOTO       CMDLBL(FINE)
+002300961010             ENDDO
+002400961010
+002500040524/*                                                                   */
+002600040524/*           ALCOBJ     OBJ((EDSUM00F *FILE *EXCL))                  */
+002700040524/*           MONMSG     MSGID(CPF1002) EXEC(DO)                      */
+002800040524/*           CHGVAR     VAR(&MSG) VALUE('Un altro +                  */
+002900040524/*                        operatore sta inviando le date arrivo +    */
+003000040524/*                        riprova più tardi')                        */
+003100040524/*           SNDBRKMSG  MSG(&MSG) TOMSGQ(&JOB)                       */
+003200040524/*           GOTO       CMDLBL(FINE1)                                */
+003300040524/*           ENDDO                                                   */
+003400040524/*                                                                   */
+003500961009
+003600961009/*  Share file display                                              */
+003700980330             OVRDBF     FILE(TRTC87D)  SHARE(*YES)
+003800980330             OVRDBF     FILE(TRTC87D6) SHARE(*YES)
+003900961011             CALL       PGM(TRTC87R) PARM(&KPJBA)
+004000961009             DLTOVR     FILE(TRTC87D)
+004100980330             DLTOVR     FILE(TRTC87D6)
+004200961010
+004300961010/*  Disalloco EDSUM                                                 */
+004400040524/*           DLCOBJ     OBJ((EDSUM00F *FILE *EXCL))                  */
+004500961010/*  Disalloco EDBRV                                                 */
+004600961010 FINE1:      DLCOBJ     OBJ((EDBRV00F *FILE *EXCL))
+004700961009
+004800961010 FINE:       ENDPGM

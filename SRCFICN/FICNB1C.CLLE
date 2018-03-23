@@ -1,0 +1,37 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400020118
+000500051107             CRTDUPOBJ  OBJ(FIFTDW0F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+000600051107                          TOLIB(QTEMP)
+000700051107
+000800051107             CRTDUPOBJ  OBJ(FIFTDW1L) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+000900051107                          TOLIB(QTEMP)
+001000051107
+001100020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001200020408/* procedura/programma fosse finita in maniera anomala occorre */
+001300020408/* parare il colpo riducendo il male al male minore ossia      */
+001400020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+001500020408/* metà piuttosto che confermarle. E ripartendo da una         */
+001600020408/* situazione pulita.                                          */
+001700020408             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001800020409/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+001900020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+002000020409             ENDCMTCTL
+002100020409             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+002200020409             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002300020409             ENDDO
+002400020116
+002500020322/* richiamo programma di stampa                    */
+002600020408             CALL       PGM(FICNB1R) PARM(&KPJBA)
+002700020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+002800020417             ROLLBACK
+002900020417             ENDDO
+003000020408 /* se per qualsiasi motivo il programma si è interrotto in modo */
+003100020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+003200020408 /* in modo pulito senza lasciare transazioni a metà.            */
+003300020322             ENDCMTCTL
+003400020116
+003500051108             DLTF       FILE(QTEMP/FIFTDW*)
+003600051108
+003700000000             ENDPGM

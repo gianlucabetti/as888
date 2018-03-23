@@ -1,0 +1,62 @@
+000100000000     H            Y J
+000200000000      ********************************************************************
+000300000000      *  BAK061R -  PULISCE AZIONI NON PIë ESISTENTI                     *
+000400000000      *------------------------------------------------------------------*
+000500000000      *--- File Input
+000600000000     FKPLOG02LUF  E           K        DISK
+000700000000X0210 *---
+000800000000  "  IKPJBA     E DS
+000900000000X0210 *---
+001000000000     I* PARAMETRI DI I/O di BAK036R
+001100000000     IDS036       DS
+001200000000     I                                        1  10 JNAM36
+001300000000     I                                       11  20 UNAM36
+001400000000     I                                       21  26 JNBR36
+001500000000     I                                       27  36 JOBQ36
+001600000000     I                                       37  37 JOBP36
+001700000000     I                                       38  47 JSTS36
+001800000000      *--- DS Data
+001900000000     I            DS
+002000000000     I                                        1   60DATA
+002100000000     I                                        1   20AA
+002200000000     I                                        3   40MM
+002300000000     I                                        5   60GG
+002400000000     C*
+002500000000     C* LEGGE LE AZIONI ATTIVE E IN CODA
+002600000000     C*
+002700000000     C                     TIME           ORA     60
+002800000000     C                     Z-ADDUDATE     DATA
+002900000000     C                     Z-ADD0         LOGDAF
+003000000000     C           LOGDAF    SETLLKPLOG02L
+003100000000     C           LOGDAF    READEKPLOG02L                 21
+003200000000     C           *IN21     DOWEQ'0'
+003300000000     C           LOGATT    IFNE 'A'
+003400000000X0210C           LOGDAI    ANDNE0
+003500000000  "   * KPJBA azione
+003600000000X0210C                     MOVELLOGKPJ    KPJBA
+003700000000     C                     CLEARDS036
+003800000000     C                     MOVELLOGNME    JNAM36
+003900000000X0210X*****                MOVEL'*ALL'    UNAM36
+004000000000  "  X*****                MOVEL'*ALL'    JNBR36
+004100000000  "  C                     MOVELKNMUS     UNAM36
+004200000000X0210C                     MOVELKNRJO     JNBR36
+004300000000     C                     CALL 'BAK036R'              99
+004400000000     C                     PARM           DS036
+004500000000     C           *IN99     IFEQ '1'
+004600000000X0210X*****      JNBR36    OREQ '*ALL  '
+004700000000  "  C           JSTS36    OREQ '*ERROR'
+004800000000X0210C           JSTS36    OREQ '*OUTQ'
+004900000000     C                     Z-ADDORA       LOGORF
+005000000000     C                     Z-ADDDATA      LOGDAF
+005100000000      * SE ANNO < 40 SIAMO NEL 2000 !!!
+005200000000     C           AA        IFLT 40
+005300000000     C                     MOVEL1         LOGDAF
+005400000000     C                     ENDIF
+0055000000001    C                     MOVE 'E'       LOGATT
+005600000000     C                     UPDATKPLOG000
+005700000000     C                     ENDIF
+005800000000     C                     ENDIF
+005900000000     C                     Z-ADD0         LOGDAF
+006000000000     C           LOGDAF    READEKPLOG02L                 21
+006100000000     C                     ENDDO
+006200000000     C                     SETON                         LR

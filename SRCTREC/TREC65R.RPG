@@ -1,0 +1,100 @@
+000100000000      *------------------------------------------------------------------------*
+000200000000      *  Nome programma:  TREC65R
+000300000000      *  Descrizione   :  Interrigazione sulla tabella 2Q (Riferimenti tariffe
+000400000000      *                   voci), com parametro aggiuntivo per il tipo tariffa
+000500000000      *  Autore        :  STEFANO (SC)
+000600000000      *  Data creazione:  26 MAG 1994
+000700000000      *------------------------------------------------------------------------*
+000800000000     H        1     J
+000900000000     F*------------------------------------------------------------------------*
+001000000000     FTABEL00FIF  E           K        DISK
+001100000000     FTREC65D CF  E                    WORKSTN
+001200000000     F                                        REC1  KSFILE EC65SF1
+001300000000     I*------------------------------------------------------------------------*
+001400000000     IDS2Q      E DS
+001500000000     C*------------------------------------------------------------------------*
+001600000000     C           *ENTRY    PLIST
+001700000000     C                     PARM           §KUT
+001800000000     C                     PARM           §KEY
+001900000000     C                     PARM           §DES   25
+002000000000     C                     PARM           §TIP    1        TIPO TARIFFA
+002100000000     C                     MOVEL§DES      §AN2    2
+002200000000     C                     MOVE '2Q'      §COD             CODICE TABELLA
+002300000000     C**
+002400000000     C* SE NELLE PRIME 2 POSIZIONI DEL PARAMETRO §DES
+002500000000     C* SI TROVANO I CARATTERI §§ SI VOGLIONO ANCHE
+002600000000     C* I RECORDS ANNULLATI
+002700000000     C*----------
+002800000000     C           *LIKE     DEFN TBLKUT    §KUT
+002900000000     C           *LIKE     DEFN TBLCOD    §COD
+003000000000     C           *LIKE     DEFN TBLKEY    §KEY
+003100000000     C           *LIKE     DEFN TBLCOD    §CODK
+003200000000     C           *LIKE     DEFN TBLKEY    §KEYK
+003300000000     C*
+003400000000     C           KEYTAB    KLIST
+003500000000     C                     KFLD           §KUT
+003600000000     C                     KFLD           §COD
+003700000000     C           KEYTAK    KLIST
+003800000000     C                     KFLD           §KUT
+003900000000     C                     KFLD           §CODK
+004000000000     C                     KFLD           §KEYK
+004100000000     C*
+004200000000     C* DECODIFICO IL CODICE TABELLA   PASSATO
+004300000000     C                     MOVE *BLANK    §CODK
+004400000000     C                     MOVE *ZEROS    §KEYK
+004500000000     C                     MOVE §COD      §KEYK
+004600000000     C                     MOVE §COD      COTIPT
+004700000000     C                     MOVE *BLANK    DETIPT
+004800000000     C           KEYTAK    CHAINTABEL                90
+004900000000     C  N90                MOVELTBLUNI    DETIPT
+005000000000     C   90                MOVEL'ERRORE'  DETIPT
+005100000000     C                     WRITEEC65D1
+005200000000     C*---------- GESTIONE SUBFILE ------------------------
+005300000000     C*§
+005400000000     C           KEYTAB    SETLLTABEL00F             90  91*
+005500000000     C  N91                SETON                     90    *
+005600000000     C   90                GOTO FINE                       *
+005700000000     C                     Z-ADD0         REC1    40       *
+005800000000     C                     MOVE *BLANKS   SCELTA           *
+005900000000     C*---------- PULIZIA SLFCT :                          *
+006000000000     C                     SETON                         70*
+006100000000     C                     WRITEEC65SC1                    *
+006200000000     C                     SETOF                     7071  *
+006300000000     C*---------- CARICAMENTO SFL :                        *
+006400000000     C           SOPRA     TAG                             *
+006500000000     C           KEYTAB    READETABEL                    91*
+006600000000     C   91                GOTO EMISF1                     *
+006700000000     C           TBLFLG    IFEQ '*'                         ANN.TA
+006800000000     C           §AN2      ANDNE'§§'
+006900000000     C                     GOTO SOPRA
+007000000000     C                     END
+007100000000     C                     MOVELTBLKEY    CODTAB           *
+007200000000     C                     MOVELTBLUNI    DESCRI           *
+007300000000     C                     MOVELTBLUNI    DS2Q             *
+007400000000     C                     MOVELTBLFLG    STATTB           *
+007500000000     C*
+007600000000     C* VISUALIZZO SOLO I RECORD CON IL TIPO TARIFFA RICHIESTO
+007700000000     C           §2QTTV    IFEQ §TIP                       TIPO TARIFFA
+007800000000     C           REC1      ADD  1         REC1       71    *
+007900000000     C                     WRITEEC65SF1                    *
+008000000000     C                     ENDIF
+008100000000     C                     GOTO SOPRA                      *
+008200000000     C*
+008300000000     C*---------- EMISSIONE SFL :                          *
+008400000000     C           EMISF1    TAG                             *
+008500000000     C                     EXFMTEC65SC1                    *
+008600000000     C   KC                SETON                         90*
+008700000000     C   KC                GOTO FINE                       *
+008800000000     C*---------- LETTURA RECORD VARIATI :                 *
+008900000000     C   71                READCEC65SF1                  91*
+009000000000     C  N71                                                *
+009100000000     COR 91                GOTO EMISF1                     *
+009200000000     C           SCELTA    CABNE'1'       EMISF1           *
+009300000000     C                     MOVE CODTAB    §KEY             *
+009400000000     C                     MOVELDESCRI    §DES             *
+009500000000     C*----------------------------------------------------*
+009600000000     C           FINE      TAG                             *
+009700000000     C   90                MOVE *BLANKS   §KEY             *
+009800000000     C   90                MOVE *BLANKS   §DES             *
+009900000000     C   90                MOVEL'ERRORE'  §DES             *
+010000000000     C                     SETON                         LR*

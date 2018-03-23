@@ -1,0 +1,241 @@
+000100910403     H              J
+000200950515     F* FNLV25R  *---------------------------------------------------*
+000300970421     F*               STAMPA SEGNACOLLO DISTINTA USCITA              *
+000301970221     F*               CON RJS  QB440                                 *
+000400910403     F*--------------------------------------------------------------*
+000500941216     FFNLV22P O   F     132            PRINTER
+000600950523     E                    §CB         6  1 0             CODICE CON CONTR.
+000700950523     E                    §CA         6  1               CODICE CON CONTR.
+000800950523     E                    §C          5  1 0             CODICE S/CONTR.
+000900950523     E                    §2          2  1 0             COMODO
+001000950523     E                    §2A         2  1               COMODO
+001100950523     I            DS
+001200950523     I                                        1   60§CB
+001300950523     I                                        1   6 §CA
+001400950523     I            DS
+001500950523     I                                        1   20§2
+001600950523     I                                        1   2 §2A
+001700950525     I            DS
+001800950525     I                                        1   50§C
+001900950525     I                                        1   5 WNFV
+002000950523     IDSLV25    E DSFNLV25DS
+002100910515     I            DS
+002200950515     I                                        1   80DATA
+002300950515     I                                        7   8 GG
+002400950515     I                                        5   6 MM
+002500950515     I                                        1   4 AA
+002600910403     I/SPACE 3
+002700910403     C*---------------------------------------------------------------*
+002800910521     C           *ENTRY    PLIST
+002900950523     C                     PARM           DSLV25
+003000950525     C* ACCORCIA ANAGRAFICA PADRONCINO
+003100950525     C                     MOVELD25RSC    W25RSC 25
+003200950525     C           W25RSC    IFEQ *BLANKS
+003300910516     C* INSERISCO DATI PROVA
+003400950515     C                     Z-ADD1231234   D25PDR
+003500950525     C                     MOVEL'ROSSI ..'W25RSC
+003600950525     C                     MOVE 'MARIO'   W25RSC
+003700950525     C                     Z-ADD67890     D25NBL
+003800950525     C                     Z-ADD12345     D25NFV
+003900950525     C                     Z-ADD11011995  D25DDC
+004000950525     C                     MOVE *BLANK    D25NOT
+004100950523     C                     MOVEL'NO......'D25NOT
+004200950523     C                     MOVE '......TE'D25NOT
+004300950607     C                     ENDIF
+004400950607     C**
+004500910403     C*
+004600910515     C** INIZIALIZZA STAMPANTE
+004700950523     C                     EXCPTLV25
+004800910403     C*
+004900950523     C** STAMPA cod.padroncino
+005000950523     C                     EXCPTLV25D1
+005100910515     C*
+005200950523     C*  STAMPA descrizione padroncino
+005300950523     C                     EXCPTLV25H
+005400950525     C*
+005500950525     C*  STAMPA DATA DISTINTA
+005600950525     C                     EXCPTLV25H1
+005700950525     C*
+005800950525     C* STAMPA Numero bolle
+005900950525     C                     EXCPTLV25D8
+006000950525     C*
+006100950525     C* STAMPA note
+006200950525     C                     EXCPTLV25D7
+006300910515     C*
+006400950525     C* STAMPA NUMERO DISTINTA
+006500950523     C                     EXCPTLV25X2
+006600950523     C*
+006700950523     C* STAMPA BARCODE
+006800950523     C*
+006900950523     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+007000950525     C                     MOVE D25NFV    WNFV    5
+007100950523     C                     EXSR M10
+007200950523     C                     MOVEA§CA       §C6A    6
+007300950523     C                     MOVE §C6A      §CDBAR  6
+007400950523     C* (CAMPO UNICO BARCODE E COSTANTI)
+007500950523     C                     MOVE *BLANK    §§CDB1  7
+007600950525     C                     MOVE §CDBAR    §§CDB1
+007700950523     C                     MOVEL'"'       §§CDB1
+007800950523     C                     MOVE *BLANK    §§CDB2  9
+007900950523     C                     MOVEL§§CDB1    §§CDB2
+008000950523     C                     MOVE '";'      §§CDB2
+008100950523     C                     EXCPTLV25D6
+008200910403     C*
+008300910403     C* STAMPA CHIUSURA ETICHETTA
+008400950523     C                     EXCPTLV25D9
+008500910403     C*
+008600910403     C                     SETON                     LR
+008700950523     C/SPACE 005
+008800950523     C*****************************************************
+008900950523     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+009000950523     C*****************************************************
+009100950523     C           M10       BEGSR
+009200950523     C                     MOVE *ZERO     §TT     30
+009300950523     C                     MOVE *ZERO     §TT2    30
+009400950523     C                     MOVE *ZERO     §1      10
+009500950523     C                     Z-ADD6         §S      20
+009600950523     C                     DO   5         §N      20
+009700950523     C                     SUB  1         §S
+009800950523     C* INTANTO SPOSTO DA UNA SCHIERA AL CAMPO COD.BARRE
+009900950523     C                     MOVE §C,§N     §CB,§N
+010000950523     C           §N        DIV  2         §CTR    30
+010100950523     C                     MVR            §RST    30 10
+010200950523     C           *IN,10    IFEQ '1'
+010300950523     C           §C,§S     MULT 2         §N2     20
+010400950523     C                     MOVE §N2       §A2     2
+010500950523     C                     MOVEA§A2       §2A
+010600950523     C                     XFOOT§2        §CTR
+010700950523     C                     ELSE
+010800950523     C                     Z-ADD§C,§S     §CTR
+010900950523     C                     END
+011000950523     C                     ADD  §CTR      §TT
+011100950523     C                     END
+011200950523     C*
+011300950523     C           §TT       ADD  9         §TT2
+011400950523     C                     MOVE 0         §TT2
+011500950523     C           §TT2      SUB  §TT       §1
+011600950523     C*
+011700950523     C                     MOVE §1        §CB,6
+011800950523     C                     ENDSR
+011900950523     OFNLV22P E 1              LV25
+012000951021     O******                                 inizializz.CON CONVERTIT.
+012100970221     O**                                 20 '&&??%%P%%7E%^"LV25";'
+012200951021     O******                                 inizializzazione VIDEO
+012300970221     O                                    9 '~^"LV25";'
+012400950523     O        E 1              LV25
+012500910403     O*LOGICA
+012600970221     O                                   16 '00001;0;389;100;'
+012700950523     O        E 1              LV25
+012800910403     O*FISICA
+012801970221     O** X TX340/240
+012900970221     O*                                  14 'UTOF;4100;SPB;'
+012901970221     O** X QB400
+012902970221     O                                   21 'UTOF;4100;TEAR;0;SPB;'
+013000950523     O        E 1              LV25
+013100910403     O*GIRO SCRITTA A 180°
+013200910403     O                                    9 'FLIP;800;'
+013300950523     O        E 1              LV25
+013400910403     O*                                       FONT
+013500910403     O                                    7 'DHR;$1;'
+013600950523     O********* Costante Padroncino
+013700950523     O        E 1              LV25D1
+013800910403     O*                                       CARATTERE
+013900950525     O                                   21 'DCH;20;DCW;20;ICS;03;'
+014000950523     O        E 1              LV25D1
+014100910403     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+014200950525     O                                   15 'VBR;45;HBR;175;'
+014300950523     O        E 1              LV25D1
+014400910403     O                                    1 '"'
+014500950525     O                                   12 'Padroncino:'
+014600950525     O                         D25PDR    23 '   .    '
+014700950525     O                                   25 '";'
+014800950523     O********* descrizione padroncino
+014900950523     O        E 1              LV25H
+015000910403     O*                                       CARATTERE
+015100950525     O                                   21 'DCH;50;DCW;35;ICS;03;'
+015200950523     O        E 1              LV25H
+015300910516     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+015400950525     O                                   16 'VBR;090;HBR;175;'
+015500950523     O        E 1              LV25H
+015600950523     O                                    1 '"'
+015700950525     O                         W25RSC    26
+015800950525     O                                   28 '";'
+015900950525     O********* DATA DISTINTA
+016000950525     O        E 1              LV25H1
+016100950525     O*                                       CARATTERE
+016200950525     O                                   21 'DCH;30;DCW;30;ICS;03;'
+016300950525     O        E 1              LV25H1
+016400950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+016500950525     O                                   16 'VBR;130;HBR;175;'
+016600950525     O        E 1              LV25H1
+016700950525     O                                    6 '"Data:'
+016800950525     O                         D25DDC    20 '  /  /    '
+016900950525     O                                   23 '";'
+017000950525     O********* Num. Bolle
+017100950525     O        E 1              LV25D7
+017200950525     O*                                       CARATTERE
+017300950525     O                                   21 'DCH;20;DCW;20;ICS;03;'
+017400950525     O        E 1              LV25D7
+017500950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+017600950525     O                                   17 'VBR;200;HBR;175;'
+017700950525     O        E 1              LV25D7
+017800950525     O                                   12 '"N.Bolle: ";'
+017900950525     O        E 1              LV25D7
+018000950525     O*                                       CARATTERE
+018100950525     O                                   21 'DCH;70;DCW;50;ICS;03;'
+018200950525     O        E 1              LV25D7
+018300950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+018400950525     O                                   16 'VBR;200;HBR;320;'
+018500950525     O        E 1              LV25D7
+018600950525     O                                    1 '"'
+018700950525     O                         D25NBLZ    6
+018800950525     O                                    8 '";'
+018900950525     O********* Note
+019000950525     O        E 1              LV25D8
+019100950525     O*                                       CARATTERE
+019200950525     O                                   21 'DCH;30;DCW;30;ICS;03;'
+019300950525     O        E 1              LV25D8
+019400950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+019500950525     O                                   16 'VBR;240;HBR;005;'
+019600950525     O        E 1              LV25D8
+019700950525     O                                    1 '"'
+019800950525     O                         D25NOT    38
+019900950525     O                                   40 '";'
+020000950523     O********* Bar Code distinta
+020100950523     O        E 1              LV25D6
+020200950523     O                                   16 'VBR;371;HBR;090;'
+020300950523     O        E 1              LV25D6
+020400950523     O*                                      BARCODE
+020500950523     O                                   22 'BDEF;8;BNEW;3;BWEW;10;'
+020600950523     O        E 1              LV25D6
+020700950523     O                                   14 'BCSH;121;BCST;'
+020800950523     O*
+020900950523     O        E 1              LV25D6
+021000950523     O                         §§CDB2     9
+021100950523     O        E 1              LV25D6
+021200950523     O                                    5 'BSTP;'
+021300950525     O********* N° distinta
+021400950525     O        E 1              LV25X2
+021500950525     O*                                       CARATTERE
+021600950525     O                                   21 'DCH;20;DCW;20;ICS;03;'
+021700950525     O        E 1              LV25X2
+021800950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+021900950525     O                                   16 'VBR;270;HBR;360;'
+022000950525     O        E 1              LV25X2
+022100950525     O                                   16 '"Num.Distinta";'
+022200950525     O        E 1              LV25X2
+022300950525     O*                                       CARATTERE
+022400950525     O                                   23 'DCH;100;DCW;100;ICS;03;'
+022500950525     O        E 1              LV25X2
+022600950525     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+022700950525     O                                   16 'VBR;360;HBR;360;'
+022800950525     O        E 1              LV25X2
+022900950525     O                                    1 '"'
+023000950525     O                         D25NFV     6
+023100950525     O                                    8 '";'
+023200910403     O********* Chiusura etchetta
+023300950523     O        E 1              LV25D9
+023400951021     O********                               CON COVERTITORE
+023500970221     O**                                  9 'TRM;%%5C%'
+023600951021     O********                               CON VIDEO
+023700970221     O                                    5 'TRM;\'

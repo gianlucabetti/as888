@@ -1,0 +1,929 @@
+000100000000      *------------------------------------------------------------------------*
+000200000000      *  Nome programma:  TRTB61R
+000300000000      *  Descrizione   :  Gesione tabella riferimenti tariffa di c/e
+000400000000      *                   Tabella 2Q
+000500000000      *                   Programma modifica, inserimento, visualizzazione, ...
+000600000000      *  Autore        :  STEFANO (SC)
+000700000000      *  Data creazione:  02 GIU 1994
+000800000000      *------------------------------------------------------------------------*
+000900000000     H              J
+001000000000     F*------------------------------------------------------------------------*
+001100000000     F* DATA BASE
+001200000000     F*------------------------------------------------------------------------*
+001300000000     FTRTB61D CF  E                    WORKSTN      KINFDS DEVDS1
+001400000000     F                                        MSGULTKSFILE TB61DVM
+001500000000     FTABEL00FUF  E           K        DISK                      A
+001600000000     E*------------------------------------------------------------------------*
+001700000000     E* SCHIERE
+001800000000     E*------------------------------------------------------------------------*
+001900000000     E                    MSG     1  20 78               *MESSAGGI
+002000000000     E                    FUN     1  31 40               *FUNZ.VIDEO
+002100000000     E*-------------------
+002200000000     E* DECODIFICA OPZIONE RICHIAMATA
+002300000000     E*-------------------
+002400000000     E                    DOPZ    1   5 16               *DECODIFICA OPZIONE
+002500000000     E* SINGOLE SCHIERE ALL'INTERNO DELLA RIGA FUNZIONI
+002600000000     E                    FFU        31  6               *FUNZIONE
+002700000000     E                    FDE        31 19               *DESCRIZIONE FUNZIONE
+002800000000     E                    FAT        31  1               *FUNZIONE ATTIVA S/N
+002900000000     E* TABELLA DESCRIZIONI A VIDEO
+003000000000     E                    FUV         8 19               *FUNZIONI A VIDEO
+003100000000     E* TABELLA TASTI FUNZIONALI PREMUTI
+003200000000     E                    KEYS       40  1
+003300000000     I*------------------------------------------------------------------------*
+003400000000     I* INPUT
+003500000000     I*------------------------------------------------------------------------*
+003600000000     I*-------------------
+003700000000     I* RIDEFINIZIONE SCHIERA -FUD- (FUNZIONI)
+003800000000     I*-------------------
+003900000000     IDSFUN     E DS
+004000000000     I                                        1  40 FUNRIG
+004100000000     I*-------------------
+004200000000     I* PARAMETRI CHIAMATA CL XMSG (GESTIONE MESSAGGI AL PGM)
+004300000000     I*-------------------
+004400000000     IDSMSG     E DS
+004500000000     I*-------------------
+004600000000     I* PARAMETRI CHIAMATA ROUTINE XFIL (RITORNO FILIALE IN CUI SONO)
+004700000000     I*-------------------
+004800000000     IDSFIL     E DS
+004900000000     I*-------------------
+005000000000     I* DS PER GESTIONE TASTI FUNZIONALI
+005100000000     I*-------------------
+005200000000     IDSKEYS    E DS
+005300000000     I                                        1  40 KEYRIG
+005400000000     I*-------------------
+005500000000     I* RIDEFINIZIONE INFDS STATO DEL PROGRAMMA
+005600000000     I*-------------------
+005700000000     I           SDS
+005800000000     I                                      254 263 USER                  UTENTE
+005900000000     I*-------------------
+006000000000     I* RIDEFINIZIONE INFDS DEL FILE VIDEO
+006100000000     I*-------------------
+006200000000     IDEVDS1      DS
+006300000000     I* CHIAVE FUNZIONALE BATTUTA
+006400000000     I                                      369 369 KEY
+006500000000     I* POSIZIONE CURSORE (IN HEX)
+006600000000     I                                      370 371 CURSOR
+006700000000     I* RRN DELLA PRIMA RIGA PAG. CORRENTE SFL VISUALIZZATA
+006800000000     I                                    B 378 3790FRTSFL
+006900000000     I*---------------------
+007000000000     I* DS TABELLA
+007100000000     I*---------------------
+007200000000     IDS2Q      E DS
+007300000000     I*---------------------
+007400000000     I* DS ESTERNA DI PROCEDURA
+007500000000     I*---------------------
+007600000000     IDS60      E DSTRTB60DS
+007700000000     I*-------------------
+007800000000     I* ARCHITETTURA
+007900000000     I*-------------------
+008000000000     IKPJBA     E DS
+008100000000     C*------------------------------------------------------------------------*
+008200000000     C* MAIN LINE
+008300000000     C*------------------------------------------------------------------------*
+008400000000     C*
+008500000000     C* SE VI E' STATO UN ERRORE NELLA ROUTINE INIZIALE ESCO PGM
+008600000000IF  1C           $FINE     IFEQ '1'
+008700000000     C*
+008800000000     C* MANDO MESSAGGIO DI ERRORE AL PGM CHIAMANTE
+008900000000     C                     MOVEL'1'       D60ERR
+009000000000     C*
+009100000000     C* SE CONTROLLI INIZIALI OK, GESTISCO VIDEATE
+009200000000X   1C                     ELSE
+009300000000     C*
+009400000000     C* CICLO FINO A CHE:
+009500000000DO  2C           $FINE     DOWEQ'0'
+009600000000     C                     MOVEL'0'       $ERR             *FLAG ERRORE
+009700000000     C*
+009800000000     C* CONTROLLA GESTIONE VIDEO
+009900000000IF  3C           $GES      IFEQ 'V1'
+010000000000     C                     EXSR GESV1                      *MANUTENZIONE TEMPO
+010100000000E   3C                     ENDIF
+010200000000     C*
+010300000000E   2C                     ENDDO
+010400000000E   1C                     ENDIF
+010500000000     C*
+010600000000IF  1C* SE E' STATO PREMUTO F03 IMPOSTO FLAG DELLA DS DI PROCEDURA
+010700000000     C           $F03      IFEQ '1'
+010800000000     C                     MOVEL'1'       D60F03
+010900000000E   1C                     ENDIF
+011000000000     C* FINE PGM
+011100000000     C                     SETON                     LR
+011200000000     C*------------------------------------------------------------------------*
+011300000000     C* CARV1  - CARICA GESTIONE PRIMO VIDEO
+011400000000     C*------------------------------------------------------------------------*
+011500000000     C           CARV1     BEGSR
+011600000000     C*
+011700000000     C                     MOVEL'V1'      $GES             *GESTIONE ATTUALE
+011800000000     C*
+011900000000     C                     EXSR CARFUN                     *CARICA FUNZIONI
+012000000000     C                     EXSR OUTFUN                     *EMETTE FUNZIONI
+012100000000     C*
+012200000000     C                     WRITETB61DVT                    *TESTATA
+012300000000     C                     WRITETB61DVF                    *FUNZIONI
+012400000000     C*
+012500000000     C                     ENDSR
+012600000000     C*------------------------------------------------------------------------*
+012700000000     C* GESV1  - GESTIONE VIDEO 'TEMPO DELIVERY'
+012800000000     C*------------------------------------------------------------------------*
+012900000000     C           GESV1     BEGSR
+013000000000     C*
+013100000000IF  1C           $TESVD    IFEQ '1'                        *RIEMETTERE TESTATA
+013200000000     C                     EXSR CARV1                      *CARICA VIDEO MOVIM
+013300000000E   1C                     ENDIF
+013400000000     C*
+013500000000IF  1C           MSGULT    IFNE *ZEROS                     *SE CI SONO MESSAGGGI
+013600000000     C                     EXSR OUTMSG                     *EMETTE MESSAGGI
+013700000000E   1C                     ENDIF
+013800000000     C*
+013900000000     C                     EXFMTTB61DV1                    *TEMPO DELIVERY
+014000000000     C*
+014100000000     C                     EXSR CONFUN                     *CONTROLLA TASTI FUNZ
+014200000000     C*
+014300000000IF  1C           $ERR      IFEQ '0'                        *TASTO ABILITATO
+014400000000SL  2C                     SELEC
+014500000000     C           KEY       WHEQ ENTER
+014600000000     C                     EXSR ENTV1                      *GEST ENTER VIDEO V1
+014700000000     C           KEY       WHEQ F6
+014800000000     C                     EXSR F06GES                     *GEST F6 GENERALIZ.TA
+014900000000     C                     OTHER
+015000000000     C                     EXSR FUNSTD                     *GEST.TASTI STANDARD
+015100000000E   2C                     ENDSL
+015200000000E   1C                     ENDIF
+015300000000     C*
+015400000000     C                     ENDSR
+015500000000     C*------------------------------------------------------------------------*
+015600000000     C* ENTV1  - GESTIONE TASTO ENTER PRIMO VIDEO
+015700000000     C*------------------------------------------------------------------------*
+015800000000     C           ENTV1     BEGSR
+015900000000     C*
+016000000000     C* CONTROLLA I CAMPI IMMESSI
+016100000000     C                     EXSR DECODI
+016200000000     C*
+016300000000     C* SE VISUALIZZAZIONE CON ENTER RITORNA PGM CHIAMANTE
+016400000000IF  1C           D60OP1    IFEQ 'O05'
+016500000000     C                     MOVEL'1'       $FINE
+016600000000E   1C                     ENDIF
+016700000000     C*
+016800000000     C                     ENDSR
+016900000000     C*------------------------------------------------------------------------*
+017000000000     C* F06GES -GEST.TASTO FUNZ. F06 ===> CONFERMA OPERAZIONE
+017100000000     C*------------------------------------------------------------------------*
+017200000000     C           F06GES    BEGSR
+017300000000     C*
+017400000000     C* LANCIO LA ROUTINE DI CONFERMA INTERESSATA
+017500000000IF  1C           D60OP1    IFEQ 'F06'
+017600000000     C                     EXSR INSERI                     *INSERIMENTO
+017700000000E   1C                     ENDIF
+017800000000IF  1C           D60OP1    IFEQ 'O02'
+017900000000     C                     EXSR MODIFI                     *MODIFICA
+018000000000E   1C                     ENDIF
+018100000000IF  1C           D60OP1    IFEQ 'O04'
+018200000000     C                     EXSR CANCEL                     *CANCELLAZIONE
+018300000000E   1C                     ENDIF
+018400000000IF  1C           D60OP1    IFEQ 'O07'
+018500000000     C                     EXSR RIPRIS                     *RIPRISTINO
+018600000000E   1C                     ENDIF
+018700000000     C*
+018800000000     C                     ENDSR
+018900000000     C*------------------------------------------------------------------------*
+019000000000     C* INSERI - FUNZIONE DI INSERIMENTO
+019100000000     C*------------------------------------------------------------------------*
+019200000000     C           INSERI    BEGSR
+019300000000     C*
+019400000000     C* CONTROLLA I CAMPI IMMESSI
+019500000000     C                     EXSR DECODI
+019600000000     C*
+019700000000IF  1C           $ERR      IFEQ '0'                        *NON CI SONO ERRORI
+019800000000     C* T A B E L
+019900000000     C                     Z-ADDDSFICD    TBLKUT           *CODICE UTENTE
+020000000000     C                     MOVEL'2Q'      TBLCOD           *CODICE TABELLA
+020100000000     C                     MOVELV1CCOD    TBLKEY           *CODICE COMMERCIALE
+020200000000     C                     MOVEL*BLANKS   TBLFLG           *VALIDITA'
+020300000000     C                     MOVEL'1'       TBLFTT           *TRASMIS A TUTTE
+020400000000     C                     MOVEL*BLANKS   TBLFTR           *DA TRASMETTERE
+020500000000     C                     Z-ADD*ZEROS    TBLDTR           *DATA TRASMISSIONE=0
+020600000000     C* D S 2 Q
+020700000000     C                     MOVE V1CDES    §2QDES           *DESCRIZIONE
+020800000000     C                     MOVE V1CTTV    §2QTTV           *TIPO TARIFFA
+020900000000     C                     MOVE V1CFPA    §2QFPA           *FLAG 1° FILIALE
+021000000000     C                     MOVE V1CFAR    §2QFAR           *FLAG 2° FILIALE
+021100000000     C                     MOVELDS2Q      TBLUNI
+021200000000     C*
+021300000000     C                     WRITETABEL
+021400000000     C*
+021500000000     C* IMPOSTO FLAG PER RITORNO AL PGM CHIAMANTE
+021600000000     C                     MOVEL'1'       $FINE
+021700000000     C*
+021800000000     C* MANDO MESSAGGIO DI INSERIMENTO EFFETTUATO
+021900000000     C                     MOVELMSG,17    DSMSMS
+022000000000     C*
+022100000000E   1C                     ENDIF
+022200000000     C*
+022300000000     C                     ENDSR
+022400000000     C*------------------------------------------------------------------------*
+022500000000     C* MODIFI - FUNZIONE DI MODIFICA
+022600000000     C*------------------------------------------------------------------------*
+022700000000     C           MODIFI    BEGSR
+022800000000     C*
+022900000000     C* CONTROLLA I CAMPI IMMESSI
+023000000000     C                     EXSR DECODI
+023100000000     C*
+023200000000IF  1C           $ERR      IFEQ '0'
+023300000000     C*
+023400000000     C* PRIMA DI AGGIORNARE, RICHIAMO DI NUOVO IL RECORD IN ESAME POICHE'
+023500000000     C* L'HO PERSO CON ALTRE CHAIN SU TABEL00F (NO IN INSERIMENTO)
+023600000000     C                     MOVELDSFICD    KTBKUT
+023700000000     C                     MOVEL'2Q'      KTBCOD
+023800000000     C                     MOVEL*BLANKS   KTBKEY
+023900000000     C                     MOVELD60COD    KTBKEY
+024000000000     C           KEYTAB    CHAINTABEL00F             99
+024100000000     C                     MOVE V1CDES    §2QDES           *DESCRIZIONE
+024200000000     C                     MOVE V1CTTV    §2QTTV           *TIPO TARIFFA
+024300000000     C                     MOVE V1CFPA    §2QFPA           *FLAG 1° FILIALE
+024400000000     C                     MOVE V1CFAR    §2QFAR           *FLAG 2° FILIALE
+024500000000     C*
+024600000000     C                     MOVELDS2Q      TBLUNI
+024700000000     C*
+024800000000     C                     MOVEL*BLANKS   TBLFTR           *DA TRASMETTERE
+024900000000     C                     Z-ADD*ZEROS    TBLDTR           *DATA TRASMISSIONE=0
+025000000000     C*
+025100000000     C                     UPDATTABEL
+025200000000     C*
+025300000000     C* IMPOSTO FLAG PER RITORNO AL PGM CHIAMANTE
+025400000000     C                     MOVEL'1'       $FINE
+025500000000     C*
+025600000000     C* IMPOSTO MESSAGGIO AL PGM CHIAMANTE DI MODIFICA EFFETTUATA
+025700000000     C                     MOVELMSG,18    D60MSG
+025800000000     C*
+025900000000E   1C                     ENDIF
+026000000000     C*
+026100000000     C                     ENDSR
+026200000000     C*------------------------------------------------------------------------*
+026300000000     C* CANCEL - FUNZIONE DI CANCELLAZIONE
+026400000000     C*------------------------------------------------------------------------*
+026500000000     C           CANCEL    BEGSR
+026600000000     C*
+026700000000     C* PRIMA DI AGGIORNARE, RICHIAMO DI NUOVO IL RECORD IN ESAME POICHE'
+026800000000     C* L'HO PERSO CON ALTRE CHAIN SU TABEL00F (NO IN INSERIMENTO)
+026900000000     C                     MOVELDSFICD    KTBKUT
+027000000000     C                     MOVEL'2Q'      KTBCOD
+027100000000     C                     MOVEL*BLANKS   KTBKEY
+027200000000     C                     MOVELD60COD    KTBKEY
+027300000000     C           KEYTAB    CHAINTABEL00F             99
+027400000000     C                     MOVEL'*'       TBLFLG           *NON VALIDO
+027500000000     C                     MOVEL*BLANKS   TBLFTR           *DA TRASMETTERE
+027600000000     C                     Z-ADD*ZEROS    TBLDTR           *DATA TRASMISSIONE=0
+027700000000     C*
+027800000000     C                     UPDATTABEL
+027900000000     C*
+028000000000     C* IMPOSTO FLAG PER RITORNO AL PGM CHIAMANTE
+028100000000     C                     MOVEL'1'       $FINE
+028200000000     C*
+028300000000     C* IMPOSTO MESSAGGIO AL PGM CHIAMANTE DI MODIFICA EFFETTUATA
+028400000000     C                     MOVELMSG,19    D60MSG
+028500000000     C*
+028600000000     C                     ENDSR
+028700000000     C*------------------------------------------------------------------------*
+028800000000     C* RIPRIS - FUNZIONE DI RIPRISTINO
+028900000000     C*------------------------------------------------------------------------*
+029000000000     C           RIPRIS    BEGSR
+029100000000     C*
+029200000000     C* PRIMA DI AGGIORNARE, RICHIAMO DI NUOVO IL RECORD IN ESAME POICHE'
+029300000000     C* L'HO PERSO CON ALTRE CHAIN SU TABEL00F (NO IN INSERIMENTO)
+029400000000     C                     MOVELDSFICD    KTBKUT
+029500000000     C                     MOVEL'2Q'      KTBCOD
+029600000000     C                     MOVEL*BLANKS   KTBKEY
+029700000000     C                     MOVELD60COD    KTBKEY
+029800000000     C           KEYTAB    CHAINTABEL00F             99
+029900000000     C                     MOVEL*BLANKS   TBLFLG           *VALIDO
+030000000000     C                     MOVEL*BLANKS   TBLFTR           *DA TRASMETTERE
+030100000000     C                     Z-ADD*ZEROS    TBLDTR           *DATA TRASMISSIONE=0
+030200000000     C*
+030300000000     C                     UPDATTABEL
+030400000000     C*
+030500000000     C* IMPOSTO FLAG PER RITORNO AL PGM CHIAMANTE
+030600000000     C                     MOVEL'1'       $FINE
+030700000000     C*
+030800000000     C* IMPOSTO MESSAGGIO AL PGM CHIAMANTE DI MODIFICA EFFETTUATA
+030900000000     C                     MOVELMSG,20    D60MSG
+031000000000     C*
+031100000000     C                     ENDSR
+031200000000     C*------------------------------------------------------------------------*
+031300000000     C*  DECODI - CONTROLLA CAMPI E DECODIFICA
+031400000000     C*------------------------------------------------------------------------*
+031500000000     C           DECODI    BEGSR
+031600000000     C*
+031700000000     C* IMPOSTO INDICATORI DI ERRORE CAMPI
+031800000000     C                     SETOF                     606162
+031900000000     C                     SETOF                     6364
+032000000000     C*--------------------
+032100000000     C* CODICE COMMERCIALE (SOLO SE INSERIMENTO)
+032200000000     C*--------------------
+032300000000IF  1C           V1CCOD    IFEQ *BLANKS
+032400000000     C                     MOVE '1'       $ERR
+032500000000     C                     MOVELMSG,8     $MSG
+032600000000     C                     EXSR CARMSG
+032700000000     C                     SETON                     60
+032800000000E   1C                     ENDIF
+032900000000     C*
+033000000000     C* IN INSERIMENTO IL CODICE NON DEVE ESSERE GIA' ESISTENTE
+033100000000IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+033200000000     C           D60OP1    ANDEQ'F06'                      *INSERIMENTO
+033300000000     C                     MOVELDSFICD    KTBKUT           *CODICE UTENTE
+033400000000     C                     MOVEL'2Q'      KTBCOD           *CODICE TABELLA
+033500000000     C                     MOVE *BLANKS   KTBKEY
+033600000000     C                     MOVELV1CCOD    KTBKEY           *CODICE TENTATIVO
+033700000000     C           KEYTAB    SETLLTABEL00F                 60
+033800000000IF  2C           *IN60     IFEQ *ON
+033900000000     C                     MOVE '1'       $ERR
+034000000000     C                     MOVELMSG,7     $MSG
+034100000000     C                     EXSR CARMSG
+034200000000E   2C                     ENDIF
+034300000000E   1C                     ENDIF
+034400000000     C*--------------------
+034500000000     C* DESCRIZIONE
+034600000000     C*--------------------
+034700000000     C* OBBLIGAORIA
+034800000000IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+034900000000IF  2C           V1CDES    IFEQ *BLANKS                    *ERRORE
+035000000000     C                     MOVEL'1'       $ERR
+035100000000     C                     MOVELMSG,9     $MSG
+035200000000     C                     EXSR CARMSG
+035300000000     C                     SETON                     61
+035400000000E   2C                     ENDIF
+035500000000E   1C                     ENDIF
+035600000000     C*--------------------
+035700000000     C* TIPO TARIFFA
+035800000000     C*--------------------
+035900000000IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+036000000000     C                     MOVE *BLANKS   V1CTTD           *DESCRIZIONE
+036100000000     C                     MOVEL'2S'      §COD             *CODICE TABELLA
+036200000000     C                     MOVEL*BLANKS   §KEY
+036300000000     C                     MOVELV1CTTV    §KEY             *CODICE ELEMENTO
+036400000000     C                     EXSR CHKTAB
+036500000000     C                     MOVEL§KEY      V1CTTV           *TIPO TARIFFA
+036600000000     C                     MOVEL§DES      V1CTTD           *DESCRIZIONE
+036700000000IF  2C           $ERR      IFEQ '1'
+036800000000     C                     MOVELMSG,10    $MSG
+036900000000     C                     EXSR CARMSG
+037000000000     C                     SETON                     62
+037100000000E   2C                     ENDIF
+037200000000E   1C                     ENDIF
+037300000000     C*--------------------
+037400000000     C* FLAG 1° FILIALE
+037500000000     C*--------------------
+037600000000IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+037700000000     C*
+037800000000IF  2C           V1CTTV    IFEQ 'F'                        * 'F'=FILIALE
+037900000000IF  3C           V1CFPA    IFNE 'L'                        * 'L'=LINEA
+038000000000     C           V1CFPA    ANDNE'T'                        * 'T'=TERMINAL
+038100000000     C                     MOVE '1'       $ERR
+038200000000     C                     MOVELMSG,11    $MSG
+038300000000     C                     EXSR CARMSG
+038400000000     C                     SETON                     63
+038500000000E   3C                     ENDIF
+038600000000     C*
+038700000000X   2C                     ELSE
+038800000000     C*
+038900000000IF  3C           V1CFPA    IFNE *BLANKS
+039000000000     C                     MOVE '1'       $ERR
+039100000000     C                     MOVELMSG,12    $MSG
+039200000000     C                     EXSR CARMSG
+039300000000     C                     SETON                     63
+039400000000E   3C                     ENDIF
+039500000000     C*
+039600000000E   2C                     ENDIF
+039700000000E   1C                     ENDIF
+039800000000     C*--------------------
+039900000000     C* FLAG 2° FILIALE
+040000000000     C*--------------------
+040100000000IF  1C           $ERR      IFEQ '0'                        *NO ERRORI
+040200000000     C*
+040300000000IF  2C           V1CTTV    IFEQ 'F'                        * 'F'=FILIALE
+040400000000IF  3C           V1CFAR    IFNE 'L'                        * 'L'=LINEA
+040500000000     C           V1CFAR    ANDNE'T'                        * 'T'=TERMINAL
+040600000000     C           V1CFAR    ANDNE*BLANKS
+040700000000     C                     MOVE '1'       $ERR
+040800000000     C                     MOVELMSG,11    $MSG
+040900000000     C                     EXSR CARMSG
+041000000000     C                     SETON                     64
+041100000000E   3C                     ENDIF
+041200000000     C*
+041300000000X   2C                     ELSE
+041400000000     C*
+041500000000IF  3C           V1CFAR    IFNE *BLANKS
+041600000000     C                     MOVE '1'       $ERR
+041700000000     C                     MOVELMSG,12    $MSG
+041800000000     C                     EXSR CARMSG
+041900000000     C                     SETON                     64
+042000000000E   3C                     ENDIF
+042100000000     C*
+042200000000E   2C                     ENDIF
+042300000000E   1C                     ENDIF
+042400000000     C*
+042500000000     C* SE C'E' UN ERRORE NON EMETTO IL SUBFILE PER FARE POSIZIONARE IL
+042600000000     C* CURSORE SUL CAMPO DEL CONTROL
+042700000000IF  1C           $ERR      IFEQ '1'
+042800000000     C                     MOVEL'0'       *IN43            *NON EMETTO SFL
+042900000000X   1C                     ELSE
+043000000000     C                     MOVEL'1'       *IN43            *EMETTO SFL
+043100000000E   1C                     ENDIF
+043200000000     C*
+043300000000     C                     ENDSR
+043400000000     C*------------------------------------------------------------------------*
+043500000000     C* CHKTAB - CONTROLLA UN ELEMENTO IN TABELLA
+043600000000     C*          INPUT --> §COD: CODICE TABELLA
+043700000000     C*                    $KEY: CODICE ELEMENTO
+043800000000     C*------------------------------------------------------------------------*
+043900000000     C           CHKTAB    BEGSR
+044000000000     C*
+044100000000     C* E' STATO INSERITO '?', LANCIO IL PGM DI INTERROG. TABELLE
+044200000000     C           '?'       SCAN §KEY                     99 ON=TROVATO '?'
+044300000000     C           *IN99     IFEQ *ON                        --- 1 -->
+044400000000     C                     MOVELDSFICD    §KUT             *CODICE UTENTE
+044500000000     C                     MOVE *BLANKS   §DES
+044600000000     C                     CALL 'X§TABER'
+044700000000     C                     PARM           §KUT    10
+044800000000     C                     PARM           §COD    2
+044900000000     C                     PARM           §KEY    8
+045000000000     C                     PARM           §DES   30
+045100000000     C                     MOVEL'1'       $PUNTO  1        *RIEMETTO VIDEO
+045200000000     C*
+045300000000     C                     ENDIF                           <-- 1 ---
+045400000000     C*
+045500000000     C* NON E' STATO INSERITO '?', CONTROLLO CHE ESISTA IN TABELLA
+045600000000     C                     MOVELDSFICD    KTBKUT           *CODICE UTENTE
+045700000000     C                     MOVEL§COD      KTBCOD           *CODICE TABELLA
+045800000000     C                     MOVE *BLANKS   KTBKEY
+045900000000     C                     MOVEL§KEY      KTBKEY           *CODICE TENTATIVO
+046000000000     C           KEYTAB    CHAINTABEL00F            N99
+046100000000     C           *IN99     IFEQ '1'                        --- 2 -->
+046200000000     C           TBLFLG    ORNE *BLANKS
+046300000000     C                     MOVEL'1'       $ERR
+046400000000     C                     MOVEL*ALL'*'   §DES             *DESCRIZIONE
+046500000000     C                     ELSE                            <-- 2 -->
+046600000000     C                     MOVELTBLUNI    §DES             *DESCRIZIONE
+046700000000     C                     ENDIF                           <-- 2 ---
+046800000000     C*
+046900000000     C                     ENDSR
+047000000000     C*------------------------------------------------------------------------*
+047100000000     C*  RECVID - RIEMPE I CAMPI DAI RECORD TABELLA AL VIDEO
+047200000000     C*------------------------------------------------------------------------*
+047300000000     C           RECVID    BEGSR
+047400000000     C*
+047500000000     C                     MOVELTBLUNI    DS2Q
+047600000000     C*
+047700000000     C                     MOVE D60COD    V1CCOD           *CODICE ELEMENTO
+047800000000     C                     MOVE §2QDES    V1CDES           *DESCRIZIONE
+047900000000     C                     MOVE §2QTTV    V1CTTV           *TIPO TARIFFA
+048000000000     C                     MOVE §2QFPA    V1CFPA           *FLAG 1° FILIALE
+048100000000     C                     MOVE §2QFAR    V1CFAR           *FLAG 2° FILIALE
+048200000000     C*
+048300000000     C                     ENDSR
+048400000000     C*------------------------------------------------------------------------*
+048500000000     C*  AZZVID - AZZERA O ABBLENCA TUTTI I CAMPI DEL FILE VIDEO
+048600000000     C*------------------------------------------------------------------------*
+048700000000     C           AZZVID    BEGSR
+048800000000     C*
+048900000000     C                     MOVE *BLANKS   V1CCOD           *CODICE
+049000000000     C                     MOVEL*BLANKS   V1CDES           *DESCRIZIONE
+049100000000     C                     MOVE *BLANKS   V1CTTV           *TIPO TARIFFA
+049200000000     C                     MOVE *BLANKS   V1CFPA           *FLAG 1° FILIALE
+049300000000     C                     MOVE *BLANKS   V1CFAR           *FLAG 2° FILIALE
+049400000000     C*
+049500000000     C                     ENDSR
+049600000000     C*------------------------------------------------------------------------*
+049700000000     C*  *INZSR - ROUTINE INIZIALE
+049800000000     C*------------------------------------------------------------------------*
+049900000000     C           *INZSR    BEGSR
+050000000000     C*
+050100000000     C* RICEVIMENTO PARAMETRI
+050200000000     C           *ENTRY    PLIST
+050300000000     C                     PARM           DS60
+050400000000     C*
+050500000000     C* DEFINIZIONE VARIABILI
+050600000000     C           *LIKE     DEFN TBLKUT    KTBKUT
+050700000000     C           *LIKE     DEFN TBLCOD    KTBCOD
+050800000000     C           *LIKE     DEFN TBLKEY    KTBKEY
+050900000000     C                     MOVEL'G'       $TGES   1        *GESTIONE
+051000000000     C*
+051100000000     C* CHIAVE LETTURA TABEL00F - COMPLETA
+051200000000     C           KEYTAB    KLIST
+051300000000     C                     KFLD           KTBKUT
+051400000000     C                     KFLD           KTBCOD
+051500000000     C                     KFLD           KTBKEY
+051600000000     C*
+051700000000     C* CHIAVE LETTURA TABEL00F - PARZIALE
+051800000000     C           KEYTA2    KLIST
+051900000000     C                     KFLD           KTBKUT
+052000000000     C                     KFLD           KTBCOD
+052100000000     C*
+052200000000     C* ESEGUE OPERAZIONI INIZIALI STANDARD
+052300000000     C                     EXSR INZSTD
+052400000000     C*
+052500000000     C* RAGIONE SOCIALE UTENTE
+052600000000     C                     MOVELDSFIRS    VTDRSU
+052700000000     C*
+052800000000     C* DECODIFICA OPZIONE RICHIAMATA
+052900000000IF  1C           D60OP1    IFEQ 'F06'
+053000000000     C                     MOVELDOPZ,1    VTDFUN           *INSERIMENTO
+053100000000E   1C                     ENDIF
+053200000000IF  2C           D60OP1    IFEQ 'O02'
+053300000000     C                     MOVELDOPZ,2    VTDFUN           *VARIAZIONE
+053400000000E   1C                     ENDIF
+053500000000IF  1C           D60OP1    IFEQ 'O04'
+053600000000     C                     MOVELDOPZ,3    VTDFUN           *CANCELLAZIONE
+053700000000E   1C                     ENDIF
+053800000000IF  1C           D60OP1    IFEQ 'O05'
+053900000000     C                     MOVELDOPZ,5    VTDFUN           *VISUALIZZAZIONE
+054000000000E   1C                     ENDIF
+054100000000IF  1C           D60OP1    IFEQ 'O07'
+054200000000     C                     MOVELDOPZ,4    VTDFUN           *RIPRISTINO
+054300000000E   1C                     ENDIF
+054400000000     C*
+054500000000     C* IMPOSTO GLI INDICATORI PER LA GESTIONE DELLA PROTEZIONE CAMPI
+054600000000     C* 0=NON PROTETTO, 1=PROTETTO
+054700000000     C*   90 - CAMPI CHIAVE (CODICE ELEMENTO)
+054800000000     C*   91 - ALTRI CAMPI
+054900000000IF  1C           D60OP1    IFEQ 'F06'                      *INSERIMENTO
+055000000000     C                     SETOF                     9091  *NESSUNA PROTEZIONE
+055100000000E   1C                     ENDIF
+055200000000IF  1C           D60OP1    IFEQ 'O02'                      *MODIFICA
+055300000000     C                     SETON                     90    *CHIAVE PROTETTA
+055400000000E   1C                     ENDIF
+055500000000IF  1C           D60OP1    IFEQ 'O04'                      *CANCELLA/RIPRISTINO
+055600000000     C           D60OP1    OREQ 'O05'
+055700000000     C           D60OP1    OREQ 'O07'
+055800000000     C                     SETON                     9091  *PROTEZIONE COMPLETA
+055900000000E   1C                     ENDIF
+056000000000     C*
+056100000000     C* SE VISUALIZZAZIONE TOLGO FUNZIONE F06=AGGIORNAMENTO
+056200000000IF  1C           D60OP1    IFEQ 'O05'
+056300000000     C                     MOVELFUN,6     FUNRIG           *AGGIORNAMENTO
+056400000000     C                     MOVEL'N'       FUNASG
+056500000000     C                     MOVEL'N'       FUNASI
+056600000000     C                     MOVEL'N'       FUNAFG
+056700000000     C                     MOVEL'N'       FUNAFG
+056800000000     C                     MOVELFUNRIG    FUN,6
+056900000000E   1C                     ENDIF
+057000000000     C*
+057100000000     C* SE SONO IN MODIFICA/CANCELLAZIONE/VISUALIZZA/RIPRISTINO LEGGO IL RECORD
+057200000000IF  1C           D60OP1    IFEQ 'O02'
+057300000000     C           D60OP1    OREQ 'O04'
+057400000000     C           D60OP1    OREQ 'O05'
+057500000000     C           D60OP1    OREQ 'O07'
+057600000000     C                     MOVELDSFICD    KTBKUT
+057700000000     C                     MOVEL'2Q'      KTBCOD
+057800000000     C                     MOVEL*BLANKS   KTBKEY
+057900000000     C                     MOVELD60COD    KTBKEY
+058000000000     C*
+058100000000     C* SE IL RECORD NON ESISTE O E' ALLOCATO MANDO ERRORE AL PGM CHIAMANTE
+058200000000     C           KEYTAB    CHAINTABEL00F             9998
+058300000000IF  2C           *IN99     IFEQ '1'                        *NON TROVATO
+058400000000     C                     MOVEL'1'       $ERR
+058500000000     C                     MOVEL'1'       $FINE
+058600000000     C                     MOVELMSG,14    D60MSG
+058700000000X   2C                     ELSE
+058800000000IF  3C           *IN98     IFEQ '1'                        *ALLOCAZIONE
+058900000000     C                     MOVEL'1'       $ERR
+059000000000     C                     MOVEL'1'       $FINE
+059100000000     C                     MOVELMSG,15    D60MSG
+059200000000X   3C                     ELSE
+059300000000     C                     EXSR RECVID                     *RIEMPE IL VIDEO
+059400000000     C                     EXSR CARV1                      CARICA TESTA/FUNZIONI
+059500000000E   3C                     ENDIF
+059600000000E   2C                     ENDIF
+059700000000E   1C                     ENDIF
+059800000000     C*
+059900000000     C* SE INSERIMENTO
+060000000000IF  1C           D60OP1    IFEQ 'F06'
+060100000000     C                     EXSR AZZVID                     *AZZERA CAMPI VIDEO
+060200000000     C                     EXSR CARV1                      CARICA TESTA/FUNZIONI
+060300000000     C                     ELSE
+060400000000     C                     EXSR DECODI                     *DECODIFICHE
+060500000000E   1C                     ENDIF
+060600000000     C*
+060700000000     C                     ENDSR
+060800000000     C*------------------------------------------------------------------------*
+060900000000     C*    §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+061000000000     C*    §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+061100000000     C*    LA PARTE DI SPECIFICHE 'C' SOTTOSTANTE SI RIFA' A PARTICOLARI
+061200000000     C*    STANDARDS DI PROGRAMMAZIONE E NELLA MAGGIOR PARTE DEI CASI
+061300000000     C*    NO E' NECESSARIO MODIFICARLA, NEL CASO FARE ATTENZIONE.
+061400000000     C*    §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+061500000000     C*    §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+061600000000     C*------------------------------------------------------------------------*
+061700000000     C* INZSTD - ROUTINE INIZIALE STANDARD
+061800000000     C*------------------------------------------------------------------------*
+061900000000     C           INZSTD    BEGSR
+062000000000     C* CHIAMA ROUTINE PER RIEMPIRE LA DS DSKEY (TASTI PREMUTI)
+062100000000     C                     CALL 'XKEYS'
+062200000000     C                     PARM           DSKEYS
+062300000000     C                     MOVEAKEYRIG    KEYS             *CARICA SCHIERA FUNZ.
+062400000000     C* PARAMETRI PER RICHIAMO PGM (ROUTINE) XMSG (MESSAGGI)
+062500000000     C           XMSGPA    PLIST
+062600000000     C                     PARM           DSMSMS
+062700000000     C                     PARM           DSMSPG
+062800000000     C                     PARM           DSMSKE
+062900000000     C                     PARM           DSMSER
+063000000000     C* IMPOSTA PER CL=XMSG (MESSAGGI ALLA CODA PGM), FISSI IN TUTTO IL PGM
+063100000000     C                     MOVEL'TRTB61R' DSMSPG           *NOME PGM CHIAMANTE
+063200000000     C                     MOVEL'TRTB61R' VMCQUE           *CODA MESSAGGI DESTIN
+063300000000     C                     MOVEL*BLANKS   VMCKEY           *CHIAVE MESSAGGIO
+063400000000     C                     MOVEL*BLANKS   DSMSMS           *MESSAGGIO
+063500000000     C* INIZIALIZZO FLAG CONTROLLO PGM
+063600000000     C                     MOVEL'0'       $ERR    1        *ERRORE
+063700000000     C                     MOVEL'0'       $F03    1        *PREMUTO TASTO F03
+063800000000     C                     MOVEL*BLANKS   $GES    2        *GESTIONE VIDEO
+063900000000     C                     MOVEL*BLANKS   $MSG   80        *MESSAGGI
+064000000000     C                     MOVEL'0'       $FINE   1        *FINE PGM
+064100000000     C                     MOVEL'0'       $TESVD  1        *1=RIEMETT.TEST.VIDEO
+064200000000     C* LANCIO ROUTINE PER VERIFICARE SE
+064300000000     C* SONO IN SEDE, IN FILIALE DI 1° LIVELLO O IN FILIALE DI 2° LIVELLO
+064400000000     C* E PER RECUPERARE LA RAGIONE SOCIALE DELL'UTENTE
+064500000000     C                     CALL 'XFIL'
+064600000000     C                     PARM           DSFIL
+064700000000     C* POSIZIONE MINIMA E MASSIMA DEL CURSORE PER GESTIONE MESSAGGI
+064800000000     C                     BITOF'01234567'POSMI1  1
+064900000000     C                     BITOF'01234567'POSMI2  1
+065000000000     C                     BITOF'01234567'POSMA1  1
+065100000000     C                     BITOF'01234567'POSMA2  1
+065200000000     C                     BITON'34'      POSMI1  1        *18
+065300000000     C                     BITON'7'       POSMI2  1        *01
+065400000000     C                     BITON'34'      POSMA1  1        *18
+065500000000     C                     BITON'0'       POSMA2  1        *80
+065600000000     C                     MOVE POSMI2    POSMIN  2
+065700000000     C                     MOVELPOSMI1    POSMIN
+065800000000     C                     MOVE POSMA2    POSMAX  2
+065900000000     C                     MOVELPOSMA1    POSMAX
+066000000000     C                     ENDSR
+066100000000     C*------------------------------------------------------------------------*
+066200000000     C* FUNSTD - LANCIA SUBROUTINE STANDARD
+066300000000     C*------------------------------------------------------------------------*
+066400000000     C           FUNSTD    BEGSR
+066500000000     C                     SELEC
+066600000000     C           KEY       WHEQ F3
+066700000000     C                     EXSR F03STD
+066800000000     C           KEY       WHEQ F12
+066900000000     C                     EXSR F12STD
+067000000000     C           KEY       WHEQ F24
+067100000000     C                     EXSR F24STD
+067200000000     C                     OTHER
+067300000000     C                     MOVELMSG,2     $MSG
+067400000000     C                     EXSR CARMSG
+067500000000     C                     ENDSL
+067600000000     C                     ENDSR
+067700000000     C*------------------------------------------------------------------------*
+067800000000     C* F03STD -GEST.TASTO FUNZ. F03 STANDARD ===> FINE
+067900000000     C*------------------------------------------------------------------------*
+068000000000     C           F03STD    BEGSR
+068100000000     C* IMPOSTO FLAG DI PREMUTO TASTO F03
+068200000000     C                     MOVEL'1'       $F03
+068300000000     C* IMPOSTO FLAG DI FINE PROGRAMMA
+068400000000     C                     MOVEL'1'       $FINE
+068500000000     C                     ENDSR
+068600000000     C*------------------------------------------------------------------------*
+068700000000     C* F12STD -GEST.TASTO FUNZ. F12 STANDARD ===> RITORNO
+068800000000     C*------------------------------------------------------------------------*
+068900000000     C           F12STD    BEGSR
+069000000000     C* IMPOSTO FLAG DI FIN PGM
+069100000000     C                     MOVEL'1'       $FINE
+069200000000     C                     ENDSR
+069300000000     C*------------------------------------------------------------------------*
+069400000000     C* F24STD -GEST.TASTO FUNZ. F24 STANDARD ===> ALTRI TASTI
+069500000000     C*------------------------------------------------------------------------*
+069600000000     C           F24STD    BEGSR
+069700000000     C* GESTIONE VISUALIZZAZIONE TASTI FUNZIONALI
+069800000000     C                     EXSR OUTFUN
+069900000000     C                     ENDSR
+070000000000     C*------------------------------------------------------------------------*
+070100000000     C* CARMSG - CARICA MESSAGGIO NEL SUBFILE MESSAGGI E LO INVIA ALLA
+070200000000     C*          CODA MESSAGGI DEL PGM
+070300000000     C*------------------------------------------------------------------------*
+070400000000     C           CARMSG    BEGSR
+070500000000     C* SE QUELLO CHE STO PER CARICARE E' IL PRIMO MESSAGGIO
+070600000000     C* PULISCO SUBFILE MESSAGGI (WRITE RECORD CONTROLLO SFLMSG)
+070700000000     C           MSGULT    IFEQ 0
+070800000000     C                     MOVEL'1'       *IN40
+070900000000     C                     WRITETB61DVK
+071000000000     C                     MOVEL'0'       *IN40
+071100000000     C                     ENDIF
+071200000000     C* INVIA MESSAGGIO ALLA CODA DEL PGM
+071300000000     C                     MOVEL$MSG      DSMSMS
+071400000000     C                     CALL 'XMSG'    XMSGPA
+071500000000     C           DSMSER    IFEQ 0
+071600000000     C                     MOVELDSMSKE    VMCKEY           *CHIAVE DEL MESSAGGIO
+071700000000     C                     ENDIF
+071800000000     C* CARICA IL MESSAGGIO NEL SUBFILE MESSAGGI
+071900000000     C                     ADD  1         MSGULT  40       *CHIAVE SFL MESS
+072000000000     C                     WRITETB61DVM                    *SFL MESS
+072100000000     C* PULISCO CAMPO MESSAGGIO APPENA CARICATO
+072200000000     C                     MOVEL*BLANKS   $MSG
+072300000000     C                     ENDSR
+072400000000     C*------------------------------------------------------------------------*
+072500000000     C* OUTMSG - EMETTE A VIDEO IL SUBFILE MESSAGGI
+072600000000     C*------------------------------------------------------------------------*
+072700000000     C           OUTMSG    BEGSR
+072800000000     C* VISUALIZZAZIONE MESSAGGIO
+072900000000     C                     MOVEL'1'       *IN44            *SFLEND (+)
+073000000000     C                     WRITETB61DVK                    *CONTR MESS
+073100000000     C* AZZERO LA CHIAVE DEL SUBFILE MESSAGGI
+073200000000     C                     Z-ADD*ZEROS    MSGULT
+073300000000     C                     ENDSR
+073400000000     C*------------------------------------------------------------------------*
+073500000000     C* CARFUN - CARICA LE SCHIERE PER LA GESTIONE DEI TASTI FUNZIONALI
+073600000000     C*          INPUT:  - FUN    (SCHIERA TASTI ABILITATI PER IL VIDEO ATTUALE)
+073700000000     C*          OUTPUT: - FFU    (SCHIERA FUNZIONI)
+073800000000     C*                  - FDE    (SCHIERA DESCRIZIONI FUNZIONI)
+073900000000     C*                  - FAT    (SCHIERA FLAG DI FUNZIONE ATTIVA S/N)
+074000000000     C*------------------------------------------------------------------------*
+074100000000     C           CARFUN    BEGSR
+074200000000     C                     Z-ADD*ZEROS    FUNULT  50       *ULTIMA FUNZ. VISUAL.
+074300000000     C           1         DO   31        I       50       --- 1 -->
+074400000000     C                     MOVELFUN,I     FUNRIG           *DS RIGA FUNZIONI
+074500000000     C                     MOVELFUNFUN    FFU,I            *FUNZIONE
+074600000000     C                     MOVELFUNDES    FDE,I            *DESCRIZIONE
+074700000000     C           DSFITI    IFEQ 'S'                        --- 2 --> *SEDE
+074800000000     C           $TGES     IFEQ 'G'                        *GESTIONE
+074900000000     C                     MOVELFUNASG    FAT,I            *FUNZIONE ATTIVA S/N
+075000000000     C                     ELSE                            *INTERROG.
+075100000000     C                     MOVELFUNASI    FAT,I
+075200000000     C                     ENDIF
+075300000000     C                     ELSE                            <-- 2 --> *FILIALE
+075400000000     C           $TGES     IFEQ 'G'                        *GESTIONE
+075500000000     C                     MOVELFUNAFG    FAT,I
+075600000000     C                     ELSE                            *INTERROG.
+075700000000     C                     MOVELFUNAFI    FAT,I
+075800000000     C                     ENDIF
+075900000000     C                     ENDIF                           <-- 2 ---
+076000000000     C           FAT,I     IFEQ 'E'                        *FLAG 'E'->SOLO EDP
+076100000000     C                     MOVELUSER      WEDP    3        *PROFILO
+076200000000     C           WEDP      IFEQ 'EDP'                      *SE PROFILO EDPXX
+076300000000     C                     MOVEL'S'       FAT,I            *ABILITO
+076400000000     C                     ELSE
+076500000000     C                     MOVEL'N'       FAT,I            *NON ABILITO
+076600000000     C                     ENDIF
+076700000000     C                     ENDIF
+076800000000     C                     ENDDO                           <-- 1 ---
+076900000000     C                     ENDSR
+077000000000     C*------------------------------------------------------------------------*
+077100000000     C* OUTFUN - EMETTE A VIDEO LE FUNZIONI ABILITATE
+077200000000     C*          INPUT:  - FUNULT (ULTIMA FUNZIONE EMESSA NEL VIDEO PRECEDENTE)
+077300000000     C*          OUTPUT: - VFD001-008 (CAMPI FUNZIONI A VIDEO)
+077400000000     C*                  - FUNULT (ULTIMA FUNZIONE EMESSA A VIDEO)
+077500000000     C*------------------------------------------------------------------------*
+077600000000     C           OUTFUN    BEGSR
+077700000000     C           1         DO   8         I                *PULIZIA FUNZIONI A
+077800000000     C                     MOVEL*BLANKS   FUV,I            *VIDEO
+077900000000     C                     ENDDO
+078000000000     C* CONTROLLO QUANTE FUNZIONI ATTIVE DA EMETTERE A VIDEO CI SONO
+078100000000     C                     Z-ADD*ZEROS    FUNNAT  20       *N.FUNZIONI ATTIVE
+078200000000     C           1         DO   31        I
+078300000000     C           FAT,I     IFEQ 'S'                        *FUNZIONE ATTIVA
+078400000000     C           FDE,I     ANDNE*BLANKS                    *DESCRIZIONE FUNZIONE
+078500000000     C                     ADD  1         FUNNAT
+078600000000     C                     ENDIF
+078700000000     C                     ENDDO
+078800000000     C* SE VI SONO PIU' DI 8 FUNZIONI ATTIVO IL TASTO F24
+078900000000     C           FUNNAT    IFGT 8
+079000000000     C                     MOVEL'S'       FAT,24           *FLAG ATTIVITA' FUNZ
+079100000000     C                     ENDIF
+079200000000     C* IMPOSTO IL N.DI FUNZIONI VISUALIZZABILI A 8, E SE SONO ATTIVE F23 E F24
+079300000000     C* (SE ATTIVE DA VISUALIZZARE SEMPRE) DIVENTANO 6
+079400000000     C                     Z-ADD8         FUNVIS  50
+079500000000     C           FAT,23    IFEQ 'S'
+079600000000     C                     SUB  1         FUNVIS
+079700000000     C                     ENDIF
+079800000000     C           FAT,24    IFEQ 'S'
+079900000000     C                     SUB  1         FUNVIS
+080000000000     C                     ENDIF
+080100000000     C* AGGIUNGO UNO ALL'ULTIMA FUNZIONE VISUALIZZATA PER AVERE LA 1A DA VISUALI
+080200000000     C                     Z-ADD*ZEROS    W       50
+080300000000     C                     ADD  1         FUNULT
+080400000000     C           FUNULT    IFGT 31
+080500000000     C                     Z-ADD1         FUNULT
+080600000000     C                     ENDIF
+080700000000     C* RICERCO LE OPZIONI ATTIVE E LE EMETTO A VIDEO
+080800000000     C           FUNULT    DO   31        I                --- 1 -->
+080900000000     C* SE HO GIA' RAGGIUNTO IL NUMERO DI FUNZIONI VISUALIZZABILI VADO A FINE
+081000000000     C           W         IFLT FUNVIS                     --- 2 -->
+081100000000     C* SE OPZIONE ATTIVA ED ESISTE LA DESCRIZIONE EMETTO A VIDEO
+081200000000     C           FAT,I     IFEQ 'S'                        --- 3 -->
+081300000000     C           FDE,I     ANDNE*BLANKS
+081400000000     C           I         IFEQ 23                         *TOLGO F23
+081500000000     C           I         OREQ 24                         *E F24
+081600000000     C                     ELSE
+081700000000     C                     ADD  1         W
+081800000000     C                     MOVELFDE,I     FUV,W
+081900000000     C                     ENDIF
+082000000000     C                     ENDIF                           <-- 3 ---
+082100000000     C* MEMORIZZO L'ULTIMO INDICE TRATTATO
+082200000000     C                     Z-ADDI         FUNULT
+082300000000     C                     ENDIF                           <-- 2 ---
+082400000000     C                     ENDDO                           <-- 1 ---
+082500000000     C* TRASFERISCO LE OPZIONI DALLA SCHIERA AI CAMPI VIDEO
+082600000000     C                     MOVELFUV,1     VFD001
+082700000000     C                     MOVELFUV,2     VFD002
+082800000000     C                     MOVELFUV,3     VFD003
+082900000000     C                     MOVELFUV,4     VFD004
+083000000000     C                     MOVELFUV,5     VFD005
+083100000000     C                     MOVELFUV,6     VFD006
+083200000000     C           FAT,23    IFEQ 'N'                        --- 1 -->
+083300000000     C           FAT,24    ANDEQ'N'
+083400000000     C                     MOVELFUV,7     VFD007
+083500000000     C                     MOVELFUV,8     VFD008
+083600000000     C                     ELSE                            <-- 1 -->
+083700000000     C           FAT,23    IFEQ 'S'                        --- 2 -->
+083800000000     C           FAT,24    ANDEQ'S'
+083900000000     C                     MOVELFDE,23    VFD007
+084000000000     C                     MOVELFDE,24    VFD008
+084100000000     C                     ELSE                            <-- 2 -->
+084200000000     C                     MOVELFUV,7     VFD007
+084300000000     C           FAT,23    IFEQ 'S'
+084400000000     C                     MOVELFDE,23    VFD008
+084500000000     C                     ELSE
+084600000000     C                     MOVELFDE,24    VFD008
+084700000000     C                     ENDIF
+084800000000     C                     ENDIF                           <-- 2 ---
+084900000000     C                     ENDIF                           <-- 1 ---
+085000000000     C                     MOVEL'1'       $TESVD           *RIEMETTE TESTATA VID
+085100000000     C                     ENDSR
+085200000000     C*------------------------------------------------------------------------*
+085300000000     C*  CONFUN - CONTROLLO SE LA FUNZIONE SCELTA E' ATTIVA
+085400000000     C*           INPUT:  - KEY    (FUNZIONE PREMUTA - DA INFDS)
+085500000000     C*           OUTPUT: - FUNOK  (OPZIONE OK S/N)
+085600000000     C*                   - ERRORE SE FUNZIONE NON ATTIVA
+085700000000     C*------------------------------------------------------------------------*
+085800000000     C           CONFUN    BEGSR
+085900000000     C* RICERCA FUNZIONE SCELTA IN TABELLA FUNZIONI
+086000000000     C           1         DO   31        I                --- 1 -->
+086100000000     C           KEY       IFEQ KEYS,I                     --- 2 -->
+086200000000     C* CONTROLLO SE IL TASTO E' ATTIVO
+086300000000     C           FAT,I     IFNE 'S'                        --- 3 -->
+086400000000     C                     MOVELMSG,1     $MSG             *FUNZ.NON ACCETTABILE
+086500000000     C                     EXSR CARMSG
+086600000000     C                     MOVEL'1'       $ERR
+086700000000     C                     ENDIF                           <-- 3 ---
+086800000000     C                     ENDIF                           <-- 2 ---
+086900000000     C                     ENDDO                           <-- 1 ---
+087000000000     C                     ENDSR
+087100000000** ======== SCHIERA: MSG  (MESSAGGI)                       ================
+087200000000TRTB61R- Tasto funzionale non valido.                                          1
+087300000000TRTB61R- Tasto funzionale abilitato ma non gestito. Avvertire CED.             2
+087400000000TRTB61R- Opzione non valida.                                                   3
+087500000000TRTB61R- Opzione abilitata ma non gestita. Avvertire CED.                      4
+087600000000TRTB61R- Inizio elenco.                                                        5
+087700000000TRTB61R- Fine elenco.                                                          6
+087800000000TRTB61R- Immettere codice elemento non esistente                               7
+087900000000TRTB61R- Immettere codice elemento                                             8
+088000000000TRTB61R- Immettere la descrizione                                              9
+088100000000TRTB61R- Immettere tipo tariffa esistente e non annullato                     10
+088200000000TRTB61R- Immettere tipo filiale valido                                        11
+088300000000TRTB61R- Non immettere tipo filiale se l'elemento non e' 'F'=Filiale          12
+088400000000TRTB61R- 13
+088500000000TRTB61R- Richiesta funzione per codice già esistente                          14
+088600000000TRTB61R- Codice momentaneamente allocato: riprovare più tardi                 15
+088700000000TRTB61R- 16
+088800000000TRTB61R- Inserimento effettuato.                                              17
+088900000000TRTB61R- Modifica effettuata.                                                 18
+089000000000TRTB61R- Cancellazione effettuata.                                            19
+089100000000TRTB61R- Ripristino effettuato.                                               20
+089200000000** FUN  (PARAMETRI)       SEDE:GI FIL:GI   (G=GESTIONE,I=INTERROG.)
+089300000000F1    -                   -    NN     NN
+089400000000F2    -                   -    NN     NN
+089500000000F3    -F3=Fine            -    SS     SS
+089600000000F4    -                   -    NN     NN
+089700000000F5    -                   -    NN     NN
+089800000000F6    -F6=Aggiornamento   -    SS     SS
+089900000000F7    -                   -    NN     NN
+090000000000F8    -                   -    NN     NN
+090100000000F9    -                   -    NN     NN
+090200000000F10   -                   -    NN     NN
+090300000000F11   -                   -    NN     NN
+090400000000F12   -F12=Ritorno        -    SS     SS
+090500000000F13   -                   -    NN     NN
+090600000000F14   -                   -    NN     NN
+090700000000F15   -                   -    NN     NN
+090800000000F16   -                   -    NN     NN
+090900000000F17   -                   -    NN     NN
+091000000000F18   -                   -    NN     NN
+091100000000F19   -                   -    NN     NN
+091200000000F20   -                   -    NN     NN
+091300000000F21   -                   -    NN     NN
+091400000000F22   -                   -    NN     NN
+091500000000F23   -                   -    NN     NN
+091600000000F24   -F24=Altri tasti    -    NN     NN
+091700000000ENTER -                   -    SS     SS
+091800000000ROLLUP-                   -    NN     NN
+091900000000ROLLDN-                   -    NN     NN
+092000000000HELP  -                   -    NN     NN
+092100000000PRINT -                   -    NN     NN
+092200000000BSPACE-                   -    NN     NN
+092300000000CLEAR -                   -    NN     NN
+092400000000** DOPZ  (OPZIONE RICHIAMATA)
+092500000000* INSERIMENTO *                                                 1
+092600000000*  VARIAZIONE  *                                                2
+092700000000*CANCELLAZIONE*                                                 3
+092800000000*  RIPRISTINO  *                                                4
+092900000000VISUALIZZAZIONE                                                 5

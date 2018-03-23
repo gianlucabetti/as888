@@ -1,0 +1,175 @@
+000100890921     H              J
+000200890921     H*----------------------------------------------------*
+000300990812     H**  PREP. DATI CONSEGNA DA TITAS                     *
+000400890921     H*----------------------------------------------------*
+000500890921     F*
+000600990812     FTITAS31CIF  E           K        DISK
+000700990812     F            TITASP00                          KIGNORE
+000800990812     FTITA430CIF  E           K        DISK
+000900980202     FTNCSB03LIF  E           K        DISK
+001000980202     FFNVAC00TO   E                    DISK                           UC
+001100910830     E                    CMD1    1   1 49
+001200910830     E                    CMD2    1   1 49
+001300910830     E                    CMD3    1   1 49
+001400890921     IKPJBA     E DS
+001500900315     IPARAM       DS
+001600941122     I                                        1   80DAL
+001700941122     I                                        9  160AL
+001800941122     I                                       17  230CLIU
+001900921023     C                     EXSR DEFCAM
+002000941122     C*
+002100921023     C                     EXSR OPNFIL                      APRE FILE
+002200921023     C*
+002300921023     C                     EXSR WRTFIL                      LEGGE/SCRIVE
+002400980202     C                     CLOSEFNVAC00T                    CHIUDE FILE
+002500921023     C                     SETON                     LR
+002600910830     C*----------------------------------------------------*
+002700910830     C           DEFCAM    BEGSR
+002800910830     C*                                                    *
+002900910830     C           *ENTRY    PLIST                           *
+003000910830     C                     PARM           KPJBA            *
+003100910830     C                     MOVELKPJBU     PARAM            *
+003200990812     C           *LIKE     DEFN TA4TRC    KA4TRC
+003300990812     C* TITAS
+003400921023     C           KTAS      KLIST                           *
+003500980202     C                     KFLD           CLIU             *
+003600980202     C* TNCSB
+003700980202     C           KCSB      KLIST                           *
+003800980202     C                     KFLD           TASAAS
+003900980202     C                     KFLD           TASLNP
+004000980202     C                     KFLD           TASNRS
+004100980202     C                     KFLD           TASNSP
+004200990812     C* TITA4
+004300990812     C           KTA4      KLIST                           *
+004400990812     C                     KFLD           TASAAS
+004500990812     C                     KFLD           TASLNP
+004600990812     C                     KFLD           TASNRS
+004700990812     C                     KFLD           TASNSP
+004800990812     C                     KFLD           KA4TRC
+004900990812     C*
+005000910830     C                     ENDSR
+005100910830     C*--------------------------------------------------------
+005200921023     C* OPNFIL    CONTROLLO ESISTENZA DEL MEMBRO (MXXXXXXX    *
+005300910830     C*           DOVE XXXXXXX=COD CLI) SE NON C'E AGGIUNGO E *
+005400910830     C*           APRO IL FILE                                *
+005500910830     C*--------------------------------------------------------
+005600921023     C           OPNFIL    BEGSR
+005700910830     C                     MOVE ')'       VAR     8
+005800910830     C                     Z-ADD49        LUNG   155
+005900980202     C                     MOVELCLIU      VAR
+006000910830     C*
+006100910830     C** CONTROLLO SE ESISTE IL MEMBRO
+006200941122     C                     SETOF                     33    TNVAF00T
+006300910830     C                     MOVE VAR       CMD1
+006400910830     C                     MOVEL*BLANKS   COMMAN 80
+006500910830     C                     MOVEACMD1,1    COMMAN
+006600910830     C                     CALL 'QCMDEXC'              33
+006700910830     C                     PARM           COMMAN
+006800910830     C                     PARM           LUNG
+006900910830     C** ESEGUE ADDPFM SOLO SE NON ESISTE MEMBRO
+007000910830     C   33                DO
+007100910830     C                     MOVE VAR       CMD2
+007200910830     C                     MOVEL*BLANKS   COMMAN
+007300910830     C                     MOVEACMD2,1    COMMAN
+007400910830     C                     CALL 'QCMDEXC'
+007500910830     C                     PARM           COMMAN
+007600910830     C                     PARM           LUNG
+007700910830     C                     END
+007800910830     C** FACCIO OVRDBF DEL FILE E LO APRO
+007900910830     C                     MOVE VAR       CMD3
+008000910830     C                     MOVEL*BLANKS   COMMAN
+008100910830     C                     MOVEACMD3,1    COMMAN
+008200910830     C                     CALL 'QCMDEXC'
+008300910830     C                     PARM           COMMAN
+008400910830     C                     PARM           LUNG
+008500910830     C**
+008600980202     C                     OPEN FNVAC00T
+008700910830     C                     ENDSR
+008800910830     C*--------------------------------------------------------
+008900990812     C* WRIFIL    LEGGE TITAS00F/TITAS10F E SCRIVE FNVAC00T   *
+009000910830     C*--------------------------------------------------------
+009100921023     C           WRTFIL    BEGSR
+009200990812     C           KTAS      SETLLTITAS31C
+009300921023     C                     DO   *HIVAL
+009400990812     C           CLIU      READETITAS31C                 70
+009500921023     C  N70                DO
+009600980202     C                     MOVELTASAAS    WDTBOL  80
+009700980202     C                     MOVE TASMGS    WDTBOL
+009800980202     C           WDTBOL    IFLE AL                         DATA SPED.
+009900980202     C           WDTBOL    ANDGEDAL
+010000961205     C*
+010100980204     C           TASTBL    IFEQ 'F1'
+010200980204     C           TASTBL    OREQ 'A2'
+010300980202     C           KCSB      CHAINTNCSB03L             55
+010400980202     C                     Z-ADDTASAAS    VACAAS
+010500980202     C                     Z-ADDTASLNP    VACLNP
+010600980202     C                     Z-ADDTASNRS    VACNRS
+010700980202     C                     Z-ADDTASNSP    VACNSP
+010800980202     C                     Z-ADDTASMGS    VACMGS
+010900980202     C*
+011000980202     C                     MOVEL'1 '      VACCBO
+011100980202     C           TASTBL    IFEQ 'A2'
+011200980202     C                     MOVEL'2 '      VACCBO
+011300980202     C                     ENDIF
+011400980202     C                     Z-ADDTASLNA    VACLNA
+011500000721     C                     MOVELTASRSD    VACRSD
+011600000721     C                     MOVELTASPRD    VACPRD
+011700980202     C                     MOVEL*BLANK    VACGC1
+011800980202     C                     MOVEL*BLANK    VACGC2
+011900980202     C                     Z-ADDTASCTR    VACCTR
+012000980202     C                     MOVELTASCTS    VACCTS
+012100980202     C                     MOVELTASFTM    VACFTM
+012200980202     C                     MOVELTASFIN    VACFIN
+012300980202     C                     MOVELTASFAP    VACFAP
+012400980202     C                     MOVELTASTSP    VACTSP
+012500980202     C                     Z-ADDTASIAS    VACIAS
+012600980202     C                     MOVELTASVAS    VACVAS
+012700980202     C                     MOVEL*BLANK    VACNAS
+012800980202     C                     Z-ADDTASNCL    VACNCL
+012900990812     C                     Z-ADDTASPKF    VACPKB
+013000980202     C                     Z-ADDTASVLF    VACVLB
+013100980202     C                     Z-ADDTASQFT    VACQFT
+013200980202     C                     MOVE *ZERO     VACCAS
+013300980202     C                     MOVE *BLANK    VACTIC
+013400980202     C                     MOVE *BLANK    VACVCA
+013500980202     C  N55                DO
+013600980202     C                     Z-ADDCSBCAS    VACCAS
+013700980202     C                     MOVELCSBTPA    VACTIC
+013800980202     C                     MOVE CSBTPI    VACTIC
+013900980202     C                     MOVELCSBVCA    VACVCA
+014000980202     C                     ENDDO
+014100980202     C                     Z-ADDTASKSC    VACCCM
+014200980202     C                     Z-ADDTASRMN    VACRMN
+014300980202     C                     MOVE *BLANK    VACRMO
+014400980202     C                     MOVELTASFFD    VACFFD
+014500980202     C                     MOVE *BLANK    VACTCR
+014600980202     C                     MOVE *ZERO     VACDCR
+014700980202     C                     MOVE *ZERO     VACHCR
+014800980202     C                     Z-ADDTASDCM    VACDCM
+014900980202     C                     Z-ADDTASHMC    VACHMC
+015000980202     C                     MOVELTASFTC    VACTC1
+015100980202     C                     MOVELTASTC2    VACTC2
+015200980202     C                     MOVELTASCCA    VACCCA
+015300980202     C                     MOVE *ZERO     VACDLA
+015400980202     C                     MOVE *ZERO     VACDAG
+015500990812     C*---                 MOVELTASRMA    VACRMA
+015600990812     C                     MOVEL'A'       KA4TRC
+015700990812IF  5C           KTA4      CHAINTITA430C             98
+015800990812     C           *IN98     IFEQ *OFF
+015900990812X   5C                     MOVELTA4NOT    VACRMA
+016000990812     C                     ELSE
+016100990812E   5C                     MOVEL*BLANKS   VACRMA
+016200990812     C                     ENDIF
+016300941122     C*
+016400980202     C                     WRITEFNVAC000
+016500980202     C                     ENDIF
+016600980204     C                     ENDIF
+016700980202     C                     ENDDO
+016800980202     C  N70                ENDDO
+016900910830     C                     ENDSR
+017000910830**         CMD1
+017100980202CHKOBJ OBJ(FNVAC00T) OBJTYPE(*FILE) MBR(M0000000)
+017200910830**         CMD2
+017300980202ADDPFM FILE(FNVAC00T)               MBR(M0000000)
+017400910830**         CMD3
+017500980202OVRDBF FILE(FNVAC00T)               MBR(M0000000)

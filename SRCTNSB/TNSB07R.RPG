@@ -1,0 +1,214 @@
+000100000000     H              J
+000200000000     F* TNSB07R *-----------------------------------------------------*
+000300000000     F*----------------*                                              *
+000400000000     F*       INTERROGAZIONE LEGAMI BOLLA                             *
+000500000000     F*---------------------------------------------------------------*
+000600000000     FTNSB07D CF  E                    WORKSTN
+000700000000     F                                        NRR1  KSFILE SB07S01
+000800000000     FFNLBL01LIF  E           K        DISK
+000900000000     FFNLBL02LIF  E           K        DISK
+001000000000     F            FNLBL000                          KRENAMEFNLBL002
+001100000000     F*
+001200000000     E                    AAN        30  4 0             ANNO BOLLA SEGUENTE
+001300000000     E                    LPN        30  3 0             LNP BOLLA SEGUENTE
+001400000000     E                    NRN        30  2 0             SERIE BOLLA SEGUENTE
+001500000000     E                    NSN        30  7 0             SPEDIZ. BOLLA SEGUENTE
+001600000000     E*
+001700000000     IKPJBA     E DS
+001800000000     IPARAM       DS
+001900000000     I                                        1   40PARAAS
+002000000000     I                                        5   80PARMGS
+002100000000     I                                        1   80PARDSP
+002200000000     I                                        9  110PARLNP
+002300000000     I                                       12  130PARNRS
+002400000000     I                                       14  200PARNSP
+002500000000     I                                       21  22 PARTBL
+002600000000     I                                       23  42 PADTBL
+002700000000     I                                       43  450PARLNA
+002800000000     I                                       46  64 PADLNA
+002900000000     I                                       65  790PARRMN
+003000000000     I                                       80  80 PARF03
+003100000000     I                                       81 100 PARRSU
+003200000000     IWLBDAT     IDS
+003300000000     I                                        1   80G02DAT
+003400000000     I                                        9  160G02INV
+003500000000     I                                       17  17 G02ERR
+003600000000     I                                       18  220G02TGI
+003700000000     I*
+003800000000     C**************************************************************************
+003900000000     C           *ENTRY    PLIST
+004000000000     C                     PARM           KPJBA
+004100000000     C                     MOVELKPJBU     PARAM
+004200000000     C*
+004300000000     C                     MOVELPARRSU    V1CRSU
+004400000000     C                     Z-ADDPARDSP    G02INV
+004500000000     C                     Z-ADD*ZERO     G02DAT
+004600000000     C                     MOVEL'3'       G02ERR
+004700000000     C                     CALL 'XSRDA8'
+004800000000     C                     PARM           WLBDAT
+004900000000     C                     Z-ADDG02DAT    V1CDSP
+005000000000     C                     Z-ADDPARLNP    V1CLNP
+005100000000     C                     Z-ADDPARNRS    V1CNRS
+005200000000     C                     Z-ADDPARNSP    V1CNSP
+005300000000     C                     MOVELPARTBL    V1CTBL
+005400000000     C                     MOVELPADTBL    V1DTBL
+005500000000     C                     Z-ADDPARLNA    V1CLNA
+005600000000     C                     MOVELPADLNA    V1DLNA
+005700000000     C                     Z-ADDPARRMN    V1CRMN
+005800000000     C*
+005900000000     C**************************************************************************
+006000000000     C* RIEMPIE IL SFL CON TUTTI I LEGAMI BOLLA
+006100000000     C* PARTENDO DALLA BOLLA ORIGINALE, FINO ALL'ULTIMA IN
+006200000000     C* ORDINE CRONOLOGICO (ULTIMO MODELLO SWATCH)
+006300000000     C**************************************************************************
+006400000000     C* PULISCO IL SFL
+006500000000     C                     SETOF                     202123
+006600000000     C                     WRITESB07C01
+006700000000     C                     SETON                     2123
+006800000000     C*
+006900000000     C                     MOVEL*BLANKS   WFLG1   1        FLAG DI COMODO
+007000000000     C* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+007100000000     C*
+007200000000     C* UTILIZZO LA BOLLA COME FIGLIA, O COME MAMMA, PER REPERIRE L'ORIGINE
+007300000000     C           KBOL      CHAINFNLBL01L             99
+007400000000     C   99      KBOL      CHAINFNLBL02L             99
+007500000000     C  N99                DO
+007600000000     C*
+007700000000     C* CON L'ORIGINALE LEGGO LA PRIMA BOLLA DELLA LISTA
+007800000000     C                     MOVELLBLAAO    KAAS             ANNO ORIGINALE
+007900000000     C                     MOVELLBLLPO    KLNP             LNP ORIGINALE
+008000000000     C                     MOVELLBLNRO    KNRS             NR.SERIE ORIGINALE
+008100000000     C                     MOVELLBLNSO    KNSP             SPEDIZIONE ORIGINALE
+008200000000     C           KLBL1     CHAINFNLBL02L             99
+008300000000     C*
+008400000000     C* PER PRIMA COSA METTO NEL SFL LA BOLLA ORIGINALE
+008500000000     C* E TESTO SE E' PRESENTE IN ARCHIVIO
+008600000000     C  N99                DO
+008700000000     C                     MOVELLBLAAO    VSCAAP
+008800000000     C                     MOVELLBLLPO    VSCLPP
+008900000000     C                     MOVELLBLLAO    VSCLAP
+009000000000     C                     MOVELLBLNRO    VSCNRP
+009100000000     C                     MOVELLBLNSO    VSCNSP
+009200000000     C                     CLEARVSCAAN
+009300000000     C                     CLEARVSCLPN
+009400000000     C                     CLEARVSCLAN
+009500000000     C                     CLEARVSCNRN
+009600000000     C                     CLEARVSCNSN
+009700941121     C           'ORIGINAL'CAT  'E':0     VSCPRE
+009800000000     C*
+009900000000     C* VERIFICO SE E' QUELLA IN ESAME DALL'UTENTE
+010000000000     C           LBLAAO    IFEQ PARAAS
+010100000000     C           LBLLPO    ANDEQPARLNP
+010200000000     C           LBLNRO    ANDEQPARNRS
+010300000000     C           LBLNSO    ANDEQPARNSP
+010400000000     C                     SETON                     81    REVERSE IMAGE
+010500000000     C                     MOVEL'1'       WFLG1            FLAG DI COMODO
+010600000000     C                     ELSE
+010700000000     C                     SETOF                     81    NO REVERSE IMAGE
+010800000000     C                     ENDIF
+010900000000     C                     SETON                     83    DSPATR(ND) SEGUENTE
+011000000000     C                     Z-ADD1         NRR1
+011100000000     C                     WRITESB07S01                    SFL
+011200000000     C                     SETON                     20    SFLDSP
+011300000000     C*
+011400000000     C                     SETOF                     83  99
+011500000000     C                     ENDDO
+011600000000     C* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+011700000000     C* CICLO FINO ALL'ULTIMO LEGAME
+011800000000     C* LAVORO SOLO SUI CAMPI "BOLLA SEGUENTE"
+011900000000     C                     Z-ADD*ZERO     WA      30       INDICE SCHIERA
+012000000000     C                     Z-ADD*ZERO     WB      30       INDICE SCHIERA
+012100000000     C                     MOVEA*ZERO     AAN              PULIZIA SCHIERA AAN
+012200000000     C           *IN99     DOWEQ*OFF
+012300000000     C*
+012400000000     C                     MOVELLBLAAP    VSCAAP
+012500000000     C                     MOVELLBLLPP    VSCLPP
+012600000000     C                     MOVELLBLLAP    VSCLAP
+012700000000     C                     MOVELLBLNRP    VSCNRP
+012800000000     C                     MOVELLBLNSP    VSCNSP
+012900000000     C                     MOVELLBLAAN    VSCAAN
+013000000000     C                     MOVELLBLLPN    VSCLPN
+013100000000     C                     MOVELLBLLAN    VSCLAN
+013200000000     C                     MOVELLBLNRN    VSCNRN
+013300000000     C                     MOVELLBLNSN    VSCNSN
+013400941121     C                     MOVEL*BLANKS   VSCPRE
+013500000000     C                     SETOF                     8182  NO REVERSE IMAGE
+013600000000     C*
+013700000000     C* VERIFICO SE LA SEGUENTE E' QUELLA IN ESAME DALL'UTENTE
+013800000000     C           LBLAAP    IFEQ PARAAS
+013900000000     C           LBLLPP    ANDEQPARLNP
+014000000000     C           LBLNRP    ANDEQPARNRS
+014100000000     C           LBLNSP    ANDEQPARNSP
+014200000000     C                     SETON                     81    REVERSE IMAGE
+014300000000     C                     ENDIF
+014400000000     C*
+014500000000     C* VERIFICO SE LA SEGUENTE E' QUELLA IN ESAME DALL'UTENTE
+014600000000     C           LBLAAN    IFEQ PARAAS
+014700000000     C           LBLLPN    ANDEQPARLNP
+014800000000     C           LBLNRN    ANDEQPARNRS
+014900000000     C           LBLNSN    ANDEQPARNSP
+015000000000     C                     SETON                     82    REVERSE IMAGE
+015100000000     C                     ENDIF
+015200000000     C*
+015300000000     C* SCRIVO IL RECORD NEL SFL
+015400000000     C                     ADD  1         NRR1
+015500000000     C                     WRITESB07S01                    SFL
+015600000000     C*
+015700000000     C* AGGIORNO LA SCHIERA CON LE FIGLIE
+015800000000     C                     ADD  1         WA               INDICE SCHIERA
+015900000000     C                     MOVELLBLAAN    AAN,WA
+016000000000     C                     MOVELLBLLPN    LPN,WA
+016100000000     C                     MOVELLBLNRN    NRN,WA
+016200000000     C                     MOVELLBLNSN    NSN,WA
+016300000000     C*
+016400000000     C           KLBL1     READEFNLBL02L                 99
+016500000000     C*
+016600000000     C* SE NON HO PIU' BOLLE CON READE
+016700000000     C* USO LA FIGLIA PER LEGGERE IL LEGAME SUCCESSIVO
+016800970116     C           WB        DOWLTWA
+016900970116     C           *IN99     ANDEQ*ON
+017000000000     C                     ADD  1         WB
+017100000000     C                     MOVELAAN,WB    KAAS             ANNO SEGUENTE
+017200000000     C                     MOVELLPN,WB    KLNP             LNP SEGUENTE
+017300000000     C                     MOVELNRN,WB    KNRS             NR.SERIE SEGUENTE
+017400000000     C                     MOVELNSN,WB    KNSP             SPEDIZIONE SEGUENTE
+017500000000     C           KLBL1     SETLLFNLBL02L
+017600000000     C           KLBL1     READEFNLBL02L                 99
+017700970116     C                     ENDDO
+017800000000     C*
+017900000000     C                     ENDDO
+018000000000     C                     ENDDO
+018100000000     C*
+018200000000     C                     Z-ADD1         NRR1             PER LA VISUALIZZAZION
+018300000000     C*
+018400000000     C                     WRITESB07Z01                    PIEDE
+018500000000     C  N20                WRITESB07D02                    VUOTO
+018600000000     C                     EXFMTSB07C01
+018700000000     C*
+018800000000     C* SE PREMUTO F3, LO PASSO AL PGM CHIAMANTE
+018900000000     C   KC                MOVEL'1'       PARF03           F3=USCITA
+019000000000     C   KC                MOVELPARAM     KPJBU
+019100000000     C*
+019200000000     C                     SETON                     LR
+019300000000     C**************************************************************************
+019400000000     C           *INZSR    BEGSR
+019500000000     C*
+019600000000     C           *LIKE     DEFN LBLAAO    KAAS
+019700000000     C           *LIKE     DEFN LBLLPO    KLNP
+019800000000     C           *LIKE     DEFN LBLNRO    KNRS
+019900000000     C           *LIKE     DEFN LBLNSO    KNSP
+020000000000     C*
+020100000000     C           KBOL      KLIST
+020200000000     C                     KFLD           PARAAS
+020300000000     C                     KFLD           PARLNP
+020400000000     C                     KFLD           PARNRS
+020500000000     C                     KFLD           PARNSP
+020600000000     C           KLBL1     KLIST                           FNLBL..L
+020700000000     C                     KFLD           KAAS             ..ANNO
+020800000000     C                     KFLD           KLNP             ..LINEA PARTENZA
+020900000000     C                     KFLD           KNRS             ..NR.SERIE
+021000000000     C                     KFLD           KNSP             ..SPEDIZIONE
+021100000000     C*
+021200000000     C                     Z-ADD*ZERO     NRR1    40
+021300000000     C*
+021400000000     C                     ENDSR

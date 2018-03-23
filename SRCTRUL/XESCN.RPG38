@@ -1,0 +1,310 @@
+000100000000     H        1    /J
+000200000000     H* XESCN *------------------------------------------------------*
+000300000000     H*-----------------*                                            *
+000400000000     H*            - ESTRATTO CONTO IN P.N. GENERICA -
+000500000000     H*--------------------------------------------------------------*
+000600000000     FXESCND  CF  E                    WORKSTN
+000700000000     F                                        CREC2 KSFILE XESCND7
+000800000000     FCNACO00FIF  E           K        DISK
+000900000000     FCNMOV00FIF  E           K        DISK
+001000000000     F/EJECT
+001100000000     F****************************************************************
+001200000000     F*
+001300000000     F*
+001400000000     F*  12    FINE LAVORO
+001500000000     F*  --
+001600000000     F*  30    SALDO AVERE (IMPA MAGG. IMPD)
+001700000000     F*  31      "   DARE  (IMPA MIN.  IMPD)
+001800000000     F*  32    SALDO  0    (IMPA UGUAL.IMPD)
+001900000000     F*  --
+002000000000     F*  78    SOTTOLINEA I CAMPI NELLE RIGHE SALDO PARTITA
+002100000000     F*  79    DELETE DEL SUBFILE
+002200000000     F*  80    CLEAR DEL SUBFILE
+002300000000     F*  81    LAVORO
+002400000000     F/EJECT
+002500000000     E                    XDTF   12  12  2 0
+002600000000     IKEYPR1      DS
+002700000000     I                                    P   1   10MOVKUT
+002800000000     I                                    P   2   40MOVKCC
+002900000000     I                                    P   5   80MOVKSC
+003000000000     I                                        1   8 KEYRG1
+003100000000     I                                    P   9  120MOVDRP
+003200000000     I                                    P  13  160MOVNRP
+003300000000     IKEYRG2      DS
+003400000000     I                                    P   1   10ACOKUT
+003500000000     I                                    P   2   40ACOKCC
+003600000000     I                                    P   5   80ACOKSC
+003700000000     ISALVPR      DS
+003800000000     I                                    P   1   10KUT
+003900000000     I                                    P   2   40KCC
+004000000000     I                                    P   5   80KSC
+004100000000     I                                    P   9  120KDP
+004200000000     I                                    P  13  160KNP
+004300000000     C/EJECT
+004400000000     C           *ENTRY    PLIST
+004500000000     C                     PARM           PARKUT  10
+004600000000     C                     PARM           PARDUT 30
+004700000000     C                     PARM           PARKCC  40
+004800000000     C                     PARM           PARKSC  70
+004900000000     C                     PARM           STATO   10
+005000000000     C           STATO     CABEQ-1        FINE
+005100000000     C                     MOVELPARDUT    RSUT   20
+005200000000     C/SPACE 2
+005300000000     C                     WRITEXESCND1
+005400000000     C/SPACE 2
+005500000000     C*------- CHIAVI UTILIZZATE --------------------------*
+005600000000     C           KEY1      KLIST
+005700000000     C                     KFLD           PARKUT
+005800000000     C                     KFLD           PARKCC
+005900000000     C                     KFLD           PARKSC
+006000000000     C           KEY3      KLIST
+006100000000     C                     KFLD           KUT
+006200000000     C                     KFLD           KCC1
+006300000000     C                     KFLD           KSC1
+006400000000     C                     KFLD           KDP1
+006500000000     C                     KFLD           KNP1
+006600000000     C*----------------------------------------------------*
+006700000000     C/EJECT
+006800000000     C*------- RICERCA ANAGRAFICA -------------------------*
+006900000000     C           AAA20     TAG
+007000000000     C           KEY1      CHAINCNACO000             11
+007100000000     C   11                GOTO NOMOV0
+007200000000     C           ACOFLG    COMP '*'                      11
+007300000000     C   11                GOTO NOMOV0
+007400000000     C*----------------------------------------------------*
+007500000000     C/SPACE 3
+007600000000     C*------- PULISCI SUBFILE ----------------------------*
+007700000000     C                     SETON                     80
+007800000000     C                     WRITEXESCND6                    *SUBF 2 COLONNE
+007900000000     C                     SETOF                     80
+008000000000     C                     Z-ADD0         TOTA
+008100000000     C                     Z-ADD0         TOTD
+008200000000     C                     Z-ADD0         CREC2   40
+008300000000     C                     Z-ADD0         CREC
+008400000000     C                     Z-ADD40        STOP    40
+008500000000     C*----------------------------------------------------*
+008600000000     C/EJECT
+008700000000     C*------- E/C PER PARTITE APERTE ---------------------*
+008800000000     C           ECPA0     TAG
+008900000000     C           KEY1      SETLLCNMOV000                 11
+009000000000     C  N11                GOTO NOMOV
+009100000000     C           KEY1      READECNMOV000                 11
+009200000000     C   11                GOTO NOMOV
+009300000000     C*------- TEST FINE ESTRAZIONE MOVIMENTI
+009400000000     C           ECPA10    TAG
+009500000000     C   11                GOTO ECPA50
+009600000000     C                     Z-ADD0         CTMOV   40       *CT MOV.PARTITA
+009700000000     C                     Z-ADD0         TOTPA
+009800000000     C                     Z-ADD0         TOTPD
+009900000000     C                     MOVELKEYPR1    SALVPR
+010000000000     C*------- RITORNO PER MOVIMENTO STESSA PARTITA
+010100000000     C           ECPA20    TAG
+010200000000     C           MOVDA     IFEQ 'A'
+010300000000     C                     ADD  MOVIMP    TOTPA  150       *LIRE ITAL.
+010400000000     C                     ELSE
+010500000000     C                     ADD  MOVIMP    TOTPD  150
+010600000000     C                     END
+010700000000     C                     ADD  1         CTMOV
+010800000000     C*------- RILETTURA E TEST ROTTURA PARTITA
+010900000000     C           KEY1      READECNMOV000                 11
+011000000000     C  N11      KEYPR1    CABEQSALVPR    ECPA20
+011100000000     C*------- PARTITA ROTTA TESTA SALDO
+011200000000     C           TOTPA     CABEQTOTPD     ECPA10           *SALDO=0 PAR.CH
+011300000000     C/SPACE 2
+011400000000     C*------- PARTITA APERTA  1) RITORNO AL PRIMO MOV DELLA PARTITA
+011500000000     C*-------                 2) RILETTUA MOV E SCRIVI IN SUBFILE
+011600000000     C*-------
+011700000000     C                     Z-ADDKCC       KCC1    40
+011800000000     C                     Z-ADDKSC       KSC1    70
+011900000000     C                     Z-ADDKDP       KDP1    60
+012000000000     C                     Z-ADDKNP       KNP1    60
+012100000000     C           KEY3      SETLLCNMOV000             11
+012200000000     C           ECPA30    TAG
+012300000000     C           KEY1      READECNMOV000                 11
+012400000000     C   11                GOTO ECPA40
+012500000000     C           KEYPR1    CABNESALVPR    ECPA40
+012600000000     C                     EXSR HHH0
+012700000000     C                     GOTO ECPA30
+012800000000     C*------- SCRIVI TOTALI NEL SUBFILE
+012900000000     C           ECPA40    TAG
+013000000000     C                     EXSR KKK0
+013100000000     C  N11                GOTO ECPA10
+013200000000     C*------- FINE MOVIMENTI DA LISTARE
+013300000000     C           ECPA50    TAG
+013400000000     C*----------------------------------------------------*
+013500000000     C/EJECT
+013600000000     C*------- GESTIONE DEL SUBFILE VISUALIZZATO ----------*
+013700000000     C           BBB10     TAG
+013800000000     C           CREC      CABEQ0         NOMOV
+013900000000     C           TOTA      COMP TOTD                 303132
+014000000000     C   30      TOTA      SUB  TOTD      SALDA
+014100000000     C   31      TOTD      SUB  TOTA      SALDD
+014200000000     C                     WRITEXESCND5
+014300000000     C           BBB20     TAG
+014400000000     C           CREC      DIV  13        TPAG1   62
+014500000000     C           TPAG1     ADD  ,99       TPAG
+014600000000     C                     Z-ADD1         NPAG
+014700000000     C                     Z-ADD1         NRIG
+014800000000     C           BBB30     TAG
+014900000000     C                     EXFMTXESCND6
+015000000000     C   12                RETRN
+015100000000     C*------- IMPOSTA PAGINA DESIDERATA
+015200000000     C           NPAG      MULT 13        NRIG
+015300000000     C           NRIG      SUB  12        NRIG
+015400000000     C           NRIG      IFGT CREC
+015500000000     C                     Z-ADD1         NRIG
+015600000000     C                     Z-ADD1         NPAG
+015700000000     C                     END
+015800000000     C                     GOTO BBB30
+015900000000     C*----------------------------------------------------*
+016000000000     C/EJECT
+016100000000     C*------- NESSUN MOVIMENTO;FINE LAVORO ---------------*
+016200000000     C           NOMOV0    TAG
+016300000000     C                     Z-ADD0         ACOKCC
+016400000000     C                     Z-ADD0         ACOKSC
+016500000000     C                     MOVE *BLANK    ACORAG
+016600000000     C           NOMOV     TAG
+016700000000     C                     EXFMTXESCND8
+016800000000     C                     RETRN
+016900000000     C           FINE      TAG
+017000000000     C                     SETON                     79
+017100000000     C                     WRITEXESCND6
+017200000000     C                     SETON                     LR
+017300000000     C*----------------------------------------------------*
+017400000000     C*----------------------------------------------------*
+017500000000     C/EJECT
+017600000000     C*------- SUBR.CARICA MOVIMENTI NEL SUBFILE ----------*
+017700000000     C*-------         1) RIGIRA DATE
+017800000000     C*-------         2) TESTA TIPO IMPORTO
+017900000000     C*-------         3) TESTA TIPO ESPOSIZIONE
+018000000000     C*-------
+018100000000     C           HHH0      BEGSR
+018200000000     C*-------
+018300000000     C                     MOVE MOVDRG    DREG
+018400000000     C                     MOVE MOVDRG    XDTGG
+018500000000     C                     MOVELMOVDRG    XDTAA
+018600000000     C                     MOVE XDTAA     DREG
+018700000000     C                     MOVELXDTGG     DREG
+018800000000     C*-------
+018900000000     C                     MOVE MOVDRP    DPAR
+019000000000     C                     MOVE MOVDRP    XDTGG
+019100000000     C                     MOVELMOVDRP    XDTAA
+019200000000     C                     MOVE XDTAA     DPAR
+019300000000     C                     MOVELXDTGG     DPAR
+019400000000     C*-------
+019500000000     C           MOVDSC    IFNE 0
+019600000000     C                     MOVE MOVDSC    DSCA
+019700000000     C                     MOVE MOVDSC    XDTGG
+019800000000     C                     MOVELMOVDSC    XDTAA
+019900000000     C                     MOVE XDTAA     DSCA
+020000000000     C                     MOVELXDTGG     DSCA
+020100000000     C                     END
+020200000000     C                     MOVE MOVIMP    IMPORT 150
+020300000000     C*-------
+020400000000     C           MOVDA     IFEQ 'A'
+020500000000     C                     MOVE IMPORT    IMPA
+020600000000     C                     ADD  IMPORT    TOTA
+020700000000     C                     MOVE *ZEROS    IMPD
+020800000000     C                     ELSE
+020900000000     C                     MOVE IMPORT    IMPD
+021000000000     C                     ADD  IMPORT    TOTD
+021100000000     C                     MOVE *ZEROS    IMPA
+021200000000     C                     END
+021300000000     C                     ADD  1         CREC2
+021400000000     C*-------
+021500000000     C                     WRITEXESCND7
+021600000000     C                     MOVE CREC2     CREC    40
+021700000000     C*--------
+021800000000     C           HHH90     ENDSR
+021900000000     C/EJECT
+022000000000     C*------- SUBROUTINE TOTALI DI PARTITA --------------*
+022100000000     C           KKK0      BEGSR
+022200000000     C                     MOVE MOVNRG    SAVNRG  60       * S
+022300000000     C                     MOVE MOVCOD    SAVCOD  4        *  T
+022400000000     C                     MOVE MOVDES    SAVDES 16        *    O
+022500000000     C                     MOVE MOVNRP    SAVNRP  60       *      R
+022600000000     C                     MOVE MOVDA     SAVDA   1        *       E
+022700000000     C                     Z-ADD0         MOVNRG
+022800000000     C                     Z-ADD0         MOVNRP
+022900000000     C                     Z-ADD0         DREG
+023000000000     C                     Z-ADD0         DPAR
+023100000000     C                     Z-ADD0         DSCA
+023200000000     C                     MOVE '****'    MOVCOD
+023300000000     C                     MOVEL'TOTALE  'MOVDES
+023400000000     C                     MOVE 'PARTITA 'MOVDES
+023500000000     C                     Z-ADDTOTPA     IMPA
+023600000000     C                     Z-ADDTOTPD     IMPD
+023700000000     C           TOTPA     SUB  TOTPD     SALDP  120 303132
+023800000000     C   32
+023900000000     COR 31                Z-ADD0         IMPA
+024000000000     C   32
+024100000000     COR 30                Z-ADD0         IMPD
+024200000000     C   30                Z-ADDSALDP     IMPA
+024300000000     C   31                Z-SUBSALDP     IMPD
+024400000000     C                     MOVEL'SALDO   'MOVDES
+024500000000     C                     ADD  1         CREC2
+024600000000     C                     SETON                     78
+024700000000     C                     WRITEXESCND7
+024800000000     C                     SETOF                     78
+024900000000     C                     MOVE CREC2     CREC
+025000000000     C           KKK20     TAG
+025100000000     C                     MOVE SAVDES    MOVDES           *R
+025200000000     C                     MOVE SAVNRG    MOVNRG           * E
+025300000000     C                     MOVE SAVCOD    MOVCOD           *  ST
+025400000000     C                     MOVE SAVNRP    MOVNRP           *    OR
+025500000000     C                     MOVE SAVDA     MOVDA            *      E
+025600000000     C           KKK90     ENDSR
+025700000000     C/EJECT
+025800000000     C*------- SUBROUTINE CONTROLLO E INVERSIONE DATE -----*
+025900000000     C           XDATA     BEGSR
+026000000000     C           XDTSTA    CABGT4         XDTERR
+026100000000     C           XDTSTA    CABLT1         XDTERR
+026200000000     C           XDTSTA    CABGT2         XDTEI
+026300000000     C*    GIRA DATA INTERNA IN ESTERNA
+026400000000     C           XDTAMG    DIV  100       XDTMM   20       * M-->XDTMM
+026500000000     C           XDTAMG    DIV  10000     XDTAA   20       * A-->XDTAA
+026600000000     C                     MOVE XDTAMG    XDTGG   20       * G-->XDTGG
+026700000000     C                     MOVE XDTAMG    XDTGMA  60       * M--> XDTGMA
+026800000000     C                     MOVELXDTGG     XDTGMA           * G--> XDTGMA
+026900000000     C                     MOVE XDTAA     XDTGMA           * A--> XDTGMA
+027000000000     C                     GOTO XDTCON
+027100000000     C           XDTEI     TAG
+027200000000     C*    GIRA DATA ESTERNA IN INTERNA
+027300000000     C           XDTGMA    DIV  100       XDTMM            * M--> XDTMM
+027400000000     C           XDTGMA    DIV  10000     XDTGG            * G--> XDTGG
+027500000000     C                     MOVE XDTGMA    XDTAA            * A--> XDTAA
+027600000000     C                     MOVE XDTGMA    XDTAMG  60       * M--> XDTAMG
+027700000000     C                     MOVELXDTAA     XDTAMG           * A--> XDTAMG
+027800000000     C                     MOVE XDTGG     XDTAMG           * G--> XDTAMG
+027900000000     C                     SUB  2         XDTSTA           *PREPARA XDTSTA
+028000000000     C*                                                    * PER TEST CONT
+028100000000     C           XDTCON    TAG
+028200000000     C           XDTSTA    CABNE1         XDTOK            * XDTSTA NON 1
+028300000000     C*                                                    *SALTA CONTROL
+028400000000     C*
+028500000000     C*    CONTROLLA LA VALIDITA* DELLA DATA
+028600000000     C           XDTGG     CABLT1         XDTERR
+028700000000     C           XDTMM     CABLT1         XDTERR
+028800000000     C           XDTMM     CABGT12        XDTERR
+028900000000     C           XDTAA     DIV  4         XDTRES  20       * INDIVIDUA
+029000000000     C                     MVR            XDTRES           * ANNO BISEST.
+029100000000     C           XDTRES    IFEQ 0
+029200000000     C                     Z-ADD29        XDTF,2           * AGGIUSTA
+029300000000     C                     ELSE                            * FINE FEBBRAIO
+029400000000     C                     Z-ADD28        XDTF,2           * IN ARRAY XDTF
+029500000000     C                     END
+029600000000     C           XDTGG     CABGTXDTF,XDTMMXDTERR           * GIORNO DATA >
+029700000000     C*                                                    * FINE MESE
+029800000000     C           XDTOK     TAG
+029900000000     C*    FINE NORMALE
+030000000000     C                     SUB  XDTSTA    XDTSTA  10
+030100000000     C                     GOTO XDTFIN
+030200000000     C           XDTERR    TAG
+030300000000     C*    DATA O RICHIESTA ERRATA
+030400000000     C                     Z-SUB1         XDTSTA
+030500000000     C           XDTFIN    TAG
+030600000000     C*    FINE ISTRUZIONI RUOTINE
+030700000000     C*
+030800000000     C                     ENDSR
+030900000000**
+031000000000312831303130313130313031

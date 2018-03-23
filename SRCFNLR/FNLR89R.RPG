@@ -1,0 +1,220 @@
+000100000000     H              J
+000200941019     H* FNLR89R *----------------------------------------------------*
+000300000000     H*-----------------*                                            *
+000400941019     H*  RICEZIONE INCASSO C/ASSEGNO IN FILIALE PARTENZA             *
+000500000000     H*--------------------------------------------------------------*
+000600941019     FFNCAF00RUF  E                    DISK                           UC
+000700941019     FFNBLP01LIF  E           K        DISK
+000800941019     FFNCSB01LUF  E           K        DISK                      A
+000900900604     FCMRIC01LUF  E           K        DISK
+001000931025     FCNACO00FIF  E           K        DISK
+001100941019     E                    CMD1    1   1 55
+001200941019     E                    CMD2    1   1 55
+001300941019     E                    CMD3    1   1 55
+001400941019     E                    CMD5    1   1 55
+001500000000     E                    TCU        50  6               TAB FLAG CNT
+001600000000     E                    KCU        50  4 0             TAB CAPO CONTO
+001700000000     E                    DTU        12  6 0             DATE PARAM
+001800921201     E                    CLI       100  7 0             COD.CLI DA TRASM.
+001900000000     IKPJBA     E DS
+002000900604     I                                       92 101 LIBSYS
+002100900604     I                                      483 492 LEGFIL
+002200900604     I                                      493 502 MBRFIL
+002300930517     IUTEDSE    E DSUT§DSE0F
+002400000000     I                                      398 697 TCU
+002500000000     I                                    P 698 847 KCU
+002600000000     I                                    P 848 8950DTU
+002700930517     ICNCR80    E DS
+002800931025     ITCUDS       DS
+002900931025     I                                        1   1 F1
+003000931025     I                                        3   3 F3
+003100931025     I                                        2   2 F2
+003200931025     I                                        4   4 F4
+003300931025     I                                        5   6 F56
+003400931025     I                                        3   4 F34
+003500000000     I/SPACE 3
+003600900604     C*---------------------------------------------------------------*
+003700941019     C* APERTURA MEMBRO DA TRASCODIFICARE  FNCAF00R
+003800900604     C*
+003900900604     C                     EXSR CAEXA
+004000900615     C*
+004100941019     C           *IN01     DOUEQ'1'
+004200941019     C                     READ FNCAF00R                 01
+004300930422     C  N01                DO
+004400941019     C                     ADD  1         NUREC
+004500941019     C           KBLP      CHAINFNBLP01L             21
+004600941019     C  N21                EXSR WRTCA
+004700941019     C                     DELETFNCAF000
+004800930921     C                     ENDDO
+004900941019     C*
+005000941019     C                     ENDDO
+005100930423     C* CHIUSURA MEMBRO TRASCODIFICATO
+005200941019     C* FNCAF00R
+005300900604     C                     EXSR CAEXB
+005400900604     C* AGGIORNA ARCHIVIO DI LOG
+005500900604     C           LEGFIL    CHAINCMRIC01L             20
+005600900604     C  N20                DO
+005700900604     C                     Z-ADDNUREC     RICNR1
+005800900604     C                     MOVE '1'       RICFL2            AGG.TO
+005900900604     C                     UPDATCMRIC000
+006000900604     C                     END
+006100900604     C           STOP      TAG
+006200000000     C                     SETON                     LR
+006300900604     C/SPACE
+006400900604     C**---------------------------------------------------------
+006500941019     C** ESEGUE QCAEXEC DI APERTURA SUL MEMBRO DI FNCAF00R
+006600900604     C**---------------------------------------------------------
+006700900604     C           CAEXA     BEGSR
+006800900604     C                     MOVE ')'       VAR11  11
+006900900604     C                     MOVELMBRFIL    VAR11
+007000900604     C                     MOVE '))'      VAR12  12
+007100900604     C                     MOVELMBRFIL    VAR12
+007200900604     C                     Z-ADD55        LUNG   155
+007300900604     C*
+007400900604     C                     SETOF                     20
+007500930422     C                     MOVE VAR11     CMD1,1
+007600900604     C                     MOVEL*BLANKS   COMMAN
+007700911111     C                     MOVEACMD1,1    COMMAN 80
+007800900604     C                     CALL 'QCMDEXC'              20
+007900900604     C                     PARM           COMMAN
+008000900604     C                     PARM           LUNG
+008100900604     C   20                GOTO STOP
+008200900604     C** CONTROLLO SE ESISTE IL MEMBRO
+008300900604     C** SE NON ESISTE CHIUDO IL PROGRAMMA
+008400900604     C                     SETOF                     20
+008500930422     C                     MOVE VAR12     CMD2,1
+008600900604     C                     MOVEL*BLANKS   COMMAN
+008700911111     C                     MOVEACMD2,1    COMMAN
+008800900604     C                     CALL 'QCMDEXC'              20
+008900900604     C                     PARM           COMMAN
+009000900604     C                     PARM           LUNG
+009100900604     C   20                GOTO STOP
+009200900604     C** ALLOCO MEMBRO
+009300900604     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+009400900604     C                     SETOF                     20
+009500930422     C                     MOVE VAR11     CMD3,1
+009600900604     C                     MOVEL*BLANKS   COMMAN
+009700911111     C                     MOVEACMD3,1    COMMAN
+009800900604     C                     CALL 'QCMDEXC'              20
+009900900604     C                     PARM           COMMAN
+010000900604     C                     PARM           LUNG
+010100900604     C   20                GOTO STOP
+010200900604     C** ESEGUE OVRDBF DEL MEMBRO DESIDERATO
+010300900604     C** SE NON RIESCE CHIUDO IL PROGRAMMA
+010400941019     C                     OPEN FNCAF00R
+010500900604     C                     ENDSR
+010600900604     C/SPACE 005
+010700911018     C**------------------------------------------------------------
+010800941019     C** ESEGUE QCAEXEC DI CHIUSURA SUL MEMBRO DI FNCAF00R
+010900911018     C**------------------------------------------------------------
+011000900604     C           CAEXB     BEGSR
+011100900604     C                     MOVE ')'       VAR11  11
+011200900604     C                     MOVELMBRFIL    VAR11
+011300900604     C                     MOVE '))'      VAR12  12
+011400900604     C                     MOVELMBRFIL    VAR12
+011500900604     C                     Z-ADD55        LUNG   155
+011600900604     C*
+011700941019     C                     CLOSEFNCAF00R
+011800900627     C*
+011900930422     C                     MOVE VAR12     CMD5,1
+012000900604     C                     MOVEL*BLANKS   COMMAN
+012100911111     C                     MOVEACMD5,1    COMMAN
+012200900604     C                     CALL 'QCMDEXC'
+012300900604     C                     PARM           COMMAN
+012400900604     C                     PARM           LUNG
+012500900604     C** DISALLOCA IL MEMBRO AGG.TO
+012600900604     C                     ENDSR
+012700931025     C*---------------------------------------------------------------*
+012800931025     C           WRTCA     BEGSR
+012900931025     C*---------------------------------------------------------------*
+013000931025      * INCASSO CONTRASSEGNO
+013100941019      *
+013200941019     C           KBLP      CHAINFNCSB01L             25
+013300931025      * AGGIORNO DATI CONTRASSEGNO SOLO SE NON ESISTONO DATI PAGAMENTO
+013400931025     C           *IN25     IFEQ '1'
+013500931025     C           CSBDDP    OREQ 0
+013600931115     C*
+013700941019     C   25                CLEARFNCSB000
+013800941019     C                     MOVE CAFLNP    CSBLNP
+013900941019     C                     MOVE CAFAAS    CSBAAS
+014000941019     C                     MOVE CAFNSP    CSBNSP
+014100941019     C                     MOVE CAFNRS    CSBNRS
+014200941019     C                     MOVE CAFCAS    CSBCAS
+014300941019     C                     MOVELCAFVCA    CSBVCA
+014400941019     C                     MOVELCAFTPA    CSBTPA
+014500941019     C                     MOVELCAFTPI    CSBTPI
+014600941019     C                     MOVE CAFDMI    CSBDDC
+014700931025     C                     MOVE BLPLNA    CSBLNA
+014800941019     C                     MOVE BLPMGS    CSBMGS
+014900931025     C                     MOVELBLPRSD    CSBRSD
+015000941019     C                     MOVE BLPRMA    CSBRMA
+015100931025     C                     MOVE BLPRMN    CSBRMN
+015200931026     C                     MOVE BLPRSM    CSBRSM
+015300931025     C           BLPCCM    IFNE 0
+015400931025     C* Ragione sociale mittente
+015500931025     C                     MOVE BLPCCM    SERV    40
+015600931025     C                     SETOF                     75
+015700931025     C*
+015800931025     C                     MOVE BLPCCM    CSBCDI
+015900931025     C           SERV      IFNE *ALL'8'
+016000931025     C           SERV      ANDNE*ALL'9'
+016100931025     C           KACO      CHAINCNACO000             21
+016200931025     C  N21                MOVELACORAG    CSBRSM
+016300931025     C                     END
+016400931025     C*
+016500931025     C                     ELSE
+016600931025     C                     MOVE BLPKSC    CSBCDI
+016700931025     C                     END
+016800931025     C*
+016900941019     C   25                WRITEFNCSB000
+017000941019     C  N25                UPDATFNCSB000
+017100931025     C                     END
+017200931025     C*
+017300931025     C                     ENDSR
+017400941019     C*---------------------------------------------------------------*
+017500941019     C           *INZSR    BEGSR
+017600941019     C*---------------------------------------------------------------*
+017700941019     C           *ENTRY    PLIST
+017800941019     C                     PARM           KPJBA
+017900941019     C* SE IL MEMBRO DA TRASCODIFICARE NON E' STATO PASSATO
+018000941019     C* ASSUMO IL PRIMO MEMBRO DEL FILE
+018100941019     C*          MBRFIL    IFEQ *BLANK
+018200941019     C*                    MOVEL'*FIRST'  MBRFIL
+018300941019     C*                    END
+018400941019     C                     Z-ADD1         CODUT
+018500941019     C                     CALL 'X§PARUT'
+018600941019     C                     PARM           UTEDSE
+018700941019     C           CODUT     CABEQ-1        STOP
+018800941019     C                     MOVELRAGUT     RSUT   20
+018900941019     C                     MOVELREC80     CNCR80
+019000941019     C*
+019100941019     C                     DO   50        F       20
+019200941019     C                     MOVE TCU,F     TCUDS
+019300941019     C           F34       IFEQ '01'
+019400941019     C           F56       ANDEQ'CG'
+019500941019     C                     Z-ADDKCU,F     CLIITA  40
+019600941019     C                     END
+019700941019     C                     END
+019800941019      *
+019900941019     C* CNACO00F
+020000941019     C           KACO      KLIST
+020100941019     C                     KFLD           CODUT
+020200941019     C                     KFLD           CLIITA
+020300941019     C                     KFLD           CSBCDI
+020400941019     C* FNBLP00F                                           *
+020500941019     C           KBLP      KLIST
+020600941019     C                     KFLD           CAFAAS
+020700941019     C                     KFLD           CAFLNP
+020800941019     C                     KFLD           CAFNRS
+020900941019     C                     KFLD           CAFNSP
+021000941019      *
+021100941019     C           *LIKE     DEFN RICNR1    NUREC
+021200941019     C                     ENDSR
+021300900604**         CMD1
+021400941019CHKOBJ OBJ(FNCAF00R) OBJTYPE(*FILE)     MBR(M234567890)
+021500900604**         CMD2
+021600941019ALCOBJ OBJ((FNCAF00R *FILE *EXCL           M234567890))
+021700900604**         CMD3
+021800941019OVRDBF FILE(FNCAF00R)                   MBR(M234567890)
+021900900604**         CMD5
+022000941019DLCOBJ OBJ((FNCAF00R *FILE *EXCL           M234567890))

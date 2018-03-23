@@ -1,0 +1,28 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200090828/* TIST68C - monitoraggio spedizioni - Guida                                  */
+000300000000/*----------------------------------------------------------------------------*/
+000400090828 TIST68C:    PGM        PARM(&KPJBA)
+000500000000
+000600080317             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700080317             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000701090922             DCL        VAR(&crt) TYPE(*CHAR) LEN(1)
+000702090922             CHGVAR     VAR(&crt) VALUE(%SUBSTRING(&KPJBA 297 1))
+000800000000
+000900080317/* CREO FILE DI LAVORO IN QTEMP */
+000901090922             IF         COND(&crt *ne 'S') THEN(DO)
+001000090828             DLTF       FILE(QTEMP/WFMSP*)
+001100080317             MONMSG     MSGID(CPF0000)
+001200090828             RTVMBRD    FILE(WFMSP00F) RTNLIB(&LIB)
+001300080317             MONMSG     MSGID(CPF0000)
+001400080317             IF         COND(&LIB = '          ') THEN(GOTO +
+001500080317                          CMDLBL(FINE))
+001600090828             CRTDUPOBJ  OBJ(WFMSP*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+001700080317                          TOLIB(QTEMP)
+001701090922             enddo
+001702090930             ELSE       CMD(CLRPFM FILE(WFMSP00F))
+001800090828/* lancia elaborazione            */
+001900090828             CALL       PGM(TIST68R) PARM(&KPJBA)
+002000000000
+002400000000             RCLRSC     LVL(*CALLER)
+002500000000
+002600080317 FINE:       ENDPGM

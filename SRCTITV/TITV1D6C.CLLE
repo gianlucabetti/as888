@@ -1,0 +1,48 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200140730/*PARMS                                                                       */
+000300140730/*PARMS                                                                       */
+000400140730/*PARMS                                                                       */
+000500140730/*PARMS                                                                       */
+000600080128             PGM        PARM(&KPJBA)
+000700990908
+000800050607
+000900080128             DCL        VAR(&KPJBA)  TYPE(*CHAR)  LEN(502)
+001000080128             DCL        VAR(&ESITO)  TYPE(*CHAR) LEN(1) VALUE(' ')
+001100060905
+001200060905
+001300060905
+001400050607/* AVVIO IL CONTROLLO SINCRONIA ------------------------------------*/
+001500080212             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001600050606             MONMSG     MSGID(CPF8351)
+001700050531
+001800050531
+001900050531
+002000050531/* AVVIO L'ELABORAZIONE DEI RECORD (TRADUZIONE/COPY FILE) ----------*/
+002100080128             CALL       PGM(TITV1D6R) PARM(&ESITO)
+002200050606             MONMSG     MSGID(CPF0000) EXEC(DO)
+002300050606             ROLLBACK
+002400050606             RCLRSC     LVL(*CALLER)
+002500050607             GOTO       CMDLBL(FINE)
+002600050606             ENDDO
+002700050607
+002800050607
+002900050607/* VERIFICO L'ESITO DELL'ELABORAIZONE ------------------------------*/
+003000080128             IF         COND(&ESITO *NE '1')  THEN(DO)
+003100050607             ROLLBACK
+003200050607             RCLRSC     LVL(*CALLER)
+003300050607             GOTO       CMDLBL(FINE)
+003400050607             ENDDO
+003500050607
+003600050607
+003700050607/* SANCISCO IL COMMIT ----------------------------------------------*/
+003800050607             COMMIT
+003900050607
+004000050606
+004100050606
+004200050607/* STOPPO IL CONTROLLO SINCRONIA -----------------------------------*/
+004300080131 FINE:       ENDCMTCTL
+004400050606             MONMSG     MSGID(CPF8356)
+004500060908
+004600080130
+004700080130
+004800050606             ENDPGM

@@ -1,0 +1,61 @@
+000100941227 FNLR73C:    PGM        PARM(&KPJBA)
+000200030612
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400030612             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+000500030612             DCL        VAR(&PRTBOL)   TYPE(*CHAR)  LEN(10)
+000600030612             DCL        VAR(&PRTBA4)   TYPE(*CHAR)  LEN(10)
+000700030612             DCL        VAR(&PRTBA5)   TYPE(*CHAR)  LEN(10)
+000800030612             DCL        VAR(&PRTETI)   TYPE(*CHAR)  LEN(10)
+000900030612             DCL        VAR(&MODBOL)   TYPE(*CHAR)  LEN(10)
+001000030612             DCL        VAR(&MODBA4)   TYPE(*CHAR)  LEN(10)
+001100030612             DCL        VAR(&MODBA5)   TYPE(*CHAR)  LEN(10)
+001200030612             DCL        VAR(&MODETI)   TYPE(*CHAR)  LEN(10)
+001300920220
+001400030612             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+001500030612
+001600030612             CHGVAR     VAR(&PRTBA4) VALUE(%SST(&KPJBU 167 10))
+001700030612             CHGVAR     VAR(&PRTBA5) VALUE(%SST(&KPJBU 177 10))
+001800030612             CHGVAR     VAR(&MODBA4) VALUE(%SST(&KPJBU 187 10))
+001900030612             CHGVAR     VAR(&MODBA5) VALUE(%SST(&KPJBU 197 10))
+002000030612             CHGVAR     VAR(&MODBOL) VALUE(%SST(&KPJBU 217 10))
+002100030612             CHGVAR     VAR(&MODETI) VALUE(%SST(&KPJBU 227 10))
+002200030612             CHGVAR     VAR(&PRTBOL) VALUE(%SST(&KPJBU 237 10))
+002300030612             CHGVAR     VAR(&PRTETI) VALUE(%SST(&KPJBU 247 10))
+002400910305
+002500030612/* Apertura dei files condivisi dai pgm richiamanti -----------------*/
+002600030612/* compresi i files di stampa */
+002700941227             OVRDBF     FILE(FNARB01L) SHARE(*YES)
+002800941227             OPNDBF     FILE(FNARB01L) OPTION(*ALL)
+002900910305
+003000030612   /* prtf bolle per stampanti ad aghi */
+003100030612             OVRPRTF    FILE(FNLSB0P) OUTQ(&PRTBOL) +
+003200030612                          FORMTYPE(&MODBOL) USRDTA('Rist.Bolle') +
+003300030612                          SHARE(*YES)
+003400030612             OVRPRTF    FILE(FNLSB0P1) OUTQ(&PRTBOL) +
+003500991206                          FORMTYPE('BOLLE-dpd') +
+003600991206                          USRDTA('Rist.Bolle') SHARE(*YES)
+003700030612             OVRPRTF    FILE(FNLSB0P2) OUTQ(&PRTBOL) +
+003800030307                          FORMTYPE('BOLLE-Fed') COPIES(2) +
+003900030307                          USRDTA('Rist.Bolle') SHARE(*YES)
+004000030612
+004100030612   /* prtf bolle per stampanti laser */
+004200030612             OVRPRTF    FILE(FNLSB5PA4) OUTQ(&PRTBA4) +
+004300030612                          FORMTYPE(&MODBA4) USRDTA('Rist.Bolle') +
+004400030612                          SHARE(*YES)
+004500030612             OVRPRTF    FILE(FNLSB5PA5) OUTQ(&PRTBA5) +
+004600030612                          FORMTYPE(&MODBA5) USRDTA('Rist.Bolle') +
+004700030612                          SHARE(*YES)
+004800970715
+004900030612   /* prtf segnacolli */
+005000970715             OVRPRTF    FILE(FNLV22P) OUTQ(&PRTETI) FORMTYPE(&MODETI) +
+005100970715                          USRDTA('Rist.Segn') SHARE(*YES)
+005200970715
+005300910305
+005400030612/* Richiamo pgm di stampa -------------------------------------------*/
+005500941227             CALL       PGM(FNLR73R) PARM(&KPJBA)
+005600030612
+005700030612/* Fine -------------------------------------------------------------*/
+005800911209             RCLRSC     LVL(*CALLER)
+005900900925             DLTOVR     FILE(*ALL)
+006000030612
+006100911209             ENDPGM

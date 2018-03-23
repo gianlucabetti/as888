@@ -1,0 +1,249 @@
+000100000000     H              J
+000200950105     H* FLLV05R *----------------------------------------------------*
+000300931227     H*             CREAZIONE NUMERATORI PER FILIALE                 *
+000400000000     H*--------------------------------------------------------------*
+000500950105     FFNLV05D CF  E                    WORKSTN
+000600931018     FTABEL00FIF  E           K        DISK
+000700931227     FAZORG01LIF  E           K        DISK
+000800990129     E                    L1         30  3 0             P.O.GESTITE
+000900990129     E                    LIN        30  3 0             P.O. COMODO
+001000931227     I*
+001100931018     IPARAM       DS
+001200931227     I* CODICE FILIALE
+001300971127     I                                        3   50PARFIL
+001400931227     I* CODICE FILIALE ELABORATORE DI VIDFIL
+001500931227     I                                        6   80VIDFEL
+001600931227     I* CODICE NUMERATORE
+001700931227     I                                        9  11 VIDCNU
+001800931227     I* TIPO FILIALE
+001900931227     I                                       12  12 VIDFTF
+002000991209     I* ANNO
+002100991209     I                                       13  160VIDAAN
+002200931018     I*
+002300971107     IWLBDAT     IDS
+002400971107     I                                        1   80G02DAT
+002500971107     I                                        9  160G02INV
+002600971107     I                                       17  17 G02ERR
+002700971107     I                                       18  220G02TGI
+002800990129     I* DS PER TRUL06R - CARICAMENTO £X
+002900990129     IDSUL06    E DSTRUL06DS
+003000990129     I                                        1  900LIN
+003100000000     IKPJBA     E DS
+003200931018     ICNCR80    E DS
+003300921030     IUT§DSE    E DSUT§DSE0F
+003400971107     IDSLV55    E DSFNLV55DS
+003500931018     C*****************************************************************
+003600931018     C* RIEPILOGO INDICATORI
+003700931018     C*****************************************************************
+003800931018     C* 30    - DI COMODO
+003900931227     C* 35    - USATO PER TESTN
+004000931227     C* 40/43 - INDICATORI PER MESSAGGI DI ERRORE
+004100931018     C* 90    - SEGNALA LA PRESENZA DI ERRORI
+004200931018     C*****************************************************************
+004300000000     C           *ENTRY    PLIST
+004400000000     C                     PARM           KPJBA
+004500000000     C                     Z-ADD1         CODUT
+004600921030     C                     CALL 'X§PARUT'
+004700921030     C                     PARM           UT§DSE
+004800000000     C                     MOVELRAGUT     RSUT   20
+004900931018     C                     MOVELREC80     CNCR80
+005000971107     C** DATA DEL GIORNO
+005100971107     C                     TIME           W0140  140
+005200971107     C* UDATE IN GGMMAAAA
+005300971107     C                     MOVE W0140     WDTGIO  80
+005400971107     C*
+005500971107     C* UDATE IN AAAAMMGG
+005600971107     C                     Z-ADDWDTGIO    G02DAT
+005700971107     C                     MOVEL*BLANK    G02ERR
+005800971107     C                     CALL 'XSRDA8'
+005900971107     C                     PARM           WLBDAT
+006000971107     C                     MOVELG02INV    DATEU   80
+006100921030     C*---------------------------------------------------------------*
+006200931018     C* ACCESSO TABEL
+006300931018     C           KTAB      KLIST
+006400931018     C                     KFLD           CODUT
+006500931227     C                     KFLD           COD
+006600931227     C                     KFLD           KEY
+006700931227     C*
+006800931227     C* DEFINIZIONE CAMPI
+006900931227     C           *LIKE     DEFN TBLCOD    COD
+007000931227     C           *LIKE     DEFN TBLKEY    KEY
+007100000000     C*---------------------------------------------------------------*
+007200931227     C*
+007300931018     C* PULIZIA CAMPI FORMATO
+007400991209     C                     Z-ADDWDTGIO    VIDAAN
+007500931227     C                     CLEARVIDCNU
+007600931227     C                     Z-ADDSIMFEL    VIDFEL
+007700931228     C                     MOVEL'A'       VIDFTF
+007800971127     C           INIZIO    TAG
+007900971127     C                     CLEARVIDFIL
+008000971127     C                     CLEARVIDAL
+008100990129     C                     CLEARVIDL1
+008200931018     C*
+008300931018     C           FOR01     TAG
+008400950105     C                     EXFMTLV05D01
+008500931018     C** CMD3 - FINE LAVORO
+008600931018     C   KC                GOTO FINE
+008700921030     C*
+008800931227     C* CONTROLLI FORMATO
+008900931018     C                     EXSR CONTR
+009000950105     C  NKF
+009100931018     COR       90          GOTO FOR01
+009200931018     C*
+009300950105     C** CMD6 - ELABORAZIONE
+009400971127    1C           VIDFIL    IFGT 0
+009500971127     C           VIDAL     ANDEQ0
+009600971127     C                     Z-ADDVIDFIL    PARFIL
+009700931018     C                     MOVELPARAM     KPJBU
+009800950105     C                     MOVEL'LV06'    KCOAZ
+009900931018     C                     CALL 'BCH10'
+010000931018     C                     PARM           KPJBA
+010100990129    1C                     ENDIF
+010200971127     C**
+010300990129    1C           VIDFIL    IFGT 0
+010400990129     C           VIDAL     ANDGT0
+010500990129     C**
+010600990611     C                     Z-ADDVIDFIL    W004DA  40
+010700990611    2C           W004DA    DOWLEVIDAL
+010800990611     C                     Z-ADDW004DA    VIDFIL
+010900971127     C           VIDFIL    CHAINAZORG01L             30
+011000971127    3C        N30ORGFVA    IFEQ ' '
+011100971127     C           ORGFAG    ANDNE'V'
+011200971127     C                     Z-ADDVIDFIL    PARFIL
+011300971127     C                     MOVELPARAM     KPJBU
+011400971127     C                     MOVEL'LV06'    KCOAZ
+011500971127     C                     CALL 'BCH10'
+011600971127     C                     PARM           KPJBA
+011700971127    3C                     ENDIF
+011800990611     C                     ADD  1         W004DA
+011900971127    2C                     ENDDO
+012000971127    1C                     ENDIF
+012100990129     C*
+012200990129     C           VIDL1     IFEQ 'S'
+012300990129     C* CARICO LA L1
+012400990129     C                     CLEARDSUL06
+012500990129     C                     MOVE '£1'      D06COD
+012600990129     C                     MOVELSIMFEL    D06KEY
+012700990129     C                     MOVEL'L'       D06TLA
+012800990129     C                     MOVELDSUL06    KPJBU
+012900990129     C*
+013000990129     C                     CALL 'TRUL06R'
+013100990129     C                     PARM           KPJBA
+013200990129     C                     MOVELKPJBU     DSUL06
+013300990129     C                     MOVEALIN       L1
+013400990129     C**
+013500990129     C                     Z-ADD1         XX      30
+013600990129     C           L1,XX     DOWGT0
+013700990129     C                     Z-ADDL1,XX     PARFIL
+013800990129     C                     MOVELPARAM     KPJBU
+013900990129     C                     MOVEL'LV06'    KCOAZ
+014000990129     C                     CALL 'BCH10'
+014100990129     C                     PARM           KPJBA
+014200990129     C                     ADD  1         XX
+014300990129    2C                     ENDDO
+014400990129    1C                     ENDIF
+014500971127     C                     GOTO INIZIO
+014600931227     C*
+014700931018     C           FINE      TAG
+014800931018     C                     SETON                     LR
+014900931018     C*
+015000931018     C*--- CONTROLLI FORMATO -----------------------------------------*
+015100931018     C           CONTR     BEGSR
+015200931018     C                     SETOF                     90
+015300931227     C*
+015400931227     C****  CODICE NUMERATORE  ****
+015500931227     C           '?'       SCAN VIDCNU                   90
+015600931018     C*
+015700931018     C           *IN90     IFEQ *ON
+015800931227     C                     MOVEL'1C'      COD
+015900931227     C                     CLEARVIDCNU
+016000931227     C                     MOVEL*BLANKS   DES    25
+016100931227     C                     CALL 'X§TABER'
+016200931227     C                     PARM           CODUT
+016300931227     C                     PARM           COD
+016400931227     C                     PARM           KEY
+016500931227     C                     PARM           DES
+016600931227     C                     MOVELKEY       VIDCNU
+016700931227     C                     SETON                     90
+016800931227     C                     GOTO ENDCTR
+016900931018     C                     ENDIF
+017000931018     C*
+017100931227     C* CONTROLLO ESISTENZA DEL NUMERATORE NELLA TABELLA "1C"
+017200931228     C           VIDCNU    IFNE *BLANKS
+017300931227     C                     MOVEL'1C'      COD
+017400931018     C                     MOVEL*BLANKS   KEY
+017500931227     C                     MOVELVIDCNU    KEY
+017600931018     C*
+017700931018     C           KTAB      CHAINTABEL                30
+017800931018     C        N30TBLFLG    IFNE ' '
+017900931018     C                     SETON                     30
+018000931018     C                     ENDIF
+018100931227     C* CODICE NUMERATORE ERRATO
+018200931227     C         30          SETON                     4190
+018300931018     C         30          GOTO ENDCTR
+018400931227     C                     ENDIF
+018500931018     C*
+018600931227     C****  FILIALE  ****
+018700971127    1C           VIDFIL    IFEQ 0
+018800971127     C           VIDAL     ANDEQ0
+018900990129     C           VIDL1     ANDEQ' '
+019000931227     C                     SETON                     4290
+019100931227     C                     GOTO ENDCTR
+019200971127   X1C                     ELSE
+019300931228     C*
+019400971127    2C           VIDFIL    IFGT 0
+019500971127     C           VIDAL     ANDEQ0
+019600931227     C           VIDFIL    CHAINAZORG                30
+019700931228     C*
+019800971127    3C           *IN30     IFEQ *ON
+019900971107     C           ORGFVA    ORNE *BLANKS
+020000971127     C           ORGFAG    OREQ 'V'
+020100931228     C                     SETON                     4290
+020200931228     C                     GOTO ENDCTR
+020300971127    3C                     ENDIF
+020400971127    2C                     ENDIF
+020500971127    1C                     ENDIF
+020600931227     C*
+020700931227     C****  FILIALE ELABORATORE  ****
+020800931227     C           VIDFEL    IFEQ 0
+020900931227     C           VIDFTF    IFEQ 'P'
+021000931227     C                     SETON                     4390
+021100931227     C                     GOTO ENDCTR
+021200931227     C                     ENDIF
+021300931227     C*
+021400931227     C                     ELSE
+021500931228     C*
+021600931227     C           VIDFEL    CHAINAZORG                30
+021700931228     C*
+021800971107     C           *IN30     IFEQ *ON
+021900971107     C           ORGFVA    ORNE *BLANKS
+022000931228     C                     SETON                     4390
+022100931228     C                     GOTO ENDCTR
+022200931227     C                     ENDIF
+022300971107     C* VEDO SE LA FILIALE E' UN TERMINAL DI PARTENZA
+022400971107     C                     CLEARDSLV55
+022500971107     C                     MOVEL'P'       D55TPT
+022600971107     C                     MOVELVIDFEL    D55LIN
+022700971107     C                     MOVELDATEU     D55DRF
+022800971107     C                     CALL 'FNLV55R'
+022900971107     C                     PARM           DSLV55
+023000971107    4C           D55ERR    IFNE ' '
+023100971107     C                     CLEARD55TFP
+023200971107    4C                     ENDIF
+023300931228     C*
+023400931228     C* SE NON E' UN PRIMO LIVELLO ERRORE
+023500971107     C           VIDFEL    IFNE D55TFP
+023600931228     C                     SETON                     4390
+023700931228     C                     GOTO ENDCTR
+023800931228     C                     ENDIF
+023900931228     C                     ENDIF
+024000990129     C* NON POSSO CHEDERE TUTTA LA L1 E VIFFIL
+024100990129     C           VIDL1     IFEQ 'S'
+024200990129     C           VIDFIL    ANDGT0
+024300990129     C           VIDL1     OREQ 'S'
+024400990129     C           VIDAL     ANDGT0
+024500990129     C                     SETON                     4490
+024600990129     C                     GOTO ENDCTR
+024700990129     C                     ENDIF
+024800931018     C*
+024900931018     C           ENDCTR    ENDSR

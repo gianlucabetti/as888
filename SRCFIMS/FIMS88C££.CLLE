@@ -1,0 +1,149 @@
+000100921111/*----------------------------------------------------------*/
+000200080806/*  CREA PROFILO                                            */
+000300080806/*                                                          */
+000400070301/*  RICEVE IN INPUT IL P.O. DA INSTALLARE                   */
+000500081218/*                  IL TIPO DI PROFILO DA CREARE            */
+000501081218/*                  Il flag x attivazione immediata per     */
+000502081218/*                     profilo pistole radio                */
+000503081218/*                  Il flag x attivazione immediata per     */
+000504081218/*                     profilo Pda Aut                      */
+000505090318/*                  Il flag x attivazione immediata per     */
+000506090318/*                     profilo VDL                          */
+000600080806/*                                                          */
+000700080806/*  I tipi gestiti sono i seguenti:                         */
+000800080806/*  P = Pistole radio                                       */
+000900080806/*  A = Pda Aut                                             */
+001000080806/*  V = VDL                                                 */
+001100080806/*  X = Tutti                                               */
+001200040218/*----------------------------------------------------------*/
+001300040218/*  ATTENZIONE                                              */
+001400040218/*    COMPILARE CON PROFILO QSECOFR e USRPRF(*OWNER)        */
+001500921111/*----------------------------------------------------------*/
+001600090318             PGM        PARM(&XXX &TIPO &ATTPR &ATTPDA &ATTVDL)
+001700911016
+001800040218             DCL        VAR(&XXX) TYPE(*CHAR) LEN(3) /* P.O.*/
+001900080806             DCL        VAR(&TIPO) TYPE(*CHAR) LEN(1) /* Tipo di prf*/
+001901081218             DCL        VAR(&attpr) TYPE(*CHAR) LEN(1)
+001902081218             DCL        VAR(&attpda) TYPE(*CHAR) LEN(1)
+001903090318             DCL        VAR(&attVDL) TYPE(*CHAR) LEN(1)
+002000040614
+002100040218             DCL        VAR(&PROFILO) TYPE(*CHAR) LEN(10) +
+002200070301                          VALUE('PR') /* PROFILO */
+002300070607             DCL        VAR(&PROFILOAU) TYPE(*CHAR) LEN(10) +
+002400070607                          VALUE('AU') /* PROFILO */
+002500080806             DCL        VAR(&PROFILOVDL) TYPE(*CHAR) LEN(10) +
+002600080806                          VALUE('VDL') /* PROFILO */
+002700040218             DCL        VAR(&PSW) TYPE(*CHAR) LEN(10) +
+002800070301                          VALUE('P') /* Psw */
+002900070607             DCL        VAR(&PSWAU) TYPE(*CHAR) LEN(10) +
+003000070607                          VALUE('A') /* Psw */
+003100080806             DCL        VAR(&PSWVDL) TYPE(*CHAR) LEN(10) +
+003200080806                          VALUE('V') /* Psw */
+003201080807             DCL        VAR(&FIBAR) TYPE(*CHAR) LEN(10) +
+003202080807                          VALUE('FIBARxxxV')
+003300040218
+003400040218/* Imposto costanti  */
+003500070301             CHGVAR     VAR(%SST(&PROFILO 3 3)) VALUE(&XXX)
+003600040218             CHGVAR     VAR(%SST(&PSW 2 3)) VALUE(&XXX)
+003700070607             CHGVAR     VAR(%SST(&PROFILOAU 3 3)) VALUE(&XXX)
+003800070607             CHGVAR     VAR(%SST(&PSWAU 2 3)) VALUE(&XXX)
+003900080806             CHGVAR     VAR(%SST(&PROFILOVDL 4 3)) VALUE(&XXX)
+004000080806             CHGVAR     VAR(%SST(&PSWVDL 2 3)) VALUE(&XXX)
+004001080807             CHGVAR     VAR(%SST(&FIBAR 6 3)) VALUE(&XXX)
+004100040218
+004200070301/* Creazione profilo Prxxx  */
+004300080806             IF         COND(&TIPO = 'P' *OR &TIPO = 'X') THEN(DO)
+004400080806             CRTUSRPRF  USRPRF(&PROFILO) PASSWORD(&PSW) +
+004500080806                          INLMNU(*SIGNOFF) LMTCPB(*YES) +
+004600080806                          TEXT('pc/400 Utente di Connessione  PDA') +
+004700080806                          SPCAUT(*ALLOBJ *SAVSYS) GRPPRF(QPGMR) +
+004800080806                          OWNER(*GRPPRF) ATNPGM(*NONE)
+004900040218
+005000040218             MONMSG     MSGID(CPF2214) /* Profilo già esistente */
+005100040218
+005200070301/* Iscrizione profilo PRxxx al file AZUTE                 */
+005300070301             CALL       PGM(TRULP1R) PARM(&XXX &PROFILO)
+005400080806             ENDDO
+005500080806
+005600070607/* Creazione profilo AUxxx  */
+005700080806             IF         COND(&TIPO = 'A' *OR &TIPO = 'X') THEN(DO)
+005800080806             CRTUSRPRF  USRPRF(&PROFILOAU) PASSWORD(&PSWAU) +
+005900080806                          INLMNU(*SIGNOFF) LMTCPB(*YES) +
+006000080806                          TEXT('pc/400 Utente di Connessione  PDA +
+006100080806                          AUT') SPCAUT(*ALLOBJ *SAVSYS) +
+006200080806                          GRPPRF(QPGMR) OWNER(*GRPPRF) ATNPGM(*NONE)
+006300070607
+006400070607             MONMSG     MSGID(CPF2214) /* Profilo già esistente */
+006500070607
+006600070607/* Iscrizione profilo AUxxx al file AZUTE                 */
+006700070607             CALL       PGM(TRULP1R) PARM(&XXX &PROFILOAU)
+006800080806             ENDDO
+006900080806
+007000080806/* Creazione profilo VDLxxx  */
+007100080806             IF         COND(&TIPO = 'V' *OR &TIPO = 'X') THEN(DO)
+007200090220             CRTUSRPRF  USRPRF(&PROFILOVDL) PASSWORD(&PSWVDL) +
+007300090220                          INLMNU(*SIGNOFF) LMTCPB(*YES) +
+007400090220                          TEXT('pc/400 Utente di Connessione  +
+007500090220                          PosiTrova') SPCAUT(*ALLOBJ *SAVSYS) +
+007600090220                          JOBD(GAITRAOBJ/VDLFIL201) GRPPRF(QPGMR) +
+007700090220                          OWNER(*GRPPRF) ATNPGM(*NONE)
+007800080806
+007900080806             MONMSG     MSGID(CPF2214) /* Profilo già esistente */
+008000080806
+008100080806/* Iscrizione profilo VDLxxx al file AZUTE                 */
+008200080806             CALL       PGM(TRULP1R) PARM(&XXX &PROFILOVDL)
+008201080807/* Creazione FIBARxxxV per scarico spunte su AS/400        */
+008202080807             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(FILTRA201) +
+008203080807                          OBJTYPE(*FILE) NEWOBJ(&FIBAR)
+008204090220             MONMSG     MSGID(CPF0000) EXEC(DO)
+008205090220             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(FILTRAPRD) +
+008206090220                          OBJTYPE(*FILE) NEWOBJ(&FIBAR)
+008207090220             MONMSG     MSGID(CPF0000)
+008300080806             ENDDO
+008301090313/* Richiamo clp per creazione files vecchio Positrova      */
+008302090313             CALL       PGM(FIMS89C2) PARM(&XXX)
+008303090220             ENDDO
+008304090318/* Disattivazione sottosistema WIFIBAR        */
+008305081218             IF         COND((&TIPO = 'P' *OR &TIPO = 'X') *AND +
+008306081218                          &ATTPR = 'S') THEN(DO)
+008307081218             ENDSBS     SBS(WIFIBAR) DELAY(30)
+008308090318             ENDDO
+008309090318/* Disattivazione sottosistema WIFIBARRIT/WIFIBARCON  */
+008310090318             IF         COND((&TIPO = 'A' *OR &TIPO = 'X') *AND +
+008311090318                          &ATTPDA = 'S') THEN(DO)
+008312090318             ENDSBS     SBS(WIFIBARRIT) DELAY(30)
+008313090318             MONMSG     MSGID(CPF0000)
+008314090318             ENDSBS     SBS(WIFIBARCON) DELAY(30)
+008315090318             MONMSG     MSGID(CPF0000)
+008316090318             ENDDO
+008317090318/* Disattivazione sottosistema VDLBAR               */
+008318090318             IF         COND((&TIPO = 'V' *OR &TIPO = 'X') *AND +
+008319090318                          &ATTVDL = 'S') THEN(DO)
+008320090318             ENDSBS     SBS(VDLBAR) DELAY(30)
+008321090318             MONMSG     MSGID(CPF0000)
+008322090318             ENDDO
+008323090318
+008324090318             IF         COND(&ATTPR = 'S' *OR &ATTPDA = 'S' *OR +
+008325090318                          &ATTVDL = 'S') THEN(DO)
+008327090318             DLYJOB     DLY(60)
+008328090318             ENDDO
+008329090318
+008330090318/* Attivazione sottosistema WIFIBAR              */
+008331090318             IF         COND((&TIPO = 'P' *OR &TIPO = 'X') *AND +
+008332090318                          &ATTPR = 'S') THEN(DO)
+008333081218             STRSBS     SBSD(WIFIBAR)
+008334081218             ENDDO
+008335090318
+008336090318/* Attivazione sottosistemi WIFIBARRIT/WIFIBARCON*/
+008337090318             IF         COND((&TIPO = 'A' *OR &TIPO = 'X') *AND +
+008338090318                          &ATTPDA = 'S') THEN(DO)
+008339081218             STRSBS     SBSD(WIFIBARRIT)
+008340081218             STRSBS     SBSD(WIFIBARCON)
+008341081218             ENDDO
+008342090318/* Attivazione sottosistema VDLBAR               */
+008343090318             IF         COND((&TIPO = 'V' *OR &TIPO = 'X') *AND +
+008344090318                          &ATTVDL = 'S') THEN(DO)
+008345090318             STRSBS     SBSD(VDLBAR)
+008346090318             ENDDO
+008400010102
+008500000000             ENDPGM

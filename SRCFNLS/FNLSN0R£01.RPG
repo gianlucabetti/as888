@@ -1,0 +1,283 @@
+000100960119     H              J
+000200960119     H* FNLSN0R *----------------------------------------------------*
+000300960119     H*-----------------*                                            *
+000400960119     H*     - CONTROLLO E REPERIMENTO DATI DESTINATARIO FINALE -     *
+000500960119     H*                                                              *
+000600960119      *--------------------------------------------------------------*
+000700960119     FFNBL401LIF  E           K        DISK
+000800960119      *--------------------------------------------------------------*
+000900960119      *   D s                                                        *
+001000960119      *--------------------------------------------------------------*
+001100960119     IFNLSN0    E DSFNLSN0DS
+001200960119     IKPJBA     E DS
+001300960119      *  DS per scomposizione record con dati Provincia/Cap/Nazione
+001400960119     I            DS
+001500960205     I                                        1   9 WCAD
+001600960205     I                                       11  12 WPRD
+001700960119     I                                       14  16 WNZD
+001800960119     I                                        1  35 WNOT
+001900960119      *--------------------------------------------------------------*
+002000960119      *   Ciclo Principale                                           *
+002100960119      *--------------------------------------------------------------*
+002200960119      *  Abblenco dati output
+002300960119     C                     EXSR AZZER
+002400960119      *  Controllo validità flag
+002500960119     C           DN0TRC    IFNE *BLANKS
+002600960119     C           DN0TRC    ANDNE'R'
+002700960119     C           DN0TRC    ANDNE'S'
+002800960119     C           DN0TRC    ANDNE'T'
+002900960119     C           DN0TRC    ANDNE'U'
+003000960119     C           DN0TRC    ANDNE'V'
+003100960119     C                     MOVEL'1'       DN0ERR
+003200960119     C                     ELSE
+003300960119      *--------------------------------------------------------*
+003400960119      *  Imposto dati spedizione
+003500960119     C                     Z-ADDDN0AAS    KAAS
+003600960119     C                     Z-ADDDN0LNP    KLNP
+003700960119     C                     Z-ADDDN0NRS    KNRS
+003800960119     C                     Z-ADDDN0NSP    KNSP
+003900960119      *  Controllo cosa devo reperire
+004000960119     C           DN0TRC    CASEQ' '       TUTTO
+004100960125     C           DN0TRC    CASEQ'R'       REPRS1
+004200960119     C           DN0TRC    CASEQ'S'       REPRS2
+004300960119     C           DN0TRC    CASEQ'T'       REPIND
+004400960119     C           DN0TRC    CASEQ'U'       REPLOD
+004500960119     C           DN0TRC    CASEQ'V'       REPCAD
+004600960119     C                     END
+004700960119      *  Tutto OK
+004800960119     C                     MOVEL'S'       DN0TRV
+004900960119      *
+005000960119     C                     END
+005100960119      *
+005200960119     C           FINE      TAG
+005300960119     C                     MOVELFNLSN0    KPJBU
+005400960119     C                     SETON                     LR
+005500960119      *--------------------------------------------------------------*
+005600960119      *  TUTTO: reperisco TUTTO i dati del destinatario finale
+005700960119      *--------------------------------------------------------------*
+005800960119     C           TUTTO     BEGSR
+005900960119      *--------------------------------------------------------*
+006000960125     C                     EXSR REPRSD
+006100960119     C                     EXSR REPIND
+006200960119     C                     EXSR REPLOD
+006300960119     C                     EXSR REPCAD
+006400960119      *--------------------------------------------------------*
+006500960119     C                     ENDSR
+006600960125      *--------------------------------------------------------------*
+006700960125      *  REPRS1: reperisco la 1°a  Rag.sociale destinatario
+006800960125      *--------------------------------------------------------------*
+006900960125     C           REPRS1    BEGSR
+007000960125      *--------------------------------------------------------*
+007100960125      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+007200960125     C                     MOVEL'R'       KTRC
+007300960125     C           KBL4      SETGTFNBL401L
+007400960125     C           KBL4      REDPEFNBL401L                 30
+007500960125     C           *IN30     DOWEQ'0'
+007600960126     C           WDTGIA    ANDLEBL4DTR
+007700960125     C           KBL4      REDPEFNBL401L                 30
+007800960125     C                     END
+007900960125     C*
+008000960125     C           *IN30     IFEQ '1'
+008100960125     C           DN0DAG    ORNE 0
+008200960125     C           DN0DAG    ANDLTBL4DTR
+008300960125      *  non trovato
+008400960125     C                     GOTO FINE
+008500960125     C                     ELSE
+008600960125     C                     MOVELBL4NOT    DN0RSD
+008700960125     C                     END
+008800960125      *
+008900960125     C                     ENDSR
+009000960119      *--------------------------------------------------------------*
+009100960125      *  REPRSD: reperisco la 1°a e 2°a Rag.sociale destinatario
+009200960119      *--------------------------------------------------------------*
+009300960119     C           REPRSD    BEGSR
+009400960119      *--------------------------------------------------------*
+009500960119      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+009600960119     C                     MOVEL'R'       KTRC
+009700960125     C           KBL4      SETGTFNBL401L
+009800960125     C           KBL4      REDPEFNBL401L                 30
+009900960125     C           *IN30     DOWEQ'0'
+010000960126     C           WDTGIA    ANDLEBL4DTR
+010100960125     C           KBL4      REDPEFNBL401L                 30
+010200960125     C                     END
+010300960125     C*
+010400960119     C           *IN30     IFEQ '1'
+010500960125     C           DN0DAG    ORNE 0
+010600960125     C           DN0DAG    ANDLTBL4DTR
+010700960119      *  non trovato
+010800960119     C                     GOTO FINE
+010900960119     C                     ELSE
+011000960119     C                     MOVELBL4NOT    DN0RSD
+011100960125     C                     MOVELBL4DTR    WDTR    80
+011200960119     C                     END
+011300960125      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+011400960125     C                     MOVEL'S'       KTRC
+011500960125     C           KBL4      SETGTFNBL401L
+011600960125     C           KBL4      REDPEFNBL401L                 30
+011700960125     C           *IN30     DOWEQ'0'
+011800960125     C           WDTR      ANDNEBL4DTR
+011900960125     C           KBL4      REDPEFNBL401L                 30
+012000960125     C                     END
+012100960125      *  non trovato
+012200960126     C           *IN30     IFEQ '0'
+012300960125     C                     MOVELBL4NOT    DN0RS2
+012400960125     C                     END
+012500960119      *
+012600960119     C                     ENDSR
+012700960125      *--------------------------------------------------------------*
+012800960125      *  REPRS2: reperisco la 2°a Rag.sociale destinatario
+012900960125      *--------------------------------------------------------------*
+013000960125     C           REPRS2    BEGSR
+013100960125      *--------------------------------------------------------*
+013200960125      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+013300960125     C                     MOVEL'R'       KTRC
+013400960125     C           KBL4      SETGTFNBL401L
+013500960125     C           KBL4      REDPEFNBL401L                 30
+013600960125     C           *IN30     DOWEQ'0'
+013700960126     C           WDTGIA    ANDLEBL4DTR
+013800960125     C           KBL4      REDPEFNBL401L                 30
+013900960125     C                     END
+014000960125     C*
+014100960125     C           *IN30     IFEQ '1'
+014200960125     C           DN0DAG    ORNE 0
+014300960125     C           DN0DAG    ANDLTBL4DTR
+014400960125      *  non trovato
+014500960125     C                     GOTO FINE
+014600960125     C                     ELSE
+014700960125     C                     MOVELBL4DTR    WDTR    80
+014800960125     C                     END
+014900960125      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+015000960125     C                     MOVEL'S'       KTRC
+015100960125     C           KBL4      SETGTFNBL401L
+015200960125     C           KBL4      REDPEFNBL401L                 30
+015300960125     C           *IN30     DOWEQ'0'
+015400960125     C           WDTR      ANDNEBL4DTR
+015500960125     C           KBL4      REDPEFNBL401L                 30
+015600960125     C                     END
+015700960125      *  non trovato
+015800960125     C           *IN30     IFEQ '1'
+015900960125     C                     GOTO FINE
+016000960125     C                     ELSE
+016100960125     C                     MOVELBL4NOT    DN0RS2
+016200960125     C                     END
+016300960125      *
+016400960125     C                     ENDSR
+016500960119      *--------------------------------------------------------------*
+016600960119      *  REPIND: reperisco indirizzo del destinatario
+016700960119      *--------------------------------------------------------------*
+016800960119     C           REPIND    BEGSR
+016900960119      *--------------------------------------------------------*
+017000960119      *  Controllo se devo reperire indirizzo destinatario
+017100960119     C                     MOVEL'T'       KTRC
+017200960125     C           KBL4      SETGTFNBL401L
+017300960125     C           KBL4      REDPEFNBL401L                 30
+017400960125     C           *IN30     DOWEQ'0'
+017500960126     C           WDTGIA    ANDLEBL4DTR
+017600960125     C           KBL4      REDPEFNBL401L                 30
+017700960125     C                     END
+017800960125     C*
+017900960119     C           *IN30     IFEQ '1'
+018000960125     C           DN0DAG    ORNE 0
+018100960125     C           DN0DAG    ANDLTBL4DTR
+018200960119      *  non trovato
+018300960119     C                     GOTO FINE
+018400960119     C                     ELSE
+018500960119     C                     MOVELBL4NOT    DN0IND
+018600960119     C                     END
+018700960119      *
+018800960119     C                     ENDSR
+018900960119      *--------------------------------------------------------------*
+019000960119      *  REPLOD: reperisco la località del destinatario
+019100960119      *--------------------------------------------------------------*
+019200960119     C           REPLOD    BEGSR
+019300960119      *--------------------------------------------------------*
+019400960119      *  Controllo se devo reperire la località del destinatario
+019500960119     C                     MOVEL'U'       KTRC
+019600960125     C           KBL4      SETGTFNBL401L
+019700960125     C           KBL4      REDPEFNBL401L                 30
+019800960125     C           *IN30     DOWEQ'0'
+019900960126     C           WDTGIA    ANDLEBL4DTR
+020000960125     C           KBL4      REDPEFNBL401L                 30
+020100960125     C                     END
+020200960125     C*
+020300960125     C           *IN30     IFEQ '1'
+020400960125     C           DN0DAG    ORNE 0
+020500960125     C           DN0DAG    ANDLTBL4DTR
+020600960119      *  non trovato
+020700960119     C                     GOTO FINE
+020800960119     C                     ELSE
+020900960119     C                     MOVELBL4NOT    DN0LOD
+021000960119     C                     END
+021100960119      *
+021200960119     C                     ENDSR
+021300960119      *--------------------------------------------------------------*
+021400960119      *  REPCAD: reperisco provincia, cap, nazione destinatario
+021500960119      *--------------------------------------------------------------*
+021600960119     C           REPCAD    BEGSR
+021700960119      *--------------------------------------------------------*
+021800960119      *  Controllo se devo reperire 1°a Rag.sociale destinatario
+021900960119     C                     MOVEL'V'       KTRC
+022000960125     C           KBL4      SETGTFNBL401L
+022100960125     C           KBL4      REDPEFNBL401L                 30
+022200960125     C           *IN30     DOWEQ'0'
+022300960126     C           WDTGIA    ANDLEBL4DTR
+022400960125     C           KBL4      REDPEFNBL401L                 30
+022500960125     C                     END
+022600960125     C*
+022700960119     C           *IN30     IFEQ '1'
+022800960125     C           DN0DAG    ORNE 0
+022900960125     C           DN0DAG    ANDLTBL4DTR
+023000960119      *  non trovato
+023100960119     C                     GOTO FINE
+023200960119     C                     ELSE
+023300960119     C                     MOVELBL4NOT    WNOT
+023400960119     C                     MOVELWPRD      DN0PRD
+023500960119     C                     MOVELWCAD      DN0CAD
+023600960119     C                     MOVELWNZD      DN0NZD
+023700960119     C                     END
+023800960119      *
+023900960119     C                     ENDSR
+024000960119      *--------------------------------------------------------------*
+024100960119      *   AZZER: inizilizzo tutti i campi dioutput                   *
+024200960119      *--------------------------------------------------------------*
+024300960119     C           AZZER     BEGSR
+024400960119      *  Abblenco dati output
+024500960119     C                     MOVEL*BLANKS   DN0TRV
+024600960119     C                     MOVEL*BLANKS   DN0ERR
+024700960119     C                     MOVEL*BLANKS   DN0RSD
+024800960119     C                     MOVEL*BLANKS   DN0RS2
+024900960119     C                     MOVEL*BLANKS   DN0IND
+025000960119     C                     MOVEL*BLANKS   DN0LOD
+025100960119     C                     MOVEL*BLANKS   DN0PRD
+025200960119     C                     MOVEL*BLANKS   DN0NZD
+025300960119     C                     MOVEL*BLANKS   DN0CAD
+025400960125      *  Se la data apertura è = 0 imposto 99999999 in WDTGIA
+025500960125     C                     Z-ADDDN0DAG    WDTGIA
+025600960125     C           DN0DAG    IFEQ 0
+025700960125     C                     Z-ADD99999999  WDTGIA  80
+025800960125     C                     END
+025900960119      *
+026000960119     C                     ENDSR
+026100960119      *--------------------------------------------------------------*
+026200960119      *   Operazioni iniziali                                        *
+026300960119      *--------------------------------------------------------------*
+026400960119     C           *INZSR    BEGSR
+026500960119      *
+026600960119     C           *ENTRY    PLIST
+026700960119     C                     PARM           KPJBA
+026800960119     C                     MOVELKPJBU     FNLSN0
+026900960119      *  Definisco chiavi accesso
+027000960119     C           KBL4      KLIST
+027100960119     C                     KFLD           KAAS
+027200960119     C                     KFLD           KLNP
+027300960119     C                     KFLD           KNRS
+027400960119     C                     KFLD           KNSP
+027500960119     C                     KFLD           KTRC
+027600960119      *  Definisco variabili
+027700960119     C           *LIKE     DEFN BL4AAS    KAAS
+027800960119     C           *LIKE     DEFN BL4LNP    KLNP
+027900960119     C           *LIKE     DEFN BL4NRS    KNRS
+028000960119     C           *LIKE     DEFN BL4NSP    KNSP
+028100960119     C           *LIKE     DEFN BL4TRC    KTRC
+028200960119      *
+028300960119     C                     ENDSR

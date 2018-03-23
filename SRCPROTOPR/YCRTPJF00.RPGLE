@@ -1,0 +1,3 @@
+000100170320       DCL-PR CreaFornitoreProj EXTPGM('YCRTPJF00');
+000101170320         piKpjba LIKEDS(kpjba);
+000102170320       END-PR ;

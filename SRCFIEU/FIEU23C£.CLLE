@@ -1,0 +1,96 @@
+000100000000/*-------------------------------------------------------------------*/
+000200020605/*  TRMZ50C                                                          */
+000300000000/*-------------------------------------------------------------------*/
+000400000000             PGM        PARM(&KPJBA)
+000500020605             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600030116             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+000700030113             DCL        VAR(&KNSIF) TYPE(*CHAR) LEN(10)
+000800030116             DCL        VAR(&POSTATES) TYPE(*CHAR) LEN(55)
+000900030116             DCL        VAR(&POSTADET) TYPE(*CHAR) LEN(198)
+001300030116             DCL        VAR(&ESEDAT) TYPE(*CHAR) LEN(6)
+001400030116             DCL        VAR(&ESETIM) TYPE(*CHAR) LEN(6)
+001500041102             DCL        VAR(&NOAGIP) TYPE(*CHAR) LEN(1) VALUE(' ')
+001600041102             DCL        VAR(&NOENI) TYPE(*CHAR) LEN(1) VALUE(' ')
+001700030116
+001702110331             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) VALUE('fatture@setras.eu')
+001703100819             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253)
+001704100819             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44)
+001705100819             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000)
+001714100819
+001715100819             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+001716100819/*-------------------------------------------------------------------*/
+001717100819
+001800030116             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&ESETIM)
+001900030116             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&ESEDAT)
+002000030113             CHGVAR     VAR(&KNSIF) VALUE(%SST(&KPJBA 92 10))
+002100041102
+002200030116 /* le stampe del gestionale vengono immesse nella coda uff. automez.*/
+002300120315             OVRPRTF    FILE(QSYSPRT) OUTQ(P046058AU) SAVE(*YES) +
+002400040416                          SECURE(*YES) OVRSCOPE(*JOB)
+002500041102
+002600041102 /* CONTROLLO SE ESISTE IL FILE PCAGIP ( file excel) */
+002700041102             RTVOBJD    OBJ(PCAGIP) OBJTYPE(*FILE)
+002800041102             MONMSG     MSGID(CPF0000) EXEC(DO)
+002900041102             CHGVAR     VAR(&NOAGIP) VALUE('1')
+003000041102             ENDDO
+003100030113 /* controllo se il campo dell'aliquota è numerico */
+003200041102             IF         COND(&NOAGIP *EQ ' ') THEN(DO)
+003300040302             DSPFFD     FILE(PCAGIP) OUTPUT(*OUTFILE) +
+003400040302                          OUTFILE(QTEMP/DDSPCAGIP)
+003500041102 /* copia il file ricevuto a PC nel file AGIP */
+003600021210             CALL       PGM(TRMZ52R)
+003700041102             DLTF       FILE(QTEMP/DDSPCAGIP)
+003800041102             ENDDO
+003900041102
+004000041102 /* CONTROLLO SE ESISTE IL FILE PCENI ( file nuovo txt) */
+004100041102             RTVOBJD    OBJ(PCENI) OBJTYPE(*FILE)
+004200041102             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300041102             CHGVAR     VAR(&NOENI) VALUE('1')
+004400041102             ENDDO
+004500041122 /* attivo controllo di sincronia */
+004600041122             IF         COND(&NOENI *EQ ' ') THEN(STRCMTCTL +
+004700041122                          LCKLVL(*CHG) CMTSCOPE(*JOB))
+004800041103 /* copia il file ricevuto a PC nel file AGIP */
+004900041102             IF         COND(&NOENI *EQ ' ') THEN(CALL PGM(TRMZ53R))
+005000041122 /* disattivo controllo di sincronia */
+005100041122             IF         COND(&NOENI *EQ ' ') THEN(ENDCMTCTL)
+005200041102
+005300041102 /* CONTINUO SOLO SE HO ALMENO UN FILE */
+005400041102             IF         COND((&NOAGIP *NE '1') *OR (&NOENI *NE '1')) +
+005500041102                          THEN(DO)
+005600041122 /* scrive file mzagi00f */
+005700041122             CALL       PGM(TRMZ50R) PARM(&KPJBA)
+005800030113 /* scrive file mzimp00f */
+005900020801             CALL       PGM(TRMZ51R) PARM(&KPJBA)
+006000030113 /* cancello file PC */
+006100040302             DLTF       FILE(PCAGIP)
+006200041102             MONMSG     MSGID(CPF0000)
+006300041102             DLTF       FILE(PCENI)
+006400041102             MONMSG     MSGID(CPF0000)
+006500021025             DLTOVR     FILE(*ALL)
+006600030116 /* TRADUTTORE  x contabilizzaz. */
+006700030116             CALL       PGM(TRMZ60C) PARM(&KNSIF '201' &ESITO)
+006800041102             ENDDO
+006900041102
+007000041102 /* SE non HO ALMENO UN FILE  mando messaggio d'errore*/
+007100041102             IF         COND((&NOAGIP *NE '1') *AND (&NOENI *NE +
+007200041102                          '1')) THEN(CHGVAR VAR(&ESITO) VALUE('1'))
+007300041102
+007400041102 /* invio messaggio di ricezione movimenti agip x contab.  */
+007500030116             IF         COND(&ESITO *NE '1') THEN(CHGVAR +
+007600030116                          VAR(&POSTATES) VALUE('- OK RICEZIONE +
+007700030116                          MOVIMENTI FATTURA AGIP '))
+007800030116             IF         COND(&ESITO *EQ '1') THEN(CHGVAR +
+007900030116                          VAR(&POSTATES) VALUE('- ERRORI IN +
+008000030116                          RICEZIONE MOVIMENTI FATTURA AGIP '))
+008100110331             CHGVAR     VAR(&POSTADET) VALUE('Visualizzare l''esito +
+008200110331                          della traduzione ')
+008300110331             CHGVAR     VAR(%SST(&POSTADET 42 5)) VALUE('DATA:')
+008400110331             CHGVAR     VAR(%SST(&POSTADET 47 6)) VALUE(&ESEDAT)
+008500110331             CHGVAR     VAR(%SST(&POSTADET 55 4)) VALUE('ORA:')
+008600110331             CHGVAR     VAR(%SST(&POSTADET 59 6)) VALUE(&ESETIM)
+008700110331
+008701110331             CHGVAR     VAR(&emogg) VALUE(&postates)
+008702110331             CHGVAR     VAR(&emmsg) VALUE(&postadet)
+008703110331             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+009000110331             ENDPGM

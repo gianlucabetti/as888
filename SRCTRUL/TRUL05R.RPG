@@ -1,0 +1,232 @@
+000100000000      *****************************************************************
+000200000000      *
+000300000000      *  Nome programma:  TRUL05R
+000400970718      *  Descrizione   :  Decodifica del C.A.P.
+000500000000      *  Autore        :  STEFANO (SC)
+000600000000      *  Data creazione:  12 NOV 1993
+000700000000      *
+000800000000      *****************************************************************
+000900000000      *  PARAMETRI PER CHIAMATA AL PROGRAMMA:
+001000000000      *
+001100000000      *  ULELAB   IN    Tipo elaborazione per la routine:
+001200000000      *                 ' ' = elaborazione e uscita con return
+001300000000      *                 'C' = chiusura file senza elaborazione
+001400000000      *                 'L' = elaborazione e chiusura file
+001500000000      *  ULCAP    IN    C.A.P. da decodificare
+001600970718      *  ULDRI    IN    Data di riferimento da cui reperire la versione
+001700000000      *  ULNRDE   IN    Numero delle decodifiche che si desiderano nel
+001800000000      *                 caso un unico C.A.P. ne abbia piu' di una;
+001900000000      *                 al massimo le decodifiche sono 10
+002000000000      *  ULNRDF   OUT   Numero delle decodifiche passate in output
+002100000000      *  ULDE00   OUT   Decodifica unica condensata con soli 3 C.A.P.
+002200000000      *  ULDE01   OUT   Prima decodifica
+002300000000      *    '      OUT
+002400000000      *    '      OUT   Piu' decodifiche a fronte di un unico C.A.P.
+002500000000      *    '      OUT
+002600000000      *  ULDE10   OUT   Decima decodifica
+002700000000      *  ULRTCD   OUT   Codice di ritorno:
+002800000000      *                 ' ' = elaborazione ok
+002900000000      *                 'E' = C.A.P. errato
+003000000000      *                 'N' = C.A.P. non trovato in archivio
+003100000000      *****************************************************************
+003200970718     FAZCPL01LIF  E           K        DISK
+003300970718     FAZCPC01LIF  E           K        DISK
+003400000000      *
+003500970718     E                    DC1        10 35               DIECI DECODIFICHE
+003600000000     E                    DC2        22  1               COMODO X DECODIF. CAP
+003700970718     E                    LC1        10 35               LOC.PRIMARIE
+003800970718     E                    LC2        10 35               LOC.SECONDARIECHE
+003900000000      *
+004000000000     IPARAM       DS
+004100000000     I                                        1   1 ULELAB
+004200941202     I                                        2  10 ULCAP
+004300941202     I                                        2   3 $CAP02
+004400941202     I                                        4   6 $CAP03
+004500970718     I                                       11  180ULDRI
+004600970718     I                                       19  21 ULNAR
+004700970718     I                                       22  230ULNRDE
+004800970718     I                                       24  250ULNRDF
+004900970718     I                                       26  60 ULDE00
+005000970718     I                                       61  95 ULDE01
+005100970718     I                                       96 130 ULDE02
+005200970718     I                                      131 165 ULDE03
+005300970718     I                                      166 200 ULDE04
+005400970718     I                                      201 235 ULDE05
+005500970718     I                                      236 270 ULDE06
+005600970718     I                                      271 305 ULDE07
+005700970718     I                                      306 340 ULDE08
+005800970718     I                                      341 375 ULDE09
+005900970718     I                                      376 410 ULDE10
+006000970718     I                                       61 410 DC1
+006100970718     I                                      411 411 ULRTCD
+006200941202     I*
+006300000000     I              '* ITALIA *'          C         CODITA
+006400941202     C*
+006500941202     C*---------------------------------------------------------------*
+006600000000     C           *ENTRY    PLIST
+006700000000     C                     PARM           PARAM
+006800941202     C*
+006900941202     C           KCAP      KLIST
+007000970718     C                     KFLD           P96VER
+007100970718     C                     KFLD           ULNAR
+007200941206     C                     KFLD           WCAP
+007300941202     C*
+007400941206     C* DEFINIZIONE CAMPI
+007500941206     C           *LIKE     DEFN ULCAP     WCAP
+007600970718     C*
+007700000000      *****************************************************************
+007800000000      *                  M A I N     L I N E
+007900000000      *****************************************************************
+008000000000      *
+008100000000      * Pulizia di tutti i campi di output della DS di parametri
+008200000000     C                     EXSR PULIZ
+008300000000      *
+008400000000      * Se il parametro elaborazione indica solo di chiudere i file
+008500000000     C           ULELAB    CABEQ'C'       FINE
+008600970718     C*
+008700970718     C* REPERISCO LA VERSIONE DEL CAPPARIO IN BASE ALLA DATA RICEVUTA
+008800970718     C* SE = 0 IL TISI96R PRENDERA' L'ULTIMA VERSIONE
+008900970718     C                     Z-ADD*ZEROS    P96VER  50
+009000970718     C                     Z-ADDULDRI     P96DRI  80
+009100970718     C                     CALL 'TISI96R'
+009200970718     C                     PARM           P96DRI
+009300970718     C                     PARM           P96VER
+009400000000      *
+009500000000      * Verifico se il C.A.P. e' generico per l'Italia
+009600941202    1C           $CAP02    IFEQ 'IT'
+009700941202    2C           $CAP03    IFEQ '000'
+009800000000     C           $CAP03    OREQ '100'
+009900000000     C                     MOVELCODITA    ULDE00           DECOD.COMPRESSA
+010000000000     C                     MOVELCODITA    ULDE01           DECODIFICA 01
+010100000000     C                     Z-ADD1         ULNRDF           Nr.1 DECODIFICA
+010200941202   X2C                     ELSE
+010300000000     C                     MOVE 'E'       ULRTCD           C.A.P. ERRATO
+010400941202    2C                     ENDIF
+010500000000     C                     GOTO FINE
+010600941202    1C                     ENDIF
+010700000000      *
+010800000000      * Proseguo l'elaborazione se non si tratta di generico Italia
+010900000000     C                     Z-ADD0         X       20
+011000970718     C                     Z-ADD0         Y       20
+011100970718     C                     Z-ADD0         WCONT   20
+011200970718     C                     CLEARDC1                        SCHIERA 1
+011300970718     C                     CLEARDC2                        SCHIERA 2
+011400970718     C                     CLEARLC1
+011500970718     C                     CLEARLC2
+011600941206     C                     MOVELULCAP     WCAP
+011700000000      *
+011800000000      * Vedo se esiste il C.A.P. cosi' come l'hanno passato
+011900970718     C           KCAP      SETLLAZCPL01L                 33
+012000000000      *
+012100000000      * Proseguo solo se trovato il C.A.P.
+012200941202    1C           *IN33     IFEQ *ON
+012300970718     C           KCAP      READEAZCPL01L                 33
+012400000000      *
+012500970718    2C           *IN33     DOWEQ*OFF
+012600970718     C           X         ANDLTULNRDE                                 HE
+012700970718     C* MEMORIZZO IN SCHIERE DISTINTE LE LOCALITA' PRINCIPALI DALLE
+012800970718     C* SECONDARIE
+012900970718    3C           CPLDLV    IFEQ 'S'
+013000970718     C                     ADD  1         X
+013100970718     C                     ADD  1         WCONT
+013200970718     C                     MOVELCPLLOC    LC1,X
+013300970718   X3C                     ELSE
+013400970718    4C           Y         IFLT 10
+013500970718     C                     ADD  1         Y
+013600970718     C                     ADD  1         WCONT
+013700970718     C                     MOVELCPLLOC    LC2,Y
+013800970718    4C                     END
+013900970718    3C                     END
+014000970718     C           KCAP      READEAZCPL01L                 33
+014100941202    2C                     ENDDO
+014200000000      *
+014300970718    2C           *IN33     IFEQ *OFF
+014400970718     C           *IN33     OREQ *ON
+014500000000     C           X         ANDGT0
+014600970718     C           *IN33     OREQ *ON
+014700970718     C           Y         ANDGT0
+014800970718     C*
+014900970718     C* CARICO SCHIERA DC1 RIEMPIENDOLA PRIMA CON LC1 E POI CON LC2
+015000970718     C                     MOVEALC1       DC1
+015100970718     C                     MOVE *BLANKS   WLOKP  35
+015200970718     C                     Z-ADD1         II      20
+015300970718     C           WLOKP     LOKUPDC1,II                   33
+015400970718     C   33                MOVEALC2       DC1,II
+015500000000      *
+015600000000      * Decodifico il C.A.P. genrico di provincia (finisce per '00')
+015700941206     C                     MOVELWCAP      WCAP5   5
+015800941206     C                     MOVE 00        WCAP5
+015900941206     C                     MOVELWCAP5     WCAP
+016000970718     C           KCAP      CHAINAZCPC01L             32
+016100970718     C  N32                MOVEACPCPRV    DC2,1            PRIMA DECOD.
+016200000000      *
+016300000000     C                     MOVEA':'       DC2,3
+016400000000      *
+016500000000      * Mi trovo con la prima decodifica
+016600970718    3C           WCONT     IFEQ 1
+016700941206     C                     MOVELULCAP     WCAP5
+016800941206     C                     MOVE WCAP5     ALF2    2        ULTIMI 2 CARATT
+016900941202    4C           ALF2      IFEQ '00'
+017000000000     C                     MOVEADC1,1     DC2,1
+017100941202   X4C                     ELSE
+017200000000     C                     MOVEADC1,1     DC2,6
+017300941202    4C                     ENDIF
+017400941202    3C                     ENDIF
+017500000000      *
+017600970718    3C           WCONT     IFGT 1
+017700000000     C                     MOVEADC1,1     DC2,6
+017800000000     C                     MOVEA'/'       DC2,11
+017900000000     C                     MOVEADC1,2     DC2,12
+018000941202    3C                     ENDIF
+018100000000      *
+018200970718    3C           WCONT     IFGT 2
+018300000000     C                     MOVEADC1,1     DC2,6
+018400000000     C                     MOVEA'/'       DC2,11
+018500000000     C                     MOVEADC1,2     DC2,12
+018600000000     C                     MOVEA'/'       DC2,17
+018700000000     C                     MOVEADC1,3     DC2,18
+018800941202    3C                     ENDIF
+018900000000      *
+019000941202    2C                     ENDIF
+019100970718     C                     Z-ADDWCONT     ULNRDF           NR.DECOD.FATTE
+019200000000     C                     MOVEADC2       ULDE00           DECOD.COMPRESSA
+019300000000      *
+019400941202   X1C                     ELSE
+019500000000      *
+019600000000     C                     MOVE 'N'       ULRTCD           NON TROVATO
+019700000000      *
+019800941202    1C                     ENDIF
+019900000000      *
+020000000000      * Verifico se devo chiudere gli archivi
+020100000000     C           FINE      TAG
+020200941202    1C           ULELAB    IFEQ 'L'                        'L'=LETTURA
+020300000000     C           ULELAB    OREQ 'C'                        'C'=CHIUSURA
+020400000000     C                     SETON                     LR
+020500941202    1C                     ENDIF
+020600000000      *
+020700000000     C                     RETRN
+020800000000      *****************************************************************
+020900000000      * Pulizia di tutti i campi di output della DS dei parametri
+021000000000      *****************************************************************
+021100000000     C           PULIZ     BEGSR
+021200000000      *
+021300000000     C                     Z-ADD*ZERO     ULNRDF           NR DECOD.FATTE
+021400000000     C                     MOVE *BLANKS   ULDE00           DECOD.COMPRESSA
+021500000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 01
+021600000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 02
+021700000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 03
+021800000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 04
+021900000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 05
+022000000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 06
+022100000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 07
+022200000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 08
+022300000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 09
+022400000000     C                     MOVE *BLANKS   ULDE01           DECODIFICA 10
+022500000000     C                     MOVE *BLANKS   ULRTCD           COD.RITORNO
+022600000000      *
+022700000000      * Se richieste piu' di 10 decodifiche
+022800000000     C           ULNRDE    IFGT 10
+022900000000     C                     Z-ADD10        ULNRDE
+023000000000     C                     ENDIF
+023100000000      *
+023200000000     C                     ENDSR

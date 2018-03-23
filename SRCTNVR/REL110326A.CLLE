@@ -1,0 +1,96 @@
+000100110315             PGM        /* PARM(&ESITO) */
+000200100921
+000300100921             DCL        VAR(&ESITO) TYPE(*DEC) LEN(15 5)
+000400100921             DCL        VAR(&LIBBTLNEW) TYPE(*CHAR) LEN(10) VALUE('EDPWKSE')
+000500100921             DCL        VAR(&LIBBTLOBJ) TYPE(*CHAR) LEN(10) VALUE('GAITRAOBJ')
+000600100921             DCL        VAR(&LIBBTLSAV) TYPE(*CHAR) LEN(10) VALUE('EDPDC')
+000700100921             DCL        VAR(&LIBPJDTAG) TYPE(*CHAR) LEN(10) VALUE('PJBARGRU')
+000800100921             DCL        VAR(&LIBPJDTAS) TYPE(*CHAR) LEN(10) VALUE('PJBARSOC')
+000900100921             DCL        VAR(&LIBPJOBJA) TYPE(*CHAR) LEN(10) VALUE('PJAI1O3')
+001000100921             DCL        VAR(&LIBPJOBJC) TYPE(*CHAR) LEN(10) VALUE('PJCI1O3')
+001100100921
+001200100921             MONMSG     MSGID(CPF0000)
+001300100921
+001400110314             IF         COND(&ESITO = 1) THEN(CALLSUBR SUBR(SET_TEST))
+007500100921
+007600100921/******************************************************************************/
+007700100921/*                                                                            */
+007800100921/*           Oggetti da spostare in PJBARSOC.                                 */
+007900100921/*                                                                            */
+008000100921/******************************************************************************/
+008100100921
+008200110321             MOVOBJ     OBJ(&LIBBTLNEW/ISANS00F) OBJTYPE(*FILE) TOLIB(&LIBPJDTAS)
+008300110321             MOVOBJ     OBJ(&LIBBTLNEW/ISANS01L) OBJTYPE(*FILE) TOLIB(&LIBPJDTAS)
+009000100921
+009100100921/******************************************************************************/
+009200100921/*                                                                            */
+009300100921/*           Oggetti da spostare in PJAI1O3.                                  */
+009400100921/*                                                                            */
+009500100921/******************************************************************************/
+009600110315
+009800100921             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBPJOBJA 'ANG*      ')
+009801110321             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBPJOBJA 'CON*      ')
+009802110321             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBPJOBJA 'CNV*      ')
+010200110321             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBPJOBJA 'ISW*      ')
+010400100921
+010500100921/******************************************************************************/
+010600100921/*                                                                            */
+010700100921/*           Oggetti da spostare in PJCI1O3.                                  */
+010800100921/*                                                                            */
+010900100921/******************************************************************************/
+011000100921
+011100110321             CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBPJOBJC 'ND*       ')
+011200100921
+011300100921/******************************************************************************/
+011400100921/*                                                                            */
+011500100921/*           I messaggi li devo copiare 2 volte.                              */
+011600100921/*                                                                            */
+011700100921/******************************************************************************/
+011800100921
+011900110321             MRGMSGF    FROMMSGF(&LIBBTLNEW/PROMSG) TOMSGF(&LIBBTLOBJ/PROMSG)
+012000110321             MRGMSGF    FROMMSGF(&LIBBTLNEW/PROMSG) TOMSGF(&LIBPJOBJA/PROMSG)
+012100110321             DLTMSGF    MSGF(&LIBBTLNEW/PROMSG)
+012200110314
+012300110314/******************************************************************************/
+012400110314/*                                                                            */
+012500110314/*           Oggetti da spostare in GAITRAOBJ.                                */
+012600110314/*                                                                            */
+012700110314/******************************************************************************/
+012800110314
+012900110321/*           CALL       PGM(GAITRAOBJ/TNSYMVC) PARM(&LIBBTLNEW &LIBBTLOBJ '*ALL     ')            */
+014300100921
+014400100921/******************************************************************************/
+014500100921/*                                                                            */
+014600100921/*           Subroutine gestione errore.                                      */
+014700100921/*                                                                            */
+014800100921/******************************************************************************/
+014900100921
+015000100921             SUBR       SUBR(ERRORE)
+015100100921                CHGVAR     VAR(&ESITO) VALUE(-1)
+015200100921                DSPJOB     OUTPUT(*PRINT) OPTION(*JOBLOG)
+015300100921                RETURN
+015400100921             ENDSUBR
+015500110314
+015600110314/******************************************************************************/
+015700110314/*                                                                            */
+015800110314/*           Imposta ambiente per test.                                       */
+015900110314/*                                                                            */
+016000110314/******************************************************************************/
+016100110314
+016200110314             SUBR       SUBR(SET_TEST)
+016300110314                CHGVAR     VAR(&LIBBTLNEW) VALUE('EDPDCWKSE')
+016400110314                CHGVAR     VAR(&LIBBTLOBJ) VALUE('EDPDCOBJ')
+016500110314                CHGVAR     VAR(&LIBBTLSAV) VALUE('EDPDCSAV')
+016600110314                CHGVAR     VAR(&LIBPJDTAG) VALUE('EDPDCPJGRU')
+016700110314                CHGVAR     VAR(&LIBPJDTAS) VALUE('EDPDCPJSOC')
+016800110314                CHGVAR     VAR(&LIBPJOBJA) VALUE('EDPDCPJA')
+016900110314                CHGVAR     VAR(&LIBPJOBJC) VALUE('EDPDCPJC')
+017000110314             ENDSUBR
+017100100921
+017200100921/******************************************************************************/
+017300100921/*                                                                            */
+017400110314/*           Se arrivo qui non è detto che tutto sia andato bene.             */
+017500100921/*                                                                            */
+017600100921/******************************************************************************/
+017700100921
+017800100921             ENDPGM

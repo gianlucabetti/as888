@@ -1,0 +1,124 @@
+000100980108/* */
+000200980108/* CONVERSIONE SPOOL FATTURE CODIFICATE IN FILE DI DATABASE  */
+000300980108/* */
+000400980108 TNSF88C:    PGM        PARM(&CODA &SPLFILE &FORMTYPE &STATO &LIBOUT +
+000500980108                          &FILOUT &LIBOUTQ &NAMOUTQ)
+000600960315             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10)
+000700960507             DCL        VAR(&SPLFILE) TYPE(*CHAR) LEN(10)
+000800980108             DCL        VAR(&FORMTYPE) TYPE(*CHAR) LEN(10)
+000900960801             DCL        VAR(&STATO) TYPE(*CHAR) LEN(3)
+001000960315             DCL        VAR(&RECL) TYPE(*DEC) LEN(9 0)
+001100961106             DCL        VAR(&LIBOUT) TYPE(*CHAR) LEN(10)
+001200961106             DCL        VAR(&FILOUT) TYPE(*CHAR) LEN(10)
+001300961106             DCL        VAR(&LIBOUTQ) TYPE(*CHAR) LEN(10)
+001400961106             DCL        VAR(&NAMOUTQ) TYPE(*CHAR) LEN(10)
+001500090514
+001600160129             DCL        VAR(&APLKEY)     TYPE(*CHAR) LEN(15)
+001700160115             DCL        VAR(&IFSNAM)     TYPE(*CHAR) LEN(10)
+001800160115             DCL        VAR(&SUBFLDR)    TYPE(*CHAR) LEN(50)
+001900160115             DCL        VAR(&FLGDATAORA) TYPE(*CHAR) LEN(1)
+002000160115             DCL        VAR(&FILEOUTPUT) TYPE(*CHAR) LEN(255)
+002100160115             DCL        VAR(&FLGSUBFLDR) TYPE(*CHAR) LEN(1)
+002200160120             DCL        VAR(&FLGREPLACE) TYPE(*CHAR) LEN(1)
+002300160127             DCL        VAR(&FLGLOG)     TYPE(*CHAR) LEN(1)
+002400160119             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1)
+002500150618
+002600040225
+002700040225             DCLF       FILE(GAITRAAZM/WFOUTQ0F)
+002800150618
+002900150618
+003000160129    /* Valori possibili per valori tabella 'AOA'                            */
+003100160112    /*      1° byte => pilota popolamento ambiente Archidoc                 */
+003200160112    /*                 valori possibili 'N' = NO                            */
+003300160112    /*                         diversamente = SI                            */
+003400160112    /*      2° byte => pilota popolamento ambiente DocFlow                  */
+003500160112    /*                 valori possibili 'T' = TEST                          */
+003600160112    /*                                  'P' = PROD                          */
+003700160112    /*                         diversamente = NESSUNO                       */
+003800160112    /*      3° byte => pilota popolamento ambiente DocFlow Storico          */
+003900160112    /*                 valori possibili 'S' = SI                            */
+004000160112    /*                         diversamente = NO                            */
+004100160112
+004200160129             CHGVAR     VAR(&APLKEY)     VALUE('TNSF88C        ')
+004300160202             CHGVAR     VAR(&FLGDATAORA) VALUE('N')
+004400160115             CHGVAR     VAR(&FLGSUBFLDR) VALUE('S')
+004500160120             CHGVAR     VAR(&FLGREPLACE) VALUE('S')
+004600160127             CHGVAR     VAR(&FLGLOG)     VALUE('S')
+004700160115             CHGVAR     VAR(&FILEOUTPUT) VALUE(' ')
+004800150618
+004900040225
+005000960507             ADDLIBLE   LIB(GAITRAOBJ)
+005100960322             MONMSG     MSGID(CPF0000)
+005200960315
+005300040225             CALL       PGM(TRUL84C) PARM(&CODA '*LIBL     ' +
+005400040225                          'QTEMP     ' 'S' ' ')
+005500960514             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDF))
+005600960315
+005700040225             OVRDBF     FILE(WFOUTQ0F) TOFILE(QTEMP/WFOUTQW) +
+005800040225                          LVLCHK(*NO)
+005900960315READ:
+006000960315             RCVF
+006100960315             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+006200040225             IF         COND(&WFFILE *EQ &SPLFILE *AND &WFFTYP *EQ +
+006300040225                          &FORMTYPE *AND &WFSTS *EQ &STATO) THEN(DO)
+006400040225             CHGVAR     VAR(&RECL) VALUE(&WFPAGW + 2)
+006500961106             CRTPF      FILE(&LIBOUT/&FILOUT) RCDLEN(&RECL) +
+006600040225                          TEXT(&WFDAT) SIZE(900000 30000 300)
+006700960315             MONMSG     MSGID(CPF0000)
+006800040225             CPYSPLF    FILE(&WFFILE) TOFILE(&LIBOUT/&FILOUT) +
+006900040225                          JOB(&WFJNBR/&WFUSER/&WFJNAM) +
+007000040225                          SPLNBR(&WFFNBR) MBROPT(*ADD) CTLCHAR(*FCFC)
+007100090514
+007200090514
+007300090514/* "COPIO" LO SPOOL CORRENTE ANCHE NEL IFS */
+007400090514             IF         COND(&FILOUT *EQ 'FTWDIST') THEN(DO)
+007500090514             CHGVAR     VAR(&IFSNAM)  VALUE('FATD_')
+007600160112             CHGVAR     VAR(&SUBFLDR) VALUE('FATD')
+007700090514             ENDDO
+007800090514
+007900090514             IF         COND(&FILOUT *EQ 'FTWORIG') THEN(DO)
+008000090514             CHGVAR     VAR(&IFSNAM)  VALUE('FATA_')
+008100160112             CHGVAR     VAR(&SUBFLDR) VALUE('FATA')
+008200090514             ENDDO
+008300090514
+008400090514             IF         COND(&FILOUT *EQ 'FTW8899') THEN(DO)
+008500090514             CHGVAR     VAR(&IFSNAM)  VALUE('FAT9_')
+008600160112             CHGVAR     VAR(&SUBFLDR) VALUE('FAT9')
+008700090514             ENDDO
+008800090514
+008900090514             IF         COND(&FILOUT *EQ 'FTWESCL') THEN(DO)
+009000090514             CHGVAR     VAR(&IFSNAM)  VALUE('FATE_')
+009100160112             CHGVAR     VAR(&SUBFLDR) VALUE('FATE')
+009200090514             ENDDO
+009300090514
+009400090519             IF         COND(&FILOUT *NE 'FTWESCL') THEN(DO)
+009500160129             CALL       PGM(TRBMAF05R) PARM(&APLKEY &IFSNAM &WFFILE &WFJNAM +
+009600160115                            &WFUSER &WFJNBR &WFFNBR &FLGDATAORA &FILEOUTPUT +
+009700160127                            &SUBFLDR &FLGSUBFLDR &FLGREPLACE &FLGLOG &ESITO)
+009800090514             MONMSG     MSGID(CPF0000)
+009900090703
+010000160115 /*          IF         COND(&FILOUT *EQ 'FTWORIG') THEN(DO)                */
+010100160115 /*          CHGVAR     VAR(&IFSNAM)  VALUE('FATE_')                        */
+010200160115 /*          CHGVAR     VAR(&SUBFLDR) VALUE('FATTURE/FATSEDE/FATESCLUSE')   */
+010300160129 /*          CALL       PGM(TRBMAF05R) PARM(&APLKEY &IFSNAM &WFFILE +       */
+010400160115 /*                         &WFJNAM &WFUSER &WFJNBR &WFFNBR &FLGDATAORA +   */
+010500160120 /*                         &FILEOUTPUT &SUBFLDR &FLGSUBFLDR +              */
+010600160127 /*                         &FLGREPLACE &FLGLOG &ESITO)                     */
+010700160115 /*          MONMSG     MSGID(CPF0000)                                      */
+010800160115 /*          ENDDO                                                          */
+010900090706
+011000090706             ENDDO
+011100090514
+011200090514
+011300090514
+011400961106/* CAMBIO CODA E METTO IN SAVE E HOLD */
+011500040225             CHGSPLFA   FILE(&WFFILE) JOB(&WFJNBR/&WFUSER/&WFJNAM) +
+011600040225                          SPLNBR(&WFFNBR) SELECT(*ALL) +
+011700961106                          OUTQ(&LIBOUTQ/&NAMOUTQ) SAVE(*YES)
+011800040225             HLDSPLF    FILE(&WFFILE) JOB(&WFJNBR/&WFUSER/&WFJNAM) +
+011900040225                          SPLNBR(&WFFNBR)
+012000961002
+012100961106             ENDDO
+012200960315             GOTO       CMDLBL(READ)
+012300960315 ENDF:
+012400000000             ENDPGM

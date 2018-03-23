@@ -1,0 +1,37 @@
+000100050502             PGM        PARM(&FTPADR &USR &PWD &DIR &LIB &FIL &MBR &NOMFILTMP +
+000200030808                          &NOMFIL)
+000300030808
+000400050502              DCL        VAR(&FTPADR) TYPE(*CHAR) LEN(30)
+000500030808              DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+000600030808              DCL        VAR(&PWD) TYPE(*CHAR) LEN(10)
+000700030808              DCL        VAR(&DIR) TYPE(*CHAR) LEN(20)
+000800030808              DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000900030808              DCL        VAR(&FIL) TYPE(*CHAR) LEN(10)
+001000030820              DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001100030808              DCL        VAR(&NOMFILTMP) TYPE(*CHAR) LEN(30)
+001200030808              DCL        VAR(&NOMFIL) TYPE(*CHAR) LEN(30)
+001300030808
+001400030808/* Cancello e ricreo il file di OUTPUT del log della sessione FTP */
+001500030808              DLTF       FILE(QTEMP/FTPOUTPUT)
+001600030808              MONMSG     MSGID(CPF0000)
+001700030808              CRTPF      FILE(QTEMP/FTPOUTPUT) RCDLEN(100)
+001800030808
+001900030808/* Cancello e ricreo il file contenente i comandi da eseguire nella sessione FTP */
+002000030808              DLTF       FILE(QTEMP/FTPINPUT)
+002100030808              MONMSG     MSGID(CPF0000)
+002200030808              CRTPF      FILE(QTEMP/FTPINPUT) RCDLEN(256)
+002300030808
+002400030808/* Eseguo il *pgm che personalizza il file contenente i comandi da eseguire nella sessione FTP */
+002500030820              CALL       PGM(XFTRFTPR) PARM(&USR &PWD &DIR &LIB &FIL &MBR +
+002600030808                          &NOMFILTMP &NOMFIL)
+002700030808
+002800030808/* Effettuo le sovrapposizioni per i file di INPUT e OUTPUT della sessione FTP */
+002900030808              OVRDBF     FILE(INPUT) TOFILE(QTEMP/FTPINPUT)
+003000030808              OVRDBF     FILE(OUTPUT) TOFILE(QTEMP/FTPOUTPUT)
+003100991110
+003200050502              FTP        RMTSYS(&FTPADR)
+003300030808
+003400030808              DLTOVR     FILE(INPUT)
+003500030808              DLTOVR     FILE(OUTPUT)
+003600991112
+003700991110              ENDPGM

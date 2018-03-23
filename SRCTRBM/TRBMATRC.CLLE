@@ -1,0 +1,108 @@
+000100161220/*PARMS ACTGRP(*CALLER) TGTRLS(*CURRENT)                                      */
+000200161220/*PARMS                                                                       */
+000300161220/*PARMS                                                                       */
+000400161220/*PARMS                                                                       */
+000500161220/*PARMS                                                                       */
+000600161220
+000700161220
+000800161220PGM (&PdfPath &PdfName &WorkPath &Device &Resolution +
+000900161221     &UsrData &FormType &Printer &EsitoOK)
+001000161220
+001100161220  Dcl &EsitoOK    *Char 1
+001200161220  Dcl &Error      *Lgl
+001300161220
+001400161220  Dcl &PdfPath    *Char 128
+001500161220  Dcl &PdfName    *Char  64
+001600161220  Dcl &WorkPath   *Char 128
+001700161220  Dcl &FullPdf    *Char 256
+001800161220  Dcl &WrkPCL     *Char  64
+001900161220  Dcl &JobNbr     *Char   6
+002000161220  Dcl &JobPath    *Char 256
+002100161220  Dcl &Device     *Char  20
+002200161220  Dcl &Resolution *Char   4
+002300161220  Dcl &Retry      *Dec    3
+002400161220
+002500161220  Dcl &SplfName   *Char  10
+002600161220  Dcl &FormType   *Char  10
+002700161220  Dcl &UsrData    *Char  10
+002800161220  Dcl &Printer    *Char  10
+002900161220  Dcl &Drawer     *Char  10
+003000161220  Dcl &JobNumber  *Char   6
+003100161220  Dcl &UserName   *Char  10
+003200161220  Dcl &JobName    *Char  10
+003300161220  Dcl &SplfNumber *Char   6
+003400161221  Dcl &Time       *Char   6  Value('000001')
+003500161220
+003600161220  Dcl &TstPath    *Char 256
+003700161220  Dcl &Null       *Char   1  Value(x'00')
+003800161220  Dcl &Rc         *Int    4
+003900161220  Dcl &Mode       *Int    4  /* API define F_OK = 0 (integer) */
+004000161220
+004100161220
+004200161220  /*?Verifica l'esistenza del PDF */
+004300161220  ChgVar &TstPath (&PdfPath *TCAT '/' *TCAT &PdfName *TCAT &Null)
+004400161220  CALLPRC PRC('access') PARM((&TstPath) (&Mode *BYVAL)) RTNVAL(&Rc)
+004500161220
+004600161220  /*?Se non esiste esco subito ....  */
+004700161220  If (&Rc *NE 0) Do
+004800161220     ChgVar &EsitoOK '0'
+004900161220     GoTo FINE
+005000161220  EndDo
+005100161221
+005200161221  /*?Reperisco ora corrente */
+005300161221  RtvSysVal SysVal(QTIME) RtnVar(&Time)
+005400161220
+005500161220  /*?Reperisce il numero del lavoro */
+005600161220  RtvJoba Nbr(&JobNbr)
+005700161221
+005800161220  /*?Crea un path specifico per questa richiesta */
+005900161222  ChgVar &JobPath (&WorkPath *TCAT '/' *TCAT &JobNbr *TCAT '/')
+006000161220  MD &JobPath DTAAUT(*RWX) OBJAUT(*ALL)
+006100161220  MonMsg CPF0000
+006200161220
+006300161220  /*?Conversione PDF in PCL  */
+006400161222  ChgVar &WrkPCL (&JobPath *TCAT 'Spool' *TCAT &Time *TCAT '.pcl')
+006500161220  ChgVar &FullPdf (&PdfPath *TCAT '/' *TCAT &PdfName)
+006600161220  PDF2PCL PDF(&FullPdf) PCL(&WrkPCL) DEVICE(&Device) +
+006700161220          RESOLUTION(&Resolution) OUTPUT(*NONE)
+006800161220  MonMsg CPF0000 EXEC(Do)
+006900161220     ChgVar &EsitoOK '0'
+007000161220     GoTo FINE
+007100161220  EndDo
+007200161220
+007300161220  /*?Converte PCL in SPLF */
+007400161220  ChgVar &Retry 1
+007500161220  DoUntil (&Retry = 20)
+007600161220    ChgVar &Error '0'
+007700161221    PCL2SPLF   PCL(&WrkPCL) OUTQ(*LIBL/&Printer) USRDTA(&UsrData) +
+007800161221               SPLFORMTYP(&FormType) SPLDRAWER(&Drawer) HOLD(*NO) +
+007900161221               SPLFNAME(&SplfName) +
+008000161221               JOBNUMBER(&JobNumber) USERNAME(&UserName) +
+008100161221               JOBNAME(&JobName) SPLFNUMBER(&SplfNumber)
+008200161220    MonMsg CPE3025 EXEC(ChgVar &Error '1')
+008300161220    If (*not &Error) Leave
+008400161220    DLYJOB 1
+008500161220    ChgVar &Retry (&Retry + 1)
+008600161220  EndDo
+008700161220
+008800161220  /*?... se la conversione non è riuscita invia un messaggio */
+008900161220  If (&Retry = 20) Do
+009000161220     ChgVar &EsitoOK '0'
+009100161220     GoTo FINE
+009200161220  EndDo
+009300161220
+009400161220  /*?Al termine "faccio pulizia" */
+009500161220  Del &WrkPCL
+009600161220  MonMsg CPF0000
+009700161221  RD &JobPath
+009800161221  MonMsg CPF0000
+009900161220
+010000161220  /*?Se arrivo qui => tutto OK */
+010100161220  ChgVar &EsitoOK '1'
+010200000000
+010300161220
+010400161220FINE:
+010500161220  RclRsc
+010600161220  Return
+010700000000
+010800000000ENDPGM

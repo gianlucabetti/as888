@@ -1,0 +1,32 @@
+000100070214/*---------------------------------------------------------------*/
+000200080422/*  Caricamento spunte da file caricato con PDA                  */
+000300070214/*---------------------------------------------------------------*/
+000400080422/* 1) Dai rekord ricevuti spuntati con PDA da SPC genera le spunte            */
+000500080422/* di categoria 8 passando in QTEMP/FIBAR00F riempito con i dati relativi     */
+000600080422/* alla distinta in gestione richiamando PGM di generazione spunte standard   */
+000700070214/*                                                                            */
+000800070214/*---------------------------------------------------------------*/
+000900080424 TRTCP1C:    PGM        PARM(&parfgs &pardis &parspc &fiprdds)
+001000080423
+001100080423             DCL        VAR(&PArfgs) TYPE(*char) LEN(3)
+001200080423             DCL        VAR(&PArdis) TYPE(*char) LEN(6)
+001300080424             DCL        VAR(&PArspc) TYPE(*char) LEN(2)
+001400080423             DCL        VAR(&fiprdds) TYPE(*char) LEN(312)
+001500080423             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10) +
+001600080424                          VALUE('FIBARCOF ')
+001700080423             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+001800080423             RTVNETA    SYSNAME(&SYSNAM)
+001900080423 /* genero file in qtemp */
+002000080423             CRTDUPOBJ  OBJ(FIBAR00F) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002100080423                          TOLIB(QTEMP) NEWOBJ(FIBARCOF)
+002200080423
+002300080423/* richiamo pgm scrittura fibar da record ricevuti da PDA     */
+002400080424             CALL       PGM(TRTCP1R) PARM(&parfgs &pardis &parspc &SYSNAM)
+002500080423
+002600080423/* call a pgm caricamento spunte su as  */
+002700080424             CALL       PGM(FNLS45C5) PARM(&PARfgs &FILE)
+002800080423
+002900080423/* richiamo pgm scrittura fibar da record ricevuti da PDA     */
+003000080423             CALL       PGM(TRTCP1R1) PARM(&fiprdds)
+003100930308
+003200000000             ENDPGM

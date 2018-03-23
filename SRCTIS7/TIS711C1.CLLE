@@ -1,0 +1,67 @@
+000100170411/*PARMS DFTACTGRP(*NO) ACTGRP(BARTVAS)                                        */
+000200990907/*PARMS                                                                       */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600170607             PGM        PARM(&OPZ &FILEWW &ESI)
+000700990908
+000800170607             DCL        VAR(&OPZ)     TYPE(*CHAR) LEN(3)
+000900170607             DCL        VAR(&FILEWW)  TYPE(*CHAR) LEN(10)
+001000170607             DCL        VAR(&ESI)     TYPE(*CHAR) LEN(1) VALUE('N')
+001100170524             DCL        VAR(&MBR)     TYPE(*CHAR) LEN(10)
+001200170607
+001300170524             CHGVAR     VAR(&MBR)     VALUE('TMP00000')
+001400170607
+001500170607
+001600170607/* Se richiesta opzione "iniziale" ----------------------------------*/
+001700170607             IF         COND(&OPZ = 'STR') THEN(DO)
+001800170607
+001900170607/* Per i tipi file previsti (almeno sinora) -------------------------*/
+002000170607             IF         COND(&FILEWW = 'FIVABWWR' *OR +
+002100170607                             &FILEWW = 'FIVADWWR' *OR +
+002200170607                             &FILEWW = 'FIVATWWR' *OR +
+002300170607                             &FILEWW = 'FIVAXWWR' *OR +
+002400170607                             &FILEWW = 'EDIVABWR' *OR +
+002500170607                             &FILEWW = 'EDIVADWR' *OR +
+002600170607                             &FILEWW = 'EDIVATWR' *OR +
+002700170607                             &FILEWW = 'EDIVAXWR' *OR +
+002800170607                             &FILEWW = 'FNVAOWWR' *OR +
+002900170621                             &FILEWW = 'FNVAOEWR' *OR +
+003000170621                             &FILEWW = 'WWRCE00F' *OR +
+003100170621                             &FILEWW = '*'        *OR +
+003200170621                             &FILEWW = '        ') THEN(DO)
+003300170607
+003400170607             CHGVAR     VAR(&ESI)     VALUE('S')
+003500170607
+003600170607             ENDDO
+003700170607             ENDDO
+003800170407
+003900170406
+004000170607/* Se richiesta opzione "finale" ------------------------------------*/
+004100170607             IF         COND(&OPZ = 'END') THEN(DO)
+004200170607
+004300170524/* Per i tipi file previsti (almeno sinora) -------------------------*/
+004400170607             IF         COND(&FILEWW = 'FIVABWWR' *OR +
+004500170607                             &FILEWW = 'FIVADWWR' *OR +
+004600170607                             &FILEWW = 'FIVATWWR' *OR +
+004700170607                             &FILEWW = 'FIVAXWWR' *OR +
+004800170607                             &FILEWW = 'EDIVABWR' *OR +
+004900170607                             &FILEWW = 'EDIVADWR' *OR +
+005000170607                             &FILEWW = 'EDIVATWR' *OR +
+005100170607                             &FILEWW = 'EDIVAXWR' *OR +
+005200170607                             &FILEWW = 'FNVAOWWR' *OR +
+005300170621                             &FILEWW = 'FNVAOEWR' *OR +
+005400170621                             &FILEWW = 'WWRCE00F') THEN(DO)
+005500170410
+005600170524/* Aggiungo un membro di work --------------------------------------*/
+005700170607             ADDPFM     FILE(&FILEWW) MBR(&MBR)
+005800170524             MONMSG     MSGID(CPF0000)
+005900170524
+006000170524/* Forzo forzo scrittura entrate in sospeso sul DB (FEOD) ----------*/
+006100170607             CALL       PGM(TIS711R1) PARM(&FILEWW)
+006200170524
+006300170410             ENDDO
+006400170607             ENDDO
+006500170419
+006600990908
+006700170406             ENDPGM

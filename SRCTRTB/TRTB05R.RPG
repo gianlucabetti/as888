@@ -1,0 +1,150 @@
+000100891030     H            Y                                                       CN0500
+000200891030     F*--------------------------------------------------------------*
+000300891107     F* GESTIONE TABELLE CAPO CONTI GESTITI DA FILIALI               *
+000400891107     F* TABELLA £4
+000500891030     F*----------------------* USO DEGLI INDICATORI *----------------*
+000600891030     F*  01        INSERIMENTO                                       *
+000700891030     F*  02        VARIAZIONE                                        *
+000800891103     F*  35        CODICE TABELLA ERRATO                             *
+000900891107     F* 40/61      FILIALE INESISTENTE                               *
+001000891030     F*--------------------------------------------------------------*
+001100891107     FTRTB05D CF  E                    WORKSTN
+001200891107     FCNACO00FIF  E           K        DISK
+001300891030     FTABEL00FUF  E           K        DISK                      A
+001400891107     E                    CC         22  4 0             CAPO CONTI
+001500891030     I*--------------------------------------------------------------*
+001600891030     I*                        I N P U T                             *
+001700891030     I*--------------------------------------------------------------*
+001800971210     ITRUL12    E DSTRUL12DS
+001900891107     ICCDS        DS
+002000891107     I                                        1   40VIDC01
+002100891107     I                                        5   80VIDC02
+002200891107     I                                        9  120VIDC03
+002300891107     I                                       13  160VIDC04
+002400891107     I                                       17  200VIDC05
+002500891107     I                                       21  240VIDC06
+002600891107     I                                       25  280VIDC07
+002700891107     I                                       29  320VIDC08
+002800891107     I                                       33  360VIDC09
+002900891107     I                                       37  400VIDC10
+003000891107     I                                       41  440VIDC11
+003100891107     I                                       45  480VIDC12
+003200891107     I                                       49  520VIDC13
+003300891107     I                                       53  560VIDC14
+003400891107     I                                       57  600VIDC15
+003500891107     I                                       61  640VIDC16
+003600891107     I                                       65  680VIDC17
+003700891107     I                                       69  720VIDC18
+003800891107     I                                       73  760VIDC19
+003900891107     I                                       77  800VIDC20
+004000891107     I                                       81  840VIDC21
+004100891107     I                                       85  880VIDC22
+004200891107     I                                        1  880CC
+004300891030     IKPJBA     E DS
+004400891030     IUTEDSE    E DSUTEDSE0F
+004500891030     C******************************************************
+004600891030     C           *ENTRY    PLIST
+004700891030     C                     PARM           KPJBA
+004800891030     C                     Z-ADD1         CODUT
+004900891030     C                     CALL 'XPARUT'
+005000891030     C                     PARM           UTEDSE
+005100891030     C           CODUT     CABEQ-1        FINE
+005200891030     C                     MOVELRAGUT     RSUT
+005300891030     C******************************************************
+005400891030     C* POSIZIONAMENTO TABELLE                             *
+005500891103     C           KTAB      KLIST                           *
+005600891103     C                     KFLD           §KUT             *
+005700891030     C                     KFLD           §COD             *
+005800891030     C                     KFLD           §KEY             *
+005900891107     C           KACO      KLIST                           *
+006000891030     C                     KFLD           CODUT            *
+006100891107     C                     KFLD           KCC     40       *
+006200891030     C******************************************************
+006300891030     C           *LIKE     DEFN TBLKUT    §KUT
+006400891030     C           *LIKE     DEFN TBLCOD    §COD
+006500891030     C           *LIKE     DEFN TBLKEY    §KEY
+006600971210     C******************************************************
+006700971210     C* Richiamo pgm per controllo modificabilità tabella
+006800971210     C                     CLEARTRUL12
+006900971210     C                     MOVEL'L'       I12TLA
+007000971210     C                     MOVELKNSIF     I12NSI
+007100971210     C                     MOVEL'£4'      I12COD
+007200971210     C                     CALL 'TRUL12R'
+007300971210     C                     PARM           TRUL12
+007400971210     C           O12ERR    IFEQ '1'
+007500971210     C                     GOTO FINE
+007600971210     C                     END
+007700971210     C******************************************************
+007800891103     C           STAR      TAG
+007900891107     C                     Z-ADD1         VCOD
+008000891103     C           INIZIO    TAG
+008100891107     C                     EXFMTTB05D1
+008200891030     C      KL             GOTO FINE
+008300891103     C*-----
+008400891107     C           VCOD      IFEQ 0
+008500891103     C                     SETON                     35
+008600891030     C                     GOTO INIZIO
+008700891030     C                     END
+008800891030     C*§  RICERCA IN TABEL00F
+008900891102     C                     MOVELCODUT     §KUT
+009000891107     C                     MOVEL'£4'      §COD
+009100891107     C                     MOVE VCOD      §KEY
+009200891103     C*
+009300891103     C                     SETOF                     0102
+009400891103     C           KTAB      CHAINTABEL                80
+009500891030     C           *IN80     IFEQ '1'
+009600891030     C                     SETON                     01    *IMMISSIONE
+009700891103     C                     ELSE
+009800891103     C                     SETON                     02    *VARIAZIONE
+009900891103     C                     END
+010000891107     C                     MOVE *ZEROS    CC
+010100891107     C   02                MOVELTBLUNI    CCDS
+010200891030     C           SU        TAG
+010300891030     C                     SETOF                     99
+010400891107     C                     EXFMTTB05D2
+010500891103     C**--- FINE LAVORO
+010600891030     C      KL             GOTO FINE
+010700891103     C**--- RITORNO SENZA AGGIORNAMENTO
+010800891030     C      KD             GOTO INIZIO
+010900891103     C**--- CONTROLLI VIDEATA
+011000891102     C                     EXSR CTRFMT
+011100891102     C      99             GOTO SU
+011200891030     C                     EXSR SCRIVI
+011300891102     C                     GOTO STAR
+011400891030     C           FINE      TAG
+011500891030     C                     SETON                     LR
+011600891030     C**------------------------
+011700891030     C** CONTROLLI 2 VIDEATA
+011800891030     C**------------------------
+011900891103     C           CTRFMT    BEGSR
+012000891107     C                     DO   22        A       20
+012100891107     C                     Z-ADD39        IN      20
+012200891107     C                     ADD  A         IN
+012300891107     C           CC,A      IFGT 0
+012400891107     C                     Z-ADDCC,A      KCC
+012500891107     C           KACO      CHAINCNACO000             96
+012600891107     C   96                DO
+012700891107     C                     MOVE '1'       *IN,IN
+012800891107     C                     SETON                     99
+012900891107     C                     GOTO END1
+013000891107     C                     END
+013100891103     C                     END
+013200891103     C                     END
+013300891030     C           END1      ENDSR
+013400891030     C**----------------------------
+013500891030     C** AGGIORNAMENTO / INSERIMENTO
+013600891030     C**----------------------------
+013700891030     C           SCRIVI    BEGSR
+013800891103     C           KTAB      CHAINTABEL                80
+013900891030     C                     MOVEL§KUT      TBLKUT
+014000891030     C                     MOVEL§COD      TBLCOD
+014100891030     C                     MOVEL§KEY      TBLKEY
+014200891107     C                     MOVELCCDS      TBLUNI
+014300900420     C*§
+014400900420     C                     MOVE '1'       TBLFTT            A TUTTI
+014500900420     C                     MOVE *ZERO     TBLFLT            FILIALE
+014600900420     C                     MOVE *BLANK    TBLFTR            TIPO TRASM.
+014700900420     C                     MOVE *ZERO     TBLDTR            N.TRASM.
+014800891102     C   80                WRITETABEL                  98
+014900891102     C  N80                UPDATTABEL                  98
+015000891030     C                     ENDSR

@@ -1,0 +1,460 @@
+000100910403     H              J
+000200941216     F* FNLV22R  *---------------------------------------------------*
+000300910403     F*-----------------*                                            *
+000400961223     F* STAMPA SEGNACOLLO CON BARCODE A 18 CON ELTRON                *
+000500921120     F*        CON BARCODE 3X70                                      *
+000600910403     F*--------------------------------------------------------------*
+000700941216     FFNLV22P O   F     132            PRINTER
+000800910403     E                    §CB        18  1 0             CODICE CON CONTR.
+000900910403     E                    §CA        18  1               CODICE CON CONTR.
+001000910403     E                    §C         17  1 0             CODICE S/CONTR.
+001100910403     E                    §2          2  1 0             COMODO
+001200910403     E                    §2A         2  1               COMODO
+001300910404     E                    §RI        37  1               RIGA DI STAMPA
+001400951020     E                    §RX        11  1               RIGA PARZIALE
+001500910403     E                    §S7         7  1               CAMPO NUMERICO
+001600910403     E                    §O7         7  1               0 > O
+001700910403     I            DS
+001800910403     I                                        1  180§CB
+001900910403     I                                        1  18 §CA
+002000910403     I            DS
+002100910403     I                                        1   70§N7
+002200910403     I                                        1   7 §S7
+002300910403     I            DS
+002400910403     I                                        1   20§2
+002500910403     I                                        1   2 §2A
+002600910403     IDSBLD     E DS
+002700910403     IDSBLD7    E DS
+002800910403     I                                        1  170§C
+002900910403     I/SPACE 3
+003000910403     C*---------------------------------------------------------------*
+003100910403     C           *ENTRY    PLIST
+003200910403     C                     PARM           DSBLD
+003300941216     C*
+003400951021     C** IMPOSTA VALORI FISSI SE NON PASSATI (PER PROVE)
+003500950831     C           §LDDLP    IFEQ *BLANK
+003600951021     C                     EXSR FISSI
+003700951021     C                     ENDIF
+003800951021     C*** PROVE CON VALORI FISSI + ETICHETTE
+003900970127     C                     DO   5
+004000961223     C                     TIME           §HMS    60
+004100961223     C                     MOVEL§HMS      §LDCDP
+004200961223     C                     ADD  1         §LDNCD
+004300941216     C*
+004400951023     C                     EXSR PRINT
+004500910403     C*
+004600961223     C                     ENDDO
+004700910403     C                     SETON                     LR
+004800951021     C/SPACE 005
+004900951021     C*****************************************************
+005000951023     C* IMPOSTAZIONE E STAMPA                           ***
+005100951021     C*****************************************************
+005200951023     C           PRINT     BEGSR
+005300951023     C                     MOVEL§LDNRS    §LDNRT  3
+005400951023     C                     MOVE '-'       §LDNRT
+005500951023     C                     MOVE §LDLNP    §LCLNP
+005600951023     C                     MOVE §LDLNA    §LCLNA
+005700951023     C                     MOVE §LDNRS    §LCNRS
+005800951023     C                     MOVE §LDNCD    §LCNCD
+005900951023     C                     MOVE §LDZSC    §LCZSC
+006000951023     C*
+006100951023     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+006200951023     C                     EXSR M10
+006300951023     C                     MOVEA§CA       §C18A  18
+006400951023     C                     MOVE §C18A     §CDBAR 18
+006500951023     C*
+006600951023     C           §LDTSP    IFEQ 'D'                         DISTRIB.
+006700951023     C                     MOVE *BLANK    §LDTSP            NON LO
+006800951023     C                     END                              STAMPO
+006900951023     C*
+007000951023     C           §LDLNA    COMP 300                  15     ESTERO
+007100951023     C           §LDTSP    COMP *BLANK               1616   SERVIZIO
+007200951023     C           §LDTSP    COMP 'E'                      17 ESPRESSO
+007300951023     C           §LDCDP    COMP *BLANK               18     COD.PROD.
+007400951023     C           §LDNRS    COMP *ZERO                19     NR.SERIE
+007500951023     C*
+007600951023     C** INIZIALIZZA STAMPANTE
+007700951023     C                     EXCPTLV22
+007800951023     C*
+007900951023     C                     MOVEA*BLANK    §RX
+008000951023     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL PRIMO NUMERO COLLI
+008100951023     C                     SETOF                     77
+008200951023     C                     MOVE *BLANK    §A7     7
+008300951023     C                     Z-ADD§LDNC1    §N7
+008400951023     C                     DO   7         §1
+008500951023     C           §S7,§1    IFEQ *ZERO
+008600951023     C                     MOVE *BLANK    §S7,§1
+008700951023     C                     ELSE
+008800951023     C                     SETON                     77
+008900951023     C                     END
+009000951023     C  N77                END
+009100951023     C                     MOVEA§S7       §A7
+009200951023     C                     MOVE §A7       §A3     3
+009300951023     C                     MOVEA§A3       §RX,1
+009400951023     C                     MOVEA'-'       §RX,4
+009500951023     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL ULTIMO NUMERO COLLI
+009600951023     C                     SETOF                     77
+009700951023     C                     MOVE *BLANK    §A7
+009800951023     C                     Z-ADD§LDNC2    §N7
+009900951023     C                     DO   7         §1
+010000951023     C           §S7,§1    IFEQ *ZERO
+010100951023     C                     MOVE *BLANK    §S7,§1
+010200951023     C                     ELSE
+010300951023     C                     SETON                     77
+010400951023     C                     END
+010500951023     C  N77                END
+010600951023     C                     MOVEA§S7       §A7
+010700951023     C                     MOVE §A7       §A3
+010800951023     C                     MOVEA§A3       §RX,5
+010900951023     C                     MOVE §LDCPD    §A3
+011000951023     C                     MOVEA§A3       §RX,9
+011100951023     C* STAMPA LINEA PARTENZA
+011200951023     C                     EXCPTLV22H
+011300951023     C*
+011400951023     C                     MOVEA*BLANK    §RI
+011500961223     C                     MOVEA§LDRSM    §RI,1
+011600961223     C                     MOVEA' '       §RI,22
+011700961223     C                     MOVEA§LDPRM    §RI,23
+011800961223     C                     MOVEA*BLANK    §RI,25
+011900951023     C                     EXCPTLV22D1
+012000951023     C* STAMPA DATI MITTENTE
+012100951023     C*
+012200951023     C* TOGLI GLI ZERI NON SIGNIFICATIVI DAL SEGNACOLLO
+012300951023     C                     SETOF                     77
+012400951023     C                     MOVE §LDNCD    §N7
+012500951023     C                     DO   7         §1
+012600951023     C           §S7,§1    IFEQ *ZERO
+012700951023     C                     MOVE *BLANK    §S7,§1
+012800951023     C                     ELSE
+012900951023     C                     SETON                     77
+013000951023     C                     END
+013100951023     C  N77                END
+013200951023     C* SOSTITUISCO GLI ALTRI ZERI CON -O- E SPOSTO A SX LE CIFRE
+013300951023     C                     MOVE *ZERO     §X      10
+013400951023     C                     MOVEA*BLANK    §O7
+013500951023     C                     DO   7         §1
+013600951023     C           §S7,§1    IFNE *BLANK
+013700951023     C                     ADD  1         §X
+013800951023     C           §S7,§1    IFEQ '0'
+013900951023     C                     MOVE 'O'       §O7,§X
+014000951023     C                     ELSE
+014100951023     C                     MOVE §S7,§1    §O7,§X
+014200951023     C                     END
+014300951023     C                     END
+014400951023     C                     END
+014500951023     C                     MOVEA§O7       §S7
+014600951023     C*
+014700951023     C* STAMPA NUMERO SEGNACOLLO
+014800951023     C                     EXCPTLV22D2
+014900951023     C*
+015000951023     C                     MOVE §LDTNA    §A3     3
+015100951023     C           '0':'O'   XLATE§A3       §ODTNA  3
+015200951023     C                     MOVE §LDLNA    §A3
+015300951023     C           '0':'O'   XLATE§A3       §ODLNA  3
+015400951023     C                     MOVE §LDZSC    §A2
+015500951023     C           '0':'O'   XLATE§A2       §ODZSC  2
+015600951023     C* DECODIFICA LINEA DI ARRIVO DA 10 A 8
+015700951023     C                     MOVEL§LDDLA    §ODDLA  8
+015800951023     C* STAMPA LINEA ARRIVO
+015900951023     C* X 15 STAMPA A "MODOD ESTERO"
+016000951023     C   15                DO
+016100951023     C                     MOVEL§ODDLA    §EEN    3
+016200951023     C                     MOVEL§LDCAD    §CA2    2
+016300951023     C                     MOVE §LDCAD    §CA7    7
+016400951023     C                     END
+016500951023     C                     EXCPTLV22D3
+016600951023     C*
+016700951023     C                     MOVEA*BLANK    §RI
+016800961223     C                     MOVEA§LDRSD    §RI,1
+016900961223     C                     MOVEA' '       §RI,22
+017000961223     C                     MOVEA§LDPRD    §RI,23
+017100961223     C                     MOVEA*BLANK    §RI,25
+017200951023     C* STAMPA 1° DATI DESTINATARIO
+017300951023     C                     EXCPTLV22D4
+017400951023     C*
+017500951023     C                     MOVEA*BLANK    §RI
+017600961223     C                     MOVEA§LDIND    §RI,1
+017700951023     C* TROVO L'ULTIMO CARATTERE DI §RI UTILIZZATO DALL'INDIRIZZO
+017800951023     C                     Z-ADD37        §Y      20     88
+017900951023     C                     DO   36
+018000951023     C                     SUB  1         §Y
+018100951023     C           §RI,§Y    IFNE ' '
+018200951023     C                     SETON                     88
+018300951023     C                     END
+018400951023     C  N88                END
+018500951023     C           §Y        IFLE 25
+018600951023     C                     ADD  3         §Y
+018700951023     C                     ELSE
+018800961223     C                     MOVEA'  '      §RI,18
+018900951023     C                     Z-ADD28        §Y
+019000951023     C                     END
+019100951023     C                     MOVEA§LDLOD    §RI,§Y
+019200951023     C* STAMPA 2° DATI DESTINATARIO
+019300951023     C                     EXCPTLV22D5
+019400951023     C* STAMPA SERVIZIO
+019500951023     C   16                EXCPTLV22X5
+019600951023     C*
+019700951023     C* STAMPA BARCODE
+019800951023     C*
+019900951023     C* (CAMPO UNICO BARCODE E COSTANTI)
+020000951023     C                     MOVE *BLANK    §§CDB1 19
+020100951023     C                     MOVE §CDBAR    §§CDB1
+020200951023     C                     MOVEL'"'       §§CDB1
+020300961223     C                     MOVE *BLANK    §§CDB2 20
+020400951023     C                     MOVEL§§CDB1    §§CDB2
+020500961223     C                     MOVE '"'       §§CDB2
+020600961223     C                     EXCPTLV22D6
+020700951023     C*
+020800951023     C                     MOVE *BLANK    §RI21  21
+020900951023     C   18                DO
+021000951023     C                     MOVEL'Rif.:'   §RI21
+021100951023     C                     MOVE §LDCDP    §RI21
+021200951023     C                     END
+021300951023     C* STAMPA RIFERIMENTO/RISTAMPA
+021400961223     C                     EXCPTLV22D7
+021500951023     C*
+021600951023     C* STAMPA CHIUSURA ETICHETTA
+021700951023     C                     EXCPTLV22D8
+021800951023     C                     ENDSR
+021900951023     C/SPACE 005
+022000951023     C*****************************************************
+022100951023     C* IMPOSTA VALORI FISSI X TEST                     ***
+022200951023     C*****************************************************
+022300951023     C           FISSI     BEGSR
+022400951021     C                     MOVE *BLANK    §LDCDP
+022500951021     C                     MOVE *BLANK    §LDDLA
+022600951021     C                     MOVE *BLANK    §LDRSM
+022700951021     C                     MOVE *BLANK    §LDRSD
+022800951021     C                     MOVE *BLANK    §LDIND
+022900951021     C                     MOVE *BLANK    §LDLOD
+023000951021     C*
+023100951021     C                     Z-ADD049       §LDLNP
+023200961223     C                     MOVEL'TORINO  '§LDDLP
+023300951021     C                     MOVEL'A1B2C3..'§LDCDP
+023400961223     C                     MOVE '...AAAAA'§LDCDP
+023500951021     C                     Z-ADD02        §LDNRS
+023600951021     C                     Z-ADD6789015   §LDNCD
+023700951023     C                     Z-ADD028       §LDLNA
+023800961223     C                     MOVEL'CAGLIARI'§LDDLA
+023900951021     C                     Z-ADD028       §LDTNA
+024000951021     C                     MOVE 'E'       §LDTSP
+024100951021     C                     Z-ADD69        §LDZSC
+024200951021     C                     Z-ADD1         §LDNC1
+024300951021     C                     Z-ADD1         §LDNC2
+024400951021     C                     MOVEL'WERUSKA '§LDRSM
+024500961223     C                     MOVE '....FINE'§LDRSM
+024600951021     C                     MOVEL'TO'      §LDPRM
+024700951021     C                     MOVEL'AUTOSOLE'§LDRSD
+024800961223     C                     MOVE '....FINE'§LDRSD
+024900951021     C                     MOVEL'75002  ' §LDCAD
+025000951021     C                     MOVEL'V. VERDI'§LDIND
+025100951021     C                     MOVEL'CAGLIARI'§LDLOD
+025200951021     C                     MOVEL'CA'      §LDPRD
+025300951021     C                     Z-ADD0         §LDCPD
+025400951021     C                     Z-ADD0         §LDNCP
+025500951021     C                     Z-ADD0         §LDNCU
+025600951021     C                     MOVEL'R'       §LDRST
+025700961223     C                     Z-ADD12,123    §LDVOL
+025800961223     C                     Z-ADD123456,1  §LDPKG
+025900951021     C                     MOVEL'P'       §LDFVR
+026000951021     C                     ENDSR
+026100910403     C/SPACE 005
+026200910403     C*****************************************************
+026300910403     C* CALCOLA CIFRA DI CONTROLLO SECONDO IL MODULO 10 IBM
+026400910403     C*****************************************************
+026500910403     C           M10       BEGSR
+026600910403     C                     MOVE *ZERO     §TT     30
+026700910403     C                     MOVE *ZERO     §TT2    30
+026800910403     C                     MOVE *ZERO     §1      10
+026900910403     C                     Z-ADD18        §S      20
+027000910403     C                     DO   17        §N      20
+027100910403     C                     SUB  1         §S
+027200910403     C* INTANTO SPOSTO DA UNA SCHIERA AL CAMPO COD.BARRE
+027300910403     C                     MOVE §C,§N     §CB,§N
+027400910403     C           §N        DIV  2         §CTR    30
+027500910403     C                     MVR            §RST    30 10
+027600910403     C           *IN,10    IFEQ '1'
+027700910403     C           §C,§S     MULT 2         §N2     20
+027800910403     C                     MOVE §N2       §A2     2
+027900910403     C                     MOVEA§A2       §2A
+028000910403     C                     XFOOT§2        §CTR
+028100910403     C                     ELSE
+028200910403     C                     Z-ADD§C,§S     §CTR
+028300910403     C                     END
+028400910403     C                     ADD  §CTR      §TT
+028500910403     C                     END
+028600910403     C*
+028700910403     C           §TT       ADD  9         §TT2
+028800910403     C                     MOVE 0         §TT2
+028900910403     C           §TT2      SUB  §TT       §1
+029000910403     C*
+029100910403     C                     MOVE §1        §CB,18
+029200910403     C                     ENDSR
+029300941216     OFNLV22P E 1              LV22
+029400970127     O******                                 inizializzazione NUOVA
+029500970127     O                                    1 'N'
+029600970127     O        E 1              LV22
+029700970127     O                                    1 'N'
+029800970127     O        E 1              LV22
+029900970127     O                                    2 'US'
+030000961223     O        E 1              LV22
+030100961223     O                                    2 'D5'
+030200941216     O        E 1              LV22
+030300961223     O                                    2 'ZT'
+030400961223     O        E 1              LV22
+030500961223     O                                    4 'R8,0'
+030600961223     O        E 1              LV22
+030700961223     O                                    2 'S4'
+030800941216     O        E 1              LV22
+030900961223     O                                    7 'Q783,16'
+031000961223     O        E 1              LV22
+031100961223     O                                    1 'N'
+031200910403     O********* Mittente
+031300941216     O        E 1              LV22D1
+031400961223     O                                   18 'A217,17,0,1,2,2,N,'
+031500961223     O                                   19 '"'
+031600961223     O                         §RI       57
+031700961223     O                                   58 '"'
+031800910403     O********* Destinatario (Rag.Soc.)
+031900941216     O        E 1              LV22D4
+032000910403     O*                         RIGA DI SEPARAZIONE:
+032100961223     O                                   14 'LO237,42,471,6'
+032200941216     O        E 1              LV22D4
+032300961223     O                                   18 'A217,55,0,1,2,2,N,'
+032400961223     O                                   19 '"'
+032500961223     O                         §RI       57
+032600961223     O                                   58 '"'
+032700910403     O********* Destinatario (Località)
+032800941216     O        E 1              LV22D5
+032900961223     O                                   18 'A219,87,0,1,2,2,N,'
+033000961223     O                                   19 '"'
+033100961223     O                         §RI       57
+033200961223     O                                   58 '"'
+033300920221     O********* MC. SPEDIZIONE
+033400941216     O        E 1              LV22D5
+033500961223     O                                   19 'A600,138,0,3,1,1,N,'
+033600961223     O                                   20 '"'
+033700961223     O                                   24 'MC.'
+033800961223     O                         §LDVOL    31 '0 ,   '
+033900961223     O                         §LDFVR    34
+034000961223     O                                   35 '"'
+034100941216     O********* SERVIZIO
+034200961223     O        E 1              LV22X5
+034300961223     O*                                      FONDO NERO
+034400961223     O                       17          17 'X714,13,10,769,84'
+034500941216     O        E 1              LV22X5
+034600961223     O*                                      FONDO NERO
+034700961223     O                       17          18 'A726,25,0,5,1,1,R,'
+034800961223     O*                                      FONDO BIANCO
+034900961223     O                      N17          18 'A726,25,0,5,1,1,N,'
+035000961223     O                                   19 '"'
+035100961223     O                         §LDTSP    20
+035200961223     O                                   21 '"'
+035300910403     O********* Linea Partenza
+035400941216     O        E 1              LV22H
+035500961223     O**                                    'COLLI DI COLLI'
+035600961223     O                                   19 'A603,158,0,3,1,1,N,'
+035700961223     O                                   20 '"'
+035800961223     O                         §RX       31
+035900961223     O                                   32 '"'
+036000941216     O        E 1              LV22H
+036100961223     O*                                       LNP
+036200961223     O                                   19 'A237,139,0,1,2,4,N,'
+036300961223     O                                   20 '"'
+036400961223     O                         §LDLNP    23
+036500961223     O                         §LDDLP    34
+036600961223     O                                   35 '"'
+036700910403     O********* Segnacollo
+036800941216     O        E 1      19      LV22D2
+036900961223     O*                                       SERIE
+037000961223     O                                   19 'A164,250,0,5,1,2,N,'
+037100961223     O                                   20 '"'
+037200961223     O                         §LDNRT    23
+037300961223     O                                   24 '"'
+037400941216     O        E 1              LV22D2
+037500961223     O*                                       N.COLLO
+037600961223     O                                   19 'A268,202,0,5,2,3,N,'
+037700961223     O                                   20 '"'
+037800961223     O                         §S7       27
+037900961223     O                                   28 '"'
+038000921106     O********* TERMINAL/LINEA/ZONA ARRIVO
+038100941216     O        E 1              LV22D3
+038200961223     O****                                   TERMINAL
+038300961223     O                                   19 'X108,350,10,235,469'
+038400961223     O        E 1              LV22D3
+038500961223     O                                   19 'A120,362,0,5,1,2,R,'
+038600961223     O                                   20 '"'
+038700961223     O                         §ODTNA    23
+038800961223     O                                   24 '"'
+038900961223     O********* LINEA ARRIVO
+039000941216     O        E 1              LV22D3
+039100961223     O                                   19 'A245,362,0,5,1,2,N,'
+039200961223     O                                   20 '"'
+039300961223     O                         §ODLNA    23
+039400961223     O                         §ODDLA    32
+039500961223     O                                   33 '"'
+039600921106     O********* ZONA ARRIVO
+039700950705     O        E 1     N15      LV22D3
+039800961223     O                                   19 'X688,350,10,779,469'
+039900961223     O        E 1     N15      LV22D3
+040000961223     O                                   19 'A700,362,0,5,1,2,R,'
+040100961223     O                                   20 '"'
+040200961223     O                         §ODZSC    22
+040300961223     O                                   23 '"'
+040400921106     O********* DESCRIZIONE LINEA DI ARRIVO
+040500961223     O*       E 1     N15      LV22D3
+040600921106     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+040700961223     O*                                  16 'VBR;240;HBR;355;'
+040800961223     O*       E 1     N15      LV22D3
+040900961223     O*                                   1 '"'
+041000961223     O*                        §ODDLA     9
+041100961223     O*                                  11 '";'
+041200961223     O*       E 1      15      LV22D3
+041300961223     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+041400961223     O*                                  16 'VBR;240;HBR;468;'
+041500961223     O*       E 1      15      LV22D3
+041600961223     O**                                  1 '"'
+041700961223     O**                       §CA2       5
+041800961223     O*                        §CA7      13
+041900961223     O*                                  15 '";'
+042000950831     O* CARATTERE LINEA ESTERA
+042100961223     O*       E 1      15      LV22D3
+042200950831     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+042300961223     O*                                  16 'VBR;240;HBR;355;'
+042400961223     O*       E 1      15      LV22D3
+042500961223     O*                                   8 'DCW;090;'
+042600961223     O*       E 1      15      LV22D3
+042700961223     O*                                   1 '"'
+042800961223     O*                        §EEN       4
+042900961223     O*                                   6 '";'
+043000961223     O* BOX DESCRIZIONE LINEA ESTERA
+043100961223     O*       E 1      15      LV22D3
+043200961223     O*                         POSIZIONE: VERT.(A/B) ORIZZ.(D-S)
+043300961223     O*                                  21 'HOME;VBR;185;HBR;348;'
+043400961223     O*       E 1      15      LV22D3
+043500961223     O* BOX DESCRIZIONE LINEA ESTERA                   L   H
+043600961223     O*                                  16 'DCBX;0;0;155;60;'
+043700910403     O********* Bar Code
+043800961223     O        E 1              LV22D6
+043900961223     O* BARCODE INTERL. 2/5
+044000970127     O*                                  24 'B160,475,0,2,4,12,240,N,'
+044100951121     O* BARCODE CODE 128
+044200970127     O                                   24 'B160,475,0,1,4,12,240,N,'
+044300961223     O                         §§CDB2    44
+044400961223     O                                   45 ' '
+044500951020     O********* Codice Prodotto/KG/RISTAMPA
+044600941216     O        E 1              LV22D7
+044700961223     O                                   19 'A130,728,0,3,1,2,N,'
+044800961223     O                                   20 '"'
+044900961223     O                         §RI21     41
+045000961223     O                                   45 'KG.'
+045100961223     O                         §LDPKG    53 '    0 , '
+045200961223     O                         §LDRST    55
+045300961223     O                                   56 '"'
+045400941216     O********* Chiusura etchetta
+045500941216     O        E 1              LV22D8
+045600961223     O                                    2 'P1'
+045700970121     O        E 1              LV22D8
+045800970121     O                                    1 'N'
+045900970127     O        E 1              LV22D8
+046000970127     O                                    1 'N'

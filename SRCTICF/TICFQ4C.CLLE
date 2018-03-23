@@ -1,0 +1,53 @@
+000100000000/*----------------------------------------------------------------------------*/
+000200160223/* TICFQ4C - Confronto Fatturazione                                           */
+000300000000/*----------------------------------------------------------------------------*/
+000400160223 TICFQ4C:    PGM        PARM(&KPJBA)
+000500000000
+000600040416             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(512)
+000700160223             DCL        VAR(&LIBRERIA) TYPE(*CHAR) LEN(10)
+000800160223             DCL        VAR(&WLIB) TYPE(*CHAR) LEN(10)
+000900160223
+001000160224/* Preparo la libreria di salvataggio */
+001100160223             CALL       PGM(TICFQ4R1) PARM(&KPJBA)
+001200121217
+001300121217/* Imposto le variabili */
+001400140408             CHGVAR     VAR(&LIBRERIA) VALUE(%SST(&KPJBA 279 10))
+001500140410             CHGVAR     VAR(&WLIB) VALUE(%SST(&KPJBA 289 10))
+001600121217
+001700050609/* pulizia Work-file                  */
+001800130123             CLRPFM     FILE(&LIBRERIA/WFCFT00F)
+001900130123             CLRPFM     FILE(&LIBRERIA/WFCFT10F)
+002000130123             CLRPFM     FILE(&LIBRERIA/WFCFT20F)
+002100130123             CLRPFM     FILE(&LIBRERIA/WFCFT30F)
+002200141218             CLRPFM     FILE(&LIBRERIA/WFCFS00F)
+002300060914
+002400060915    /* aggiungo libreria bolle + file work */
+002500140408             ADDLIBLE   LIB(&LIBRERIA)
+002600050608
+002700130123/* lancio pgm di scrittura file per memorizzazione dettaglio */
+002800160224             CALL       PGM(TICFQ4R) PARM(&KPJBA)
+002900050608
+003000050608/* lancio pgm di scrittura file per memorizzazione totali */
+003100140407             CALL       PGM(TICFQ1R) PARM(&KPJBA)
+003200130123
+003300130123/* lancio pgm di scrittura file per memorizzazione totali per unificante */
+003400140407             CALL       PGM(TICFQ3R) PARM(&KPJBA)
+003500141218
+003600141218/* lancio pgm di scrittura file per memorizzazione dettaglio SCARTATO*/
+003700141218             CALL       PGM(TICFS2R) PARM(&KPJBA)
+003800121228
+003900160223/* Copio file nella libreria di salvataggio */
+004000140410             CPYF       FROMFILE(&LIBRERIA/WFCFT00F) +
+004100140410                          TOFILE(&WLIB/WFCFT00F) CRTFILE(*YES)
+004200140410             CPYF       FROMFILE(&LIBRERIA/WFCFT10F) +
+004300140410                          TOFILE(&WLIB/WFCFT10F) CRTFILE(*YES)
+004400140410             CPYF       FROMFILE(&LIBRERIA/WFCFT20F) +
+004500140410                          TOFILE(&WLIB/WFCFT20F) CRTFILE(*YES)
+004600140410             CPYF       FROMFILE(&LIBRERIA/WFCFT30F) +
+004700140410                          TOFILE(&WLIB/WFCFT30F) CRTFILE(*YES)
+004800141218             CPYF       FROMFILE(&LIBRERIA/WFCFS00F) +
+004900141218                          TOFILE(&WLIB/WFCFS00F) CRTFILE(*YES)
+005000050608
+005100050607             DLTOVR     FILE(*ALL)
+005200160223
+005300050613             ENDPGM

@@ -1,0 +1,341 @@
+000100000000     F* TAADBFWR   - Retrieve deleted records - Called by TAADBFWC
+000200000000     F*   INPUT is the SAVF file
+000300000000     F*   WORK and OUTPUT are both overridden to the output file for
+000400000000     F*     the deleted records
+000500000000     F*   The first time the program is called, it writes a default
+000600000000     F*     record into the WORK file and then retrieves it.
+000700000000     F*   The program then returns to CL to clear the output file.
+000800000000     F*   The default record is used to scan the SAVF. This is done
+000900000000     F*     by using a 6 byte work area to scan and then a test for
+001000000000     F*     a good next character following the record length. The
+001100000000     F*     next character must be a good record or a deleted record.
+001200000000     F*     If this occurs then the record written is compared to
+001300000000     F*     ensure it is the default record in the save file.
+001400000000     F*   When the default record is found, the data follows.
+001500000000     F*   Look for the delete byte hex value and write to output
+001600000000     F*     At the 16MB boundary, a record may be split over 2 extents
+001700000000     F*     There are special codes for these records
+001800000000     FINPUT   IF  F     528            DISK
+001900000000     F* The save file has 528 bytes, but only the first 512 have data
+002000000000     FWORK    IF  F    2000            DISK                           UC
+002100000000     FOUTPUT  O   F    2000            DISK                           UC
+002200000000     E                    ARR      7680  1
+002300000000     E                    TST      2000  1
+002400000000     IINPUT   AA  01
+002500000000     I                                        1 512 SAVDS
+002600000000     IWORK    AB  02
+002700000000     I                                        12000 DFTDS
+002800000000     IDFTDS       DS                           2000
+002900000000     I                                        1   5 WORK5
+003000000000     IRCDDS       DS                           2000
+003100000000     I                                        12000 TST
+003200000000     ISAVDS       DS                            512
+003300000000     I                                        1   1 DUMMY3
+003400000000     I* The size of the big DS is set into a variable in -Initialize-
+003500000000     IBIGDS       DS
+003600000000     I                                        17680 ARR
+003700000000     ITMPDS       DS                           5000
+003800000000     I                                        1   1 DUMMY4
+003900000000     IRRDS        DS
+004000000000     I                                    P   1   70RELRCD
+004100000000     IHEXDS       DS                             20
+004200000000     I                                        1   1 HEX00
+004300000000     I                                        2   2 HEX80
+004400000000     I                                        3   3 HEX90
+004500000000     I                                        4   4 HEX88
+004600000000     I                                        5   5 HEX98
+004700000000     I                                        6   6 HEXC0
+004800000000     I                                        7   7 HEXD0
+004900000000     I                                        8   8 HEXC8
+005000000000     I                                        9   9 HEXD8
+005100000000     I                                       10  10 HEXE0
+005200000000     I                                       11  11 HEXF0
+005300000000     I                                       12  12 HEXE8
+005400000000     I                                       13  13 HEXF8
+005500000000     I                                       14  14 HEXA0
+005600000000     I                                       15  15 HEXB0
+005700000000     I                                       16  16 HEXA8
+005800000000     I                                       17  17 HEXB8
+005900000000     I                                       18  18 HEX03
+006000000000     I* Hex values
+006100000000     I*   End of file = X'00'
+006200000000     I*
+006300000000     I*   Good records
+006400000000     I*
+006500000000     I*      X'80'
+006600000000     I*      X'90'
+006700000000     I*      X'88'
+006800000000     I*      X'98'
+006900000000     I*
+007000000000     I*   Deleted records
+007100000000     I*
+007200000000     I*     X'C0'
+007300000000     I*     X'D0'
+007400000000     I*     X'C8'
+007500000000     I*     X'D8'
+007600000000     I*
+007700000000     I*   Good records that span 16 MB boundary
+007800000000     I*
+007900000000     I*    X'A0'
+008000000000     I*    X'B0'
+008100000000     I*    X'A8'
+008200000000     I*    X'B8'
+008300000000     I*
+008400000000     I*  Deleted records that span 16 MB boundary
+008500000000     I*
+008600000000     I*    X'D0'
+008700000000     I*    X'F0'
+008800000000     I*    X'E8'
+008900000000     I*    X'F8'
+009000000000     I*
+009100000000     I*  Beginning 16 MB boundary record
+009200000000     I*
+009300000000     I*    X'03'
+009400000000     I*
+009500000000     C* Parameter list
+009600000000     C           *ENTRY    PLIST                           Parm list
+009700000000     C                     PARM           RQSCDE  8        Request code
+009800000000     C                     PARM           ACTCNT  90       Active count
+009900000000     C                     PARM           DLTCNT  90       Dlt rcd cnt
+010000000000     C                     PARM           RCDLEN  50       Record len
+010100000000     C                     PARM           RRRQS   4        Rel rcd rqs
+010200000000     C                     PARM           HEXDS  20        Hex codes
+010300000000     C                     PARM           RTNCDE  8        Return code
+010400000000     C* RDDFT request is done only once
+010500000000     C           RQSCDE    IFEQ 'RDDFT   '                 RDDFT
+010600000000     C* Initialize
+010700000000     C                     Z-ADD0         RELRCD           Packd in DS
+010800000000     C                     MOVE *BLANKS   RTNCDE           Initialize
+010900000000     C*  This is the size of the array in BIGDS
+011000000000     C                     Z-ADD7680      BIGSIZ  50       Big size
+011100000000     C*  The array ARR is filled by reading the 512 byte save file
+011200000000     C*     records. Calculate the point where the array will be
+011300000000     C*     refreshed. This occurs by a shift from a safe point
+011400000000     C*     to the TMPDS and then back to the array beginning at 1.
+011500000000     C*     The array is then filled from that point.
+011600000000     C*  The safe point is the BIGSIZ value minus the record length
+011700000000     C*     minus 5.
+011800000000     C           BIGSIZ    SUB  RCDLEN    SAFPT   50       Safe point
+011900000000     C                     SUB  5         SAFPT            Safe point
+012000000000     C* Determine the beginning of the last 512 byte record
+012100000000     C           1         ADD  BIGSIZ    LSTBND  50       Safe boundry
+012200000000     C                     SUB  512       LSTBND  50       Last boundry
+012300000000     C* Determine position one GT than record length
+012400000000     C           1         ADD  RCDLEN    RX      50       Rcd len + 1
+012500000000     C                     OPEN WORK                       Open work fl
+012600000000     C* Read the default record into the DFTDS data structure
+012700000000     C                     READ WORK                     20 Get dft rcd
+012800000000     C* If EOF found, there is no default record - abort
+012900000000     C   20                DO                              If EOF
+013000000000     C                     MOVE 'NODFTRCD'RTNCDE           Set return
+013100000000     C                     GOTO ENDPGM                     Abort
+013200000000     C                     ENDDO                           If EOF
+013300000000     C                     MOVE 'GOOD    'RTNCDE           Set return
+013400000000     C                     CLOSEWORK                       Close work
+013500000000     C* Use a 6 position scan value
+013600000000     C                     MOVELHEX80     SCNVAL  6        Scan value
+013700000000     C                     MOVE WORK5     SCNVAL           Scan value
+013800000000     C* Return to CL to clear the member the pgm just wrote to
+013900000000     C                     GOTO RETURN                     Return
+014000000000     C                     END                             RDDFT
+014100000000     C* WRTDLT request
+014200000000     C           RQSCDE    IFEQ 'WRTDLT  '                 WRTDLT
+014300000000     C                     OPEN OUTPUT                     Open output
+014400000000     C* First time, LX will be 1 which will fill the entire array
+014500000000     C                     Z-ADD1         SX      50       Inlz index
+014600000000     C                     Z-ADD1         LX      50       Inlz index
+014700000000     C           FILARR    TAG
+014800000000     C                     EXSR FILL                       Fil arr subr
+014900000000     C* Scan the data structure for the scan value. This is a Hex 80
+015000000000     C*   followed by the first 5 bytes of the default record.
+015100000000     C*     If found, it may be the default record
+015200000000     C           SCNAGN    TAG                             Scan again
+015300000000     C           SCNVAL    SCAN BIGDS:SX  LX      50     20 Scan big
+015400000000     C* If not found check EOF meaning it was never found
+015500000000     C  N20                DO                              Not found
+015600000000     C* If already at EOF, abort
+015700000000     C           EOF       IFEQ 'X'                        If EOF
+015800000000     C                     MOVE 'SCNEOF  'RTNCDE           Set error
+015900000000     C                     GOTO ENDPGM                     End the pgm
+016000000000     C                     END                             If EOF
+016100000000     C* If not at EOF, set LX to last boundary, shift and fill the arra
+016200000000     C                     Z-ADDLSTBND    LX               Last boundry
+016300000000     C                     Z-ADD1         SX               Inlz index
+016400000000     C                     GOTO FILARR                     Loop back
+016500000000     C                     END                             Not found
+016600000000     C* The scan was successful
+016700000000     C* If LX is greater than the safe point, shift and fill the array
+016800000000     C           LX        IFGT SAFPT                      GT safe pt
+016900000000     C                     EXSR FILL                       Fill array
+017000000000     C                     END                             GT safe pt
+017100000000     C* Bump LX for what could be the first byte of the dft record
+017200000000     C                     ADD  1         LX
+017300000000     C* Before testing to see if it is the default record, do the
+017400000000     C*   simple test of comparing the first byte following what may
+017500000000     C*   be the default record.
+017600000000     C* The first position after the default record must be
+017700000000     C*   Hex 80 - Good record
+017800000000     C*   Hex C0 - Deleted record
+017900000000     C* It cannot be an end of file condition right after the dft rcd
+018000000000     C*
+018100000000     C* Bump for the record length size and test the character
+018200000000     C           LX        ADD  RCDLEN    TX      50       Bump length
+018300000000     C                     MOVEAARR,TX    CHAR1   1        Move one byt
+018400000000     C           CHAR1     IFEQ HEX80                      Good record
+018500000000     C           CHAR1     OREQ HEX90                        Good rcd
+018600000000     C           CHAR1     OREQ HEX88                        Good rcd
+018700000000     C           CHAR1     OREQ HEX98                        Good rcd
+018800000000     C           CHAR1     OREQ HEXC0                        Dltd rcd
+018900000000     C           CHAR1     OREQ HEXD0                        Dltd rcd
+019000000000     C           CHAR1     OREQ HEXC8                        Dltd rcd
+019100000000     C           CHAR1     OREQ HEXD8                        Dltd rcd
+019200000000     C* Move what could be the default record to an array. Blank remndr
+019300000000     C                     MOVEAARR,LX    TST,1            Move rcd
+019400000000     C                     MOVEA*BLANKS   TST,RX           Blank remndr
+019500000000     C* DFTDS has the default record written to WORK file.
+019600000000     C*   RCDDS has the TST array in it. This may be the default record
+019700000000     C* If they are equal, branch ahead to start processing data
+019800000000     C           RCDDS     CABEQDFTDS     RDRCD            If equal
+019900000000     C* If not equal, inlz index and scan again
+020000000000     C                     Z-ADDLX        SX               Inlz index
+020100000000     C                     GOTO SCNAGN                     Loop back
+020200000000     C                     END                             Good record
+020300000000     C* The Hex value was not a good or deleted record
+020400000000     C*    Loop back and scan again
+020500000000     C                     Z-ADDLX        SX               Set index
+020600000000     C                     GOTO SCNAGN                     Loop back
+020700000000     C           RDRCD     TAG                             Default fnd
+020800000000     C* At this point, the default record has been found. Begin loop
+020900000000     C*  to determine the type of record read.
+021000000000     C* First check if passed the safe point
+021100000000     C           LX        ADD  RCDLEN    TSTPT   50       Test point
+021200000000     C* If TSTPT is greater than the safe point, shift and fill array
+021300000000     C           TSTPT     IFGT SAFPT                      GT safe pt
+021400000000     C                     EXSR FILL                       Fill subr
+021500000000     C                     END                             GT safe pt
+021600000000     C* Bump to the next leading byte and move it
+021700000000     C                     ADD  RCDLEN    LX               Add rcd len
+021800000000     C                     MOVE ARR,LX    CHAR1            Move one byt
+021900000000     C* Determine by the leading byte whether it is EOF, active or dltd
+022000000000     C* If EOF (Hex 00) is found, end the pgm
+022100000000     C           CHAR1     CABEQHEX00     ENDOUT           EOF found
+022200000000     C* If it is a good record, bump over the leading byte and loop
+022300000000     C           CHAR1     IFEQ HEX80                      Good record
+022400000000     C           CHAR1     OREQ HEX90                        Good recd
+022500000000     C           CHAR1     OREQ HEX98                        Good recd
+022600000000     C           CHAR1     OREQ HEX88                        Good recd
+022700000000     C                     ADD  1         LX               Bump one
+022800000000     C                     ADD  1         ACTCNT           Active count
+022900000000     C                     ADD  1         RELRCD 130       Rel rcd nbr
+023000000000     C                     GOTO RDRCD                      Loop back
+023100000000     C                     END                             Good record
+023200000000     C* If it is a good record that spans a 16 MB boundary, bump for
+023300000000     C*    the extra 32 and do same functions
+023400000000     C           CHAR1     IFEQ HEXA0                      Good record
+023500000000     C           CHAR1     OREQ HEXB0                        Good recd
+023600000000     C           CHAR1     OREQ HEXA8                        Good recd
+023700000000     C           CHAR1     OREQ HEXB8                        Good recd
+023800000000     C                     ADD  1         LX               Bump one
+023900000000     C                     ADD  32        LX               Bump one
+024000000000     C                     ADD  1         ACTCNT           Active count
+024100000000     C                     ADD  1         RELRCD 130       Rel rcd nbr
+024200000000     C                     GOTO RDRCD                      Loop back
+024300000000     C                     END                             Good record
+024400000000     C* If it is a deleted record, bump the index by one, trim off the
+024500000000     C*   excess characters, and output the record
+024600000000     C           CHAR1     IFEQ HEXC0                      Dltd rcd
+024700000000     C           CHAR1     OREQ HEXD0                        Dltd rcd
+024800000000     C           CHAR1     OREQ HEXC8                        Dltd rcd
+024900000000     C           CHAR1     OREQ HEXD8                        Dltd rcd
+025000000000     C                     ADD  1         LX               Bump one
+025100000000     C                     MOVEAARR,LX    TST,1            Move rcd
+025200000000     C                     ADD  1         DLTCNT           Count rcds
+025300000000     C                     ADD  1         RELRCD           Rel rcd nbr
+025400000000     C* If RRRQS is *YES, move the rel rcd nbr to the end of the rcd
+025500000000     C           RRRQS     IFEQ '*YES'                     If rqstd
+025600000000     C* The Rel Rcd nbr is a packed value in a DS. Move the DS
+025700000000     C                     MOVEARRDS      TST,RX           Move RR
+025800000000     C                     END                             If rqstd
+025900000000     C* No need to trim the excess as writing to the file will do it
+026000000000     C                     EXCPTNEWRCD                     Output
+026100000000     C                     GOTO RDRCD                      Loop back
+026200000000     C                     END                             Dltd rcd
+026300000000     C* If it is a deleted record, that spans a 16 MB boundary,
+026400000000     C*   set a flag for diag message and bump by 32
+026500000000     C           CHAR1     IFEQ HEXE0                      Dltd rcd
+026600000000     C           CHAR1     OREQ HEXF0                        Dltd rcd
+026700000000     C           CHAR1     OREQ HEXE8                        Dltd rcd
+026800000000     C           CHAR1     OREQ HEXF8                        Dltd rcd
+026900000000     C                     ADD  1         LX               Bump one
+027000000000     C                     ADD  32        LX               Bump one
+027100000000     C                     MOVE 'X'       SPNDLT  1        Span dltd
+027200000000     C                     ADD  1         RELRCD           Rel rcd nbr
+027300000000     C                     GOTO RDRCD                      Loop back
+027400000000     C                     END                             Dltd rcd
+027500000000     C* If it is a Hex 03, it is the 16 MB boundary record that
+027600000000     C*   just happens to appear at the beginning of a record.
+027700000000     C* Bump 32 and try the next record
+027800000000     C           CHAR1     IFEQ HEX03                      Bndry rcd
+027900000000     C                     ADD  32        LX               Bump one
+028000000000     C                     GOTO RDRCD                      Loop back
+028100000000     C                     END                             Bndry rcd
+028200000000     C* If it is none of the above, set bad return
+028300000000     C                     MOVE 'BADHEX  'RTNCDE           Set error
+028400000000     C                     GOTO ENDPGM                     End the pgm
+028500000000     C* All records have been output
+028600000000     C           ENDOUT    TAG                             End read 1
+028700000000     C                     MOVE 'GOOD    'RTNCDE           Set return
+028800000000     C                     GOTO ENDPGM                     End the pgm
+028900000000     C                     END                             WRTDLT
+029000000000     C* If it gets to here, it is a bad RQSCDE
+029100000000     C                     MOVE 'BADRQS  'RTNCDE           Set error
+029200000000     C* End of program
+029300000000     C           ENDPGM    TAG                             End of pgm
+029400000000     C                     SETON                     LR    Set LR
+029500000000     C           RETURN    TAG                             Return point
+029600000000     C                     RETRN                           Return
+029700000000     C* Fill subroutine
+029800000000     C           FILL      BEGSR                           READ subr
+029900000000     C* If LX is 1, it is the first time. Fill the whole array
+030000000000     C           LX        IFEQ 1                          First time
+030100000000     C                     Z-ADD1         AX               Inlz
+030200000000     C                     GOTO FILL1                      Branch
+030300000000     C                     END                             First time
+030400000000     C* Must shift the ARR array from 512 boundary to the left of LX
+030500000000     C*   First determine the boundary
+030600000000     C           1         ADD  BIGSIZ    BX      50       Inlz boundry
+030700000000     C           BX        DOWGTLX                         Do while GT
+030800000000     C                     SUB  512       BX               Sub 512
+030900000000     C                     END                             Do while GT
+031000000000     C* Shift array by moving to TMPDS which contains the TST array
+031100000000     C                     MOVEAARR,BX    TMPDS            Temp DS
+031200000000     C                     MOVEATMPDS     ARR,1            Move back
+031300000000     C* Trim off the excess. Determine where excess starts by
+031400000000     C*   subtracting BX from BIGSIZ. Then add 2 to account for start
+031500000000     C           BIGSIZ    SUB  BX        AX      50       Excess
+031600000000     C                     ADD  2         AX               Str of excss
+031700000000     C                     MOVEA*BLANKS   ARR,AX           Trim off
+031800000000     C* Determine the new LX position. Keep subtracting until GT 512
+031900000000     C           LX        DOWGT512                        Do while GT
+032000000000     C                     SUB  512       LX               Sub 512
+032100000000     C                     END                             Do until GT
+032200000000     C* If EOF has already been read, branch to end
+032300000000     C           EOF       CABEQ'X'       FILL9            Branch
+032400000000     C* Fill the remainder of the array with records from the save file
+032500000000     C           FILL1     TAG
+032600000000     C           AX        IFLT BIGSIZ                     LT max
+032700000000     C                     READ INPUT                    20 EOF
+032800000000     C   20                DO                              If EOF
+032900000000     C                     MOVE 'X'       EOF     1        Set switch
+033000000000     C                     GOTO FILL9                      Branch
+033100000000     C                     END                             If EOF
+033200000000     C* Move save file record to next slot in the array
+033300000000     C                     MOVEASAVDS     ARR,AX           Move to arr
+033400000000     C                     ADD  1         SAVRCD 110       SAVF rcds
+033500000000     C* Bump AX and loop back
+033600000000     C                     ADD  512       AX               Next slot
+033700000000     C                     GOTO FILL1                      Loop back
+033800000000     C                     END                             LT max
+033900000000     C           FILL9     ENDSR                           READ subr
+034000000000     OOUTPUT  E                NEWRCD
+034100000000     O                         RCDDS   2000

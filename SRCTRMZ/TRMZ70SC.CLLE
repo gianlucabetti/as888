@@ -1,0 +1,34 @@
+000100090225/*?******************************************************************/
+000200090326/*?*    attivazione sincronia x COMMIT ******************************/
+000300090225/*?******************************************************************/
+000400090225
+000500090326             PGM        PARM(&KPJBA)
+000600090225
+000700090326             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000800090225
+000900090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+001000090213/* procedura/programma fosse finita in maniera anomala occorre */
+001100090213/* parare il colpo riducendo il male al male minore ossia      */
+001200090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+001300090213/* metà piuttosto che confermarle. E ripartendo da una         */
+001400090213/* situazione pulita.                                          */
+001500090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001600090213/*           MONMSG     MSGID(CPF8351) EXEC(rollback)   */
+001700090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+001800090213             ENDCMTCTL
+001900090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+002000090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+002100090213             ENDDO
+002200090212
+002300090326             CALL       PGM(TRMZ70SR) PARM(&KPJBA)
+002400090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500090213             ROLLBACK
+002600090213             ENDDO
+002700090212
+002800090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+002900090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+003000090213 /* in modo pulito senza lasciare transazioni a metà.            */
+003100090213             ENDCMTCTL
+003200090216
+003300090216
+003400090212             ENDPGM

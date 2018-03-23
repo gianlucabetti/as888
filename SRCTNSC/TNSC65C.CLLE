@@ -1,0 +1,53 @@
+000100890707             PGM        PARM(&KPJBA)
+000200890707
+000300890707             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400130716             DCL        VAR(&D64lib) TYPE(*CHAR) LEN(10)
+000401130716             DCL        VAR(&D64nas) TYPE(*CHAR) LEN(10)
+000600950302             DCL        VAR(&D64PUL) TYPE(*CHAR) LEN(2)
+000800940712             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+000900130716             DCL        VAR(&MSG) TYPE(*CHAR) LEN(200)
+001100130716
+001101130716             CHGVAR     VAR(&msg) VALUE('(C G) +
+001102130716                          Montare nastro per scarico +
+001103130716                          archivi pulizia Contrassegni di sede in ' +
+001104130716                          *BCAT  &d64nas)
+001200940712/*---------------------------------------------------------------------*/
+001300940712/*  Reperisco parametri scarico dati archivi C/A                       */
+001400940712/*---------------------------------------------------------------------*/
+001500130716             CHGVAR     VAR(&D64lib) VALUE(%SUBSTRING(&KPJBA 247 10))
+001600130716             CHGVAR     VAR(&D64nas) VALUE(%SUBSTRING(&KPJBA 257 10))
+001700950302             CHGVAR     VAR(&D64PUL) VALUE(%SUBSTRING(&KPJBA 267 2))
+001900890707
+003200940315/*---------------------------------------------------------------------*/
+003300940315/*  Inizio scarico: invio messaggio coda operatore x montare nastro    */
+003400940315/*---------------------------------------------------------------------*/
+003500890707             SNDUSRMSG  MSG(&MSG) VALUES(C G) DFT(C) TOMSGQ(QSYSOPR) +
+003600890707                          MSGRPY(&RISP)
+003700890707             IF         COND((&RISP *EQ 'C') *OR (&RISP *EQ 'c')) +
+003800890707                          THEN(GOTO CMDLBL(ENDPGM))
+003900890707
+004000940315/*---------------------------------------------------------------------*/
+004100940315/*  Inizializzo il nastro sull'unità TAP03                             */
+004200940315/*---------------------------------------------------------------------*/
+004300130716             INZTAP     DEV(&d64nas) NEWVOL(SAVCA) NEWOWNID(*BLANK) +
+004400940315                          CHECK(*NO) CLEAR(*NO)
+004500940315
+004501130716/*---------------------------------------------------------------------*/
+004502130716/*  Salvataggio libreria dati                                         */
+004503130716/*---------------------------------------------------------------------*/
+004504130716             SAVLIB     LIB(&d64LIB) DEV(&d64NAS)
+005000940315             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDPGM))
+005100940315
+005200940315/*---------------------------------------------------------------------*/
+005300940315/*  Mando in stampa contenuto dei dati salvati                         */
+005400940315/*---------------------------------------------------------------------*/
+005500130716             DSPTAP     DEV(&d64nas) DATA(*SAVRST) OUTPUT(*PRINT)
+005600940315
+006500940315/*---------------------------------------------------------------------*/
+006600940712/*  Se ho richiesto la pulizia la eseguo                               */
+006700940315/*---------------------------------------------------------------------*/
+006800950302             IF         COND(&D64PUL *EQ 'SI') THEN(DO)
+006900130716                 DLTLIB     LIB(&D64LIB)
+007100130716             ENDDO
+007200940712
+007300890707 ENDPGM:     ENDPGM

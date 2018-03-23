@@ -1,0 +1,37 @@
+000100050617/*-------------------------------------------------------------------*/
+000200050708/*?Gestione modulo "DOCUMENTO DI RITIRO"                            ?*/
+000300050617/*-------------------------------------------------------------------*/
+000400050617             pgm        parm(&KPJBA)
+000500050617
+000600050617             dcl        var(&KPJBA)    type(*char)  len(502)
+000700050708             dcl        var(&TRUL90DS) type(*char)  len(177) -
+000800080709                                       value(' O ')
+000900050617             dcl        var(&F3)       type(*char)  len(1)   value(' ')
+001000050708             dcl        var(&PRTXDR)   type(*char)  len(10)
+001100050708             dcl        var(&MODXDR)   type(*char)  len(10)
+001200050617
+001300050617/* Richiamo pgm per scelta stampante --------------------------------*/
+001400050617             call       pgm(TRUL90R)   parm(&KPJBA &TRUL90DS)
+001500050617   /* F3 -> Fine lavoro */
+001600050617             chgvar     var(&F3)       value(%sst(&TRUL90DS 85 1))
+001700050617             if         cond(&F3 *eq '1')  then(goto cmdlbl(FINE))
+001800050617
+001900050617/* Override ---------------------------------------------------------*/
+002000050708             chgvar     var(&PRTXDR)   value(%sst(&TRUL90DS 65 10))
+002100050708             chgvar     var(&MODXDR)   value(%sst(&TRUL90DS 15 10))
+002200050617
+002300050617   /* prtf bolle per stampanti ad aghi */
+002400050708             ovrprtf    file(FNLSB4P)  outq(&PRTXDR) -
+002500050708                                       formtype(&MODXDR) -
+002600050708                                       usrdta('Doc.Ritiro') -
+002700050708                                       share(*yes)
+002800050617
+002900051011/* Richiamo pgm di gestione documento di ritiro ---------------------*/
+003000050630    /*****   call       pgm(FNLS11R)   parm(&KPJBA &TRUL90DS)  *****/
+003100050630             call       pgm(FNLS11R)   parm(&KPJBA)
+003200050617
+003300050617/* Fine -------------------------------------------------------------*/
+003400050617             rclrsc     lvl(*caller)
+003500050617             dltovr     file(FNLSB4P)
+003600050617    Fine:
+003700050617             endpgm

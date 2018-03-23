@@ -1,0 +1,311 @@
+000100941024     H* FNLG40R *----------------------------------------------------*
+000200000000     H*-----------------*                                            *
+000300900511     H*           - STAMPA STATISTICHE -                             *
+000400000000     H*--------------------------------------------------------------*
+000500941024     FFNLG40D CF  E                    WORKSTN
+000600900619     FTABEL00FIF  E           K        DISK
+000700941024     I*--------------------------------------------------------------*
+000800900619     IDS2G      E DS
+000900950105     IFNLG40    E DSFNLG40DS
+001000900131     IUTEDSE    E DSUTEDSE0F
+001100900131     IKPJBA     E DS
+001200900131     I                                       92 101 LIBSYS
+001300900131     I                                      453 502 MSGERR
+001400941024     IWLBDA8      DS
+001500941024     I                                        1   80G02DAT
+001600941024     I                                        9  160G02INV
+001700941024     I                                       17  17 G02ERR
+001800941024     I                                       18  220G02TGI
+001900000000     C*----------------------------------------------------*
+002000000000     C           CICLO     TAG
+002100900511     C                     EXSR PULVID
+002200941024     C                     Z-ADD§2GGGL    VGG1
+002300941024     C                     Z-ADD§2GGCH    VGG2
+002400941024     C                     Z-ADD§2GGRI    VGG4
+002500941024     C                     Z-ADD§2GCRP    VGG5
+002600000000     C           INIZIO    TAG
+002700941024     C                     EXFMTLG4001D
+002800900423     C      KC             GOTO FINE
+002900900511     C** CONTROLLI + LANCIO LISTA
+003000900511     C** NESSUNA LISTA SCELTA
+003100900511     C           VSEL1     IFEQ *BLANKS
+003200950105     C           VSEL2     ANDEQ*BLANKS
+003300950105     C           VSEL3     ANDEQ*BLANKS
+003400950105     C           VSEL4     ANDEQ*BLANKS
+003500950105     C           VSEL5     ANDEQ*BLANKS
+003600900514     C                     SETON                     50
+003700900511     C                     GOTO INIZIO
+003800900511     C                     END
+003900900511     C** SCELTA LISTA 1
+004000941024     C           VSEL1     IFEQ '1'
+004100900511     C** CODICI MITTENTE DAL-AL DISCORDANTI
+004200900511     C           VSCMD     IFGT VSCMA
+004300900514     C                     SETON                     51
+004400900511     C                     GOTO INIZIO
+004500950105     C                     END
+004600950105     C                     END
+004700950105     C** SCELTA LISTA 2
+004800950105     C           VSEL2     IFEQ '1'
+004900950105     C** CODICI LUOGO DEP.MERCE DAL-AL DISCORDANTI
+005000950105     C           VCCRD     IFGT VCCRA
+005100950105     C                     SETON                     52
+005200950105     C                     GOTO INIZIO
+005300950105     C                     END
+005400950105     C                     END
+005500950105     C** SCELTA LISTA 4
+005600950105     C           VSEL4     IFEQ '1'
+005700950105     C** CODICI LUOGO DEP.MERCE DAL-AL DISCORDANTI
+005800950105     C           VCCRD4    IFGT VCCRA4
+005900950105     C                     SETON                     53
+006000950105     C                     GOTO INIZIO
+006100950105     C                     END
+006200950105     C** DATA DAL
+006300950105     C           VDRD      IFEQ 0
+006400950105     C                     SETON                     54
+006500950105     C                     GOTO INIZIO
+006600950105     C                     ELSE
+006700950105     C                     Z-ADDVDRD      G02DAT           DATA
+006800950105     C                     Z-ADD0         G02INV
+006900950105     C                     MOVEL' '       G02ERR
+007000950105     C                     CALL 'XSRDA8'
+007100950105     C                     PARM           WLBDA8
+007200950105     C           G02ERR    IFEQ '1'
+007300950105     C                     SETON                     54
+007400950105     C                     GOTO INIZIO
+007500950105     C                     END
+007600950105     C                     END
+007700950110     C                     Z-ADDG02INV    AMG4DD  80
+007800950105     C                     Z-ADDG02DAT    VDRD
+007900950105     C** DATA AL
+008000950105     C           VDRA      IFEQ 0
+008100950105     C                     SETON                     55
+008200950105     C                     GOTO INIZIO
+008300950105     C                     ELSE
+008400950105     C                     Z-ADDVDRA      G02DAT           DATA
+008500950105     C                     Z-ADD0         G02INV
+008600950105     C                     MOVEL' '       G02ERR
+008700950105     C                     CALL 'XSRDA8'
+008800950105     C                     PARM           WLBDA8
+008900950105     C           G02ERR    IFEQ '1'
+009000950105     C                     SETON                     55
+009100950105     C                     GOTO INIZIO
+009200950105     C                     END
+009300950105     C                     END
+009400950110     C                     Z-ADDG02INV    AMG4DA  80
+009500950105     C                     Z-ADDG02DAT    VDRA
+009600950105     C** DATE DAL-AL DISCORDANTI
+009700950110     C           AMG4DD    IFGT AMG4DA
+009800950105     C                     SETON                     57
+009900950105     C                     GOTO INIZIO
+010000950105     C                     END
+010100950105     C**N.GIORNI DIVERSO DA 0
+010200950105     C           VGG4      IFEQ 0
+010300950105     C                     SETON                     56
+010400950105     C                     GOTO INIZIO
+010500950105     C                     END
+010600950105     C                     END
+010700950105     C** SCELTA LISTA 5
+010800950105     C           VSEL5     IFEQ '1'
+010900950105     C** CODICI LUOGO DEP.MERCE DAL-AL DISCORDANTI
+011000950105     C           VCCRD5    IFGT VCCRA5
+011100950105     C                     SETON                     58
+011200950105     C                     GOTO INIZIO
+011300950105     C                     END
+011400950105     C** DATA DAL
+011500950105     C           VDRD1     IFEQ 0
+011600950105     C                     SETON                     59
+011700950105     C                     GOTO INIZIO
+011800950105     C                     ELSE
+011900950105     C                     Z-ADDVDRD1     G02DAT           DATA
+012000950105     C                     Z-ADD0         G02INV
+012100950105     C                     MOVEL' '       G02ERR
+012200950105     C                     CALL 'XSRDA8'
+012300950105     C                     PARM           WLBDA8
+012400950105     C           G02ERR    IFEQ '1'
+012500950105     C                     SETON                     59
+012600950105     C                     GOTO INIZIO
+012700950105     C                     END
+012800950105     C                     END
+012900950105     C                     Z-ADDG02DAT    VDRD1
+013000950110     C                     Z-ADDG02INV    AMG5DD  80
+013100950105     C** DATA AL
+013200950105     C           VDRA1     IFEQ 0
+013300950105     C                     SETON                     60
+013400950105     C                     GOTO INIZIO
+013500950105     C                     ELSE
+013600950105     C                     Z-ADDVDRA1     G02DAT           DATA
+013700950105     C                     Z-ADD0         G02INV
+013800950105     C                     MOVEL' '       G02ERR
+013900950105     C                     CALL 'XSRDA8'
+014000950105     C                     PARM           WLBDA8
+014100950105     C           G02ERR    IFEQ '1'
+014200950105     C                     SETON                     60
+014300950105     C                     GOTO INIZIO
+014400950105     C                     END
+014500950105     C                     END
+014600950105     C                     Z-ADDG02DAT    VDRA1
+014700950110     C                     Z-ADDG02INV    AMG5DA  80
+014800950105     C** DATE DAL-AL DISCORDANTI
+014900950110     C           AMG5DD    IFGT AMG5DA
+015000950105     C                     SETON                     62
+015100950105     C                     GOTO INIZIO
+015200950105     C                     END
+015300950105     C**N.GIORNI DIVERSO DA 0
+015400950105     C           VGG5      IFEQ 0
+015500950105     C                     SETON                     61
+015600950105     C                     GOTO INIZIO
+015700950105     C                     END
+015800950105     C                     END
+015900950105     C** SE NON HO SCELTO ALCUNA LISTA TORNO AD INIZIO PGM
+016000950105     C  NKF                GOTO INIZIO
+016100950105     C*----------------------------------------------------*
+016200950105     C**  LISTA 1
+016300950105     C           VSEL1     IFEQ '1'
+016400950105     C                     CLEARFNLG40
+016500950105     C                     MOVELVSEL1     D40SC1
+016600950105     C                     Z-ADDVSCMD     D40MD1
+016700950105     C                     Z-ADDVSCMA     D40MA1
+016800950105     C                     Z-ADDVGG1      D40GG1
+016900950105     C                     MOVELFNLG40    KPJBU
+017000950105     C                     MOVEL'LG41'    KCOAZ
+017100950105     C           KNMUS     IFNE *ALL'1'
+017200950105     C                     CALL 'BCH10'
+017300950105     C                     PARM           KPJBA
+017400950105     C                     ELSE
+017500950105     C                     CALL 'FNLG41R'
+017600950105     C                     PARM           KPJBA
+017700950105     C                     END
+017800950105     C                     END
+017900950105     C*----------------------------------------------------*
+018000950105     C**  LISTA 2
+018100950105     C           VSEL2     IFEQ '1'
+018200950105     C                     CLEARFNLG40
+018300950105     C                     MOVELVSEL2     D40SC2
+018400950105     C                     Z-ADDVCCRD     D40FD2
+018500950105     C                     Z-ADDVCCRA     D40FA2
+018600950105     C                     Z-ADDVGG2      D40GG2
+018700950105     C                     MOVELFNLG40    KPJBU
+018800950105     C                     MOVEL'LG41'    KCOAZ
+018900950105     C           KNMUS     IFNE *ALL'1'
+019000950105     C                     CALL 'BCH10'
+019100950105     C                     PARM           KPJBA
+019200950105     C                     ELSE
+019300950105     C                     CALL 'FNLG41R'
+019400950105     C                     PARM           KPJBA
+019500950105     C                     END
+019600950105     C                     END
+019700950105     C*----------------------------------------------------*
+019800950105     C**  LISTA 3
+019900950105     C           VSEL3     IFEQ '1'
+020000950105     C                     CLEARFNLG40
+020100950105     C                     MOVELVSEL3     D40SC3
+020200950105     C                     MOVELFNLG40    KPJBU
+020300950105     C                     MOVEL'LG41'    KCOAZ
+020400950105     C                     MOVELFNLG40    KPJBU
+020500950105     C           KNMUS     IFNE *ALL'1'
+020600950105     C                     CALL 'BCH10'
+020700950105     C                     PARM           KPJBA
+020800950105     C                     ELSE
+020900941024     C                     CALL 'FNLG41R'
+021000900511     C                     PARM           KPJBA
+021100900511     C                     END
+021200900511     C                     END
+021300921013     C**------------------------------------------------------------
+021400950105     C**  LISTA 4
+021500950105     C           VSEL4     IFEQ '1'
+021600950105     C                     CLEARFNLG40
+021700950105     C                     MOVELVSEL4     D40SC4
+021800950105     C                     Z-ADDVCCRD4    D40FD4
+021900950105     C                     Z-ADDVCCRA4    D40FA4
+022000950110     C                     Z-ADDAMG4DD    D40DD4
+022100950110     C                     Z-ADDAMG4DA    D40DA4
+022200950105     C                     Z-ADDVGG4      D40GG4
+022300950105     C                     MOVELFNLG40    KPJBU
+022400941024     C                     MOVEL'LG41'    KCOAZ
+022500921013     C           KNMUS     IFNE *ALL'1'
+022600921013     C                     CALL 'BCH10'
+022700921013     C                     PARM           KPJBA
+022800921013     C                     ELSE
+022900950105     C                     CALL 'FNLG41R'
+023000921013     C                     PARM           KPJBA
+023100921013     C                     END
+023200921013     C                     END
+023300950105     C**------------------------------------------------------------
+023400950105     C**  LISTA 5
+023500950105     C           VSEL5     IFEQ '1'
+023600950105     C                     CLEARFNLG40
+023700950105     C                     MOVELVSEL5     D40SC5
+023800950105     C                     Z-ADDVCCRD5    D40FD5
+023900950105     C                     Z-ADDVCCRA5    D40FA5
+024000950110     C                     Z-ADDAMG5DD    D40DD5
+024100950110     C                     Z-ADDAMG5DA    D40DA5
+024200950105     C                     Z-ADDVGG5      D40GG5
+024300950105     C                     MOVELFNLG40    KPJBU
+024400950111     C                     MOVEL'LG41'    KCOAZ
+024500921013     C           KNMUS     IFNE *ALL'1'
+024600921013     C                     CALL 'BCH10'
+024700921013     C                     PARM           KPJBA
+024800921013     C                     ELSE
+024900941024     C                     CALL 'FNLG41R'
+025000921013     C                     PARM           KPJBA
+025100921013     C                     END
+025200921013     C                     END
+025300921013      *------------------------------------------------------------
+025400000000     C                     GOTO CICLO
+025500000000     C           FINE      TAG
+025600000000     C                     SETON                     LR
+025700900511     C*---------------------------------------------------------------*
+025800900511     C*   P U L V I D                                                 *
+025900900511     C*---------------------------------------------------------------*
+026000900511     C           PULVID    BEGSR
+026100950105     C*
+026200900511     C                     MOVEL*BLANKS   VSEL1
+026300900511     C                     Z-ADD0         VSCMD
+026400900511     C                     MOVEL*ALL'9'   VSCMA
+026500900511     C                     Z-ADD60        VGG1
+026600900511     C                     MOVEL*BLANKS   VSEL2
+026700900511     C                     Z-ADD1         VCCRD
+026800900511     C                     MOVEL*ALL'9'   VCCRA
+026900900511     C                     Z-ADD15        VGG2
+027000900511     C                     MOVEL*BLANKS   VSEL3
+027100900511     C                     MOVEL*BLANKS   VSEL4
+027200900511     C                     Z-ADD1         VCCRD4
+027300900511     C                     MOVEL*ALL'9'   VCCRA4
+027400900511     C                     Z-ADD0         VDRD
+027500900511     C                     Z-ADD0         VDRA
+027600900511     C                     Z-ADD7         VGG4
+027700921013     C                     MOVEL*BLANKS   VSEL5
+027800921013     C                     Z-ADD1         VCCRD5
+027900921013     C                     MOVEL*ALL'9'   VCCRA5
+028000921013     C                     Z-ADD0         VDRD1
+028100921013     C                     Z-ADD0         VDRA1
+028200921013     C                     Z-ADD1         VGG5
+028300950105     C                     CLEARFNLG40
+028400900511     C*
+028500900511     C                     ENDSR
+028600941024     C*---------------------------------------------------------------*
+028700941024     C*  OPERAZIONI INIZIALI                                          *
+028800941024     C*---------------------------------------------------------------*
+028900941024     C           *INZSR    BEGSR
+029000950105     C*
+029100941024     C           *ENTRY    PLIST
+029200941024     C                     PARM           KPJBA
+029300941024     C                     Z-ADD1         CODUT
+029400941024     C                     CALL 'XPARUT'
+029500941024     C                     PARM           UTEDSE
+029600941024     C           CODUT     CABEQ-1        FINE
+029700941024     C                     MOVELRAGUT     RSUT   20
+029800941024     C** TABEL
+029900941024     C           KTAB      KLIST
+030000941024     C                     KFLD           CODUT
+030100941024     C                     KFLD           COD     2
+030200941024     C                     KFLD           KEY     8
+030300941024     C** RICERCO SULLA TABELLA I GG DA PROPORRE A VIDEO
+030400941024     C                     CLEARDS2G
+030500941024     C                     MOVEL'2G'      COD
+030600941024     C                     MOVEL*BLANKS   KEY
+030700941024     C                     MOVEL1         KEY
+030800941024     C           KTAB      CHAINTABEL                70
+030900941024     C  N70                MOVELTBLUNI    DS2G
+031000941024     C*
+031100941024     C                     ENDSR

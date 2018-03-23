@@ -1,0 +1,3 @@
+000100091027     D ChkCapLocalitaLang...
+000200091027     D                 PR                  EXTPGM('TISI95R1')
+000300091027     D  tisi95r1Ds                         LIKEDS(tisi95r1Ds)

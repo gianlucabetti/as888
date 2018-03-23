@@ -1,0 +1,33 @@
+000100141111/* per compilare questo pgm bisogna creare il file QTEMP/WFLPGMTMP mediante: */
+000200140819/*           DSPOBJD    OBJ(&LIB/*ALL) OBJTYPE(*PGM) +                      */
+000300141113/*                        OUTPUT(*OUTFILE) OUTFILE(QTEMP/WFLPGMTMP)               */
+000400140819/* dando una libreria qualunque (non interessano i dati ma la struttura  */
+000500140819/* e poi cancellare il file */
+000600141113             PGM        PARM(&LIB &CLR &ESITO)
+000700140819             DCLF       FILE(WFLPGMTMP)
+000800140819             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000900140819             DCL        VAR(&CLR) TYPE(*CHAR) LEN(1)
+001000140819             DCL        VAR(&RCVVAR) TYPE(*CHAR) LEN(500)
+001100140819             DCL        VAR(&ESITO) TYPE(*DEC) LEN(2 0)
+001200140819             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+001300141113             DCL        VAR(&CRTUSER) TYPE(*CHAR) LEN(10)
+001400140819             DCL        VAR(&ERRCODE) TYPE(*CHAR) LEN(8)
+001500140819/* pulisco il file di arrivo se richiesto */
+001600140819             IF         COND(&CLR = 'S') THEN(CLRPFM FILE(WFACTGR0F))
+001700140819/* estraggo la lista dei pgm della libreria */
+001800140819             DSPOBJD    OBJ(&LIB/*ALL) OBJTYPE(*PGM) +
+001900141113                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/WFLPGMTMP)
+002000140819 RCVF:       RCVF       RCDFMT(QLIDOBJD)
+002100140819             MONMSG     MSGID(CPF0000) EXEC(DO)
+002200140819/* non c'è un esito particolare perché dà errore anche a fine file */
+002300140819             GOTO       CMDLBL(FINE)
+002400140819             ENDDO
+002500140819             CHGVAR     VAR(&PGM) VALUE(&ODOBNM)
+002600141111             CALL       PGM(UBACTGPMC) PARM(&PGM &LIB +
+002700140819                          &RCVVAR &ERRCODE)
+002800141113/* recupero il profilo creatore */
+002900141113             RTVOBJD    OBJ(&LIB/&PGM) OBJTYPE(*PGM) CRTUSER(&CRTUSER)
+003000141113/* scrivo il rcd del file finale */
+003100141113             CALL       PGM(UBACTGPMR2) PARM(&RCVVAR &CRTUSER &ERRCODE)
+003200140819             GOTO       CMDLBL(RCVF)
+003300140819FINE:        ENDPGM

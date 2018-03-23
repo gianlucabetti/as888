@@ -1,0 +1,440 @@
+000100891030     H            Y                                                       CN0500
+000200891030     F*----------------------* USO DEGLI INDICATORI *----------------*
+000300931209     F*  KL        RITORNO                                           *
+000400940928     F*  KC        FINE LAVORO                                       *
+000500891030     F*--------------------------------------------------------------*
+000600960115     FTRTB73D CF  E                    WORKSTN
+000700960115     F                                        NRR   KSFILE TB73S02
+000800940418     F*----------
+000900940928     FTABEL00FIF  E           K        DISK
+001000940418     E*--------------------------------------------------------------*
+001100940418     E*   SCHIERE                                                    *
+001200940701     E*--------------------------------------------------------------*
+001300960115     E                    ERR     1   1 70               Errori file video
+001400940928     E                    COST    1   1 16               Costanti visual.
+001500960115     E                    CODP       30  2               cod.part.varie7U
+001600960115     E                    C7S       100  2               cod.part.varie7S
+001700960115     E                    D7S       100 89               partic.varie7S
+001800940928     I*--------------------------------------------------------------*
+001900940928     I*  DS                                                          *
+002000940928     I*--------------------------------------------------------------*
+002100960115     IDSTB73    E DSDS7PQRS
+002200960115     IDS7S      E DS
+002300900608      *
+002400891030     IKPJBA     E DS
+002500911118      *
+002600971210     ITRUL12    E DSTRUL12DS
+002700911118     IUTEDSE    E DSUTEDSE0F
+002800960108      *  Codice x posizionamento su tabella 7V
+002900960108     I            DS
+003000960108     I                                        1   1 WTPPAR
+003100960108     I                                        2   3 WCDPAR
+003200960109     I                                        4   4 WTPELE
+003300960109     I                                        1   4 WKEY01
+003400960109     I                                        5   80WPROGG
+003500960110     I                                        1   8 WKEY02
+003600960109      *  SComposizione KEY di TABEL x 7V
+003700960109     I            DS
+003800960109     I                                        1   4 WSVKEY
+003900960109     I                                        1   8 TBLKEY
+004000940228      *
+004100940228     I           SDS
+004200940927     I                                        1  10 V1CPGM
+004300931209     C*--------------------------------------------------------------*
+004400931209     C*    C I C L O    P R I N C I P A L E                          *
+004500931209     C*--------------------------------------------------------------*
+004600931209     C*  Loop gestione varie videate fino a rich. fine elaboraz.
+004700940927     C           WFINE     DOWNE'S'
+004800940927     C*
+004900940928     C           WTPVID    CASEQ'1'       GESD01           Prima videata
+005000940928     C           WTPVID    CASEQ'2'       GESD02           Subfile Interr.
+005100940928     C           WTPVID    CASEQ'3'       GESD03           Subfile Vuoto
+005200931209     C                     END
+005300931209     C*
+005400931209     C                     END
+005500931209     C* Fine programma
+005600931209     C           FINE      TAG
+005700960115     C                     MOVELDSTB73    KPJBU
+005800931209     C                     SETON                     LR
+005900940928     C*---------------------------------------------------*
+006000940928     C*  GESD01: Gestione prima videata                   *
+006100940928     C*---------------------------------------------------*
+006200940928     C           GESD01    BEGSR
+006300940928     C*---------------------------------------------------*
+006400931209     C*  Emissione videata
+006500940929     C                     MOVEL*BLANKS   V1DFUN
+006600960115     C                     WRITETB73T01
+006700960115     C                     EXFMTTB73D01
+006800940928     C                     SETOF                     4028
+006900940418     C                     MOVEL*BLANKS   $MSG
+007000940928     C*---------------------------------------------------*
+007100931209     C*  Fine elaborazione
+007200931209     C           *INKC     IFEQ '1'
+007300940929     C                     MOVEL'S'       WFINE
+007400931209     C                     GOTO FINVD1
+007500931209     C                     END
+007600940928     C*---------------------------------------------------*
+007700940928     C*   Se richiesta ricerca richiamo subfile
+007800940928     C           '?'       SCAN V1CCOD                   32
+007900940928     C           *IN32     IFEQ '1'
+008000940929     C                     EXSR INZ02
+008100940929     C                     GOTO FINVD1
+008200940928     C                     END
+008300940928     C*---------------------------------------------------*
+008400940928     C*   Se immesso codice eseguo caricamento dati
+008500940928     C           V1CCOD    IFNE *BLANKS
+008600940929     C                     MOVELV1CCOD    DS7COD
+008700940929     C                     MOVEL'1'       DS7OPZ
+008800960115     C                     MOVELDSTB73    KPJBU
+008900960115     C                     CALL 'TRTB73R0'
+009000960110     C                     PARM           KPJBA
+009100960115     C                     MOVELKPJBU     DSTB73
+009200940929     C           DS7F03    IFEQ '1'
+009300940929     C                     MOVEL'S'       WFINE
+009400940929     C                     ELSE
+009500960115     C                     EXSR CAR7S
+009600940929     C                     EXSR INZ01
+009700940929     C                     END
+009800940928     C                     ELSE
+009900940928     C                     SETON                     2840
+010000940928     C                     MOVELERR,1     $MSG
+010100940928     C                     END
+010200931209     C*--------------------------------------------------------------*
+010300940928     C           FINVD1    ENDSR
+010400940928     C*--------------------------------------------------------------*
+010500940928     C*  GESD02: Gestione prima videata                              *
+010600940928     C*--------------------------------------------------------------*
+010700940928     C           GESD02    BEGSR
+010800940928     C*----------------------------------------------------*
+010900940928     C*  Emissione videata
+011000940929     C  N28                Z-ADD1         DSPNRR
+011100940928     C                     SETON                     20
+011200960115     C                     WRITETB73Z02
+011300960115     C                     EXFMTTB73C02
+011400940928     C                     SETOF                     2840
+011500940928     C                     MOVEL*BLANKS   $MSG
+011600940928     C*----------------------------------------------------*
+011700940928     C*  Fine elaborazione
+011800940928     C           *INKC     IFEQ '1'
+011900940929     C                     MOVEL'S'       WFINE
+012000940929     C                     MOVEL'1'       DS7F03
+012100940928     C                     GOTO FINVD2
+012200940928     C                     END
+012300940928     C*----------------------------------------------------*
+012400940928     C*  Ritorno prima videata
+012500960112     C           *INKL     IFEQ '1'
+012600960115     C           DS7RIC    IFEQ ' '
+012700960112     C                     EXSR INZ01
+012800960112     C                     ELSE
+012900960112     C                     MOVEL'S'       WFINE
+013000960112     C                     END
+013100940928     C                     GOTO FINVD2
+013200940928     C                     END
+013300940928     C*----------------------------------------------------*
+013400940928     C*  controlli
+013500940928     C                     EXSR CTR02
+013600940929     C*----------------------------------------------------*
+013700940928     C           FINVD2    ENDSR
+013800940928     C*----------------------------------------------------*
+013900940928     C*  GESD03: Gestione videata subfile vuoto            *
+014000940928     C*----------------------------------------------------*
+014100940928     C           GESD03    BEGSR
+014200940928     C*----------------------------------------------------*
+014300940928     C*  Emissione videata
+014400940929     C                     SETOF                     20
+014500960115     C                     WRITETB73D02
+014600960115     C                     EXFMTTB73C02
+014700940928     C                     SETOF                     2840
+014800940928     C*----------------------------------------------------*
+014900940928     C*  Fine elaborazione
+015000940928     C           *INKC     IFEQ '1'
+015100940929     C                     MOVEL'1'       DS7F03
+015200940929     C                     MOVEL'S'       WFINE
+015300940928     C                     GOTO FINVD3
+015400940928     C                     END
+015500940928     C*----------------------------------------------------*
+015600960115     C           DS7RIC    IFEQ ' '
+015700940928     C                     EXSR INZ01
+015800940929     C                     ELSE
+015900940929     C                     MOVEL'S'       WFINE
+016000940929     C                     END
+016100940928     C*----------------------------------------------------*
+016200940928     C           FINVD3    ENDSR
+016300940928     C*----------------------------------------------------*
+016400940928     C*  INZ01   Gestione inizializzazione prima videata   *
+016500940928     C*----------------------------------------------------*
+016600940927     C           INZ01     BEGSR
+016700940419     C*  Inizializzo prima videata impostando rich. ricerca tabella
+016800940929     C                     MOVEL'1'       WTPVID
+016900940928     C                     MOVEL'? '      V1CCOD
+017000940419     C                     MOVEL*BLANKS   $MSG
+017100940928     C                     SETOF                     2840
+017200940419     C*
+017300940419     C                     ENDSR
+017400940928     C*----------------------------------------------------*
+017500940928     C*  INZ02 : Gestione inizializz. Seconda videata      *
+017600940928     C*----------------------------------------------------*
+017700940928     C           INZ02     BEGSR
+017800940701     C*----------------------------------------------------*
+017900940930     C                     SETOF                     28
+018000940418     C                     MOVEL*BLANKS   $MSG
+018100940928     C*----------------------------------------------------*
+018200940929     C           DS7GES    IFEQ 'V'
+018300940929     C                     MOVELCOST,1    V1DFUN
+018400940928     C                     ELSE
+018500940929     C                     MOVEL*BLANKS   V1DFUN
+018600940928     C                     END
+018700940927     C*----------------------------------------------------*
+018800940927     C*  Inizializzazione subfile
+018900940927     C                     SETOF                     2021
+019000960115     C                     WRITETB73C02
+019100940929     C                     Z-ADD0         NRR     40
+019200940927     C                     SETON                     21
+019300940927     C*----------------------------------------------------*
+019400940927     C*  Caricamento subfile
+019500960109     C                     Z-ADD1         X
+019600960109     C                     MOVEL'7V'      KCOD
+019700940929     C                     MOVEL*BLANKS   V2CSEL
+019800960109     C                     DO   Z         X
+019900960109      *  Costruisco chiave per posizionamento su tabel
+020000960115     C                     MOVEL'S'       WTPPAR
+020100960115     C                     MOVELC7S,X     WCDPAR
+020200960109     C                     MOVEL'V'       WTPELE
+020300960109     C                     Z-ADD0         WPROGG
+020400960110     C                     MOVELWKEY02    KKEY
+020500960109     C                     SETOF                     01
+020600960109     C           KTAB2     SETLLTABEL00F
+020700960109     C           KTAB1     READETABEL00F                 31
+020800960109     C           *IN31     IFEQ '0'
+020900960109     C           WSVKEY    ANDEQWKEY01
+021000960109     C*----------------------------------------------------*
+021100960109     C*  Se immesso codice cliente prima di caricare particol.
+021200960109     C*  controllo se il cliente è abilitato
+021300960109     C                     SETON                     32
+021400960115     C                     MOVELD7S,X     DS7S
+021500960109     C           DS7KSC    IFNE 0
+021600960115     C           §7SABC    ANDEQ'S'
+021700960115     C           C7S,X     LOKUPCODP                     32
+021800960109     C                     END
+021900960109     C*----------------------------------------------------*
+022000960109     C           *IN32     IFEQ '1'
+022100960115     C                     MOVELC7S,X     V2CCOD
+022200960115     C                     MOVEL§7SELI    V2CELI
+022300960115     C                     MOVEL§7SINS    V2CINS
+022400940927     C           *IN31     DOWEQ'0'
+022500960109     C           WSVKEY    ANDEQWKEY01
+022600960109     C           TBLUNI    IFNE *BLANKS
+022700960109     C                     MOVELTBLUNI    V2DCOD
+022800940928     C                     ADD  1         NRR
+022900960115     C                     WRITETB73S02
+023000960109     C                     END
+023100960109     C           KTAB1     READETABEL00F                 31
+023200960109     C                     SETON                     01
+023300960109     C                     END                             *IN31=0 DOW
+023400940928     C*----------------------------------------------------*
+023500960109     C                     END                             *in32=0 IF
+023600940418     C*----------------------------------------------------*
+023700960109     C                     END                             *in31=0 IF
+023800960109     C*----------------------------------------------------*
+023900960109     C                     END                             DO Z
+024000960109     C*----------------------------------------------------*
+024100940928     C*  Controllo se devo emettere subfile vuoto
+024200940928     C           NRR       IFEQ 0
+024300940928     C                     MOVEL'3'       WTPVID
+024400940928     C                     ELSE
+024500940929     C                     MOVEL'2'       WTPVID  1
+024600940928     C                     END
+024700940928     C*----------------------------------------------------*
+024800940928     C                     ENDSR
+024900940928     C*----------------------------------------------------*
+025000940928     C*  CTR02 : Gestione inizial. seconda videata         *
+025100940928     C*----------------------------------------------------*
+025200940928     C           CTR02     BEGSR
+025300940928     C*----------------------------------------------------*
+025400940929     C                     MOVEL'N'       WSELEZ  1
+025500960111     C                     SETOF                     01
+025600960115     C                     READCTB73S02                  31
+025700940928     C           *IN31     DOWEQ'0'
+025800940928     C           *IN28     ANDEQ'0'
+025900940928     C                     SETOF                     40
+026000940928     C           V2CSEL    IFEQ '5'
+026100960108     C                     MOVELV2CSEL    DS7OPZ
+026200960108     C                     MOVELV2CCOD    DS7COD
+026300960115     C                     MOVELDSTB73    KPJBU
+026400960109     C                     MOVEL'S'       WSELEZ
+026500960115     C                     CALL 'TRTB73R0'
+026600960108     C                     PARM           KPJBA
+026700960115     C                     MOVELKPJBU     DSTB73
+026800940929     C           DS7F03    IFEQ '1'
+026900940929     C                     MOVEL'S'       WFINE
+027000940929     C                     GOTO FINCT2
+027100940929     C                     END
+027200940928     C                     END
+027300960115     C                     EXSR CAR7S
+027400940928     C           V2CSEL    IFEQ '1'
+027500941107     C                     MOVELV2CSEL    DS7OPZ
+027600940929     C           DS7GES    IFEQ 'V'
+027700940930     C                     MOVELV2CCOD    DS7COD
+027800941107     C                     MOVELV2CELI    DS7ELI
+027900941107     C                     MOVELV2CINS    DS7INS
+028000940930     C                     MOVEL'S'       WFINE
+028100940928     C                     ELSE
+028200940929     C                     MOVELV2CCOD    DS7COD
+028300960115     C                     MOVELDSTB73    KPJBU
+028400960109     C                     MOVEL'S'       WSELEZ
+028500960115     C                     CALL 'TRTB73R0'
+028600960108     C                     PARM           KPJBA
+028700960115     C                     MOVELKPJBU     DSTB73
+028800940929     C           DS7F03    IFEQ '1'
+028900940929     C                     MOVEL'S'       WFINE
+029000940929     C                     GOTO FINCT2
+029100940929     C                     END
+029200960115     C                     EXSR CAR7S
+029300940928     C                     END
+029400940929     C                     END
+029500940928     C*  Aggiorno Sufile
+029600940928     C                     SETON                     22
+029700940928     C           *IN40     IFEQ '0'
+029800940929     C                     MOVEL' '       V2CSEL
+029900940928     C                     END
+030000960115     C                     UPDATTB73S02
+030100940928     C                     SETOF                     22
+030200960115     C  N40                READCTB73S02                  31
+030300940928     C                     END
+030400940928     C*
+030500940929     C           WSELEZ    IFEQ 'S'
+030600960115     C           DS7RIC    IFEQ ' '
+030700940929     C                     EXSR INZ01
+030800941003     C                     ELSE
+030900941107     C           DS7OPZ    IFNE '1'
+031000941104     C                     MOVEL*BLANKS   DS7COD
+031100940929     C                     END
+031200941104     C                     END
+031300941003     C                     END
+031400940929     C*
+031500940929     C           FINCT2    ENDSR
+031600960111     C*--------------------------------------------------------------*
+031700960115     C*  CAR7S:  Caricamento tabella 7S                              *
+031800960111     C*--------------------------------------------------------------*
+031900960115     C           CAR7S     BEGSR
+032000960111     C*
+032100960115     C                     MOVEL'7S'      KCOD
+032200960111     C                     Z-ADD0         X       30
+032300960115     C                     MOVEA*BLANKS   C7S
+032400960115     C                     MOVEA*BLANKS   D7S
+032500960111     C           KTAB1     CHAINTABEL00F             31
+032600960111     C           *IN31     DOWEQ'0'
+032700960111     C           TBLFLG    IFEQ ' '
+032800960111     C                     ADD  1         X
+032900960115     C                     MOVELTBLKEY    C7S,X
+033000960115     C                     MOVELTBLUNI    D7S,X
+033100960111     C                     END
+033200960111     C           KTAB1     READETABEL00F                 31
+033300960111     C                     END
+033400960111     C                     Z-ADDX         Z       30
+033500960111     C                     ENDSR
+033600931209     C*--------------------------------------------------------------*
+033700931209     C*  *INZSR: Operazioni iniziali                                 *
+033800931209     C*--------------------------------------------------------------*
+033900931209     C           *INZSR    BEGSR
+034000931209     C*
+034100931209     C           *ENTRY    PLIST
+034200931209     C                     PARM           KPJBA
+034300960115     C                     MOVELKPJBU     DSTB73
+034400960115     C           DSTB73    IFEQ *BLANKS
+034500960115     C                     CLEARDSTB73
+034600960112     C                     END
+034700931209     C*----------------------------------------------------*
+034800931209     C*  Richiamo XPARUT
+034900931209     C                     Z-ADD1         CODUT
+035000931209     C                     CALL 'XPARUT'
+035100931209     C                     PARM           UTEDSE
+035200931209     C           CODUT     CABEQ-1        FINE
+035300940927     C                     MOVELRAGUT     V1CRSU
+035400931209     C*----------------------------------------------------*
+035500931209     C* Definizione chiavi                                 *
+035600940927     C           KTAB1     KLIST                           *
+035700940927     C                     KFLD           KKUT             *
+035800940927     C                     KFLD           KCOD             *
+035900940928     C*
+036000940928     C           KTAB2     KLIST                           *
+036100940928     C                     KFLD           KKUT             *
+036200940928     C                     KFLD           KCOD             *
+036300940928     C                     KFLD           KKEY             *
+036400931209     C*----------------------------------------------------*
+036500931209     C* Definizione variabili                              *
+036600940927     C           *LIKE     DEFN TBLKUT    KKUT             *
+036700940927     C           *LIKE     DEFN TBLCOD    KCOD             *
+036800940928     C           *LIKE     DEFN TBLKEY    KKEY             *
+036900971210     C******************************************************
+037000971210     C* Richiamo pgm per controllo modificabilità tabella
+037100980225     C           DS7GES    IFEQ *BLANKS
+037200971210     C                     CLEARTRUL12
+037300971210     C                     MOVEL'L'       I12TLA
+037400971210     C                     MOVELKNSIF     I12NSI
+037500971210     C                     MOVEL'7S'      I12COD
+037600971210     C                     CALL 'TRUL12R'
+037700971210     C                     PARM           TRUL12
+037800971210     C           O12ERR    IFEQ '1'
+037900971210     C                     GOTO FINE
+038000971210     C                     END
+038100980225     C                     END
+038200940725     C*----------------------------------------------------*
+038300940927     C*  Inizializzazione variabili
+038400940928     C                     Z-ADD1         KKUT
+038500940927     C                     MOVEL'N'       WFINE   1
+038600940927     C                     MOVEL*BLANKS   V1DFUN
+038700940928     C                     SETOF                     90
+038800960111     C*----------------------------------------------------*
+038900960115     C*  carico tabella particolarità varie in schiera
+039000960115     C                     EXSR CAR7S
+039100960112     C*----------------------------------------------------*
+039200960112     C           DS7KSC    IFNE 0
+039300960112     C                     MOVEL'7U'      KCOD
+039400960112     C                     MOVELDS7KSC    KKEY
+039500960115     C                     MOVE 'S'       KKEY
+039600960112     C                     MOVEA*BLANKS   CODP
+039700960112     C           KTAB2     CHAINTABEL00F             31
+039800960112     C           *IN31     IFEQ '0'
+039900960112     C           TBLFLG    ANDEQ' '
+040000960112     C                     MOVEATBLUNI    CODP
+040100960112     C                     MOVELTBLUNI    DS7CDP
+040200960112     C                     END
+040300960112     C                     END
+040400940927     C*----------------------------------------------------*
+040500940928     C*  Se il programma non è richiamato inizializzo DS
+040600940928     C*  parametri ed emetto prima videata
+040700960115     C           DS7RIC    IFEQ ' '
+040800960115     C                     CLEARDSTB73
+040900940927     C                     EXSR INZ01
+041000940928     C*----------------------------------------------------*
+041100940927     C                     ELSE
+041200940928     C*----------------------------------------------------*
+041300940929     C           DS7GES    COMP 'V'                      90
+041400940929     C                     MOVEL' '       DS7F03
+041500940928     C*  Se il programma è richiamato e ho il codice particolarità
+041600940928     C*  impostato richiamo pgm. successivo
+041700940929     C           DS7COD    IFNE *BLANKS
+041800960115     C                     MOVELDSTB73    KPJBU
+041900960115     C                     CALL 'TRTB73R0'
+042000960108     C                     PARM           KPJBA
+042100960115     C                     MOVELKPJBU     DSTB73
+042200960115     C                     EXSR CAR7S
+042300940929     C                     MOVEL'S'       WFINE
+042400940928     C*----------------------------------------------------*
+042500940928     C* ... altrimenti controllo se ho impostato il codice cliente
+042600960115     C* e se si provvedo al caricamento delle particolarità varie
+042700940928     C* a cui è abilitato
+042800940928     C                     ELSE
+042900940928     C*----------------------------------------------------*
+043000940928     C*  ... emetto subfile selezione particolarità.
+043100940928     C                     EXSR INZ02
+043200940928     C                     END
+043300940928     C                     END
+043400940228     C*----------------------------------------------------*
+043500931209     C                     ENDSR
+043600931209     O*-----------------------------------------------------*
+043700940418**
+043800960115Immettere codice particolarità varie                                  01
+043900940419**
+044000940927INTERROGAZIONE

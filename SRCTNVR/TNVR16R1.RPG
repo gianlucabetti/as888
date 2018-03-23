@@ -1,0 +1,111 @@
+000100000517     FFILEDPD IF  E                    DISK
+000200000517     F            FILEDPD                           KRENAMEFNBLP
+000300000517     FAZORG01LIF  E           K        DISK
+000400000517     FFNBLP01LUF  E           K        DISK
+000500000517     FFLNUF02LUF  E           K        DISK                      A
+000600000517     F            FLNUF                             KRENAMEFLNUF2
+000700000517     E                    §11        11  1 0
+000800000517      * CALCOLO DEL CHCK DIGIT PER BARCODE DPD
+000900000517     I            DS
+001000000517     I                                        1   30DPDLNP
+001100000517     I                                        4   70DPDGMS
+001200000517     I                                        8  110DPDNDS
+001300000517     I                                        1  110§11
+001400000517     I                                       12  120DPDCHD
+001500000517     I                                        1  120DPDBRC
+001600000517     IOG143     E DS
+001700000517     IKPJBA     E DS
+001800000517      * DS PER FIEU22R - CREAZIONE EVENTI FISSI DPD
+001900000517     IDSEU22    E DSFIEU22DS
+002000000517     C           *ENTRY    PLIST
+002100000517     C                     PARM           KPJBA
+002200000517     C*
+002300000517     C                     READ FILEDPD                  31
+002400000517    1C           *IN31     DOWEQ*OFF
+002500000517     C           BLPLNP    CHAINAZORG01L             30
+002600000517     C  N30                MOVELORGDE3    OG143
+002700000517     C   30                CLEAROG143
+002800000517     C                     CLEARDPDBRC
+002900000517      *
+003000000517     C                     MOVE §OGDPT    DPDLNP
+003100000517      *
+003200000517     C                     MOVELBLPMGS    W0020
+003300000517     C                     MOVE W0020     DPDGMS
+003400000517     C                     MOVE BLPMGS    W0020
+003500000517     C                     MOVELW0020     DPDGMS
+003600000517      * Aggancio numeratore 190 per progressivo distinta
+003700000517     C                     CLEARNUFNUM
+003800000517     C                     EXSR DPDNUM
+003900000517     C                     Z-ADDNUFNUM    DPDNDS
+004000000517      * Calcolo CHECK DIGIT
+004100000517     C                     EXSR M1031
+004200000517     C*
+004300000517     C           KBLP      KLIST
+004400000517     C                     KFLD           BLPAAS
+004500000517     C                     KFLD           BLPLNP
+004600000517     C                     KFLD           BLPNRS
+004700000517     C                     KFLD           BLPNSP
+004800000517     C**
+004900000517     C           KBLP      CHAINFNBLP01L             31
+005000000517     C                     MOVELDPDBRC    BLPRMA
+005100000517     C                     UPDATFNBLP000
+005200000517     C                     READ FILEDPD                  31
+005300000517     C                     ENDDO
+005400000517     C**
+005500000517     C                     SETON                     LR
+005600000517      *
+005700000517      *--- NUMERO DISTINTA DPD ---------------------------------------*
+005800000517     C           DPDNUM    BEGSR
+005900000517      *
+006000000517     C                     Z-ADDBLPMGS    DATA6
+006100000517     C                     MOVE BLPAAS    W0020   20
+006200000517     C                     MOVELW0020     DATA6
+006300000517     C                     Z-ADD190       CNU
+006400000517     C*
+006500000517     C           KNUF3     KLIST
+006600000517     C                     KFLD           CNU     30
+006700000517     C                     KFLD           DATA6   60
+006800000517      *
+006900000517     C           KNUF3     CHAINFLNUF2               30
+007000000517      * SE NON TROVATO IL NUMERATORE PROVO A CREARLO
+007100000517     C           *IN30     IFEQ *ON
+007200000517     C                     CLEARFLNUF2
+007300000517     C                     Z-ADDCNU       NUFCNU
+007400000517     C                     Z-ADDDATA6     NUFDAT
+007500000517     C                     WRITEFLNUF2
+007600000517     C           KNUF3     CHAINFLNUF2               30
+007700000517     C                     ENDIF
+007800000517      *
+007900000517     C           *IN30     IFEQ *OFF
+008000000517     C                     ADD  1         NUFNUM
+008100000517     C                     UPDATFLNUF2
+008200000517     C                     ENDIF
+008300000517      *
+008400000517     C                     ENDSR
+008500000517      *
+008600000517      ** CALCOLA CHECK DIGIT -----------------------------
+008700000517     C           M1031     BEGSR
+008800000517      *
+008900000517     C                     MOVE *ZERO     §TT2    30
+009000000517     C                     CLEARW0030
+009100000517      *
+009200000517      * TOTALIZZO I VALORI, QUELLI NELLE POSIZIONI DISPARI PER 3
+009300000517     C                     DO   11        XX      20
+009400000517      *
+009500000517     C           XX        DIV  2         §CTR    30
+009600000517     C                     MVR            §RST    30 30
+009700000517      *
+009800000517     C           *IN30     IFEQ '1'
+009900000517     C           §11,XX    MULT 3         §CTR
+010000000517     C                     ELSE
+010100000517     C                     Z-ADD§11,XX    §CTR
+010200000517     C                     ENDIF
+010300000517      *
+010400000517     C                     ADD  §CTR      W0030   30
+010500000517     C                     ENDDO
+010600000517      *
+010700000517     C           W0030     ADD  9         §TT2
+010800000517     C                     MOVE 0         §TT2
+010900000517     C           §TT2      SUB  W0030     DPDCHD
+011000000517      *
+011100000517     C                     ENDSR

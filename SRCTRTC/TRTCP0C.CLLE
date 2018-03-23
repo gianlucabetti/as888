@@ -1,0 +1,50 @@
+000100070214/*----------------------------------------------------------------------------*/
+000200070214/*  CARICAMENTO SPUNTE DA impianto RPVP rilevatore pesi e volumi              */
+000300010713/* -------------------------------------------------------------------------- */
+000400000000/*                                                                            */
+000500030704/* INPUT --> P.O. CHE SPUNTA                                                  */
+000600030704/*           SISTEMA INFORMATIVO                                              */
+000700030704/*           FILE DELLE SPUNTE LETTE "GREZZE"     (FLTR5xxx)                  */
+000800170515/*           FILE DELLE SPUNTE LETTE NORMALIZZATE (OBSOLETO)                  */
+000900170515/*           FILE DELLE SPUNTE DA SCRIVERE        (OBSOLETO)                  */
+001000030716/*           TIPO FOGLIO VIAGGIO                                              */
+001100030716/*           NUMERO FOGLIO VIAGGIO                                            */
+001200000000/*                                                                            */
+001300030716/* I PARAMETRI NON DEVE INIZIARE CON UN NUMERO                                */
+001400030716/* (PER QUESTO LA FILIALE FILW VIENE PASSATA CON UNA P all'inizio)            */
+001500000000/* -------------------------------------------------------------------------- */
+001600170126             PGM        PARM(&FILW &SYF &FILGRE &FILLET &FILSCR &NPG &NFV)
+001700170126
+001800000000
+001900000000/* Dichiarazione variabili __________________________________________________ */
+002000030716             DCL        VAR(&FILW)   TYPE(*CHAR) LEN(4)    /* P.O. spunta */
+002100170126             DCL        VAR(&FIL)    TYPE(*CHAR) LEN(3)    /* FIL spunta */
+002200030716             DCL        VAR(&SYF)    TYPE(*CHAR) LEN(10)   /* S.S. */
+002300030716             DCL        VAR(&FILGRE) TYPE(*CHAR) LEN(10)   /* File da impianto "grezzo" */
+002400030716             DCL        VAR(&FILLET) TYPE(*CHAR) LEN(10)   /* File da impianto "normalizzato" */
+002500030716             DCL        VAR(&FILSCR) TYPE(*CHAR) LEN(10)   /* File spunte Bartolini */
+002600030716             DCL        VAR(&NPG)    TYPE(*CHAR) LEN(2)    /* Tipo foglio viaggio */
+002700030716             DCL        VAR(&NFV)    TYPE(*CHAR) LEN(7)    /* Numero foglio viaggio */
+002800030704
+002900021004             DCL        VAR(&L275)   TYPE(*CHAR) LEN(275)
+003000021004             DCL        VAR(&CMD)    TYPE(*CHAR) LEN(350)
+003100021004             DCL        VAR(&LUNG)   TYPE(*DEC)  LEN(15 5) VALUE(350)
+003200170126
+003300170126             CHGVAR     VAR(&FIL)    VALUE(%SST(&FILW 2 3))
+003400170126
+003500021004
+003600021004/* Reperisco la lista librerie CORRENTE _____________________________________ */
+003700021004             RTVJOBA    USRLIBL(&L275)
+003800000000
+003900021001/* Chiama il pgm di cambio sistema informativo ______________________________ */
+004000030704             CALL       PGM(GAITRAOBJ/TRUL07C) PARM(&SYF)
+004100170126
+004200170126/* Richiamo pgm per normalizzare il file ricevuto dall'impianto _____________ */
+004800170126             CALL       PGM(TRTCP0C2) +
+004900170126                        PARM(&FILW &SYF &FILGRE &NPG &NFV)
+005100021004
+005200021004/* REIMPOSTO LA LISTA LIBRERIE ORIGINALE ____________________________________ */
+005300030716             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &L275 *CAT ' )')
+005400021004             CALL       PGM(QCMDEXC) PARM(&CMD &LUNG)
+005500030716
+005600000000             ENDPGM

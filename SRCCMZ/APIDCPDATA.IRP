@@ -1,0 +1,78 @@
+000100920211                     ENTRY .ENTRY(*ENTRY) EXT ;
+000200920213                     DCL SPCPTR X01.P PARM ;
+000300920213                     DCL OL *ENTRY(X01.P) EXT PARM ;
+000400920213                     DCL DD X01.0 CHAR(20) BAS(X01.P) ;
+000500920213                     DCL DD X01.1 CHAR(10) DEF(X01.0) POS(1) ;
+000600920213                     DCL DD X01.2 CHAR(10) DEF(X01.0) POS(11) ;
+000700920213
+000800920213                    /*USERSPACE TEMPLATE*/ ;
+000900920213                    DCL SYSPTR Y001§  ;
+001000920213                    DCL DD USRSPCTMPL CHAR(34) AUTO ;
+001100920213                    DCL DD * CHAR(1) DEF(USRSPCTMPL) POS(1) INIT(X'19') ;
+001200920213                    DCL DD * CHAR(1) DEF(USRSPCTMPL) POS(2) INIT(X'34') ;
+001300920213                    DCL DD USRSPCNM CHAR(30) DEF(USRSPCTMPL) POS(3) ;
+001400920213                    DCL DD * CHAR(2) DEF(USRSPCTMPL) POS(33) INIT(X'0000') ;
+001500920213
+001600920213                    /*CONTEXT   TEMPLATE*/ ;
+001700920213                    DCL SYSPTR Y002§  ;
+001800920213                    DCL DD CTXTMPL CHAR(34) AUTO ;
+001900920213                    DCL DD * CHAR(1) DEF(CTXTMPL) POS(1) INIT(X'04') ;
+002000920213                    DCL DD * CHAR(1) DEF(CTXTMPL) POS(2) INIT(X'01') ;
+002100920213                    DCL DD CTXNM CHAR(30) DEF(CTXTMPL) POS(3) ;
+002200920213                    DCL DD * CHAR(2) DEF(CTXTMPL) POS(33) INIT(X'0000') ;
+002300920213
+002400920213                    /*RSLVSP TO CONTEXT  */ ;
+002500920213                    CPYBLAP CTXNM,X01.2,X'40' ;
+002600920213                    RSLVSP Y002§,CTXTMPL,*,* ;
+002700920213
+002800920213                    /*RSLVSP TO USERSPACE*/ ;
+002900920213                    CPYBLAP USRSPCNM,X01.1,X'40' ;
+003000920213                    RSLVSP Y001§,USRSPCTMPL,Y002§,* ;
+003100920214
+003200920214                     /*dcpdata template  */     ;
+003300920213                     DCL SPCPTR DCPTEMPL§ AUTO INIT(DCPTEMPL) ;
+003400920219                     DCL DD DCPTEMPL CHAR(64) AUTO BDRY(16) INIT((0064) X'00') ;
+003500920213                     DCL DD * CHAR(4) DEF(DCPTEMPL) POS(1) ;
+003600920213                     DCL DD RESALEN BIN(4) DEF(DCPTEMPL) POS(5) ;
+003700920213                     DCL DD ARESLEN BIN(4) DEF(DCPTEMPL) POS(9) ;
+003800920213                     DCL DD * CHAR(20) DEF(DCPTEMPL) POS(13) ;
+003900920219                     DCL SPCPTR SRCSPP§ DEF(DCPTEMPL) POS(33) ;
+004000920219                     DCL SPCPTR RCVSPP§ DEF(DCPTEMPL) POS(49) ;
+004100920220
+004200920220                     /*----------------------*/ ;
+004300920214                     DCL DD OFFSET BIN(4) AUTO INIT(0) ;
+004400920219                     /*----------------------*/ ;
+004500920323                     /*header dello userspace*/
+004600920323                     DCL DD HDRUSRSPC CHAR(46) BAS(RCVSPP§) ;
+004700920323                         /*nome file coi dati da compri*/ ;
+004800920323                     DCL DD * CHAR(10) DEF(HDRUSRSPC) POS(1) ;
+004900920323                         /*nome libr coi dati da compri*/ ;
+005000920323                     DCL DD * CHAR(10) DEF(HDRUSRSPC) POS(11) ;
+005100920323                         /*nome mbr  coi dati da compri*/ ;
+005200920323                     DCL DD * CHAR(10) DEF(HDRUSRSPC) POS(21) ;
+005300920323                         /*n° totale rcds nel file     */ ;
+005400920323                     DCL DD RCDTOT BIN(4) DEF(HDRUSRSPC) POS(31) ;
+005500920323                         /*len record                  */ ;
+005600920323                     DCL DD RCDLEN BIN(2) DEF(HDRUSRSPC) POS(35) ;
+005700920323                         /*len header                  */ ;
+005800920323                     DCL DD HDRLEN BIN(2) DEF(HDRUSRSPC) POS(37) ;
+005900920323                         /*len dati da comprimere      */ ;
+006000920323                     DCL DD UNCPRLEN BIN(4) DEF(HDRUSRSPC) POS(39)     ;
+006100920323                         /*len dati compressi          */ ;
+006200920323                     DCL DD CPRLEN BIN(4) DEF(HDRUSRSPC) POS(43) ;
+006300920323                     /*header del COMPRESSO  */
+006400920323                     DCL DD AAAA CHAR(10) BAS(SRCSPP§) ;
+006500920323                     DCL DD LENCPR BIN(4) DEF(AAAA) POS(6) ;
+006600920323/*                   SETSPPFP SRCSPP§,Y001§ ;       */
+006700920323                     SETSPPFP RCVSPP§,Y001§ ;
+006800920220                     BRK '1       ' ;
+006900920323/*                   ADDN OFFSET, CPRLEN, 5 ;           */
+007000920220                     BRK '2       ' ;
+007100920323                     CPYNV RESALEN, UNCPRLEN ;
+007200920323                     ADDSPP SRCSPP§, RCVSPP§, UNCPRLEN ;
+007300920323                     ADDSPP SRCSPP§, SRCSPP§, 1        ;
+007400920220                     BRK '3       ' ;
+007500920213
+007600920213                     DCPDATA DCPTEMPL§ ;
+007700920213
+007800920211                     PEND ;

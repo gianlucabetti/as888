@@ -1,0 +1,612 @@
+000100171107      */*PRM rstdsp(*yes) dfrwrt(*yes) decfmt(*job)
+000200171107      */*END
+000300031002      *** FIMS03D *-------------------------------------------------***
+000400031002      *   Gestione Piano di Smistamento per Picking                   *
+000500031002      ***-----------------------------------------------------------***
+000600031008     A                                      REF(FLTR900F)
+000700031002     A                                      DSPSIZ(24 80 *DS3)
+000800031002     A                                      CHGINPDFT(HI UL)
+000900031002     A                                      PRINT
+001000031002     A                                      CA03
+001100031002      *---------------------------------------------------------------*
+001200031002     A          R MS03T01
+001300031002     A                                      TEXT('Testata')
+001400031002     A            RSUT          20A  O  1  2
+001500031002     A                                  1 24'* PIANO SMISTAMENTO PER PICKING *'
+001600031002     A                                      DSPATR(RI)
+001700031002     A                                      DSPATR(UL)
+001800161207     A            V1TPGM    R        O  1 59REFFLD($PGM       CNDIZION)
+001900031002     A                                  1 70DATE(*YY)
+002000031002     A                                      EDTCDE(Y)
+002100161207     A            KNSIF     R        O  2  2REFFLD(KNSIF      KPJBA)
+002200031002     A                                   + 1USER
+002300031113     A  01N02                           2 31'* PIANO DI DEFAULT *'
+002400031010     A                                      DSPATR(RI)
+002500031010     A                                      DSPATR(UL)
+002600031113     A N01 02                           2 30'* PIANO GIORNALIERO *'
+002700031010     A                                      DSPATR(RI)
+002800031010     A                                      DSPATR(UL)
+002900031002     A                                  2 70TIME
+003000031002      *---------------------------------------------------------------*
+003100031002     A          R MS03D01
+003200031002     A                                      TEXT('Parametri')
+003300031009     A                                      OVERLAY
+003400031003     A  28        V1DMSG        78   M
+003500031002      *
+003600070530     A                                  4  2'Filiale gestione .....:'
+003700031008     A            V1CPOG    R     Y  B  4 26
+003800031008     A                                      REFFLD(TR9FGS)
+003900031006     A                                      EDTWRD('0   ')
+004000031006     A                                      CHECK(RZ)
+004100040702     A     39                               DSPATR(PR)
+004200031002     A  41                                  DSPATR(PC)
+004300031002     A            V1DPOG    R        O  4 38
+004400161207     A                                      REFFLD(ORGDES     AZORG00F)
+004500031002      *
+004600031002     A                                  5  2'Categoria foglio .....:'
+004700040415     A            V1CNPG    R     Y  B  5 26
+004800031008     A                                      REFFLD(TR9NPGA)
+004900031009     A                                      EDTCDE(Z)
+005000040415     A  42                                  DSPATR(PC)
+005100040415     ***A                                  5 38'(2-Arrivi, 6-Arrivi 2° liv.)'
+005200040408     A                                  5 38'(2-Arrivi)'
+005300031002      *
+005400031014     A                                  6  2'Numero F.V. .......(?):'
+005500031014     A            V1CNFV    R     A  B  6 26
+005600031008     A                                      REFFLD(TR9NFVA)
+005700031014     A                                      CHECK(RZ)
+005800031002     A  43                                  DSPATR(PC)
+005900040701      *
+006000040705     A        03                        8  2'Piano smistamento DPD :'
+006100040705     A        03  V1CDPD         1A  B  8 26
+006200070530     A                                      TEXT('S/N solo Fil. DPD')
+006300040701     A                                      VALUES(' ' 'S')
+006400040705     A  44                                  DSPATR(PC)
+006500040705     A        03                        8 38'(S=Si)'
+006600171027      *
+006700171027     A        05                       10  2'Tipo Piano Smistamento:'
+006800171027     A        05  V1CTPS         1A  B 10 26
+006900171027     A                                      TEXT('Tipo Piano Smistamen-
+007000171027     A                                      to: V=VDL, R=Rulliera')
+007100171027     A                                      VALUES('V' 'R')
+007200171027     A  45                                  DSPATR(PC)
+007300171027     A        05                       10 38'(V=VDL, R=Rulliera)'
+007400031007      *---------------------------------------------------------------*
+007500031007     A          R MS03W01
+007600031007     A                                      TEXT('Window con messaggio')
+007700031007     A                                      WINDOW(9 9 4 60 *NOMSGLIN)
+007800031007     A                                      USRRSTDSP
+007900031008     A                                      CF06
+008000031009     A                                      CA12
+008100031007     A                                      BLINK
+008200031007     A                                      OVERLAY
+008300031007      *
+008400031007     A            W1DMS1        60A  O  1  1
+008500031007     A            W1DMS2        60A  O  2  1
+008600031007     A            W1DMS3        60A  O  3  1
+008700031007      *
+008800031008     A            W1DTFA        60A  O  4  1
+008900031007     A                                      COLOR(BLU)
+009000031003      *---------------------------------------------------------------*
+009100031003     A          R MS03S01
+009200031003     A                                      TEXT('PIANO DI DEFAULT x -
+009300070530     A                                      Fil. senza VDL')
+009400031003     A                                      SFL
+009500031003     A  32                                  SFLNXTCHG
+009600031003      * Campi hidden
+009700161207     A            S1CNFV    R     A  H      REFFLD(FVVNFV     FNFVV00F)
+009800031022     A            S1DDFV    R    6   H      REFFLD(TR9DFV)
+009900180110     A            H1DMES    R    3   H
+010000180110     A                                      REFFLD(§APDTPM    DAPDFLR)
+010100180110     A                                      TEXT('"Mes" = Aut Messaggeria')
+010200031003      * Campi di i/o
+010300031010     A            S1CPEP    R   10   B  6  2
+010400031008     A                                      REFFLD(TR9PEP)
+010500031003     A  51                                  DSPATR(PC)
+010600171106     A            S1CDES    R   -5   B   + 1
+010700031008     A                                      REFFLD(TR9DES)
+010800031003     A  52                                  DSPATR(PC)
+010900171106     A            S1CBAI    R        B   + 1
+011000031008     A                                      REFFLD(TR9BAI)
+011100031003     A  53                                  DSPATR(PC)
+011200031021     A            S1CPDC    R   -3A  B   + 2
+011300031008     A                                      REFFLD(TR9PDC)
+011400031007     A                                      CHECK(RZ)
+011500031003     A  55                                  DSPATR(PC)
+011600171106     A            S1DPDC    R   31   O   + 1
+011700161207     A                                      REFFLD(APDRSC     FIAPD00F)
+011800180110     A*//         S1DMES    R    3   O   + 1
+011900180110     A*//                                   REFFLD(§APDTPM    DAPDFLR)
+012000180110     A*//                                   TEXT('"Mes" = Aut Messaggeria')
+012100180110     A*//    N04                            DSPATR(ND)
+012200180110     A*//  87 04                            DSPATR(RI)
+012300180110      *---------------------------------------------------------------*
+012400031003     A          R MS03C01
+012500031003     A                                      TEXT('SubFile control x S01')
+012600031003     A                                      SFLCTL(MS03S01)
+012700040518     A                                      SFLSIZ(0035)
+012800031003     A                                      SFLPAG(0017)
+012900031003      *
+013000031009     A                                      CF06
+013100031028     A                                      CF08
+013200031009     A                                      CA12
+013300031003      *
+013400031003     A                                      OVERLAY
+013500031003     A N30                                  SFLDSP
+013600050615     A    N31                               SFLDSPCTL
+013700031003     A  30 31                               SFLCLR
+013800050615     A        33                            SFLEND(*MORE)
+013900031003      *
+014000031007     A                                      SFLCSRRRN(&C01CSR)
+014100031007     A            C01RCD         4S 0H      SFLRCDNBR(CURSOR)
+014200031007     A            C01CSR         5S 0H
+014300031003      *
+014400031003     A  28        V1DMSG        78   M
+014500031007      *
+014600070530     A                                  3  2'Filiale gestione:'
+014700031007     A                                      COLOR(RED)
+014800031006     A            V1CPOG    R        O   + 1
+014900031008     A                                      REFFLD(TR9FGS)
+015000031006     A                                      EDTWRD('0   ')
+015100031007     A                                      COLOR(RED)
+015200031006     A            V1DPOG    R        O   + 1
+015300161207     A                                      REFFLD(ORGDES     AZORG00F)
+015400031007     A                                      COLOR(RED)
+015500031006      *
+015600180110     A        04                        3 77     'Mes'
+015700180110     A                                      DSPATR(HI)
+015800180110     A        04                        4  2'                                  -
+015900180110     A                                         Pos                             -
+016000180110     A                                            sag'
+016100180110     A                                      DSPATR(HI)
+016200180110     A        04                        5  2'Cod. Baia  Descrizione            -
+016300180110     A                                         taz. Autotrasportatore (?)      -
+016400180110     A                                            ger'
+016500180110     A                                      DSPATR(HI)
+016600180110     A                                      DSPATR(UL)
+016700180110     A       N04                        4  2'                                  -
+016800171106     A                                         Pos                             -
+016900031007     A                                               '
+017000031003     A                                      DSPATR(HI)
+017100180110     A       N04                        5  2'Cod. Baia  Descrizione            -
+017200171106     A                                         taz. Autotrasportatore (?)      -
+017300031010     A                                               '
+017400031003     A                                      DSPATR(HI)
+017500031003     A                                      DSPATR(UL)
+017600031003      *---------------------------------------------------------------*
+017700031003     A          R MS03S02
+017800031003     A                                      TEXT('PIANO DI DEFAULT x -
+017900070530     A                                      Fil. con VDL')
+018000031003     A                                      SFL
+018100031003     A  32                                  SFLNXTCHG
+018200031003      * Campi hidden
+018300161207     A            S2CNFV    R     A  H      REFFLD(FVVNFV     FNFVV00F)
+018400031106     A            S2DDFV    R    6   H      REFFLD(TR9DFV)
+018500031003      * Campi di i/o
+018600161207     A            S2CPEP         2Y 0B  6  3
+018700031003     A                                      TEXT('Baia di Uscita - VDL')
+018800031009     A                                      EDTCDE(Z)
+018900031003     A                                      CHECK(RB)
+019000031003     A  51                                  DSPATR(PC)
+019100161207     A            S2CDES    R   -5   B   + 2
+019200031008     A                                      REFFLD(TR9DES)
+019300031003     A  52                                  DSPATR(PC)
+019400161207     A            S2CBNL    R        B   + 2
+019500031008     A                                      REFFLD(TR9BNL)
+019600040304     A  57                                  DSPATR(PC)
+019700161207     A            S2CBAI    R        B   + 3
+019800040305     A                                      REFFLD(TR9BAI)
+019900040305     A  53                                  DSPATR(PC)
+020000161214     A            S2CZNC    R     A  B   + 2
+020100161207     A                                      REFFLD($ZNC       CNDIZION)
+020200161214     A*//                                   EDTCDE(Z)
+020300161215     A*//                                   CHECK(RZ)
+020400161207     A  58                                  DSPATR(PC)
+020500040305     A            S2CPDC    R   -3A  B   + 2
+020600031008     A                                      REFFLD(TR9PDC)
+020700031007     A                                      CHECK(RZ)
+020800031006     A  55                                  DSPATR(PC)
+020900050629     A            S2DPDC    R   24   O   + 1
+021000161207     A                                      REFFLD(APDRSC     FIAPD00F)
+021100050629     A            S2DMES    R    3   O   + 1
+021200161207     A                                      REFFLD(§APDTPM    DAPDFLR)
+021300050629     A                                      TEXT('"Mes" = Aut Messaggeria')
+021400050615     A       N04                            DSPATR(ND)
+021500050615     A     87 04                            DSPATR(RI)
+021600161207 Baia *                         Non  Pos  Zo                                sag
+021700161207 Usc. *escrizione              Letti taz. na  Autotrasportatore (?)         ger
+021800161207  __  *...+....1....+....2....+  S   A01  12  1234 *...+....1....+....2.... Mes
+021900031003      *---------------------------------------------------------------*
+022000031003     A          R MS03C02
+022100031003     A                                      TEXT('SubFile control x S02')
+022200031003     A                                      SFLCTL(MS03S02)
+022300040518     A                                      SFLSIZ(0035)
+022400031003     A                                      SFLPAG(0017)
+022500031003      *
+022600031009     A                                      CF06
+022700031028     A                                      CF08
+022800031009     A                                      CA12
+022900031003      *
+023000031003     A                                      OVERLAY
+023100031003     A N30                                  SFLDSP
+023200050615     A    N31                               SFLDSPCTL
+023300031003     A  30 31                               SFLCLR
+023400050615     A        33                            SFLEND(*MORE)
+023500031003      *
+023600031007     A                                      SFLCSRRRN(&C02CSR)
+023700031007     A            C02RCD         4S 0H      SFLRCDNBR(CURSOR)
+023800031007     A            C02CSR         5S 0H
+023900031003      *
+024000031003     A  28        V1DMSG        78   M
+024100031003      *
+024200070530     A                                  3  2'Filiale gestione:'
+024300031007     A                                      COLOR(RED)
+024400031006     A            V1CPOG    R        O   + 1
+024500031008     A                                      REFFLD(TR9FGS)
+024600031006     A                                      EDTWRD('0   ')
+024700031007     A                                      COLOR(RED)
+024800031006     A            V1DPOG    R        O   + 1
+024900161207     A                                      REFFLD(ORGDES     AZORG00F)
+025000031007     A                                      COLOR(RED)
+025100161207      *
+025200161207     A        04                        3 77     'Mes'
+025300050629     A                                      DSPATR(HI)
+025400161207     A        04                        4  2'Baia                           Non-
+025500161207     A                                        Pos  Zo                          -
+025600161207     A                                            sag'
+025700050629     A                                      DSPATR(HI)
+025800161207     A        04                        5  2'Usc. Descrizione              Lett-
+025900161207     A                                      i taz. na  Autotrasportatore (?)   -
+026000161207     A                                            ger'
+026100161207     A                                      DSPATR(HI)
+026200050629     A                                      DSPATR(UL)
+026300161207     A       N04                        4  2'Baia                           Non-
+026400161207     A                                        Pos  Zo                          -
+026500161207     A                                               '
+026600050615     A                                      DSPATR(HI)
+026700161207     A       N04                        5  2'Usc. Descrizione              Lett-
+026800161207     A                                      i taz. na  Autotrasportatore (?)   -
+026900161207     A                                               '
+027000050615     A                                      DSPATR(HI)
+027100050615     A                                      DSPATR(UL)
+027200161207      * - PRIMA:
+027300161207      *                                                                     Mes
+027400161207 Baia *i                           Non   Pos                                sag
+027500161207 Uscit*  Descrizione              Letti  taz. Autotrasportatore (?)         ger
+027600161207   __ *  *...+....1....+....2....+  S    A01  1234 *...+....1....+....2.... Mes
+027700161207      * - DOPO:
+027800161207      *                                                                     Mes
+027900161207 Baia *                         Non  Pos  Zo                                sag
+028000161207 Usc. *escrizione              Letti taz. na  Autotrasportatore (?)         ger
+028100161207  __  *...+....1....+....2....+  S   A01  12  1234 *...+....1....+....2.... Mes
+028200031003      *---------------------------------------------------------------*
+028300031003     A          R MS03S03
+028400031003     A                                      TEXT('PIANO GIORNALIERO x -
+028500070530     A                                      Fil. senza VDL')
+028600031003     A                                      SFL
+028700031003     A  32                                  SFLNXTCHG
+028800031003      * Campi hidden
+028900060113     A            H1CPRG    R        H      REFFLD(TR9PRG)
+029000031023     A            H1CBAI    R        H      REFFLD(TR9BAI)
+029100031014     A            H1CPDC    R        H      REFFLD(TR9PDC)
+029200161207     A            H1DPDC    R        H      REFFLD(APDRSC     FIAPD00F)
+029300180110     A            H1DMES    R    3   H
+029400180110     A                                      REFFLD(§APDTPM    DAPDFLR)
+029500180110     A                                      TEXT('"Mes" = 1a Dist.Messaggeria')
+029600180110     A            H3DMES    R    3   H
+029700180110     A                                      REFFLD(§APDTPM    DAPDFLR)
+029800180110     A                                      TEXT('"Mes" = 2a Dist.Messaggeria')
+029900180110      * Campi di i/o
+030000031010     A            S1CPEP    R   10   O  6  2
+030100031009     A                                      REFFLD(TR9PEP)
+030200031003     A  51                                  DSPATR(PC)
+030300031023     A            S1CBAI    R        B   + 1
+030400031008     A                                      REFFLD(TR9BAI)
+030500031003     A  53                                  DSPATR(PC)
+030600031023     A            S1CNFV    R     A  B   + 1
+030700161207     A                                      REFFLD(FVVNFV     FNFVV00F)
+030800031007     A                                      CHECK(RZ)
+030900180110     A*//- 87 04                            DSPATR(RI)
+031000031003     A  54                                  DSPATR(PC)
+031100031021     A            S1DFPP    R        O   + 1
+031200161207     A                                      REFFLD(FVVFPP     FNFVV00F)
+031300180110     A     87 04                            DSPATR(RI)
+031400180110     A     87 04                            COLOR(YLW)
+031500180110     A            S1DDFV    R    6   O   + 1
+031600031008     A                                      REFFLD(TR9DFV)
+031700031021     A                                      EDTWRD('  /  /  ')
+031800180110     A     87 04                            DSPATR(RI)
+031900180110     A     87 04                            COLOR(YLW)
+032000180110     A            S3CNFV    R     A  B   + 1
+032100161207     A                                      REFFLD(FVVNFV     FNFVV00F)
+032200031021     A                                      CHECK(RZ)
+032300180110     A*//- 88 04                            DSPATR(RI)
+032400180110     A  56                                  DSPATR(PC)
+032500031022     A            S3DFPP    R        O   + 1
+032600161207     A                                      REFFLD(FVVFPP     FNFVV00F)
+032700180110     A     88 04                            DSPATR(RI)
+032800180110     A     88 04                            COLOR(YLW)
+032900180110     A            S3DDFV    R    6   O   + 1
+033000031021     A                                      REFFLD(TR9DFV)
+033100031021     A                                      EDTWRD('  /  /  ')
+033200180110     A     88 04                            DSPATR(RI)
+033300180110     A     88 04                            COLOR(YLW)
+033400180110     A            S1CAST         1A  O   + 1
+033500031023     A                                      TEXT('"*" = Autotrasp. con più F.V.-
+033600031023     A                                       in carico')
+033700031027     A                                      DSPATR(HI)
+033800031021     A            S1CPDC    R   -3A  O   + 1
+033900031008     A                                      REFFLD(TR9PDC)
+034000040701     A     85                               DSPATR(RI)
+034100031003     A  55                                  DSPATR(PC)
+034200031022     A            S3DPDC    R   22   O   + 1
+034300161207     A                                      REFFLD(APDRSC     FIAPD00F)
+034400040701     A     85                               DSPATR(RI)
+034500031010      *
+034600171106     A            S1CDES    R   -5   O  7  7
+034700031010     A                                      REFFLD(TR9DES)
+034800031010     A  52                                  DSPATR(PC)
+034900171027     A            S1KDFT         8A  O   + 2
+035000031023     A                                      TEXT('Costante: "Default:"')
+035100031023     A            S1KBAD         4A  O   + 1
+035200031023     A                                      TEXT('Costante: "Baia"')
+035300031023     A            S1CBAD    R        O   + 1
+035400031023     A                                      REFFLD(TR9BAI)
+035500031023     A            S1KATD         7A  O   + 1
+035600031023     A                                      TEXT('Costante: "Autotr."')
+035700031024     A            S1CATD    R   -3A  O   + 1
+035800031014     A                                      REFFLD(TR9PDC)
+035900031023     A            S1DATD    R   15   O   + 1
+036000161207     A                                      REFFLD(APDRSC     FIAPD00F)
+036100031003      *---------------------------------------------------------------*
+036200031003     A          R MS03C03
+036300031003     A                                      TEXT('SubFile control x S03')
+036400031003     A                                      SFLCTL(MS03S03)
+036500040518     A                                      SFLSIZ(0033)
+036600031112     A                                      SFLPAG(0008)
+036700031010     A                                      SFLDROP(CF09)
+036800031010     A***                                   SFLFOLD(CF09)
+036900031003      *
+037000031003     A                                      CF06
+037100031111     A                                      CF07
+037200031028     A                                      CF08
+037300031009     A                                      CA12
+037400040315     A                                      CF16
+037500031003      *
+037600031003     A                                      OVERLAY
+037700031003     A N30                                  SFLDSP
+037800050615     A    N31                               SFLDSPCTL
+037900031003     A  30 31                               SFLCLR
+038000050615     A        33                            SFLEND(*MORE)
+038100031003      *
+038200031007     A                                      SFLCSRRRN(&C01CSR)
+038300031007     A            C01RCD         4S 0H      SFLRCDNBR(CURSOR)
+038400031007     A            C01CSR         5S 0H
+038500031003      *
+038600031003     A  28        V1DMSG        78   M
+038700031003      *
+038800070530     A                                  3  2'Filiale gestione:'
+038900031007     A                                      COLOR(RED)
+039000031006     A            V1CPOG    R        O   + 1
+039100031008     A                                      REFFLD(TR9FGS)
+039200031006     A                                      EDTWRD('0   ')
+039300031007     A                                      COLOR(RED)
+039400031006     A            V1DPOG    R        O   + 1
+039500161207     A                                      REFFLD(ORGDES     AZORG00F)
+039600031007     A                                      COLOR(RED)
+039700031014     A                                   + 5'F.V.:'
+039800031007     A                                      COLOR(RED)
+039900031006     A            V1CNPG    R        O   + 1
+040000031008     A                                      REFFLD(TR9NPGA)
+040100031007     A                                      COLOR(RED)
+040200031014     A            V1DNFV    R        O   + 1
+040300031008     A                                      REFFLD(TR9NFVA)
+040400031014     A                                      EDTCDE(Z)
+040500031007     A                                      COLOR(RED)
+040600031014     A                                   + 2'del'
+040700031010     A                                      COLOR(RED)
+040800031010     A            V1DDFV    R        O   + 1
+040900031010     A                                      REFFLD(TR9DFV)
+041000031010     A                                      EDTCDE(Y)
+041100031010     A                                      COLOR(RED)
+041200031006      *
+041300180110     A                                  4  2'           Pos *------- D I S T I -
+041400180110     A                                      N T E -------*                     -
+041500031007     A                                               '
+041600031003     A                                      DSPATR(HI)
+041700031030     A                                  5  2'Cod. Baia  taz.  Numero (?), Matt.-
+041800031023     A                                      /Pom. e Data     Autotrasportatore -
+041900031023     A                                               '
+042000031003     A                                      DSPATR(HI)
+042100031003     A                                      DSPATR(UL)
+042200031003      *---------------------------------------------------------------*
+042300031003     A          R MS03S04
+042400031003     A                                      TEXT('PIANO GIORNALIERO x -
+042500070530     A                                      Fil. con VDL')
+042600031003     A                                      SFL
+042700031003     A  32                                  SFLNXTCHG
+042800031003      * Campi hidden
+042900060113     A            H2CPRG    R        H      REFFLD(TR9PRG)
+043000040304     A            H2CBAI    R        H      REFFLD(TR9BAI)
+043100161214     A            H2CZNC         2A  H      TEXT('ZONA (O MEGLIO TURNO)')
+043200031014     A            H2CPDC    R        H      REFFLD(TR9PDC)
+043300161207     A            H2DPDC    R        H      REFFLD(APDRSC     FIAPD00F)
+043400040423     A            S2CBNL    R        H      REFFLD(TR9BNL)
+043500031003      * Campi di i/o
+043600180110Baia P*s Zo *----------- D I S T I N T E -----------*   Autotrasportatore     |
+043700161207Usc. t*z na Numero (?), Messaggerie, Matt./Pom., Data   xxxx Descrizione      |
+043800161207 13  C*3 12 67885 Mes M 10/11/16 _____ Mes P gg/mm/aa * 1043 BAHRIN VITALIE   |
+043900161207     A            S2CPEP         2Y 0O  6  3
+044000031003     A                                      TEXT('Baia di Uscita - VDL')
+044100031009     A                                      EDTCDE(Z)
+044200031003     A  51                                  DSPATR(PC)
+044300161207     A            S2CBAI    R        B   + 2
+044400040304     A                                      REFFLD(TR9BAI)
+044500040702     A     80                               DSPATR(PR)
+044600040304     A  53                                  DSPATR(PC)
+044700161214     A            S2CZNC    R     A  B   + 1
+044800161207     A                                      REFFLD($ZNC       CNDIZION)
+044900161214     A*//                                   EDTCDE(Z)
+045000161215     A*//                                   CHECK(RZ)
+045100161207     A     80                               DSPATR(PR)
+045200161207     A  58                                  DSPATR(PC)
+045300161207     A            S2CNFV    R     A  B   + 1
+045400161207     A                                      REFFLD(FVVNFV     FNFVV00F)
+045500031003     A                                      CHECK(RZ)
+045600040309     A     80                               DSPATR(PR)
+045700031003     A  54                                  DSPATR(PC)
+045800050629     A            S2DMES    R    3   O   + 1
+045900161207     A                                      REFFLD(§FVVTPM    DFVVSPN)
+046000050629     A                                      TEXT('"Mes" = Distinta Messaggeria')
+046100050615     A       N04                            DSPATR(ND)
+046200050615     A     87 04                            DSPATR(RI)
+046300031027     A            S2DFPP    R        O   + 1
+046400161207     A                                      REFFLD(FVVFPP     FNFVV00F)
+046500031106     A            S2DDFV    R    6   O   + 1
+046600031008     A                                      REFFLD(TR9DFV)
+046700031106     A                                      EDTWRD('  /  /  ')
+046800031106     A            S4CNFV    R     A  B   + 1
+046900161207     A                                      REFFLD(FVVNFV     FNFVV00F)
+047000031106     A                                      CHECK(RZ)
+047100040309     A     80                               DSPATR(PR)
+047200031106     A  56                                  DSPATR(PC)
+047300050629     A            S4DMES    R    3   O   + 1
+047400161207     A                                      REFFLD(§FVVTPM    DFVVSPN)
+047500050629     A                                      TEXT('"Mes" = Distinta Messaggeria')
+047600050615     A       N04                            DSPATR(ND)
+047700050615     A     88 04                            DSPATR(RI)
+047800031106     A            S4DFPP    R        O   + 1
+047900161207     A                                      REFFLD(FVVFPP     FNFVV00F)
+048000031106     A            S4DDFV    R    6   O   + 1
+048100031106     A                                      REFFLD(TR9DFV)
+048200031106     A                                      EDTWRD('  /  /  ')
+048300031023     A            S2CAST         1A  O   + 1
+048400031023     A                                      TEXT('"*" = Autotrasp. con più F.V.-
+048500031023     A                                       in carico')
+048600031027     A                                      DSPATR(HI)
+048700050614     A            S2CPDC    R   -3A  O   + 1
+048800031008     A                                      REFFLD(TR9PDC)
+048900031003     A  55                                  DSPATR(PC)
+049000040312     A     85                               DSPATR(RI)
+049100050629     A            S4DPDC    R   17A  O   + 1
+049200161207     A                                      REFFLD(APDRSC     FIAPD00F)
+049300040315     A     80                               DSPATR(UL)
+049400040315     A     85                               DSPATR(RI)
+049500040423     A     86                               DSPATR(HI)
+049600031023      *
+049700040305     A            S2CDES    R   -5   O  7  2
+049800031023     A                                      REFFLD(TR9DES)
+049900031023     A  52                                  DSPATR(PC)
+050000040304     A            S2KDFT         8A  O   + 1
+050100031023     A                                      TEXT('Costante: "Default:"')
+050200040304     A            S2KBAD         4A  O   + 1
+050300040304     A                                      TEXT('Costante: "Baia"')
+050400040304     A            S2CBAD    R        O   + 1
+050500040304     A                                      REFFLD(TR9BAI)
+050600031023     A            S2KATD         7A  O   + 1
+050700031023     A                                      TEXT('Costante: "Autotr."')
+050800031024     A            S2CATD    R   -3A  O   + 1
+050900031023     A                                      REFFLD(TR9PDC)
+051000040309     A            S2DATD    R   21   O   + 1
+051100161207     A                                      REFFLD(APDRSC     FIAPD00F)
+051200031003      *---------------------------------------------------------------*
+051300031003     A          R MS03C04
+051400031003     A                                      TEXT('SubFile control x S04')
+051500031003     A                                      SFLCTL(MS03S04)
+051600040518     A                                      SFLSIZ(0033)
+051700031112     A                                      SFLPAG(0008)
+051800031010     A                                      SFLDROP(CF09)
+051900031010     A***                                   SFLFOLD(CF09)
+052000031003      *
+052100031003     A                                      CF06
+052200031111     A                                      CF07
+052300031028     A                                      CF08
+052400031009     A                                      CA12
+052500040315     A                                      CF16
+052600031003      *
+052700031003     A                                      OVERLAY
+052800031003     A N30                                  SFLDSP
+052900040423     A    N31                               SFLDSPCTL
+053000031003     A  30 31                               SFLCLR
+053100050615     A        33                            SFLEND(*MORE)
+053200031003      *
+053300031007     A                                      SFLCSRRRN(&C02CSR)
+053400031007     A            C02RCD         4S 0H      SFLRCDNBR(CURSOR)
+053500031007     A            C02CSR         5S 0H
+053600031003      *
+053700031003     A  28        V1DMSG        78   M
+053800031003      *
+053900070530     A                                  3  2'Filiale gestione:'
+054000031007     A                                      COLOR(RED)
+054100031006     A            V1CPOG    R        O   + 1
+054200031008     A                                      REFFLD(TR9FGS)
+054300031006     A                                      EDTWRD('0   ')
+054400031007     A                                      COLOR(RED)
+054500031006     A            V1DPOG    R        O   + 1
+054600161207     A                                      REFFLD(ORGDES     AZORG00F)
+054700031007     A                                      COLOR(RED)
+054800031014     A                                   + 5'F.V.:'
+054900031007     A                                      COLOR(RED)
+055000031006     A            V1CNPG    R        O   + 1
+055100031008     A                                      REFFLD(TR9NPGA)
+055200031007     A                                      COLOR(RED)
+055300031014     A            V1DNFV    R        O   + 1
+055400031008     A                                      REFFLD(TR9NFVA)
+055500031014     A                                      EDTCDE(Z)
+055600031007     A                                      COLOR(RED)
+055700031014     A                                   + 2'del'
+055800031010     A                                      COLOR(RED)
+055900031010     A            V1DDFV    R        O   + 1
+056000031010     A                                      REFFLD(TR9DFV)
+056100031010     A                                      EDTCDE(Y)
+056200031010     A                                      COLOR(RED)
+056300031006      *
+056400180110     A                                  4  2'Baia Pos Zo *----------- D I S T I-
+056500180110     A                                       N T E -----------*   Autotrasporta-
+056600050629     A                                      tore     '
+056700050615     A                                      DSPATR(HI)
+056800161207     A       N04                        5  2'Usc. taz na * Numero (?), Mattino/-
+056900050629     A                                      Pomeriggio e Data *   xxxx Descrizi-
+057000050629     A                                      one      '
+057100050615     A                                      DSPATR(HI)
+057200050615     A                                      DSPATR(UL)
+057300161213     A        04                        5  2'Usc. taz na Numero (?), Messaggeri-
+057400050629     A                                      e, Matt./Pom., Data   xxxx Descrizi-
+057500050629     A                                      one      '
+057600050615     A                                      DSPATR(HI)
+057700050615     A                                      DSPATR(UL)
+057800161207      * - PRIMA:
+057900180110 Baia *Pos  *----------- D I S T I N T E -----------*   Autotrasportatore     |
+058000161207Uscita*taz. Numero (?), Messaggerie, Matt./Pom., Data   xxxx Descrizione      |
+058100161207  13  *C13  67885 Mes M 10/11/16 _____ Mes P gg/mm/aa * 1043 BAHRIN VITALIE   |
+058200161207      * - DOPO
+058300180110Baia P*s Zo *----------- D I S T I N T E -----------*   Autotrasportatore     |
+058400161207Usc. t*z na Numero (?), Messaggerie, Matt./Pom., Data   xxxx Descrizione      |
+058500161207 13  C*3 12 67885 Mes M 10/11/16 _____ Mes P gg/mm/aa * 1043 BAHRIN VITALIE   |
+058600031002      *---------------------------------------------------------------*
+058700031002     A          R MS03Z01
+058800031002     A                                      TEXT('Elenco tasti funzionali abili-
+058900031003     A                                      tati alla 1ª videata')
+059000031003     A                                      OVERLAY
+059100031003     A                                 24  2'F3=Fine'
+059200031003      *---------------------------------------------------------------*
+059300031003     A          R MS03Z02
+059400031003     A                                      TEXT('Elenco tasti funzionali abili-
+059500040304     A                                      tati al subfile S01/S02')
+059600031003     A                                      OVERLAY
+059700031003     A                                 24  2'F3=Fine'
+059800040312     A                                   + 3'F6=Aggiorna dati'
+059900040312     A                                   + 3'F8=Aggiorna e STAMPA'
+060000031003     A                                   + 3'F12=Ritorno'
+060100031007      *---------------------------------------------------------------*
+060200031007     A          R MS03Z03
+060300031007     A                                      TEXT('Elenco tasti funzionali abili-
+060400040304     A                                      tati al subfile S03/S04')
+060500031007     A                                      OVERLAY
+060600040315     A                                 23  2'F3=Fine    '
+060700040315     A                                   + 3'F7=Distinte non inserite'
+060800040315     A                                   + 3'F9=Altri dati'
+060900040315     A                                   + 3'F12=Ritorno'
+061000040315     A                                 24  2'F6=Aggiorna'
+061100040315     A                                   + 3'F8=Aggiorna e STAMPA    '
+061200040315     A                                   + 3'F16=Cancella '

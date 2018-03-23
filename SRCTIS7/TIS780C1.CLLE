@@ -1,0 +1,50 @@
+000100051108/*PARMS DFTACTGRP(*NO)                                                        */
+000200051108/*PARMS ACTGRP(VASENTRY)                                                      */
+000300990907/*PARMS                                                                       */
+000400990907/*PARMS                                                                       */
+000500990907/*PARMS                                                                       */
+000600170118
+000700010921             PGM        PARM(&MBR &KSU &OPE &ESITO)
+000800990908
+000900010921             DCL        VAR(&MBR)   TYPE(*CHAR) LEN(10)
+001000010921             DCL        VAR(&KSU)   TYPE(*CHAR) LEN(8)
+001100010921             DCL        VAR(&OPE)   TYPE(*CHAR) LEN(1)
+001200010921             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001300990921
+001400990920
+001500010525
+001600010525/* ISTRUZIONI X OPERAZIONI INIZIALI (OPE='I') -----------------------*/
+001700010525             IF         COND(&OPE = 'I') THEN(DO)
+001800990908
+001900010525/* Aggiungo il membro (che non deve esistere) al TIVIN00R -----------*/
+002000010525             ADDPFM     FILE(TIVIN00R) MBR(&MBR) TEXT(&KSU)
+002100010921             MONMSG     MSGID(CPF0000) EXEC(DO)
+002200010921             CHGVAR     VAR(&ESITO) VALUE('1')
+002300010921             GOTO       CMDLBL(FINE)
+002400010921             ENDDO
+002500001013
+002600010525/* Alloco il membro nel TIVIN00R ------------------------------------*/
+002700010525             ALCOBJ     OBJ((TIVIN00R *FILE *EXCL &MBR))
+002800170118
+002900170118/* Punto al membro --------------------------------------------------*/
+003000170118             OVRDBF     FILE(TIVIN00R) MBR(&MBR) OVRSCOPE(*JOB)
+003100010525
+003200010525             ENDDO
+003300010328
+003400010525
+003500010525
+003600010525/* ISTRUZIONI X OPERAZIONI FINALI (OPE='F') -------------------------*/
+003700010525             IF         COND(&OPE = 'F') THEN(DO)
+003800010525
+003900010525/* Cancello le override ---------------------------------------------*/
+004000010525             DLTOVR     FILE(TIVIN00R) LVL(*JOB)
+004100010525             MONMSG     MSGID(CPF0000)
+004200990916
+004300990910/* Disalloco i membri -----------------------------------------------*/
+004400010525             DLCOBJ     OBJ((TIVIN00R *FILE *EXCL &MBR))
+004500010525             MONMSG     MSGID(CPF0000)
+004600010525
+004700010525             ENDDO
+004800010207
+004900990908
+005000010921 FINE:       ENDPGM

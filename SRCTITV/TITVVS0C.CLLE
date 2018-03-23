@@ -1,0 +1,49 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200140730/*PARMS                                                                       */
+000300140730/*PARMS                                                                       */
+000400140730/*PARMS                                                                       */
+000500140730/*PARMS                                                                       */
+000600090126             PGM        PARM(&CCM &LIB &MBR &OPZ)
+000700990908
+000800010202             DCL        VAR(&CCM) TYPE(*CHAR) LEN(8)
+000900090126             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+001000010202             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+001100010202             DCL        VAR(&OPZ) TYPE(*CHAR) LEN(1)
+001200990921
+001300000710
+001400990908
+001500010202             IF         COND(&OPZ = '1') THEN(DO)
+001600990913/* Aggiungo il membro al file di arrivo -----------------------------*/
+001700090126             CHKOBJ     OBJ(&LIB/TNVAS00T) OBJTYPE(*FILE) MBR(&MBR)
+001800001013             MONMSG     MSGID(CPF9815) EXEC(DO)
+001900090126             ADDPFM     FILE(&LIB/TNVAS00T) MBR(&MBR) TEXT(&CCM)
+002000001013             MONMSG     MSGID(CPF0000) EXEC(DO)
+002100001013             DLYJOB     DLY(300)
+002200090126             ADDPFM     FILE(&LIB/TNVAS00T) MBR(&MBR) TEXT(&CCM)
+002300001013             ENDDO
+002400001013             ENDDO
+002500001013
+002600010202/* Alloco il membro nel file ----------------------------------------*/
+002700001214/* ... se non ci riesco preferisco un bel CPF -----------------------*/
+002800090126             ALCOBJ     OBJ((&LIB/TNVAS00T *FILE *EXCL &MBR))
+002900990910
+003000001214/* Punto al membro e sostituisco a 1 il "Force-RCcord-RATIO" --------*/
+003100090126             OVRDBF     FILE(TNVAS00T) TOFILE(&LIB/TNVAS00T) +
+003200090126                          MBR(&MBR) FRCRATIO(1) OVRSCOPE(*JOB)
+003300010202             ENDDO
+003400990915
+003500010202
+003600010202
+003700010202
+003800010202             IF         COND(&OPZ = '2') THEN(DO)
+003900041206/* Cancello le override ---------------------------------------------*/
+004000090123             DLTOVR     FILE(TNVAS00T) LVL(*JOB)
+004100041206
+004200990910/* Disalloco i membri -----------------------------------------------*/
+004300090126             DLCOBJ     OBJ((&LIB/TNVAS00T *FILE *EXCL &MBR))
+004400041206
+004500010202             ENDDO
+004600990908
+004700010202
+004800010202
+004900990907             ENDPGM

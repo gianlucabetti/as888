@@ -1,0 +1,234 @@
+000100940215/*********************************************************************/
+000200940215/* LANCIO AUTOMATICO PROCEDURA PTPOSTEL                              */
+000300940215/*********************************************************************/
+000400950711             PGM        PARM(&KPJBA)
+000500950711             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000600940603
+000700940603             DCL        VAR(&SOC)   TYPE(*CHAR) LEN(3)
+000800940603                        /* codice società                      */
+000900950711
+001000940603             DCL        VAR(&UTE)   TYPE(*CHAR) LEN(10)
+001100940603                        /* nome utente                         */
+001200950711
+001300940603             DCL        VAR(&PSW)   TYPE(*CHAR) LEN(10)
+001400940603                        /* password dell'utente                */
+001500950711
+001600950711             DCL        VAR(&TAGCRT) TYPE(*CHAR) LEN(1)
+001700940603                        /* 1 = creazione lotti */
+001800950711
+001900950711             DCL        VAR(&HHCRT)  TYPE(*CHAR) LEN(6)
+002000940603                        /* ora lancio ceazione lotti */
+002100950711
+002200950711             DCL        VAR(&DTCRT)  TYPE(*CHAR) LEN(6)
+002300940603                        /* data lancio creazione lotti */
+002400950711
+002500950711             DCL        VAR(&TAGACC) TYPE(*CHAR) LEN(1)
+002600940603                        /* 1 = raccolta posta  */
+002700950711
+002800950711             DCL        VAR(&HHACC)  TYPE(*CHAR) LEN(6)
+002900940603                        /* ora lancio  raccolta posta */
+003000950711
+003100950711             DCL        VAR(&DTACC)  TYPE(*CHAR) LEN(6)
+003200940603                        /* data lancio raccolta posta  */
+003300950711
+003400950711             DCL        VAR(&GRPACC) TYPE(*CHAR) LEN(10)
+003500940603                        /* gruppo per  raccolta posta  */
+003600950711
+003700950711             DCL        VAR(&TAGSPE) TYPE(*CHAR) LEN(1)
+003800940603                        /* 1 = spedizione lotti */
+003900950711
+004000950711             DCL        VAR(&HHSPE)  TYPE(*CHAR) LEN(6)
+004100940603                        /* ora lancio spedizione lotti */
+004200950711
+004300950711             DCL        VAR(&DTSPE)  TYPE(*CHAR) LEN(6)
+004400940603                        /* data lancio spedizione lotti */
+004500950711
+004600940603             DCL        VAR(&LIDB)  TYPE(*CHAR) LEN(10)
+004700940603                        /* libreria dei dati  (es: PICCIONEDB) */
+004800950711
+004900940603             DCL        VAR(&LIPGM) TYPE(*CHAR) LEN(10)
+005000940603                        /* libreria programmi (es: PICCIONE)   */
+005100950711
+005200940603             DCL        VAR(&LISPE) TYPE(*CHAR) LEN(10)
+005300940603                        /* libreria spedizione (es: PTLINK)     */
+005400950711
+005500940608             DCL        VAR(&RGZ) TYPE(*CHAR) LEN(1)
+005600940609                        /* Riorganizza file accorpamento, S=si  */
+005700950711
+005800021125             DCL        VAR(&JC) TYPE(*CHAR) LEN(10)
+005900021125             DCL        VAR(&JCL) TYPE(*CHAR) LEN(10)
+006000021125             DCL        VAR(&WJC) TYPE(*CHAR) LEN(10)
+006100021125             DCL        VAR(&WJCL) TYPE(*CHAR) LEN(10)
+006200021125             DCL        VAR(&JS) TYPE(*CHAR) LEN(10)
+006300021125             DCL        VAR(&JSL) TYPE(*CHAR) LEN(10)
+006400021125             DCL        VAR(&WJS) TYPE(*CHAR) LEN(10)
+006500021125             DCL        VAR(&WJSL) TYPE(*CHAR) LEN(10)
+006600021125             DCL        VAR(&OS) TYPE(*CHAR) LEN(10)
+006700021125             DCL        VAR(&OSL) TYPE(*CHAR) LEN(10)
+006800021125             DCL        VAR(&WOS) TYPE(*CHAR) LEN(10)
+006900021125             DCL        VAR(&WOSL) TYPE(*CHAR) LEN(10)
+007000021125             DCL        VAR(&OD) TYPE(*CHAR) LEN(10)
+007100021125             DCL        VAR(&ODL) TYPE(*CHAR) LEN(10)
+007200021125             DCL        VAR(&WOD) TYPE(*CHAR) LEN(10)
+007300021125             DCL        VAR(&WODL) TYPE(*CHAR) LEN(10)
+007400100125             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10)
+007500100125             DCL        VAR(&ELASPOOL) TYPE(*CHAR) LEN(1)
+007600100125
+007700160115             DCL        VAR(&EXEOPZ)     TYPE(*CHAR) LEN(20)
+007800160115             DCL        VAR(&IFSNAM)     TYPE(*CHAR) LEN(10)
+007900160115             DCL        VAR(&SUBFLDR)    TYPE(*CHAR) LEN(50)
+008000160115             DCL        VAR(&FLGDATAORA) TYPE(*CHAR) LEN(1)
+008100160115             DCL        VAR(&FILEOUTPUT) TYPE(*CHAR) LEN(255)
+008200160115             DCL        VAR(&FLGSUBFLDR) TYPE(*CHAR) LEN(1)
+008300160115
+008400100125
+008500100125             DCLF       FILE(GAITRAAZM/WFOUTQ0F)
+008600100125
+008700150618
+008800160112    /* Valori possibili per &EXEOPZ:                                        */
+008900160112    /*      1° byte => pilota popolamento ambiente Archidoc                 */
+009000160112    /*                 valori possibili 'N' = NO                            */
+009100160112    /*                         diversamente = SI                            */
+009200160112    /*                 valore speciale  '*' = da tabella di procedura 'AOA' */
+009300160112    /*      2° byte => pilota popolamento ambiente DocFlow                  */
+009400160112    /*                 valori possibili 'T' = TEST                          */
+009500160112    /*                                  'P' = PROD                          */
+009600160112    /*                         diversamente = NESSUNO                       */
+009700160112    /*                 valore speciale  '*' = da tabella di procedura 'AOA' */
+009800160112    /*      3° byte => pilota popolamento ambiente DocFlow Storico          */
+009900160112    /*                 valori possibili 'S' = SI                            */
+010000160112    /*                         diversamente = NO                            */
+010100160112    /*                 valore speciale  '*' = da tabella di procedura 'AOA' */
+010200160112
+010300160115             CHGVAR     VAR(&EXEOPZ)     VALUE('                    ')
+010400160115             CHGVAR     VAR(&FLGDATAORA) VALUE('S')
+010500160115             CHGVAR     VAR(&FLGSUBFLDR) VALUE('S')
+010600160115             CHGVAR     VAR(&FILEOUTPUT) VALUE(' ')
+010700100125
+010800021125
+010900950711             CHGVAR     VAR(&SOC) VALUE('BAR')
+011000950711             CHGVAR     VAR(&UTE) VALUE('PICCIONE  ')
+011100950711             CHGVAR     VAR(&PSW) VALUE('PICCIONE  ')
+011200950711             CHGVAR     VAR(&TAGCRT) VALUE('1')
+011300950711             CHGVAR     VAR(&HHCRT) VALUE('      ')
+011400950711             CHGVAR     VAR(&DTCRT) VALUE('      ')
+011500950711             CHGVAR     VAR(&TAGACC) VALUE(' ')
+011600950711             CHGVAR     VAR(&HHACC) VALUE('      ')
+011700950711             CHGVAR     VAR(&DTACC) VALUE('      ')
+011800950711             CHGVAR     VAR(&GRPACC) VALUE('          ')
+011900950711             CHGVAR     VAR(&TAGSPE) VALUE('1')
+012000950711             CHGVAR     VAR(&HHSPE) VALUE('      ')
+012100950711             CHGVAR     VAR(&DTSPE) VALUE('      ')
+012200950711             CHGVAR     VAR(&LIDB) VALUE('PICCIONEDB')
+012300950711             CHGVAR     VAR(&LIPGM) VALUE('PICCIONE  ')
+012400950711             CHGVAR     VAR(&LISPE) VALUE('PTLINK    ')
+012500950711             CHGVAR     VAR(&RGZ) VALUE('N')
+012600100125             CHGVAR     VAR(&CODA) VALUE('BARPICSTM')
+012700940608
+012800940603             ADDLIBLE   LIB(&LISPE)
+012900940707             MONMSG     MSGID(CPF2103)
+013000940603             ADDLIBLE   LIB(&LIPGM)
+013100940707             MONMSG     MSGID(CPF2103)
+013200940603             ADDLIBLE   LIB(&LIDB)
+013300940707             MONMSG     MSGID(CPF2103)
+013400100125
+013500100125
+013600100125  /* SPOOL IN IFS */
+013700100125             ADDLIBLE   LIB(GAITRAOBJ)
+013800100125             MONMSG     MSGID(CPF0000)
+013900100125
+014000100125             CALL       PGM(TRUL84C) PARM(&CODA '*LIBL     ' +
+014100100125                          'QTEMP     ' 'S' ' ')
+014200100125             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDF))
+014300100125
+014400100125             OVRDBF     FILE(WFOUTQ0F) TOFILE(QTEMP/WFOUTQW) +
+014500100125                          LVLCHK(*NO)
+014600100125READ:
+014700100125             RCVF
+014800100125             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+014900100125
+015000100125
+015100100125             CHGVAR     VAR(&ELASPOOL) VALUE('N')
+015200100125
+015300120328
+015400120328/* VENGONO ELABORATI UNICAMENTE GLI SPOOL IN STATO *READY O *HOLD */
+015500120328             IF         COND(&WFSTS *EQ 'RDY' *OR &WFSTS *EQ 'HLD') THEN(DO)
+015600100125
+015700100125/* "COPIO" LO SPOOL CORRENTE ANCHE NEL IFS */
+015800100125             IF         COND(&WFFILE *EQ 'MODBON') THEN(DO)
+015900100125             CHGVAR     VAR(&IFSNAM)  VALUE('AVVBON_')
+016000100125             CHGVAR     VAR(&SUBFLDR) VALUE('MODBON')
+016100100125             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+016200100125             ENDDO
+016300100125
+016400120328             IF         COND(&WFFILE *EQ 'LETGIA') THEN(DO)
+016500120328             CHGVAR     VAR(&IFSNAM)  VALUE('LETGIA_')
+016600120328             CHGVAR     VAR(&SUBFLDR) VALUE('GIACENZE')
+016700120328             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+016800120328             ENDDO
+016900120328
+017000120328             IF         COND(&WFFILE *EQ 'LETGIC') THEN(DO)
+017100120328             CHGVAR     VAR(&IFSNAM)  VALUE('LETGIC_')
+017200120328             CHGVAR     VAR(&SUBFLDR) VALUE('GIACENZE')
+017300120328             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+017400120328             ENDDO
+017500120328
+017600100126             IF         COND(&WFFILE *EQ 'LET198' *AND &WFFTYP *EQ 'AVVDANBAR') THEN(DO)
+017700100126             CHGVAR     VAR(&IFSNAM)  VALUE('AVVDANBAR_')
+017800100125             CHGVAR     VAR(&SUBFLDR) VALUE('AVVDAN')
+017900100125             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+018000100125             ENDDO
+018100100126
+018200100126             IF         COND(&WFFILE *EQ 'LET198' *AND &WFFTYP *EQ 'AVVDANNLT') THEN(DO)
+018300100126             CHGVAR     VAR(&IFSNAM)  VALUE('AVVDANNLT_')
+018400100126             CHGVAR     VAR(&SUBFLDR) VALUE('AVVDAN')
+018500100126             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+018600100126             ENDDO
+018700100126
+018800100126             IF         COND(&WFFILE *EQ 'LET198' *AND &WFFTYP *EQ 'SOLDOC') THEN(DO)
+018900100126             CHGVAR     VAR(&IFSNAM)  VALUE('SOLDOC_')
+019000100126             CHGVAR     VAR(&SUBFLDR) VALUE('AVVDAN')
+019100100126             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+019200100126             ENDDO
+019300100125
+019400100126             IF         COND(&WFFILE *EQ 'YNSF64P' *AND &WFFTYP *EQ 'NACCR_201') THEN(DO)
+019500100126             CHGVAR     VAR(&IFSNAM)  VALUE('YNSF64P_')
+019600100125             CHGVAR     VAR(&SUBFLDR) VALUE('NACC')
+019700100125             CHGVAR     VAR(&ELASPOOL) VALUE('S')
+019800100125             ENDDO
+019900100125
+020000100125             IF         COND(&ELASPOOL *EQ 'S') THEN(DO)
+020100150618             CALL       PGM(TRBMAF05R) PARM(&EXEOPZ &IFSNAM &WFFILE &WFJNAM +
+020200160115                            &WFUSER &WFJNBR &WFFNBR &FLGDATAORA &FILEOUTPUT +
+020300160115                            &SUBFLDR &FLGSUBFLDR)
+020400100125   /*        MONMSG     MSGID(CPF0000)     */
+020500120405
+020600120405   /* X gli spool giacenze che nn vengono trattatida Piccione si forza il cambaimento */
+020700120405   /* di coda d output (da BARPICSTM a BARPICLOT)                                     */
+020800120405             IF         COND(&WFFILE *EQ 'LETGIC' *OR +
+020900120405                             &WFFILE *EQ 'LETGIA') THEN(DO)
+021000120405             CHGSPLFA   FILE(&WFFILE) JOB(&WFJNBR/&WFUSER/&WFJNAM) +
+021100120405                          SPLNBR(&WFFNBR) OUTQ(PICCIONEDB/BARPICLOT)
+021200120405             ENDDO
+021300120405
+021400100125             ENDDO
+021500100125
+021600120328             ENDDO
+021700120328
+021800100125
+021900100125             GOTO       CMDLBL(READ)
+022000100125
+022100100125 ENDF:
+022200100125
+022300100125
+022400940215
+022500100127             CALL       PGM(PT000B) PARM(&SOC &UTE &PSW)
+022600100127             CALL       PGM(PTAUTO) PARM(&TAGCRT &HHCRT &DTCRT +
+022700100127                          &TAGACC &HHACC &DTACC &GRPACC &TAGSPE +
+022800100127                          &HHSPE &DTSPE &RGZ)
+022900940215
+023000940603             RMVLIBLE   LIB(&LISPE)
+023100940603             RMVLIBLE   LIB(&LIPGM)
+023200940603             RMVLIBLE   LIB(&LIDB)
+023300940215
+023400940215             ENDPGM

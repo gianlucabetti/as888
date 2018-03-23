@@ -1,0 +1,90 @@
+000100000000 =====================================================================
+000200000000 |Aut.|Data Mod.| Descrizione Modifica                               |
+000300000000 =====================================================================
+000400950405 : SC :05/04/95 : Aggiunto campo CSBCCA (cod.consegna anomala) nel
+000500950623 :                file di lavoro TNCSBWRK
+000600950623 : RE :23/06/95 : Utilizzata una nuova vista logica ordinata per data/
+000700950623 :    :         : nr.documento/cod.cliente. La lettura dei C/Assegni
+000800950623 :    :         : scoperti o non incassati avviene per data pagam. = 0
+000900950623 :    :         : quella x i contrassegni pagati in base ai limiti di
+001000950623 :    :         : data fissati.
+001100971118 : RE :18/11/97 : Controllo in che ramo di azienda sto lavorando e se
+001200971118 :    :         : sto esaminando i C/Assegni in partenza controllo solo
+001300971118 :    :         : quelli relativi alle filiali della mia azienda
+001400971218 : RE :17/12/97 : Devo esaminare i C/Assegni aventi o lnp o lna del mio
+001500971218 :    :18/12/97 : ramo aziendale. A tale fine ho eliminato il test del
+001600971218 :    :         : 18/11 e ho sostituito effettuato il caricamento delle
+001700971218 :    :         : filiali da elaborare da AZORG e non dalla £3.
+001800971218 :    :         : Il codice della filiale raggruppamento viene recuperato
+001900971218 :    :         : richiamando il pgm FNLV55R che restituisce il Terminal
+002000971218 :    :         : di partenza della esaminata.
+002100971218 :    :         : Cambiano le logiche di ragionamento:
+002200971218 :    :         : - SCOPERTI x lna: se lna è del mio ramo (sia infrag.
+002300971218 :    :         :                   che non) controllo che DDP e DDT=0
+002400971218 :    :         :                   altrimenti controllo che non esista
+002500971218 :    :         :                   TNCSG e DDP sia =0 (CSG: incasso)
+002600971218 :    :         : -INCASSATI no PAG: data pag.(CSBDDP) deve essere = 0
+002700971218 :    :         :   SCOPERTI x lnp  .. se la lna è del mio ramo aziend.
+002800971218 :    :         :                   la data incasso deve essere>0 ma
+002900971218 :    :         :                   se la lnp non è del mio ramo devo
+003000971218 :    :         :                   controllare che non esista TNCSG
+003100971218 :    :         :                   .. se la lna non è del mio ramo
+003200971218 :    :         :                   aziendale devo controllare che
+003300971218 :    :         :                   esista TNCSG
+003400971218 :    :         :                   TNCSG e DDP sia =0 (CSG: incasso)
+003500971218 :    :         : - PAGATI        : se lnp è del mio ramo (sia infrag.
+003600971218 :    :         :                   che non) controllo che DDP>0
+003700971218 :    :         :                   altrimenti controllo che esista
+003800971218 :    :         :                   TNCSG
+003900971218 :    :         :                   A fine pgm devo effettuare un loop
+004000971218 :    :         :                   su TNCSG per controllare anche i
+004100971218 :    :         :                   C/Ass. aventi lnp <> dal mio ramo
+004200971218 :    :         :                   ma lna = e CSBDDP=0
+004300971218 :    :         : - PAGATI NO INC.: se lnp è del mio ramo (sia infrag.
+004400971218 :    :         :                   che non) controllo che DDP>0
+004500971218 :    :         :                   altrimenti controllo che esista
+004600971218 :    :         :                   TNCSG
+004700971218 :    :         :                   se lna è del mio ramo controllo che
+004800971218 :    :         :                   CSGDDC=0 altrimenti controllo che
+004900971218 :    :         :                   non esista TNCSG
+005000971218 :    :         :                   A fine pgm devo effettuare un loop
+005100971218 :    :         :                   su TNCSG per controllare anche i
+005200971218 :    :         :                   C/Ass. aventi lnp <> dal mio ramo
+005300971218 :    :         :                   ma lna = e CSBDDP=0
+005400980105: RE:05/01/98 : Ottimizzato giro richiamo TRUL15
+005500980127 : RE :27/01/98 : Per decodificare il codice cliente richiamo il pgm
+005600980127 :    :         : TIBS69R poichè gestisce anche le decodifiche clienti
+005700980127 :    :         : SDI in ambiente Bartolini e viceversa
+005800990611 : RE :11/06/99 : Eliminata call a TRUL15R (gestisce tutto TNSC96R)
+005900990611 :    :         : e modificata call a pgm Tnsc96R in quanto ad esso
+006000990611 :    :         : è delegata la scelta del calcolo del ramo aziendale
+006100990611 :    :         : del pagamento C/Assegno (se da cliente o lnp)
+006200990615 : RE :11/06/99 : Eliminata call a TRUL15R (gestisce tutto TNSC96R)
+006300990615 :    :         : e modificata call a pgm Tnsc96R in quanto ad esso
+006400990615 :    :         : è delegata la scelta del calcolo del ramo aziendale
+006500990728 : RE :28/07/99 : Sostituita chain a TNTAS30C con nuovo file TITAS30C
+006600990728 :    :         : e modificata call a pgm Tnsc96R in quanto ad esso
+006700990913 : RE :13/09/99 : C/Assegni scoperti: eseguo la stampa come se SDI e
+006800990913 :    :         : Bartolini fossero un'unica azienda
+006900000223 : RE :23/02/00 : Aggiunti commenti e note interne in occasione della
+007000000223 :    :         : attivazione della procedura di attribuzione del ramo
+007100000223 :    :         : della lnp in base alla lnp della bolla origjnale e
+007200000223 :    :         : non della bolla su cui si trova il C/Assegno
+007300000301 : RE :01/03/00 : Se elaboro gli scoperti per lna cpnsidero tutti i
+007400000301 :    :         : C/Assegni non incassati che hanno la lna del mio ramo
+007500000301 :    :         : Se elaboro gli scoperti per lnp cpnsidero tutti i
+007600000301 :    :         : C/Assegni non incassati e non pagati che hanno la lnp
+007700000301 :    :         : (originale nel caso di dirottamenti) del mio ramo
+007800010105 : MM :05/01/01 : Inserita parzializz. per gli scoperti B=bart P=poste
+007900010205 : AB :05/02/01 : Tolto tutte le Open sui files
+008000010220 : AB :20/02/01 : Riattivate le vecchie Open per controllare il pgm
+008100010308 : MO :08/03/01 : Eliminati ragionamenti eseguiti tramite il TNSC91R e
+008200010308 :    :         : i test sul file TNCSG00F
+008300011105 : DC :05/11/01 : Corretto errore selezione data pagamento finale.
+008400020717: AB :17/07/02  : In vista dell'AS Unico all'organigramma si è allineato
+008500020717:    :          : il modo di reperire le vecchie informazioni con il network
+008600030117: BA :17/01/03  : eliminato controllo sulla data distinta incasso (DDC)o
+008700030117:    :          : basta la data di conferma (DTA)                      twork
+008800050707: BA :17/01/03  : eliminato controllo sulla data distinta incasso (DDC)o
+008900050707: ba :07/07/05  :Aggiunta parzializzazione x cliente
+009000120216: ba :16/02/12  :eliminata parzializzazione bartolini/poste

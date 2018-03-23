@@ -1,0 +1,46 @@
+000600080220             PGM        PARM(&PO)
+000601080220/* DICHIARAZIONE VARIABILI */
+000602080220             DCL        VAR(&PO) TYPE(*CHAR) LEN(3)
+001200020617             DCL        VAR(&CHIUDI) TYPE(*CHAR) LEN(1) VALUE('N')
+001201080220             DCL        VAR(&MSG) TYPE(*CHAR) LEN(120) VALUE('ERRORE +
+001202080220                          La Ricezione dati "Distribuzione" per PDA +
+001203080220                          è terminata in modo anomalo. Il +
+001204080220                          lavoro            verrà terminato!!!!!')
+001205080220             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+001206080220/* IMPOSTO TESTO MESSAGGIO DI ERRORE */
+001207080220             RTVJOBA    JOB(&JOB)
+001208080220             CHGVAR     VAR(%SST(&MSG 86 10)) VALUE(&JOB)
+001209080220
+001302080220/*                          INIZIO PROCEDURA                         */
+001303080220
+001304080220             STRCMTCTL  LCKLVL(*CHG)
+001305080220/* commit già attivo */
+001306080220             MONMSG     MSGID(CPF8351) EXEC(DO)
+001307080220             rollback
+001308080220             ENDCMTCTL
+001309080220             STRCMTCTL  LCKLVL(*CHG)
+001310080220             ENDDO
+001311080220
+001312080220             OVRDBF     FILE(FIPLG00F) SHARE(*YES) SEQONLY(*NO)
+001400020612
+001500020617 GUFO:
+001501080220
+001600080221             CALL       PGM(TRTCPD0R) PARM(&PO &CHIUDI)
+001601080220/* errore */
+001602080220             MONMSG     MSGID(CPF0000) EXEC(DO)
+001603080220             ROLLBACK
+001604080220             SNDMSG     MSG(&MSG) TOUSR(QSYSOPR) MSGTYPE(*INFO)
+001605080220 /* termina il job quindi non importa RCLRSC perchè lo fa dopo */
+001606080220             CHGVAR     VAR(&CHIUDI) VALUE('S')
+001607080220 /* se non termina il job allora non imposto CHIUDI =S ma faccio RCLRSC */
+001609080220 /*          RCLRSC           */
+001610080220             ENDDO
+001700080220 /* se ricevo ENDSBS testato nell'RPG vado a fine altrimenti DLY 15 */
+001800020617             IF         COND(&CHIUDI *EQ 'S') THEN(GOTO CMDLBL(FINE))
+002000080220             DLYJOB     DLY(15)
+002100000621             GOTO       CMDLBL(GUFO)
+002300020617 FINE:
+002301080220             DLTOVR     FILE(*ALL)
+002302080220             RCLRSC
+002303080220             ENDCMTCTL
+002400990907             ENDPGM

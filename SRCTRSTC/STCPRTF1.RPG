@@ -1,0 +1,217 @@
+000100000000     H              J
+000200000000      *****************************************************************
+000300000000      *
+000400000000      *  Nome programma:  PRTF1
+000500000000      *  Descrizione   :  Stampa dizionario file
+000600000000      *  Autore        :  STEFANO CARATI
+000700000000      *  Data creazione:  NOVEMBRE 1993
+000800000000      *
+000900000000      *****************************************************************
+001000000000     FPDSPFD  IF  E                    DISK
+001100000000     FPDSPFFD IF  E                    DISK
+001200000000     FSTCPRTFPO   E             01     PRINTER
+001300000000      *
+001400000000     E                    TIT     1   2 74               TITOLI STAMPA
+001500000000      *
+001600000000     C           *ENTRY    PLIST
+001700000000     C                     PARM           DESFIL           DESCRIZ.FILE
+001800000000     C                     PARM           CAMPI   3        DESCRIZ.FILE
+001900000000      *****************************************************************
+002000000000      *              M A I N    P R O G R A M
+002100000000      *****************************************************************
+002200000000      *
+002300000000     C           CAMPI     COMP '*SI'                    08 RICHIESTI CAMP
+002400000000      *
+002500000000     C           *LIKE     DEFN WHNAME    $PRECE
+002600000000     C                     MOVE *BLANKS   $PRECE           RECORD PRECEDEN
+002700000000     C                     SETOF                     05    NUMERAZIONE
+002800000000      *
+002900000000      * Leggo il record che rappresenta il dettaglio campi del file
+003000000000     C                     SETOF                     06
+003100000000     C                     MOVE *BLANK    $PRIMA  1
+003200000000     C                     DO   *HIVAL
+003300000000     C                     READ PDSPFFD                  02
+003400000000     C  N02                DO
+003500000000     C                     MOVE WHNAME    NOMERE           NOME RECORD
+003600000000      *
+003700000000      * Leggo la descrizione del file, solo la prima volta
+003800000000     C           $PRIMA    IFEQ *BLANK
+003900000000     C                     EXSR DESCR
+004000000000     C                     MOVE '1'       $PRIMA
+004100000000     C                     MOVE WHNAME    $PRECE
+004200000000     C                     ENDIF
+004300000000      *
+004400000000      * Verifico se il formato record e' come il precedente
+004500000000     C   08      WHNAME    IFNE $PRECE
+004600000000     C                     WRITEPRTFP1                     TESTATA STAMPA
+004700000000     C                     WRITEPRTFP6                     TESTATA STAMPA
+004800000000     C                     WRITEPRTFP2                     TESTATA FILE
+004900000000     C                     WRITEPRTFP4                     TESTATA CAMPI
+005000000000     C                     MOVE WHNAME    $PRECE
+005100000000     C                     ENDIF
+005200000000      *
+005300000000      * Lunghezza del campo
+005400000000     C   08      WHFLDD    IFNE *ZERO
+005500000000     C                     Z-ADDWHFLDD    WHFLD            NUMERICO
+005600000000     C                     ELSE
+005700000000     C                     Z-ADDWHFLDB    WHFLD            ALFANUMERICO
+005800000000     C                     ENDIF
+005900000000      *
+006000000000      * Posizione fino a
+006100000000     C   08      WHFOBO    ADD  WHFLDB    FINOA            FINO A
+006200000000     C   08                SUB  1         FINOA            FINO A
+006300000000      *
+006400000000      * Se il campo e' alfanumerico non devo visualizzare i decimali
+006500000000     C           WHFLDT    COMP 'A'                  0707  SENZA DECIMALI
+006600000000      *
+006700000000      * Per overflow ristampo la testata
+006800000000     C   01 08             WRITEPRTFP1                     TESTATA RECORD
+006900000000     C   01 08             WRITEPRTFP4                     TESTATA CAMPI
+007000000000     C   01 08             SETOF                     01
+007100000000      *
+007200000000      * Stampo il dettaglio dei campi
+007300000000     C   08                WRITEPRTFP5                     DETTAG.CAMPI
+007400000000      *
+007500000000     C                     ENDDO
+007600000000     C  N02                ENDDO
+007700000000      *
+007800000000     C                     SETON                     LR
+007900000000      *****************************************************************
+008000000000      * Reperisco la descrizione del file con i campi chiave
+008100000000      *****************************************************************
+008200000000     C           DESCR     BEGSR
+008300000000      *
+008400000000     C                     TIME           ORARIO
+008500000000      *
+008600000000     C                     MOVE *BLANKS   ACCPAT
+008700000000     C                     MOVE *BLANK    $PRIM1  1
+008800000000      *
+008900000000     C                     DO   *HIVAL
+009000000000     C                     READ PDSPFD                   04
+009100000000     C  N04                DO
+009200000000      *
+009300000000      * Testo il mantenimento del file
+009400000000     C                     MOVE *BLANKS   MANTEN
+009500000000     C           APMANT    IFEQ 'I'
+009600000000     C                     MOVE 'IMMED'   MANTEN
+009700000000     C                     ELSE
+009800000000     C           APMANT    IFEQ 'R'
+009900000000     C                     MOVE 'REBLD'   MANTEN
+010000000000     C                     ELSE
+010100000000     C           APMANT    IFEQ 'D'
+010200000000     C                     MOVE ' DLY '   MANTEN
+010300000000     C                     ELSE
+010400000000     C                     MOVE *BLANKS   MANTEN
+010500000000     C                     MOVELAPMANT    MANTEN
+010600000000     C                     ENDIF
+010700000000     C                     ENDIF
+010800000000     C                     ENDIF
+010900000000      *
+011000000000      * Testo se il file e' a chiavi uniche
+011100000000     C           APUNIQ    IFEQ 'Y'
+011200000000     C                     MOVE 'SI'      CHIUNI           UNIQUE
+011300000000     C                     ELSE
+011400000000     C                     MOVE 'NO'      CHIUNI           NO UNIQUE
+011500000000     C                     ENDIF
+011600000000      *
+011700000000      * Testo il tipo di ordinamento
+011800000000     C                     MOVE *BLANKS   ORDIN
+011900000000     C           APKEYO    IFEQ 'L'
+012000000000     C                     MOVE 'LIFO'    ORDIN
+012100000000     C                     ENDIF
+012200000000     C           APKEYO    IFEQ 'F'
+012300000000     C                     MOVE 'FIFO'    ORDIN
+012400000000     C                     ENDIF
+012500000000     C           APKEYO    IFEQ 'C'
+012600000000     C                     MOVE 'FCFO'    ORDIN
+012700000000     C                     ENDIF
+012800000000      *
+012900000000      * Testo se vi sono scelte o omissioni
+013000000000     C           APSELO    IFEQ 'Y'
+013100000000     C                     MOVE 'SI'      SCEOMI
+013200000000     C                     ELSE
+013300000000     C                     MOVE 'NO'      SCEOMI
+013400000000     C                     ENDIF
+013500000000      *
+013600000000      * Testo se vi sono scelte o omissioni
+013700000000     C                     MOVE *BLANKS   SPECIF
+013800000000     C           APKSIN    IFEQ 'S'
+013900000000     C                     MOVE 'SI'      SPECIF
+014000000000     C                     ENDIF
+014100000000     C           APKSIN    IFEQ 'N'
+014200000000     C                     MOVE 'NO'      SPECIF
+014300000000     C                     ENDIF
+014400000000     C           APKSIN    IFEQ 'A'
+014500000000     C                     MOVE 'AS'      SPECIF
+014600000000     C                     ENDIF
+014700000000      *
+014800000000      * Testo se vi sono scelte o omissioni
+014900000000     C           APKASQ    IFEQ 'Y'
+015000000000     C                     MOVE 'SI'      ALTER
+015100000000     C                     ELSE
+015200000000     C                     MOVE 'NO'      ALTER
+015300000000     C                     ENDIF
+015400000000      *
+015500000000      * Testo se file di join
+015600000000     C           APJOIN    IFEQ 'Y'
+015700000000     C                     MOVE 'SI'      JOIN
+015800000000     C                     ELSE
+015900000000     C                     MOVE 'NO'      JOIN
+016000000000     C                     ENDIF
+016100000000      *
+016200000000     C           $PRIM1    IFEQ *BLANK
+016300000000     C                     MOVE '1'       $PRIM1
+016400000000     C           APNSCO    COMP 1                    09
+016500000000     C   09                Z-ADD1         NRREC
+016600000000     C   09                MOVE APBOLF    $RECPR 10        REC.PRECEDENTE
+016700000000     C                     SETON                     10
+016800000000      *
+016900000000     C           APFTYP    COMP 'L'                      03 'L'=LF
+017000000000      *
+017100000000      * Verifico immediatamente se si tratta di file a chiavi o no
+017200000000     C           APACCP    IFEQ 'A'                        SEQUENZIALE
+017300000000     C           'FILE SEQ'CAT  'UENZIA':0ACCPAT
+017400000000     C           ACCPAT    CAT  'LE':0    ACCPAT
+017500000000     C                     ENDIF
+017600000000      *
+017700000000     C           APACCP    IFEQ 'K'                        A CHIAVI
+017800000000     C           TIT,1     CAT  TIT,2:4   ACCPAT
+017900000000     C                     ENDIF
+018000000000      *
+018100000000     C                     WRITEPRTFP1                     TESTATA STAMPA
+018200000000     C                     WRITEPRTFP6                     TESTATA STAMPA
+018300000000     C                     WRITEPRTFP2                     TESTATA FILE
+018400000000      *
+018500000000     C                     ENDIF
+018600000000      *
+018700000000     C   01                WRITEPRTFP1                     TESTATA STAMPA
+018800000000     C   01                WRITEPRTFP6                     TESTATA STAMPA
+018900000000     C   01                WRITEPRTFP2                     TESTATA FILE
+019000000000      *
+019100000000      * Verifico se il formato record e' uguale al precedente
+019200000000     C   09N01   APBOLF    IFNE $RECPR                     REC.PRECEDENTE
+019300000000     C                     SETOF                     0610
+019400000000     C                     MOVE APBOLF    NOMERE
+019500000000     C                     ADD  1         NRREC            NR.DEL RECORD
+019600000000     C                     MOVE APBOLF    $RECPR           REC.PRECEDENTE
+019700000000     C                     WRITEPRTFP6                     NUOVO RECORD
+019800000000     C                     WRITEPRTFP2                     TESTATA FILE
+019900000000     C                     MOVE WHNAME    NOMERE           NOME RECORD
+020000000000     C                     ENDIF
+020100000000     C   01                SETOF                     01
+020200000000      *
+020300000000     C           APACCP    IFNE 'A'                        NO SEQUENZIALE
+020400000000     C                     WRITEPRTFP3                     DETT.CHIAVI
+020500000000     C  N06                SETON                     06
+020600000000     C                     ENDIF
+020700000000      *
+020800000000     C                     ENDDO
+020900000000     C  N04                ENDDO
+021000000000      *
+021100000000     C   08                WRITEPRTFP4                     TESTATA CAMPI
+021200000000      *
+021300000000     C                     ENDSR
+021400000000      *****************************************************************
+021500000000**
+021600000000Manten.   Chiave unica    Ord.chiave   Selez/omis             Campo chiave
+021700000000Seq.    Segno   Alter.   Join

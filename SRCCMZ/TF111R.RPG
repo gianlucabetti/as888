@@ -1,0 +1,140 @@
+000100891026     H/TITLE   GESTIONE FILE TFAZI00F AAZIONI DA ESGUIRE
+000200891023     H            Y                                                       CN1100
+000300891023?    F*----------------------------------------------------*
+000400891023?    F*   INDICATORI                                       *
+000500891023     F* 10   ORDINATO PER FILE                             *
+000600891024     F* 60   ROLLUP
+000700891024     F* 80   CHIAVI DOPPIE
+000800891023?    F*----------------------------------------------------*
+000900891023?    F*               D A T A   B A S E                    *
+001000891023?    F*----------------------------------------------------*
+001100891026     FTF111D  CF  E                    WORKSTN
+001200891026     F                                        NRR   KSFILE TF111SF1
+001300900525     F                                              KINFDS TF11DS
+001400891026     FTFAZI00FUF  E                    DISK                      A
+001500891026     FTFAZI01LIF  E           K        DISK
+001600891026     F                                              KINFDS AZIDS
+001700891026     F            TFAZI                             KRENAMETFAZI001
+001800891023     IKPJBA     E DS
+001900891026     IAZIDS       DS
+002000891026     I                                    B 397 4000AZINRR
+002100900525     ITF11DS      DS
+002200900525     I                                    B 378 3790PRIMA
+002300891023?    C*----------------------------------------------------*
+002400891023?    C*-  OPERAZIONI INIZIALI                             -*
+002500891023?    C*----------------------------------------------------*
+002600891023     C           *ENTRY    PLIST                           *
+002700891023     C                     PARM           KPJBA            *
+002800981212     C           *LOVAL    SETLLTFAZI01L
+002900891023     C                     EXSR PULSFL                     *
+003000891023     C                     EXSR SETSF1                     *
+003100891023     C                     EXSR CARSF1                     *
+003200891026     C                     WRITETF111D2
+003300891023     C           C1TAG     TAG
+003400891026     C                     EXFMTTF111CT1
+003500900525     C                     Z-ADDPRIMA     INIZ    40
+003600891023     C                     SETON                         71*
+003700891023     C*
+003800891023     C   KC                GOTO FINE
+003900891023     C   60                EXSR CARSF1                     *
+004000891023     C   60                GOTO C1TAG
+004100891023     C                     EXSR CTRLC1
+004200891023     C   01                GOTO C1TAG
+004300891023     C                     EXSR AGGIOR
+004400900525     C                     Z-ADDINIZ      RCD
+004500891026     C                     GOTO C1TAG
+004600891023     C           FINE      TAG
+004700891023     C                     SETON                         LR*
+004800891023     C*----------------------------------------------------*
+004900891023     C*   PULSFL
+005000891023     C*----------------------------------------------------*
+005100891023     C           PULSFL    BEGSR
+005200891023     C                     SETOF                     507071*
+005300891026     C                     WRITETF111CT1
+005400891023     C                     SETON                       7071*
+005500891023     C                     Z-ADD0         NRR     40
+005600891023     C                     Z-ADD0         MAXNRR  40
+005700891023     C                     ENDSR
+005800891023     C*----------------------------------------------------*
+005900891023     C*   SETSF1
+006000891023     C*----------------------------------------------------*
+006100891023     C           SETSF1    BEGSR
+006200891026     C                     READ TFAZI001                 50*
+006300891023     C                     ENDSR
+006400891023     C*----------------------------------------------------*
+006500891023     C*   CARSF1
+006600891023     C*----------------------------------------------------*
+006700891023     C           CARSF1    BEGSR
+006800891023     C                     Z-ADDMAXNRR    NRR
+006900891026     C                     Z-ADD0         I       30
+007000891023     C           *IN50     DOWEQ'0'
+007100891026     C           I         ANDLT15
+007200981202     C                     MOVELAZISEQ    SSEQ
+007300981202     C                     MOVELAZIAZI    SAZI
+007400981202     C                     MOVELAZISIS    SSIS
+007500981212     C                     MOVELAZIJBQ    SJBQ
+007600981212     C                     MOVELAZIPTY    SPTY
+007700981212     C                     MOVELAZIHSC    SHSC
+007800891026     C                     Z-ADDAZINRR    HNRR
+007900891023     C                     ADD  1         NRR
+008000891023     C                     ADD  1         I
+008100891026     C                     WRITETF111SF1
+008200891026     C                     READ TFAZI001                 50*
+008300891023     C                     END
+008400891026     C                     ADD  1         I
+008500891026     C                     MOVE *BLANK    SAZI
+008600891026     C                     MOVE *BLANK    SSIS
+008700981212     C                     MOVE *BLANK    SJBQ
+008800981212     C                     MOVE *BLANK    SPTY
+008900981212     C                     MOVE *ZERO     SHSC
+009000891026     C                     MOVE *ZERO     SSEQ
+009100891023     C                     MOVE *ZERO     HNRR
+009200891023     C                     SETOF                         72*
+009300891023     C           I         DO   15
+009400891023     C                     ADD  1         NRR
+009500891026     C                     WRITETF111SF1
+009600891023     C                     END
+009700891023     C                     Z-ADDNRR       MAXNRR
+009800900525     C                     Z-ADDNRR       RCD
+009900891023     C                     ENDSR
+010000891023     C*----------------------------------------------------*
+010100891023     C*   CTRLC1
+010200891023     C*----------------------------------------------------*
+010300891023     C           CTRLC1    BEGSR
+010400891023     C                     SETOF                         01
+010500891026     C                     READCTF111SF1                 21*
+010600891023     C   21                SETOF                         71
+010700891023     C           *IN21     DOWEQ'0'
+010800891023     C                     SETON                         72*
+010900891026     C                     UPDATTF111SF1
+011000891026     C                     READCTF111SF1                 21*
+011100891023     C                     END
+011200891023     C                     ENDSR
+011300891023     C*----------------------------------------------------*
+011400891023     C*   AGGIOR
+011500891023     C*----------------------------------------------------*
+011600891023     C           AGGIOR    BEGSR
+011700891026     C                     READCTF111SF1                 21*
+011800891023     C           *IN21     DOWEQ'0'
+011900891023     C           HNRR      IFNE 0
+012000891026     C           HNRR      CHAINTFAZI                22    *
+012100891023     C                     END
+012200981202     C                     MOVELSSEQ      AZISEQ
+012300981202     C                     MOVELSAZI      AZIAZI
+012400981202     C                     MOVELSSIS      AZISIS
+012500981212     C                     MOVELSJBQ      AZIJBQ
+012600981212     C                     MOVELSPTY      AZIPTY
+012700981212     C                     MOVELSHSC      AZIHSC
+012800900614     C           HNRR      IFNE 0
+012900900614     C           SSEQ      IFNE 999
+013000891026     C                     UPDATTFAZI                  80
+013100900614     C                     ELSE
+013200900614     C                     DELETTFAZI                  80
+013300900614     C                     END
+013400900614     C*
+013500891023     C                     ELSE
+013600891026     C                     WRITETFAZI                  80
+013700891023     C                     END
+013800891026     C                     READCTF111SF1                 21*
+013900891023     C                     END
+014000891023     C                     ENDSR

@@ -1,0 +1,138 @@
+000100140915/*PRM dftactgrp(*no)                                                 */
+000200140912/*END                                                                */
+000300140912/*===================================================================*/
+000400140912/*?ACPO10C - Aggiornamento/Acquisizione Potenziali (su SETRAS)      ?*/
+000500140912/*===================================================================*/
+000600140912
+000700140912             pgm        parm(&KPJBA)
+000800140912
+000900140912             dcl        var(&KPJBA)      type(*char) len(502)
+001000140915             dcl        var(&Aggio)      type(*char) len(1)
+001100140912             dcl        var(&Libr)       type(*char) len(10)
+001200140915             dcl        var(&Libr)       type(*char) len(10)
+001300140912             dcl        var(&File)       type(*char) len(10)
+001400140912
+001500140912             dcl        var(&MsgId)      type(*char) len(7)
+001600140912             dcl        var(&MsgDta)     type(*char) len(150)
+001700140912
+001800140915             chgvar     var(&Aggio)      value(%sst(&KPJBA 247  1))
+001900140915             chgvar     var(&Libr)       value('EDPCRIBIS ')
+002000140912
+002100140912             monmsg     msgid(CPF0000)   exec(goto cmdlbl(Errore))
+002200140912
+002300140912             sndpgmmsg  msgid(CPDA0FF)   msgf(QCPFMSG) +
+002400140912                          msgdta('Elaborazione in corso. Attendere, +
+002500140912                          prego...') +
+002600140912                          topgmq(*ext)   msgtype(*status)
+002700140915
+002800140912
+002900140912/* -?Copia dei file in Aggiornamento (SE non chiesta solo Lista)?--- */
+003000140915             IF         cond(&Aggio *ne ' ')   then(DO)
+003100140912
+003200140912               /* -?File TNCPO00F?---------------------------------- */
+003300140912               dltf       file(&Libr/TNCPO0*)
+003400140912               monmsg     msgid(CPF2125)
+003500140912               cpyf       fromfile(UNITRAGRU/TNCPO00F) +
+003600140912                          tofile(&Libr/TNCPO00F) +
+003700140912                          mbropt(*replace) +
+003800140912                          crtfile(*yes)
+003900140915               if         cond(&Aggio *eq 'T' *or &Aggio *eq 'P') +
+004000140915                          then(DO)
+004100140915                 crtdupobj  obj(TNCPO01L)      fromlib(UNITRAGRU) +
+004200140915                            objtype(*file)     tolib(&Libr)
+004300140915                 endDo
+004400140912
+004500140912               /* -?File TNCPO10F?---------------------------------- */
+004600140912               dltf       file(&Libr/TNCPO1*)
+004700140912               monmsg     msgid(CPF2125)
+004800140912               cpyf       fromfile(UNITRAGRU/TNCPO10F) +
+004900140915                          tofile(&Libr/TNCPO10F) +
+005000140912                          mbropt(*replace) +
+005100140912                          crtfile(*yes)
+005200140915               if         cond(&Aggio *eq 'T' *or &Aggio *eq 'P') +
+005300140915                          then(DO)
+005400140915                 crtdupobj  obj(TNCPO11L)      fromlib(UNITRAGRU) +
+005500140915                            objtype(*file)     tolib(&Libr)
+005600140915                 endDo
+005700140912
+005800140912               /* -?File TICPI00F?---------------------------------- */
+005900140912               dltf       file(&Libr/TICPI*)
+006000140912               monmsg     msgid(CPF2125)
+006100140912               cpyf       fromfile(UNITRAGRU/TICPI00F) +
+006200140912                          tofile(&Libr/TICPI00F) +
+006300140912                          mbropt(*replace) +
+006400140912                          crtfile(*yes)
+006500140915               if         cond(&Aggio *eq 'T' *or &Aggio *eq 'P') +
+006600140915                          then(DO)
+006700140915                 crtdupobj  obj(TICPI01L)      fromlib(UNITRAGRU) +
+006800140915                            objtype(*file)     tolib(&Libr)
+006900140915                 endDo
+007000140912
+007100140912             ENDDO
+007200140912
+007300140912/* -?Override ai file in aggiornamento?----------------------------- */
+007400140915/*  ?NON SERVE: la lista di librerie dev'essere sistemata PRIMA?---- */
+007500140915/*             ?del lancio!?---------------------------------------- */
+007600140915          /* Select                                                  */
+007700140912               /* -?Se solo lista: nessuno?------------------------- */
+007800140915          /*   When     cond(&Aggio *eq ' ')   then(DO)              */
+007900140915          /*     enddo                                               */
+008000140912               /* -?Se TEST: nella libr. EDPCRIBIS?----------------- */
+008100140915          /*   When     cond(&Aggio *eq 'T' *or &Aggio *eq 'P') +    */
+008200140915          /*            then(DO)                                     */
+008300140915          /*     chgvar var(&Libr)       value('EDPCRIBIS ')         */
+008400140915          /*     enddo                                               */
+008500140912               /* -?Se "BUONA": nella libr. UNITRAGRU?-------------- */
+008600140915          /*   When     cond(&Aggio *eq 'A') +                       */
+008700140915          /*            then(DO)                                     */
+008800140915          /*     chgvar var(&Libr)       value('UNITRAGRU ')         */
+008900140915          /*     enddo                                               */
+009000140915          /* EndSelect                                               */
+009100140912
+009200140912             /* -?File TNCPO00F?------------------------------------ */
+009300140915          /* ovrdbf     file(TNCPO01L)   tofile(&Libr/TNCPO01L) +    */
+009400140915          /*            ovrscope(*callLvl)                           */
+009500140912             /* -?File TNCPO10F?------------------------------------ */
+009600140915          /* ovrdbf     file(TNCPO11L)   tofile(&Libr/TNCPO11L) +    */
+009700140915          /*            ovrscope(*callLvl)                           */
+009800140912             /* -?File TICPI00F?------------------------------------ */
+009900140915          /* ovrdbf     file(TICPI01L)   tofile(&Libr/TICPI01L) +    */
+010000140915          /*            ovrscope(*callLvl)                           */
+010100140912
+010200140912
+010300140912/* -?Richiamo *pgm di AGGIORNAMENTO?-------------------------------- */
+010400140915             if         cond(&Aggio *ne ' ')   then(DO)
+010500140912               chgvar   var(%sst(&KPJBA 247  3)) value('A  ')
+010600140912             enddo
+010700140912
+010800140912             call       pgm(ACPO06R)     parm(&KPJBA)
+010900140912
+011000140912/* -?Richiamo *pgm di INSERIMENTO?---------------------------------- */
+011100140915             if         cond(&Aggio *ne ' ')   then(DO)
+011200140912               chgvar   var(%sst(&KPJBA 247  3)) value('A  ')
+011300140912             enddo
+011400140912
+011500140912             call       pgm(ACPO07R)     parm(&KPJBA)
+011600140912
+011700140912
+011800140912/* -?FINE ELABORAZIONE?--------------------------------------------- */
+011900140912             dltovr     file(*all)       lvl(*)
+012000140912             goto       cmdlbl(Fine)
+012100140912
+012200140912
+012300140912/* -?Gestione errori NON monitorizzati?----------------------------- */
+012400140912    Errore:
+012500140912             rcvmsg     msgdta(&MsgDta)  msgid(&MsgId)
+012600140912
+012700140912             if         cond(&MsgId = '       ') +
+012800140912                          then(goto cmdlbl(Fine))
+012900140912
+013000140912             sndpgmmsg  msgid(&MsgId)    msgf(QSYS/QCPFMSG) +
+013100140912                          msgdta(&MsgDta)
+013200140912             goto       cmdlbl(Errore)
+013300140912
+013400140912/* -?Fine?---------------------------------------------------------- */
+013500140912    Fine:
+013600140912             rclrsc
+013700140912
+013800140912             EndPgm

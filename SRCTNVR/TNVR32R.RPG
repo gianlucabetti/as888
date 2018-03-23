@@ -1,0 +1,124 @@
+000100000000     H              J
+000200961010     H* TNVR32R *----------------------------------------------------*
+000300000000     H*-----------------*                                            *
+000400961010     H*  QUESTO PGM E' DA FARE GIRARE SOLO IN FILIALE                *
+000500961010     H*                                                              *
+000600961011     H*  SFLAGGA I RECORD DI CNACO00F / TNTAM00F / ANSPE04L (SOLO    *
+000700961011     H*  I CLIENTI DELLA £1) PER TRASMETTERLI ALLE ALTRE FILIALI     *
+000800961011     H*                                                              *
+000900000000     H*--------------------------------------------------------------*
+001000961010     FCNACO00FUF  E           K        DISK
+001100961010     FTNTAM01LUF  E           K        DISK
+001200961011     FANSPE04LUF  E           K        DISK
+001300961010     E*
+001400961010     E* SCHIERE PER CARICAMENTO L1
+001500961010     E                    L1         30  3 0             FIL.GESTITE
+001600961010     E                    LIN        30  3 0             SKI COMODO
+001700961010     I*
+001800961010     I* DS PER TRUL06R - CARICAMENTO £1
+001900961010     IDSUL06    E DSTRUL06DS
+002000961010     I                                        1  900LIN
+002100961010     I*
+002200961011     IKPJBA     E DS
+002300961010     ICNCR80    E DS
+002400961010     IUT§DSE    E DSUT§DSE0F
+002500961010     C*
+002600961010     C           KACO      KLIST
+002700961010     C                     KFLD           CODUT
+002800961010     C                     KFLD           KCI     40
+002900961010     C                     KFLD           WKSC    70
+003000961010     C           KACO2     KLIST
+003100961010     C                     KFLD           CODUT
+003200961010     C                     KFLD           KCI
+003300961010     C*
+003400961010     C                     Z-ADD1         CODUT
+003500961010     C                     CALL 'X§PARUT'
+003600961010     C                     PARM           UT§DSE
+003700961010     C                     MOVELREC80     CNCR80
+003800960422     C*
+003900961010     C****  CARICO TABELLA FILIALI GESTITE £1  ****
+004000961010     C                     CLEARDSUL06
+004100961010     C                     MOVE '£1'      D06COD
+004200961010     C                     MOVELSIMFEL    D06KEY
+004300961010     C                     MOVELDSUL06    KPJBU
+004400961010     C                     CALL 'TRUL06R'
+004500961010     C                     PARM           KPJBA
+004600961010     C                     MOVELKPJBU     DSUL06
+004700961010     C                     MOVEALIN       L1
+004800961010     C*
+004900981114     C                     Z-ADD0151      KCI
+005000961010     C                     Z-ADD1         X       30
+005100961010     C**
+005200961010     C**
+005300961010     C****  LEGGO TUTTE LE FILIALI DELLA £1  ****
+005400961010    1C           L1,X      DOWGT0
+005500961010     C                     CLEARWKSC
+005600961010     C                     MOVELL1,X      WKSC
+005700961010     C*
+005800961010     C*****
+005900961010     C*  C N A C O 0 0 F
+006000961010     C*****
+006100961010     C           KACO      SETLLCNACO00F
+006200961010     C           KACO2     READECNACO00F                 30
+006300961010     C*
+006400961010    2C           *IN30     DOWEQ*OFF
+006500961010     C                     MOVELACOKSC    WFIL    30
+006600961010     C*
+006700961010    3C           WFIL      IFEQ L1,X
+006800961010     C                     CLEARACOFTR
+006900961010     C                     CLEARACODTR
+007000961010     C                     UPDATCNACO000
+007100961010     C*
+007200961010   X3C                     ELSE
+007300961010     C                     SETON                     30
+007400961010    3C                     ENDIF
+007500961010     C*
+007600961010     C     N30   KACO2     READECNACO00F                 30
+007700961010    2C                     ENDDO
+007800960620     C*
+007900961010     C*****
+008000961010     C*  T N T A M 0 0 F
+008100961010     C*****
+008200961010     C           WKSC      SETLLTNTAM01L
+008300961010     C                     READ TNTAM01L                 30
+008400961010     C*
+008500961010    2C           *IN30     DOWEQ*OFF
+008600961010     C                     MOVELTAMKSC    WFIL
+008700961010     C*
+008800961010    3C           WFIL      IFEQ L1,X
+008900961010     C                     CLEARTAMFTR
+009000961010     C                     CLEARTAMDTR
+009100961010     C                     UPDATTNTAM000
+009200961010     C*
+009300961010   X3C                     ELSE
+009400961010     C                     SETON                     30
+009500961010    3C                     ENDIF
+009600961010     C*
+009700961010     C     N30             READ TNTAM01L                 30
+009800961010    2C                     ENDDO
+009900961010     C*
+010000961011     C*****
+010100961011     C*  A N S P E 0 4 L
+010200961011     C*****
+010300961011     C           WKSC      SETLLANSPE04L
+010400961011     C                     READ ANSPE04L                 30
+010500961011     C*
+010600961011    2C           *IN30     DOWEQ*OFF
+010700961011     C                     MOVELSPECLI    WFIL
+010800961011     C*
+010900961011    3C           WFIL      IFEQ L1,X
+011000961011     C                     CLEARSPEFTR
+011100961011     C                     CLEARSPEDTR
+011200961011     C                     UPDATANSPE000
+011300961011     C*
+011400961011   X3C                     ELSE
+011500961011     C                     SETON                     30
+011600961011    3C                     ENDIF
+011700961011     C*
+011800961011     C     N30             READ ANSPE04L                 30
+011900961011    2C                     ENDDO
+012000961011     C*
+012100961010     C                     ADD  1         X
+012200960729    1C                     ENDDO
+012300000000     C*
+012400000000     C                     SETON                     LR

@@ -1,0 +1,156 @@
+000100840308     H              J
+000200900413     F***   STAMPA  FILE TABELL00F                                 ****
+000300840308     F*****************************************************************
+000400840308     F*   89=ON TABELLA NON TROVATA
+000500840308     F*   90=ON FINE FILE TABELLE
+000600840308     F*   91=ON RECORD DI TESTATA TABELLA
+000700840308     F*   92=ON RECORD DI DETTAGLIO TABELLA
+000800840308     F*****************************************************************
+000900840308     FTABEL00FIF  E           K        DISK
+001000900601     FPRTF198 O   F     198     OF     PRINTER
+001100840308     E                    ST1     1   2 66
+001200840308     E                    ST2     1   2 66
+001300840308     E                    ST3     1   2 66
+001400891222     E                    §FA        29  3
+001500891222     E                    §FN        29  3 0
+001600900413     E                    §CT       900  2               TIPI TABELLE
+001700900413     E                    §DT       900 89               DESCR.TABELLE
+001800840308     E                    TCU        50  6               TAB FLAG CNT
+001900840308     E                    KCU        50  4 0             TAB CAPO CONTO
+002000840308     IKPJBA     E DS
+002100900413     I                                       92 101 LIBSYS
+002200840308     I/SPACE 3
+002300840308     IUTEDSE    E DSUTEDSE0F
+002400840308     I                                      398 697 TCU
+002500840308     I                                    P 698 847 KCU
+002600840308     IPARAME      DS
+002700840308     I                                        1   2 COD1
+002800840308     I                                        3   4 COD2
+002900840308     C/EJECT
+003000840308     C           *ENTRY    PLIST
+003100840308     C                     PARM           KPJBA
+003200890302     C                     Z-ADD1         CODUT
+003300840308     C                     CALL 'XPARUT'
+003400840308     C                     PARM           UTEDSE
+003500840308     C           CODUT     CABEQ-1        FINE
+003600840308     C                     MOVELRAGUT     RSUT   20
+003700840308     C                     MOVELKPJBU     PARAME
+003800840308     C                     MOVE CODUT     KUT     10
+003900900413     C**
+004000840308     C           CHIAVE    KLIST
+004100840308     C                     KFLD           KUT
+004200900413     C                     KFLD           COD
+004300840308     C**
+004400840308     C*****************************************************************
+004500840308     C                     TIME           ORADAT 120
+004600840308     C                     MOVELORADAT    ORA     60
+004700840308     C                     MOVE ORADAT    DAT     60
+004800900612LC   C                     SETON                     93    1° GIRO
+004900900413     C* CARICO TABELLA DELLE TABELLE
+005000900413     C                     MOVE *BLANK    COD     2
+005100900413     C           CHIAVE    SETLLTABEL
+005200900413     C                     DO   *HIVAL    XY      30
+005300900413     C           CHIAVE    READETABEL                    77
+005400900413     C  N77                DO
+005500900413     C                     MOVE TBLKEY    §CT,XY
+005600900413     C                     MOVELTBLUNI    §DT,XY
+005700900413     C                     END
+005800900413     C  N77                END
+005900900413     C***
+006000900413     C*
+006100900413     C                     MOVELCOD1      COD
+006200840308     C           CHIAVE    SETLLTABEL                89
+006300840308     C   89                GOTO FINE
+006400840308     C           INIZIO    TAG
+006500840308     C           KUT       READETABEL                    90
+006600840308     C   90                GOTO FINE
+006700900612LC   C   93                EXCPTTESTA
+006800900612LC   C   93                SETOF                     93
+006900840308     C           TBLCOD    CABGTCOD2      FINE       90
+007000840418     C           TBLCOD    COMP SAVCOD               919192
+007100900612      *-------
+007200840308     C   91
+007300900612     COR OF                DO
+007400900413     C                     Z-ADD1         XY
+007500900413     C           TBLCOD    LOKUP§CT,XY                   77
+007600900612      *---
+007700900413     C           *IN,77    IFEQ '1'
+007800900413     C                     MOVEL§DT,XY    NOME   89
+007900840427     C                     ELSE
+008000840427     C                     MOVE *ALL'*'   NOME
+008100840427     C                     END
+008200900612      *---
+008300840427     C                     EXCPTTESTA
+008400840427     C                     END
+008500900612      *-------
+008600840418     C           TBLKEY    IFNE *BLANK
+008700891222     C           TBLCOD    IFEQ '£3'
+008800901206     C           TBLCOD    OREQ '£2'
+008900930118     C           TBLCOD    OREQ '£6'
+009000930118     C           TBLCOD    OREQ '£7'
+009100930118     C           TBLCOD    OREQ '£9'
+009200901206     C           TBLCOD    OREQ '£1'
+009300891222     C           TBLCOD    OREQ 'FM'
+009400891222     C                     SETON                         80
+009500891222     C                     MOVEATBLUNI    §FA
+009600891222     C                     MOVE §FA       §FN
+009700891222     C                     MOVE TBLUNI    §A2     2
+009800891222     C                     END
+009900840418     C                     EXCPTDETT
+010000891222     C                     SETOF                     80
+010100840418     C                     END
+010200840418     C                     MOVE TBLCOD    SAVCOD  2
+010300840308     C                     GOTO INIZIO
+010400840308     C*------
+010500840308     C           FINE      TAG
+010600840308     C   89                EXCPTTESTA
+010700840308     C   89                EXCPTERR1
+010800840308     C                     SETON                     LR
+010900900413     C*
+011000900601     OPRTF198 E   02           TESTA
+011100840308     O                         ST1      132
+011200900413     O                         RSUT      20
+011300840308     O                         DAT       90 '  /  /  '
+011400840308     O                         ORA      100 '  :  :  '
+011500900413     O                         KNMUS    113
+011600840308     O                         PAGE     132
+011700840308     O*------- NOME TABELLA
+011800840308     O        E 2              TESTA
+011900840308     O                         ST2      132
+012000840308     O                         TBLCOD    19
+012100840427     O                         NOME     132
+012200840308     O        E 0              TESTA
+012300840308     O                         TBLCOD    19
+012400840427     O                         NOME     132
+012500840308     O*------- DESCRIZIONE CAMPI
+012600840308     O        E 2              TESTA
+012700840308     O                         ST3      132
+012800840308     O*------- DETTAGLIO
+012900840308     O        E 1              DETT
+013000840308     O                         TBLKEY     9
+013100891222     O                      N80TBLUNI    99
+013200900413     O                      N80TBLFTT   101
+013300900413     O                      N80TBLFLTZ  104
+013400900413     O                      N80TBLFTR   110
+013500900413     O                      N80TBLDTRZ  117
+013600891222     O                       80§FN   Z  153
+013700891222     O                       80§A2      157
+013800900413     O                       80TBLFTT   161
+013900900413     O                       80TBLFLTZ  164
+014000900413     O                       80TBLFTR   170
+014100900413     O                       80TBLDTRZ  177
+014200901206     O                         TBLFLG   180
+014300840308     O*------- ERRORE
+014400840308     O        E 2              ERR1
+014500840308     O                                   70 '** NESSUNA TABELLA'
+014600840308     O                                 +  1 'FRA GLI ESTREMI'
+014700840308     O                         COD1    +  2
+014800840308     O                         COD2    +  3
+014900840308     O                                 +  2 '**'
+015000840308**    ST1
+015100840308                                 ***  S T A M P A   T A B E L L E
+015200871102 ***                                            CNC007R   PAG.
+015300840308**    ST2
+015400840308CODICE TABELLA      *  DESCRIZIONE TABELLA
+015500840308
+015600840308** ST3

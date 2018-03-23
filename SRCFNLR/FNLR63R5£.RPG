@@ -1,0 +1,408 @@
+000100980325     H              J
+000200980325      *---------*----------------------------------------------------*
+000300980325      * FNLR63R5*                                                    *
+000400980325      *---------*                                                    *
+000500980325      *         - GESTIONE CHIUSURA DISTINTA ESTERO -                *
+000600980325      *           -- GESTIONE DETTAGLIO SEGNACOLLI --                *
+000700980325      *--------------------------------------------------------------*
+000800980325     FFNLR63D CF  E                    WORKSTN
+000900980330     F                                        NRR6  KSFILE LR63S06
+001000980330     F                                        NRR7  KSFILE LR63S07
+001100980325      *---------
+001200980325     FFNCDS02LUF  E           K        DISK
+001300980331     F                                              KCOMIT
+001400980325      *--------------------------------------------------------------*
+001500980330      *  SCHIERE
+001600980325      *--------------------------------------------------------------*
+001700980330     E                    ERR     1   1 70               ERRORI
+001800980330     E                    SCA        99 14               ANNULLATI
+001900980330     E                    SCE        99 14               ELIMINATI
+002000980330     E                    SCF        99 14               FORZATI
+002100980330      *--------------------------------------------------------------*
+002200980330      *  DS
+002300980330      *--------------------------------------------------------------*
+002400980325     IKPJBA     E DS
+002500980325     IFNLR63    E DSFNLR63DS
+002600980331      *  DS per inverisone data
+002700980331     IWLBDA8      DS
+002800980331     I                                        1   80G02DAT
+002900980331     I                                        9  160G02INV
+003000980331     I                                       17  17 G02ERR
+003100980331     I                                       18  220G02TGI
+003200980330      *
+003300980330     I            DS
+003400980330     I                                        1   8 DATA
+003500980330     I                                        9  11 STS
+003600980330     I                                       12  14 COD
+003700980330     I                                        1  14 SCHI
+003800980325      *--------------------------------------------------------------*
+003900980325      *  C I C L O        P R I N C I P A L E
+004000980325      *--------------------------------------------------------------*
+004100980325     C           *ENTRY    PLIST
+004200980325     C                     PARM           KPJBA
+004300980325      *
+004400980325     C                     MOVELKPJBU     FNLR63
+004500980330      *
+004600980330      *  Carico subfile hidden
+004700980330     C                     EXSR INZS07
+004800980330     C           NRR7      IFEQ *ZEROS
+004900980330     C                     GOTO FINE
+005000980330     C                     END
+005100980331      *
+005200980331      *  Caricamento subfile emissione da subfile hidden
+005300980330     C                     EXSR INZS06
+005400980331      *
+005500980331      *  Loop gestione errori
+005600980330     C           WFINE     DOUEQ'S'
+005700980331     C           WTPVID    CASEQ'6'       GESS06
+005800980330     C                     END
+005900980330     C                     END
+006000980330      *
+006100980330     C           FINE      TAG
+006200980330     C                     MOVELFNLR63    KPJBU
+006300980330     C                     COMIT
+006400980330     C                     SETON                     LR
+006500980325      *--------------------------------------------------------------*
+006600980330      *  Carico subfile hidden
+006700980325      *--------------------------------------------------------------*
+006800980330     C           INZS07    BEGSR
+006900980330      *
+007000980330      * Pulisco subfile
+007100980330     C                     SETON                     23
+007200980330     C                     WRITELR63C07
+007300980330     C                     SETOF                     23
+007400980330     C                     Z-ADD*ZEROS    NRR7
+007500980330      *
+007600980330     C                     Z-ADDD63NDT    KNDC
+007700980330     C                     Z-ADDD63AAS    KAAS
+007800980330     C                     Z-ADDD63LNP    KLNP
+007900980330     C                     Z-ADDD63NRS    KNRS
+008000980330     C                     Z-ADDD63NSP    KNSP
+008100980330     C           KCDS      CHAINFNCDS000             30
+008200980330      *
+008300980330     C           *IN30     DOWEQ'0'
+008400980330      *
+008500980330     C                     MOVELCDSSTS    V7CSTS
+008600980330     C                     MOVELCDSCOD    V7CCOD
+008700980330     C                     MOVELCDSMOT    V7DCOD
+008800980330     C                     MOVELCDSSEE    V7CSEE
+008900980331      *
+009000980331     C                     CLEARWLBDA8
+009100980331      *
+009200980331     C                     Z-ADDCDSDCM    G02INV
+009300980331     C                     MOVEL'3'       G02ERR
+009400980331     C                     CALL 'XSRDA8'
+009500980331     C                     PARM           WLBDA8
+009600980331     C                     Z-ADDG02DAT    V7CDCM
+009700980401     C                     Z-ADDCDSDCM    V7XDCM
+009800980331      *
+009900980331     C                     Z-ADDCDSDRC    G02INV
+010000980331     C                     MOVEL'3'       G02ERR
+010100980331     C                     CALL 'XSRDA8'
+010200980331     C                     PARM           WLBDA8
+010300980331     C                     Z-ADDG02DAT    V7CDRC
+010400980401     C                     Z-ADDCDSDRC    V7XDRC
+010500980331      *
+010600980331     C                     Z-ADDCDSDLA    G02INV
+010700980331     C                     MOVEL'3'       G02ERR
+010800980331     C                     CALL 'XSRDA8'
+010900980331     C                     PARM           WLBDA8
+011000980331     C                     Z-ADDG02DAT    V7CDLA
+011100980401     C                     Z-ADDCDSDLA    V7XDLA
+011200980331      *
+011300980331     C                     Z-ADDCDSDAG    G02INV
+011400980331     C                     MOVEL'3'       G02ERR
+011500980331     C                     CALL 'XSRDA8'
+011600980331     C                     PARM           WLBDA8
+011700980331     C                     Z-ADDG02DAT    V7CGIA
+011800980401     C                     Z-ADDCDSDAG    V7XGIA
+011900980331      *
+012000980330     C                     ADD  1         NRR7
+012100980330      *
+012200980330     C                     WRITELR63S07
+012300980330     C           KCDS      READEFNCDS000                 30
+012400980330     C                     END
+012500980330      *
+012600980330     C                     ENDSR
+012700980330      *---------------------------------------------------------------*
+012800980330      * Gestione videata subfile errori                               *
+012900980330      *---------------------------------------------------------------*
+013000980330     C           GESS06    BEGSR
+013100980330      *
+013200980330     C  N28                Z-ADD1         NR6KEY
+013300980330      *
+013400980331      *  Se errore emetto finestra con messaggio
+013500980330     C   28                EXFMTLR63W08
+013600980330      *
+013700980330     C                     WRITELR63Z06
+013800980330     C                     EXFMTLR63C06
+013900980330      *
+014000980330     C                     MOVEL*BLANKS   WINMSG
+014100980330     C                     Z-ADD1         NR6KEY
+014200980330     C                     SETOF                     28
+014300980331      *
+014400980330      *  Fine Lavoro
+014500980331     C           *INKC     IFEQ '1'
+014600980330     C                     MOVEL'S'       WFINE
+014700980330     C                     GOTO FINVD3
+014800980330     C                     END
+014900980331      *  Controlli
+015000980330     C                     EXSR CTR06
+015100980330      *  Se ho errori ricarico il subfile
+015200980330     C   28                EXSR INZS06
+015300980331      *  Se non ho errori elaboro dati per conferma
+015400980330     C  N28 KF             EXSR CONF06
+015500980330      *
+015600980330     C           FINVD3    ENDSR
+015700980330      *---------------------------------------------------------------*
+015800980331      * Gestione videata subfile emissione                            *
+015900980330      *---------------------------------------------------------------*
+016000980330     C           INZS06    BEGSR
+016100980330      *
+016200980330     C                     SETON                     63
+016300980330     C                     WRITELR63C06
+016400980330     C                     SETOF                     63
+016500980330      *
+016600980330     C                     MOVELD63AAS    V6CAAS
+016700980330     C                     Z-ADDD63LNP    V6CLNP
+016800980330     C                     Z-ADDD63NRS    V6CNRS
+016900980330     C                     Z-ADDD63NSP    V6CNSP
+017000980330     C                     Z-ADD1         NRR7    40
+017100980330     C                     Z-ADD0         NRR6    40
+017200980330     C                     MOVEL'N'       WFINE
+017300980330     C                     CLEARSCE
+017400980330     C                     CLEARSCA
+017500980330     C                     CLEARSCF
+017600980330      *
+017700980330     C           NRR7      CHAINLR63S07              31
+017800980330      *
+017900980330     C           *IN31     DOWEQ'0'
+018000980330      *
+018100980331     C                     SETOF                     22
+018200980330      *
+018300980331      *  Scrivo subfile emissione da subfile hidden
+018400980331     C                     MOVELV7CSTS    V6CSTS
+018500980331     C                     MOVELV7CCOD    V6CCOD
+018600980331     C                     MOVELV7DCOD    V6DCOD
+018700980331     C                     MOVELV7CSEE    V6CSEE
+018800980331     C                     Z-ADDV7CDCM    V6CDCM
+018900980331     C                     Z-ADDV7CDRC    V6CDRC
+019000980331     C                     Z-ADDV7CDLA    V6CDLA
+019100980331     C                     Z-ADDV7CGIA    V6CGIA
+019200980330     C                     MOVELV7CSCE    V6CSCE
+019300980330     C                     Z-ADDNRR7      V6CNR7
+019400980330     C                     ADD  1         NRR6
+019500980331     C                     WRITELR63S06
+019600980330      *
+019700980330     C                     ADD  1         NRR7
+019800980330     C           NRR7      CHAINLR63S07              31
+019900980330     C                     END
+020000980330      *
+020100980330     C                     ENDSR
+020200980330      *---------------------------------------------------------------*
+020300980331      *  Controllo errori
+020400980330      *---------------------------------------------------------------*
+020500980330     C           CTR06     BEGSR
+020600980330      *
+020700980331     C                     Z-ADD1         NRR6
+020800980331     C           NRR6      CHAINLR63S06              32
+020900980330      *
+021000980330     C           *IN32     DOWEQ'0'
+021100980330      *
+021200980331     C                     SETOF                     31
+021300980330     C                     MOVEL*BLANKS   SCHI
+021400980330      *
+021500980330      *  Creo DS per schiera
+021600980330      *
+021700980331     C                     MOVELV6CSTS    STS
+021800980331     C                     MOVELV6CCOD    COD
+021900980331     C           V6CDCM    IFGT *ZEROS
+022000980331     C                     MOVELV6CDCM    DATA
+022100980330     C                     ELSE
+022200980331     C           V6CDRC    IFGT *ZEROS
+022300980331     C                     MOVELV6CDRC    DATA
+022400980330     C                     ELSE
+022500980331     C           V6CDLA    IFGT *ZEROS
+022600980331     C                     MOVELV6CDLA    DATA
+022700980330     C                     ELSE
+022800980331     C                     MOVELV6CGIA    DATA
+022900980330     C                     END
+023000980331     C                     END
+023100980330     C                     END
+023200980330      *
+023300980330      *  Annulla record
+023400980330      *
+023500980331     C           V6CSCE    IFEQ 'A'
+023600980330      *
+023700980330     C           SCHI      LOKUPSCE                      28  escluse
+023800980330     C  N28      SCHI      LOKUPSCF                      28  forzate
+023900980330      *
+024000980331     C           SCHI      LOKUPSCA                      31
+024100980331     C           *IN31     IFEQ '0'
+024200980330     C                     Z-ADD1         XX      30
+024300980331     C           *BLANKS   LOKUPSCA,XX                   31
+024400980331     C   31                MOVELSCHI      SCA,XX
+024500980330     C                     END
+024600980330     C                     END
+024700980330      *
+024800980330      *  Escludi record
+024900980330      *
+025000980331     C           V6CSCE    IFEQ 'E'
+025100980330      *
+025200980330     C           SCHI      LOKUPSCA                      28  annullate
+025300980330     C  N28      SCHI      LOKUPSCF                      28  forzate
+025400980330      *
+025500980331     C           SCHI      LOKUPSCE                      31
+025600980331     C           *IN31     IFEQ '0'
+025700980331     C                     Z-ADD1         XX
+025800980331     C           *BLANKS   LOKUPSCE,XX                   31
+025900980331     C   31                MOVELSCHI      SCE,XX
+026000980330     C                     END
+026100980330     C                     END
+026200980330      *
+026300980330      *  Forzo record
+026400980330      *
+026500980331     C           V6CSCE    IFEQ *BLANKS
+026600980330      *
+026700980330     C           SCHI      LOKUPSCA                      28  annullate
+026800980330     C  N28      SCHI      LOKUPSCE                      28  escluse
+026900980330      *
+027000980331     C           SCHI      LOKUPSCF                      31
+027100980331     C           *IN31     IFEQ '0'
+027200980331     C                     Z-ADD1         XX
+027300980331     C           *BLANKS   LOKUPSCF,XX                   31
+027400980331     C   31                MOVELSCHI      SCF,XX
+027500980330     C                     END
+027600980330     C                     END
+027700980330      *
+027800980401      * Imposto messaggio d'errore
+027900980331     C           *IN28     IFEQ '1'
+028000980331     C                     Z-ADDNRR6      NR6KEY
+028100980330     C                     MOVELERR,1     WINMSG
+028200980330     C                     END
+028300980330      *
+028400980330      *  Aggiorno subfile
+028500980330     C                     SETON                     22
+028600980330     C                     UPDATLR63S06
+028700980330     C                     SETOF                     22
+028800980330      *
+028900980330      *  Aggiorno subfile nascosto
+029000980330     C           V6CNR7    CHAINLR63S07              31
+029100980330     C                     MOVELV6CSCE    V7CSCE
+029200980330     C  N31                UPDATLR63S07
+029300980330      *
+029400980401     C                     ADD  1         NRR6
+029500980401     C           NRR6      CHAINLR63S06              32
+029600980330     C                     END
+029700980401      *
+029800980401      *  Se ho rilevato almeno un errore accendo *IN28
+029900980401     C           WINMSG    COMP *BLANKS              2828
+030000980401      *
+030100980401      *  Può esistere 1 solo evento forzato
+030200980401     C  N28      SCF,1     IFNE *BLANKS
+030300980401     C           SCF,2     ANDNE*BLANKS
+030400980401     C                     SETON                     28
+030500980401     C                     Z-ADD1         NR6KEY
+030600980401     C                     MOVELERR,1     WINMSG
+030700980401     C                     END
+030800980330      *
+030900980330     C                     ENDSR
+031000980331      *---------------------------------------------------------------*
+031100980331      * No errori conferma scelte
+031200980331      *---------------------------------------------------------------*
+031300980331     C           CONF06    BEGSR
+031400980331      *
+031500980331     C                     Z-ADD1         NRR7
+031600980331      *
+031700980331     C           NRR7      CHAINLR63S07              31
+031800980331      *
+031900980331     C           *IN31     DOWEQ'0'
+032000980331      *
+032100980331      *  Annulla record
+032200980331      *
+032300980331     C           V7CSCE    IFEQ 'A'
+032400980331     C           KCDS      CHAINFNCDS000             30
+032500980331      *
+032600980331     C           *IN30     DOWEQ'0'
+032700980331     C                     EXSR VERRCD
+032800980331     C   32      KCDS      DELETFNCDS000             30
+032900980331     C           KCDS      READEFNCDS000                 30
+033000980331     C                     END
+033100980331      *
+033200980331     C                     END
+033300980331      *
+033400980331      *  Escludi record
+033500980331      *
+033600980331     C           V7CSCE    IFEQ 'E'
+033700980331     C           KCDS      CHAINFNCDS000             30
+033800980331      *
+033900980331     C           *IN30     DOWEQ'0'
+034000980331     C                     EXSR VERRCD
+034100980331     C   32                Z-ADD*ZEROS    CDSNDC
+034200980331     C   32                EXCPTAGGCDS
+034300980331     C           KCDS      READEFNCDS000                 30
+034400980331     C                     END
+034500980331      *
+034600980331     C                     END
+034700980331      *
+034800980331      * Leggo
+034900980331     C                     ADD  1         NRR7
+035000980331     C           NRR7      CHAINLR63S07              31
+035100980331     C                     END
+035200980331      *
+035300980331      * Imposto fine PGM e test di dettaglio segnacolli univoco per evento
+035400980331     C                     MOVEL'S'       WFINE
+035500980331     C                     Z-ADD1         D63DSE
+035600980331      *
+035700980401     C                     COMIT
+035800980401      *
+035900980331     C                     ENDSR
+036000980331      *---------------------------------------------------------------*
+036100980331      *  Verifica record
+036200980331      *---------------------------------------------------------------*
+036300980331     C           VERRCD    BEGSR
+036400980331      *
+036500980401     C           CDSDCM    IFEQ V7XDCM                     data consegna
+036600980401     C           CDSDLA    ANDEQV7XDLA                     data lasciato avviso
+036700980401     C           CDSDAG    ANDEQV7XGIA                     data giacenza
+036800980401     C           CDSDRC    ANDEQV7XDRC                     data riserva
+036900980331     C           CDSSTS    ANDEQV7CSTS                     stato
+037000980331     C           CDSCOD    ANDEQV7CCOD                     codice
+037100980331     C                     SETON                     32
+037200980331     C                     ELSE
+037300980331     C                     SETOF                     32
+037400980331     C                     END
+037500980331      *
+037600980331     C                     ENDSR
+037700980330      *--------------------------------------------------------------*
+037800980330      *  SUBROUTINE INIZIALE
+037900980330      *--------------------------------------------------------------*
+038000980330     C           *INZSR    BEGSR
+038100980325      *
+038200980325      * Definisco chiave di accesso
+038300980325     C           KCDS      KLIST
+038400980325     C                     KFLD           KNDC
+038500980325     C                     KFLD           KAAS
+038600980325     C                     KFLD           KLNP
+038700980325     C                     KFLD           KNRS
+038800980325     C                     KFLD           KNSP
+038900980325      *
+039000980325      * Definisco variabili
+039100980325     C           *LIKE     DEFN CDSNDC    KNDC
+039200980325     C           *LIKE     DEFN CDSAAS    KAAS
+039300980325     C           *LIKE     DEFN CDSLNP    KLNP
+039400980325     C           *LIKE     DEFN CDSNRS    KNRS
+039500980325     C           *LIKE     DEFN CDSNSP    KNSP
+039600980325      *
+039700980330     C                     MOVEL'N'       WFINE   1
+039800980331     C                     MOVEL'6'       WTPVID  1
+039900980330      *
+040000980325     C                     ENDSR
+040100980330      *--------------------------------------------------------------*
+040200980330      *  O U T P U T
+040300980330      *--------------------------------------------------------------*
+040400980330     OFNCDS000E                AGGCDS
+040500980330     O                         CDSNDC
+040600980330      *--------------------------------------------------------------*
+040700980330**
+040800980330Selezioni non congruenti. Controlla.

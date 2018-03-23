@@ -1,0 +1,44 @@
+000100921111/*----------------------------------------------------------*/
+000200070214/*  Caricamento spunte da terminalini radio PDA                               */
+000300070214/* -------------------------------------------------------------------------- */
+000400070214/* 1) DALLE SPUNTE LETTE -FIPSP00F- CREA:                                     */
+000500070214/*  - file di carica spunte (FIBARxxxP )                                      */
+000600070214/*  - file di log           (FIPSL00F  )                                      */
+000700070214/* 2) SOTTOMETTE aggiornamento su AS400 dei dati accodati in FIBARxxxP        */
+000800070214/*    a file spunte  AS400  (FNBRV00F)                                        */
+000900070214/*                                                                            */
+001000070214/* INPUT --> FILIALE CHE SPUNTA (lunga 3 senza lettera davanti)               */
+001100070214/* -------------------------------------------------------------------------- */
+001200070214 TRTCP8C:    PGM        PARM(&PARPO)
+001300930308
+001400070209             DCL        VAR(&PARPO) TYPE(*char) LEN(3)
+001500070209             DCL        VAR(&FLAG) TYPE(*char) LEN(1)
+001600070213             DCL        VAR(&PARSPU) TYPE(*CHAR) LEN(1) VALUE(' ')
+001700070209             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10) +
+001800070213                          VALUE('FIBAR00FP ')
+001900070213             DCL        VAR(&NOMEJOB) TYPE(*CHAR) LEN(10) +
+002000070214                          VALUE('PRxxx_P8  ')
+002100070213             DCL        VAR(&UTENT) TYPE(*CHAR) LEN(10) +
+002200070213                          VALUE('PRxxx     ')
+002300071009             DCL        VAR(&SYSNAM) TYPE(*CHAR) LEN(8)
+002400071009             RTVNETA    SYSNAME(&SYSNAM)
+002500070209             CHGVAR     VAR(%SST(&FILE 6 3)) VALUE(&PARPO)
+002600070209             OVRDBF     FILE(FIBAR00F) TOFILE(&FILE)
+002700071009/*                                               */
+002800071009 SOPRA:      CALL       PGM(TRTCP8R) PARM(&PARPO &FLAG &PARSPU &SYSNAM)
+002900070213/* Sottomossione pgm caricamento spunte su AS/400                 */
+003000070213             CHGVAR     VAR(%SST(&UTENT 3 3)) VALUE(&parpo)
+003100070213             CHGVAR     VAR(%SST(&NOMEJOB 3 3)) VALUE(&parpo)
+003200070925/* Asterisco momentaneamente call a pgm caricamento spunte su as per */
+003300070925/* prove */
+003400071016             IF         COND(&PARSPU = 'S') THEN(SBMJOB CMD(CALL +
+003500070213                          PGM(FNLS45C5) PARM(&PARPO &FILE)) +
+003600071016                          JOB(&NOMEJOB) JOBQ(AGGPC) USER(&UTENT))
+003700070213
+003800070213/* Se richiesta ciusura del sottosistema vado a fine pgm          */
+003900070209             IF         COND(&FLAG = '1') THEN(GOTO CMDLBL(FINE))
+004000070213
+004100070209             DLYJOB     DLY(15)
+004200070209             GOTO       CMDLBL(SOPRA)
+004300070213
+004400070209 FINE:       ENDPGM

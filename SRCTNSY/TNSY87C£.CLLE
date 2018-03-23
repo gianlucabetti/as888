@@ -1,0 +1,282 @@
+000100000000  /*---------------------------------------------------------------*/
+000200000000  /*     ESECUZIONE PROGRAMMI DI UTILITA' OPERATIVE VIDEO          */
+000300021001  /*     AS UNICO                                                  */
+000400000000  /*---------------------------------------------------------------*/
+000500000000             PGM
+000600000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000700000000             DCL        VAR(&XJBU) TYPE(*CHAR) LEN(256)
+000800000000             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+000900000000             DCL        VAR(&USER)    TYPE(*CHAR)  LEN(10)
+001000000000             DCL        VAR(&UTE) TYPE(*CHAR) LEN(3)
+001100021009             DCL        VAR(&ok) TYPE(*CHAR) LEN(1)
+001200040306             DCL        VAR(&CTLXXX) TYPE(*CHAR) LEN(5) VALUE('Rxxx*')
+001300040306             DCL        VAR(&PCxxx) TYPE(*CHAR) LEN(6) VALUE('Pxxx* ')
+001400021009             DCL        VAR(&VIxxx) TYPE(*CHAR) LEN(6) VALUE('Rxxx* ')
+001500000000             DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(10)
+001600080421             DCL        VAR(&USRL) TYPE(*CHAR) LEN(2750)
+001700080421             DCL        VAR(&CMD) TYPE(*CHAR) LEN(3000)
+001800080421             DCL        VAR(&NN) TYPE(*DEC) LEN(15 5) VALUE(3000)
+001900021009             DCL        VAR(&NUM) TYPE(*DEC) LEN(3 0) VALUE(0)
+002000021010             DCL        VAR(&DSBS55) TYPE(*CHAR) LEN(214)
+002100971113             DCL        VAR(&O50PSI) TYPE(*CHAR) LEN(10)
+002200971113             DCL        VAR(&O50PLA) TYPE(*CHAR) LEN(3)
+002300971119             DCL        VAR(&O50PL1) TYPE(*CHAR) LEN(1)
+002400021113             DCL        VAR(&TIBS36) TYPE(*CHAR) LEN(1691)
+002500021113             DCL        VAR(&O36POUTE) TYPE(*CHAR) LEN(3) VALUE('000')
+002600021003             DCL        VAR(&TRUL31) TYPE(*CHAR) LEN(759)
+002700021009             DCL        VAR(&UL31POG) TYPE(*CHAR) LEN(750)
+002800021010             DCL        VAR(&TESTDATIUT) TYPE(*CHAR) LEN(15)
+002900040611             DCL        VAR(&NQRY) TYPE(*CHAR) LEN(10)
+003000040611             DCL        VAR(&NLIB) TYPE(*CHAR) LEN(10) +
+003100040611                          VALUE('GAITRAOBJ')
+003200021003
+003300021003             DCLF       FILE(TNSY87D)
+003400000000
+003500000000             RTVNETA    SYSNAME(&SYSNAME)
+003600000000             QSYS/RTVJOBA USER(&USER) OUTQ(&OUTQ) USRLIBL(&USRL)
+003700021003
+003800020410             CHGVAR     VAR(%SUBSTRING(&UTE 1 3)) +
+003900020410                          VALUE(%SUBSTRING(&USER 1 3))
+004000020410             IF         COND(%SST(&OUTQ 1 1) *EQ '*') THEN(CHGVAR +
+004100161008                          VAR(&OUTQ) VALUE('PRTUNO    '))
+004200971118
+004300971118/* Aggiunte librerie in lista */
+004400971118             ADDLIBLE   LIB(GAITRAOBJ)
+004500971118             MONMSG CPF0000
+004600971113
+004700021003/* NO X LED E UTENTI SISTEMA                                */
+004800021003             IF         COND(&UTE *NE 'LED' *AND (&UTE *NE 'GEO') +
+004900021003                          *AND (&UTE *NE 'QPG') *AND (&UTE *NE +
+005000021003                          'QSY') *AND (&UTE *NE 'QSE')) THEN(DO)
+005100021003/* Chiama il pgm di reperimento librerie oggetti            */
+005200021010             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+005300021010             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('000')
+005400021010             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('000')
+005500021010             CALL       PGM(TIBS55R) PARM(&DSBS55)
+005600021003             MONMSG     MSGID(CPF0000)
+005700021010             CHGVAR     VAR(&O50PSI) VALUE(%SST(&DSBS55 33 10))
+005800021010             CHGVAR     VAR(&O50PLA) VALUE(%SST(&DSBS55 79 3))
+005900021010             CHGVAR     VAR(&O50PL1) VALUE(%SST(&DSBS55 79 1))
+006000021003/* Chiama il pgm di reperimento DATI UTENTE                 */
+006100021113             CHGVAR     VAR(%SST(&TIBS36 1 1)) VALUE('L')
+006200021113             CHGVAR     VAR(%SST(&TIBS36 2 10)) VALUE(&USER)
+006300021113             CALL       PGM(TIBS36R) PARM(&TIBS36)
+006400021003             MONMSG     MSGID(CPF0000)
+006500021113             CHGVAR     VAR(&O36POUTE) VALUE(%SST(&TIBS36 614 3))
+006600021003/* Chiama il pgm di reperimento PO AREA (>DOPO CAPO AREA)   */
+006700021003             CHGVAR     VAR(%SST(&TRUL31 1 2)) VALUE('AR')
+006800021003             CHGVAR     VAR(%SST(&TRUL31 4 3)) VALUE('000')
+006900021113             CHGVAR     VAR(%SST(&TRUL31 7 3)) VALUE(&O36POUTE)
+007000021004             CALL       PGM(TRUL31R) PARM(&KPJBA &TRUL31)
+007100021003             MONMSG     MSGID(CPF0000)
+007200021009             CHGVAR     VAR(&UL31POG) VALUE(%SST(&TRUL31 10 750))
+007300021003
+007400020410             ENDDO
+007500000000
+007600000000/* PARAMETRI KPJBA  */
+007700000000    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE(&USER)               /*KNMUS*/
+007800000000    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                   /*KNRAZ*/
+007900000000    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                   /*KNRVJ*/
+008000000000    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(0)                   /*KNRJO*/
+008100000000    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                 /*KSTJO*/
+008200000000    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                   /*KTMIN*/
+008300000000    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                 /*KTPAZ*/
+008400000000    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                   /*KNMSB*/
+008500000000    CHGVAR VAR(%SST(&KPJBA 77 10)) VALUE('AZNAUTO   ')        /*KNMEB*/
+008600000000    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                   /*KKEYF*/
+008700000000    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                   /*KRCDS*/
+008800000000    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                 /*KEXCN*/
+008900000000    CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('P5')                /*KCOJB*/
+009000000000    CHGVAR VAR(%SST(&KPJBA 156 7)) VALUE('       ')           /*KQEBI*/
+009100000000    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')                 /*KCANC*/
+009200971113    CHGVAR VAR(%SST(&KPJBA 92 10)) VALUE(&O50PSI)             /*KNSIF*/
+009300000000    CHGVAR VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)             /*KPJBU*/
+009400990529
+009500021009             IF         COND(&UTE *eq 'LED' *or (&UTE *eq 'GEO')) +
+009600021009                          THEN(DO)
+009700021009             CHGVAR     VAR(%SUBSTRING(&PCxxx 2 3)) +
+009800021009                          VALUE(%SUBSTRING(&USER 4 3))
+009900021009             CHGVAR     VAR(%SUBSTRING(&VIxxx 2 3)) +
+010000021009                          VALUE(%SUBSTRING(&USER 4 3))
+010100021009                          enddo
+010200000000
+010300021113             CHGVAR     VAR(&PO) VALUE(&O36poute)
+010400021009
+010500000000 /*------- EMISSIONE FORMATO -----------------------*/
+010600021009 /*  imposta costanti                       --------*/
+010700000000 EMISS:
+010800000000             CHGVAR     VAR(&DES1) VALUE('Visualizza messaggi del +
+010900000000                          video               ')
+011000000000             CHGVAR     VAR(&DES2) VALUE('             ')
+011100000000             CHGVAR     VAR(&DES3) VALUE('Visualizza coda di +
+011200000000                          stampa            ')
+011300130404             CHGVAR     VAR(&DES4) VALUE('                         ')
+011400021010             CHGVAR     VAR(&DES5) VALUE('                       ')
+011500021014             CHGVAR     VAR(&DES6) VALUE('Visualizza Code Stampa PC ')
+011600021014             CHGVAR     VAR(&DES7) VALUE('Visualizza Code Stampa AS ')
+011700990529             CHGVAR     VAR(&DES8) VALUE('Visualizza Stampe utente ')
+011800130404             CHGVAR     VAR(&DES9) VALUE('                        ')
+011900040306             CHGVAR     VAR(&DES10) VALUE('Visualizza lavori batch +
+012000040306                          (x msg)')
+012100040306             CHGVAR     VAR(&DES11) VALUE('                         ')
+012200021014             CHGVAR     VAR(&DES12) VALUE('Visualizza Stampanti PC ')
+012300021014             CHGVAR     VAR(&DES13) VALUE('Visualizza Stampanti AS ')
+012400021010             CHGVAR     VAR(&DES14) VALUE('Visualizza stato Unità PC ')
+012500021010             CHGVAR     VAR(&DES15) VALUE('Visualizza stato Unità AS ')
+012600130404             CHGVAR     VAR(&DES16) VALUE('QQ                     ')
+012700021010             CHGVAR     VAR(&DES17) VALUE('Visualizza spunte NON +
+012800021010                          aggiornate')
+012900021009             CHGVAR     VAR(&DES18) VALUE('Interrogazione bolle   ')
+013000021009             CHGVAR     VAR(&DES19) VALUE('Interroga organigramma ')
+013100000000             CHGVAR     VAR(&DES20) VALUE('Interrogazione cappario')
+013200000000             CHGVAR     VAR(&DES21) VALUE('Interrogazione località')
+013300021009             CHGVAR     VAR(&DES22) VALUE('                       ')
+013400000000             CHGVAR     VAR(&DES23) VALUE('                       ')
+013500021009             CHGVAR     VAR(&DES24) VALUE('Simula Delivery e +
+013600021009                          Tassazione')
+013700010417
+013800130404             CHGVAR     VAR(&DES25) VALUE('                       ')
+013900021009             CHGVAR     VAR(&DES26) VALUE('                       ')
+014000021009             CHGVAR     VAR(&DES27) VALUE('                       ')
+014100021009             CHGVAR     VAR(&DES88) VALUE('Gestione O.R.M.        ')
+014200021009             IF         COND(&UTE *eq 'LED' *or  (&UTE *eq 'GEO')) +
+014300021009                          THEN(DO)
+014400021009             CHGVAR     VAR(&DES9) VALUE('                         ')
+014500021009             CHGVAR     VAR(&DES24) VALUE('                         ')
+014600021009             CHGVAR     VAR(&DES88) VALUE('                        ')
+014700991113             ENDDO
+014800120307             IF         COND(%SST(&o50psi 1 6) *EQ 'GAITRA') THEN(DO)
+014900120307             CHGVAR     VAR(&DES88) VALUE('                       ')
+015000120306             CHGVAR     VAR(&DES17) VALUE('                      +
+015100120306                                    ')
+015200120306             CHGVAR     VAR(&DES18) VALUE('                       ')
+015300120306             enddo
+015400000000             CHGVAR     VAR(&SCELTA) VALUE(0)
+015500000000
+015600021009 /*------- LETTURA FORMATO -----------------------*/
+015700021001             SNDRCVF    RCDFMT(SY87D01)
+015800000000             IF         COND(&IN12) THEN(GOTO CMDLBL(FINE))
+015900021009 /*  controlla PO immesso                   --------*/
+016000021009             CHGVAR     VAR(&NUM) VALUE(-2)
+016100021009             CHGVAR     VAR(&OK) VALUE(' ')
+016200021009SU:
+016300021009             CHGVAR     VAR(&NUM) VALUE(&NUM + 3)
+016400021009             IF         COND(&NUM *GT 747) THEN(GOTO CMDLBL(BASTA))
+016500021009             IF         COND(%SST(&UL31POG &NUM 3) *LE '000') +
+016600021009                          THEN(GOTO CMDLBL(BASTA))
+016700021009             IF         COND(%SST(&UL31POG &NUM 3) *EQ &PO) THEN(DO)
+016800021009             CHGVAR     VAR(&OK) VALUE('S')
+016900021009             GOTO       CMDLBL(BASTA)
+017000021009             enddo
+017100021009             GOTO       CMDLBL(SU)
+017200021009BASTA:
+017300021009             IF         COND(&OK *ne 'S') THEN(CHGVAR VAR(&PO) +
+017400021113                          VALUE(&O36POUTE))
+017500021009             IF         COND(&UTE *NE 'LED' *AND (&UTE *NE 'GEO')) +
+017600021009                          THEN(DO)
+017700021009             CHGVAR     VAR(%SUBSTRING(&PCXXX 2 3)) VALUE(&PO)
+017800021009             CHGVAR     VAR(%SUBSTRING(&VIXXX 2 3)) VALUE(&PO)
+017900040306             CHGVAR     VAR(%SUBSTRING(&ctlXXX 2 3)) VALUE(&PO)
+018000021009             enddo
+018100000000
+018200021009 /*  imposta comandi                        --------*/
+018300000000             IF         COND(&SCELTA = 1) THEN(DSPMSG)
+018400000000             IF         COND(&SCELTA *EQ 3) THEN(WRKOUTQ OUTQ(&OUTQ))
+018500980123
+018600021014             IF         COND(&SCELTA *EQ 6) THEN(WRKOUTQ OUTQ(&PCXXX))
+018700021014             IF         COND(&SCELTA *EQ 7) THEN(WRKOUTQ OUTQ(&VIXXX))
+018800980123
+018900021010             IF         COND(&SCELTA *EQ 8) THEN(WRKSPLF)
+019000040306             IF         COND(&SCELTA = 10) THEN(do)
+019100050919             WRKACTJOB  SBS(KPBATCH QBATCH QUSRWRK) SEQ(*STS) /* +
+019200050919                          lavori */
+019300040306             MONMSG     MSGID(CPF0000)
+019400040306             ENDDO
+019500021014             IF         COND(&SCELTA *EQ 12) THEN(WRKWTR WTR(&PCXXX))
+019600021014             IF         COND(&SCELTA *EQ 13) THEN(WRKWTR WTR(&VIXXX))
+019700021010             IF         COND(&SCELTA *EQ 14) THEN(WRKCFGSTS +
+019800021010                          CFGTYPE(*DEV) CFGD(&PCxxx))
+019900021010             IF         COND(&SCELTA *EQ 15) THEN(WRKCFGSTS +
+020000021010                          CFGTYPE(*DEV) CFGD(&VIxxx))
+020100040611             IF         COND(&SCELTA =16) THEN(DO)
+020200040611             CALL       PGM(TNSYQQ99C1) PARM(&NQRY &NLIB &KPJBA)
+020300040611             MONMSG CPF0000
+020400040611             ENDDO
+020500000000
+020600120307             IF         COND(%SST(&o50psi 1 6) *NE 'GAITRA') THEN(DO)
+020700021010             IF         COND(&SCELTA = 17) THEN(DO)
+020800021010             IF         COND(&O50PLA *EQ '201' *OR &O50PLA *EQ +
+020900021010                          '101') THEN(DO)
+021000021010             CALL       PGM(TNSY87C2) PARM(&PO)
+021100021010             MONMSG     MSGID(CPF0000)
+021200021010             ENDDO
+021300021010             ENDDO
+021400120306             ENDDO
+021500000000
+021600120307             IF         COND(%SST(&o50psi 1 6) *NE 'GAITRA') THEN(DO)
+021700000000             IF         COND(&SCELTA = 18) THEN(DO)
+021800971119             IF         COND(&O50PLA *EQ '201' *OR &O50PLA *EQ '101' +
+021900971119                          *OR &O50PL1 *EQ 'P') THEN(DO)
+022000980604             CHGVAR     VAR(%SST(&XJBU  201 7)) VALUE('FNLS04R')
+022100971113             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+022200980604             CALL FNLV02R PARM(&KPJBA)
+022300000000             MONMSG     MSGID(CPF0000)
+022400980604    /* TORNO A PULIRE LA KPJBU   */
+022500980604             CHGVAR     VAR(%SST(&XJBU  201 7)) VALUE('       ')
+022600000000             ENDDO
+022700971113             ENDDO
+022800120306             ENDDO
+022900000000
+023000000000             IF         COND(&SCELTA = 19) THEN(DO)
+023100971113             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+023200000000             CALL       PGM(TNSD16R) PARM(&KPJBA)
+023300000000             MONMSG     MSGID(CPF0000)
+023400000000             ENDDO
+023500000000
+023600120307             IF         COND(&UTE *NE 'LED' *AND (&UTE *NE 'GEO') +
+023700120307                          *AND (%SST(&O50PSI 1 6) *NE 'GAITRA')) +
+023800120307                          THEN(DO)
+023900010417             IF         COND(&SCELTA = 88) THEN(DO)
+024000010417             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+024100150923             CALL       PGM(FIOR010R) PARM(&KPJBA)
+024200010417             MONMSG     MSGID(CPF0000)
+024300010417             ENDDO
+024400020410             ENDDO
+024500010417
+024600000000
+024700000000             IF         COND(&SCELTA = 20) THEN(DO)
+024800971113             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+024900000000             CHGVAR     VAR(%SST(&KPJBA 247 3)) VALUE('C05')
+025000000000             CALL       PGM(TISI00R) PARM(&KPJBA)
+025100000000             MONMSG     MSGID(CPF0000)
+025200000000             ENDDO
+025300000000
+025400000000             IF         COND(&SCELTA = 21) THEN(DO)
+025500971113             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+025600000000             CHGVAR     VAR(%SST(&KPJBA 247 3)) VALUE('L05')
+025700000000             CALL       PGM(TISI00R) PARM(&KPJBA)
+025800000000             MONMSG     MSGID(CPF0000)
+025900000000             ENDDO
+026000000000
+026100020410             IF         COND(&UTE *NE 'LED' *AND (&UTE *NE 'GEO')) +
+026200020410                          THEN(DO)
+026300000000             IF         COND(&SCELTA = 24) THEN(DO)
+026400971119             IF         COND(&O50PLA *EQ '201' *OR &O50PLA *EQ '101' +
+026500971119                          *OR &O50PL1 *EQ 'P') THEN(DO)
+026600971113             CHGVAR     VAR(%SST(&KPJBA 247 256)) VALUE(&XJBU)
+026700000000             CALL TISI92R PARM(&KPJBA)
+026800000000             MONMSG     MSGID(CPF0000)
+026900000000             ENDDO
+027000971113             ENDDO
+027100000228             ENDDO
+027200000000
+027300000000             GOTO       CMDLBL(EMISS)
+027400000000 FINE:
+027500011210
+027600011210             RCLRSC
+027700011210
+027800000000             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &USRL +
+027900000000                          *CAT ')')
+028000000000             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+028100971113             MONMSG     MSGID(CPF0000)
+028200000000             ENDPGM

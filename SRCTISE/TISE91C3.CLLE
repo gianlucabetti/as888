@@ -1,0 +1,46 @@
+000100000000/*------------------------------------------------------------------------------------------------*/
+000200100204/* STATISTICHE DELTA -      CREA FILE di TOTALE    W A D E A P C T  ?                            */
+000300080916/*      questo programma deve girare ASSOLUTAMENTE con il Superlancio                             */
+000400080916/*        ossia prima deve essere elaborato l'ITALIA e poi l'ESTERO                               */
+000500080916/*      altrimenti                                                                                */
+000600080916/*        i dati non saranno corretti.                                                            */
+000700000000/*------------------------------------------------------------------------------------------------*/
+000800100216/*          ?   - 02/02/2010 aggiunti 3 WFiles WADEAPCI/E/T come i WADELPCF/E/T ? stesso          */
+000900100203/*            tracciato con in + il Network ed il Tipo servizio                                   */
+001000100203/*            il File WADEAPCT deve contenere la somma x cliente dei 2 file Italia  +  Estero.    */
+001100000000/*------------------------------------------------------------------------------------------------*/
+001200080916 TISE91C1:   PGM        PARM(&KPJBA)
+001300000000
+001400000000/* DICHIARAZIONI VARIABILI ---------------------------------------------------------------------- */
+001500000000             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001600080918             DCL        VAR(&KPJBU) TYPE(*CHAR) LEN(256)
+001700030311             DCL        VAR(&FPC)   TYPE(*CHAR) LEN(1)
+001800050224             DCL        VAR(&IOE)   TYPE(*CHAR) LEN(1)
+001900000000
+002000000000/* VALORIZZAZIONE VARIABILI --------------------------------------------------------------------- */
+002100080918             CHGVAR     VAR(&KPJBU) VALUE(%SUBSTRING(&KPJBA 247 256))
+002200080918             CHGVAR     VAR(&IOE) VALUE(%SUBSTRING(&KPJBA 281 1))
+002300030311             CHGVAR     VAR(&FPC) VALUE(%SUBSTRING(&KPJBA 331 1))
+002400030311
+002500100216/*  ?    CANCELLA IL FILE DI WRK PC (WADEAPCT) - ricoprendolo con il WADEAPCI       ?            */
+002600100204/*  ?                                                             ----ITALIA---     ?            */
+002700080918             IF         COND((&FPC *EQ 'S') *AND ((&IOE *EQ 'I') *OR +
+002800080918                          (&IOE *EQ ' ')) *OR (&KPJBU *EQ ' ')) +
+002900080918                          THEN(DO)
+003000080916
+003100100204/*  con un CPYFile:  ?*/
+003200100216             CPYF       FROMFILE(WADEAPCI) TOFILE(WADEAPCT) +
+003300100216                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+003400080916
+003500030311             ENDDO
+003600000000
+003700100204/*  ?   SOMMA quindi i dati dell'ESTERO a quelli riportati dell'ITALIA.       -     ?            */
+003800080918             IF         COND(((&FPC *EQ 'S') *AND (&IOE *EQ 'E')) +
+003900080918                          *OR (&KPJBU *EQ ' ')) THEN(DO)
+004000080916
+004100080916/* ESEGUE la somma dell'estero  sull'ITALIA copiato prima --------------------------- */
+004200100302             CALL       PGM(TISE91R3) PARM(&KPJBA)
+004300080916
+004400050224             ENDDO
+004500000000
+004600000000             ENDPGM

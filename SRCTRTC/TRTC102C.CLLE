@@ -1,0 +1,52 @@
+000100880609/********************************************************************/
+000200010913/*  RICEVE ED ELABORA ARCHIVI E.D.I.  IN SEDE E LI TRASMETTE "TC77" */
+000300880609/********************************************************************/
+000400050221             PGM        PARM(&FLGTST &USRMSG &TIPFIL &CODFIL &INZPRG)
+000500010911
+000600050221             DCL        VAR(&FLGTST) TYPE(*CHAR) LEN(1)
+000700050221             DCL        VAR(&USRMSG) TYPE(*CHAR) LEN(10)
+000800050221             DCL        VAR(&TIPFIL) TYPE(*CHAR) LEN(10)
+000900050221             DCL        VAR(&CODFIL) TYPE(*CHAR) LEN(3)
+001000050221             DCL        VAR(&INZPRG) TYPE(*CHAR) LEN(5)
+001100090917
+001200090917/* ?******************************************************************* */
+001300090917/* ?                                                                    */
+001400090917/* ? Controlla se ALLOCATO FILE SNDIFCSUM da procedure di MANIFEST      */
+001500090917/* ?  in esecuzione quindi ritenta fino a trovarlo LIBERO               */
+001600090917/* ?                                                                    */
+001700090917/* ? COMUNQUE ritenta più volte fino a riuscirci.                       */
+001800090917/* ?   (dopo 60 secondi di intervallo)                                  */
+001900090917/* ?******************************************************************* */
+002000090917
+002100090917  RIPROVA:
+002200090917
+002300090917             IF         COND(&TIPFIL *EQ 'IFCSUM') THEN(DO)
+002400090917             ALCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+002500090917             MONMSG     MSGID(CPF1002) EXEC(DO)
+002600090917
+002700090917             DLYJOB     DLY(60) /* attende e riprova */
+002800090917             GOTO       CMDLBL(RIPROVA)
+002900090917             ENDDO
+003000090917             ENDDO
+003100090917
+003200050324
+003300050324/* ?------------------------------------------------------------------ */
+003400050324/* ?Esegue un ritardo per permettere al CPYF precedente di essere      */
+003500050324/* ? completato altrimenti l'RPG non ha ancora a disposizione          */
+003600050324/* ?  i records da elaborare per l'invio.                              */
+003700050324/* ?------------------------------------------------------------------ */
+003800090917             DLYJOB     DLY(60)
+003900050221
+004000050221             CALL       PGM(TRTC102R) PARM(&FLGTST &USRMSG &TIPFIL +
+004100050221                          &CODFIL &INZPRG)
+004200090917
+004300090917             IF         COND(&TIPFIL *EQ 'IFCSUM') THEN(DO)
+004400090917/* ?******************************************************************* */
+004500090917/* ? quindi disalloca il SNDIFCSUM                                      */
+004600090917/* ?******************************************************************* */
+004700090917             DLCOBJ     OBJ((SNDIFCSUM *FILE *EXCL))
+004800090917             ENDDO
+004900090917
+005000050221
+005100010911 FINE:
+005200010903             ENDPGM

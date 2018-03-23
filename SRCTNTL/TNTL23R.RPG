@@ -1,0 +1,485 @@
+000100951009     H*------------------------------------------------------------------------*
+000200951009     H* CREAZIONE GRIGLIA (FILTRO)                                     NO      *
+000300951009     H*------------------------------------------------------------------------*
+000400951009     H              J
+000500951009     F*------------------------------------------------------------------------*
+000600950921     FTNTL23D CF  E                    WORKSTN
+000700950922     FTNTLT01LIF  E           K        DISK
+000800950922     FAZORG01LIF  E           K        DISK
+000900951006     FTNTST01LIF  E           K        DISK
+001000951030     FTABEL00FIF  E           K        DISK
+001100951204     FAZCLN01LIF  E           K        DISK
+001200951204     E                    MSG     1  16 78               MSG VIDEO
+001300951030     E                    SMS        78  1               DI COMODO
+001400951204     E                    TAB     1   7  1   TABDAY  9   GG. SETTIMANA
+001500951204     E                    POM        31  1               FESTIV.POMER.
+001600960122     E                    S1Y        10  1               SIMBOLI CALEND
+001700960122     E                    FET        10  1               FLAG.FESTIVO
+001800950921     IWLBDA8      DS
+001900950921     I                                        1   80G08DAT
+002000950921     I                                        9  160G08INV
+002100950921     I                                       17  17 G08ERR
+002200950921     I                                       18  220G08TGI
+002300951204     I            DS
+002400951204     I                                        1  31 CLNPOM
+002500951204     I                                        1  31 POM
+002600960318     IDSTL23      DS
+002700960318     I                                        1   7 D23TRN
+002800960318     I* Opzione di ricreazione griglia se già esistente:
+002900960318     I* ('S'=Ricrea ' '=Non ricrea)
+003000960318     I                                        8   8 D23CRT
+003100950922     IPARAM       DS
+003200950922     I* DATA TRAINO DAL
+003300950922     I                                        1   80PARDTD
+003400950922     I* DATA TRAINO AL
+003500950922     I                                        9  160PARDTA
+003600950922     I* NUMERO TRAINO
+003700950922     I                                       17  230PARTRN
+003800950922     I* TERMINAL DI PARTENZA
+003900950922     I                                       24  260V1CTFP
+004000951002     I* DATA DECORRENZA TRAINO
+004100951002     I                                       27  340PARDDE
+004200951205     I* CREAZIONE SE GIORNO FESTIVO (' '=No controllo festivo
+004300951205     I*                             ('S'=Controllo festivo e crea solo
+004400951205     I*                                  se non festivo)
+004500951205     I                                       35  35 PARFES
+004600960318     IDSTL28      DS
+004700960318     I* DATA TRAINO DAL
+004800960318     I                                        1   80D28DTD
+004900960318     I* DATA TRAINO AL
+005000960318     I                                        9  160D28DTA
+005100960318     I* NUMERO TRAINO
+005200960318     I                                       17  230D28TRN
+005300960318     I* TERMINAL DI PARTENZA
+005400960318     I                                       24  260D28TFP
+005500960318     I* Opzione di ricreazione immediata della griglia:
+005600960318     I* ('S'=Ricrea ' '=Non ricrea)
+005700960318     I                                       27  27 D28CRT
+005800951116     IDS00      E DSTNTL00DS
+005900971203     IDSLV55    E DSFNLV55DS
+006000950921     IUT§DSE    E DSUT§DSE0F
+006100950921     IKPJBA     E DS
+006200951030     IDSTV      E DS
+006300960122     IDS1Y      E DS
+006400000626     IOG143     E DS
+006500950921     I           SDS
+006600950921     I                                        1  10 V1CPGM
+006700951123     I              '*  CREAZIONE GRIGLIA-C         V1CTIT
+006800951204     I              ' TRAINI *'
+006900951009     C****************************************************************
+007000951009     C*  RIEPILOGO INDICATORI
+007100951009     C***************************************************************
+007200951009     C* 01    - ERRORE DATA TRAINO DAL
+007300951009     C* 02    - ERRORE DATA TRAINO AL
+007400951009     C* 03    - ERRORE NUMERO TRAINO
+007500951123     C* 04    - ERRORE TERMINAL DI PARTENZA TRAINO
+007600960318     C* 09    - PROTEZIONE NUMERO TRAINO E TERMINAL PARTENZA
+007700951123     C* 10    - PROTEZIONE CAMPI VIDEO (UTILIZZATO IN TNTL27R)
+007800951204     C* 11    - ON  --> NO DISPLAY MESSAGGIO DI ATTENZIONE DATA FESTIVA
+007900951204     C*                 (IN QUESTO PGM DEVE ESSERE = OFF)
+008000951009     C* 30    - COMODO
+008100951009     C* 31    - COMODO
+008200951009     C* 90    - ERRORE GENERICO DSPF
+008300951009     C***************************************************************
+008400950922     C           INIZIO    TAG
+008500950921     C                     CLEARV1CDTD
+008600950921     C                     CLEARV1CDTA
+008700960318     C           D23TRN    IFGT *ZEROS
+008800960318     C                     MOVE D23TRN    V1CTRN
+008900960318     C                     SETON                     09
+009000960318     C                     ELSE
+009100960318     C                     CLEARV1CTRN
+009200960318     C                     END
+009300950921     C                     CLEARV1CTFP
+009400951009     C                     CLEARV1DTFP
+009500951206     C                     CLEARV1DGSE
+009600950921     C* Emissione formato video
+009700950922     C           EMISS     TAG
+009800950921     C                     EXFMTTL23D01
+009900950921     C                     SETOF                     90
+010000950921     C                     CLEARV1ZMSG
+010100950921     C           *INKC     CABEQ*ON       FINE
+010200950921     C* Richiamo routine controlli
+010300950927     C                     EXSR CTRD01
+010400950921     C           *IN90     IFEQ *ON
+010500950921     C           *INKF     OREQ *OFF
+010600950922     C                     GOTO EMISS
+010700950921     C                     END
+010800950921     C* Richiamo batch creazione griglia
+010900950921     C           *INKF     IFEQ *ON
+011000960318     C* Annullo griglia se richiesta la ricreazione
+011100960318     C           D23CRT    IFEQ 'S'
+011200960318     C                     MOVE PARDTD    D28DTD
+011300960318     C                     MOVE PARDTA    D28DTA
+011400960318     C                     MOVE PARTRN    D28TRN
+011500960318     C                     MOVE V1CTFP    D28TFP
+011600960318     C                     MOVELD23CRT    D28CRT
+011700960318     C                     MOVELDSTL28    KPJBU
+011800960318     C                     MOVEL'TL28'    KCOAZ
+011900960318     C                     CALL 'BCH10'
+012000960318     C                     PARM           KPJBA
+012100960318     C                     END
+012200950922     C                     MOVELPARAM     KPJBU
+012300950922     C                     MOVE 'TL24'    KCOAZ
+012400950922     C                     CALL 'BCH10'
+012500950922     C                     PARM           KPJBA
+012600960318     C* Se richiesto richiamo pgm di abbinamento fv a griglia
+012700960318    1C           D23CRT    IFEQ 'S'
+012800010927     C                     MOVE 'TL45'    KCOAZ
+012900960318     C                     CLEARKPJBU
+013000960318     C                     CALL 'BCH10'
+013100960318     C                     PARM           KPJBA
+013200960318     C* Se richiesto richiamo pgm di abbin. date/ore arrivo a griglia
+013300960318     C                     MOVE 'TL26'    KCOAZ
+013400960318     C                     CLEARKPJBU
+013500960318     C                     CALL 'BCH10'
+013600960318     C                     PARM           KPJBA
+013700960318    1C                     END
+013800960318     C*
+013900951206     C*          V1CTRN    IFNE *BLANKS
+014000951206     C*          V1CTFP    ORNE *ZEROS
+014100950922     C                     GOTO INIZIO
+014200951206     C*                    END
+014300950921     C                     END
+014400950921     C           FINE      TAG
+014500971203     C                     CLEARDSLV55
+014600971203     C                     MOVEL'C'       D55TLA
+014700971203     C                     CALL 'FNLV55R'
+014800971203     C                     PARM           DSLV55
+014900950921     C                     SETON                     LR
+015000950921     C****************  CONTROLLI VIDEO   *****************************
+015100950927     C           CTRD01    BEGSR
+015200950921     C                     SETOF                     010203
+015300950921     C                     SETOF                     04
+015400951002     C                     CLEARPARDTD
+015500951002     C                     CLEARPARDTA
+015600951002     C                     CLEARPARTRN
+015700951002     C                     CLEARPARDDE
+015800951009     C                     CLEARV1DTFP
+015900951204     C                     CLEARV1DGSE
+016000951206     C**** CONTROLLI DATE
+016100950922     C* Controllo data dal (obbligatoria)
+016200950921    1C           V1CDTD    IFEQ *ZEROS
+016300950922     C                     MOVELMSG,1     V1ZMSG
+016400950921     C                     SETON                     0190
+016500950922     C                     GOTO ENDCTR
+016600950922    1C                     END
+016700950921     C                     CLEARWLBDA8
+016800950921     C                     MOVE V1CDTD    G08DAT
+016900950921     C                     CALL 'XSRDA8'
+017000950921     C                     PARM           WLBDA8
+017100950922    1C           G08ERR    IFEQ '1'
+017200950922     C                     MOVELMSG,2     V1ZMSG
+017300950921     C                     SETON                     0190
+017400950922     C                     GOTO ENDCTR
+017500950922    1C                     END
+017600950922     C                     MOVE G08DAT    V1CDTD
+017700950921     C                     Z-ADDG08TGI    TGIDTD
+017800950922     C                     MOVE G08INV    PARDTD
+017900951205     C* Controllo data al se immessa
+018000950921    1C           V1CDTA    IFNE *ZEROS
+018100950921     C                     CLEARWLBDA8
+018200950921     C                     MOVE V1CDTA    G08DAT
+018300950921     C                     CALL 'XSRDA8'
+018400950921     C                     PARM           WLBDA8
+018500950921    2C           G08ERR    IFEQ '1'
+018600950922     C                     MOVELMSG,3     V1ZMSG
+018700950922     C                     SETON                     0290
+018800950922     C                     GOTO ENDCTR
+018900951030   X2C                     ELSE
+019000950922     C                     MOVE G08DAT    V1CDTA
+019100950922     C                     MOVE G08INV    PARDTA
+019200950921    2C                     END
+019300950922     C* Controllo se data dal > data al
+019400951102    2C           PARDTD    IFGT PARDTA
+019500950921     C                     MOVELMSG,4     V1ZMSG
+019600950921     C                     SETON                     010290
+019700950922     C                     GOTO ENDCTR
+019800950922    2C                     END
+019900950922     C* Controllo che periodo richiesto sia <= 31 Giorni
+020000950921     C           G08TGI    SUB  TGIDTD    W0050   50
+020100950922    2C           W0050     IFGT 30
+020200950922     C                     MOVELMSG,5     V1ZMSG
+020300950921     C                     SETON                     010290
+020400950922     C                     GOTO ENDCTR
+020500950922    2C                     END
+020600950921    1C                     END
+020700951206     C* Determino giorno settimana di data dal
+020800951206     C                     MOVELV1CDTD    W006A   6
+020900951206     C                     MOVE V1CDTD    W002A   2
+021000951206     C                     MOVE W002A     W006A
+021100951206     C                     CALL 'XGIOSE1'
+021200951206     C                     PARM           W006A   6
+021300951206     C                     PARM           GIOSET  1
+021400951206     C           GIOSET    LOKUPTAB       TABDAY         30
+021500951206     C                     MOVELTABDAY    V1DGSE
+021600951206     C* Richiesta creazione griglia di una sola data:
+021700951206    1C           PARDTA    IFEQ *ZEROS
+021800951206     C           PARDTA    OREQ PARDTD
+021900951206     C* abblenco parfes in modo da creare griglia anche se data festiva
+022000951206     C                     CLEARPARFES
+022100951206     C* Se data traino festiva emetto messaggio di avvertimento
+022200951206    3C           PARDTD    IFNE COMDTD
+022300951206     C                     MOVELPARDTD    KANN
+022400951206     C                     MOVE PARDTD    W0040   40
+022500951206     C                     MOVELW0040     KMES
+022600951206     C                     MOVE W0040     GG      20
+022700951206     C           KCLN      CHAINAZCLN01L             30
+022800951206    4C           *IN30     IFEQ *OFF
+022900960112     C           POM,GG    ANDNE' '
+023000960122     C                     Z-ADD1         II
+023100960122     C           POM,GG    LOKUPS1Y,II                   30
+023200960122     C   30      FET,II    IFNE *BLANKS
+023300951206     C                     MOVELMSG,16    V1ZMSG
+023400951206     C                     SETON                     0190
+023500960122     C                     END
+023600951206    4C                     END
+023700951206     C                     MOVE PARDTD    COMDTD
+023800951206    3C                     END
+023900951206   X1C                     ELSE
+024000951206     C* Se creazione griglia per un range di date imposto parfes
+024100951206     C* in modo da creare griglia solo per date non festive
+024200951206     C                     MOVE 'S'       PARFES
+024300951206     C                     CLEARCOMDTD
+024400951206    1C                     END
+024500950922     C**SE IMMESSO NR.TRAINO NON CI DEVE ESSERE IL TERMINAL E VICEVERSA
+024600951030    1C           V1CTRN    IFNE *BLANKS
+024700950922     C           V1CTRN    ANDNE*ZEROS
+024800950922     C           V1CTFP    ANDNE*ZEROS
+024900950922     C                     MOVELMSG,11    V1ZMSG
+025000950922     C                     SETON                     030490
+025100950922     C                     GOTO ENDCTR
+025200951030    1C                     END
+025300951206     C**** CONTROLLI NUMERO TRAINO
+025400950922     C* Gestione '?' su numero traino
+025500950922     C           '?'       SCAN V1CTRN                   30
+025600951030    1C           *IN30     IFEQ *ON
+025700951116     C                     CLEARDS00
+025800951116     C           PARDTA    IFEQ *ZEROS
+025900951121     C                     MOVE PARDTD    D00DDE
+026000951116     C                     END
+026100951116     C                     MOVELDS00      KPJBU
+026200951116     C                     CALL 'TNTL17R'
+026300951116     C                     PARM           KPJBA
+026400951116     C                     MOVELKPJBU     DS00
+026500951116     C                     MOVE D00TRN    V1CTRN
+026600951030    1C                     END
+026700950922     C* Controllo numero traino se immesso
+026800950922    1C           V1CTRN    IFNE *BLANKS
+026900950922     C           V1CTRN    ANDNE*ZEROS
+027000950922     C                     TESTN          V1CTRN     30
+027100950922    2C           *IN30     IFEQ *ON
+027200950922     C                     MOVE V1CTRN    W001A   1
+027300950922    3C           W001A     IFLT '0'
+027400950922     C                     SETOF                     30
+027500950922    3C                     END
+027600950922    2C                     END
+027700950922    2C           *IN30     IFEQ *OFF
+027800950922     C                     SETON                     0390
+027900950922     C                     MOVELMSG,12    V1ZMSG
+028000950922     C                     GOTO ENDCTR
+028100950922    2C                     END
+028200950922     C                     MOVE V1CTRN    PARTRN
+028300951030     C* S e   r i c h i e s t o   u n   r a n g e   d i   d a t e
+028400951205    2C           V1CDTA    IFGT V1CDTD
+028500951030     C           PARTRN    SETLLTNTLT01L
+028600951030     C           PARTRN    READETNTLT01L                 30
+028700951030    3C           *IN30     DOWEQ*OFF
+028800951030     C           TLTATB    ANDNE*BLANKS
+028900951030     C           PARTRN    READETNTLT01L                 30
+029000951030    3C                     ENDDO
+029100951030     C* trovato il traino: verifico che il tipo preveda il controllo in
+029200951116     C* sede
+029300951030    3C           *IN30     IFEQ *OFF
+029400951030     C                     EXSR TPTTR
+029500951030     C   90                GOTO ENDCTR
+029600951030   X3C                     ELSE
+029700951030     C* traino inesistente o annullato
+029800951030     C                     SETON                     0390
+029900951030     C                     MOVELMSG,15    V1ZMSG
+030000951030     C                     GOTO ENDCTR
+030100951030    3C                     END
+030200951030   X2C                     ELSE
+030300951030     C*  S e   r i c h i e s t a   u n a   s o l a   d a t a
+030400950922     C           KTLT1     SETLLTNTLT01L                 30
+030500950922     C   30      KTLT1     READETNTLT01L                 31
+030600950922     C  N30      PARTRN    REDPETNTLT01L                 31
+030700951030    3C  N30      *IN31     DOWEQ*OFF
+030800951012     C           TLTATB    ANDNE*BLANKS
+030900951012     C           PARTRN    REDPETNTLT01L                 31
+031000951030    3C                     ENDDO
+031100951025     C* non trovato o annullato: traino inesistente o annullato o non
+031200951025     C* decorrente
+031300951030    3C           *IN31     IFEQ *ON
+031400960220     C           TLTATB    ORNE *BLANKS
+031500950922     C                     SETON                     0390
+031600950922     C                     MOVELMSG,6     V1ZMSG
+031700950922     C                     GOTO ENDCTR
+031800951030    3C                     END
+031900951030     C* tipo traino da non utilizzare nei controlli di sede: griglia
+032000951030     C* non creabile
+032100951030     C                     EXSR TPTTR
+032200951030     C   90                GOTO ENDCTR
+032300950922     C* traino scaduto
+032400951030    3C           *IN30     IFEQ *OFF
+032500951030     C           TLTDSC    ANDLTPARDTD
+032600950922     C                     SETON                     0390
+032700950922     C                     MOVELMSG,7     V1ZMSG
+032800950922     C                     GOTO ENDCTR
+032900951030    3C                     END
+033000951205     C* traino non previsto nel giorno richiesto
+033100950922     C           GIOSET    SCAN TLTGSE                   30
+033200951030    3C           *IN30     IFEQ *OFF
+033300950922     C                     SETON                     0390
+033400950922     C                     MOVELMSG,8     V1ZMSG
+033500950922     C                     GOTO ENDCTR
+033600951030    3C                     END
+033700951002     C                     MOVE TLTDDE    PARDDE
+033800960318     C* Controllo se griglia già esistente (Solo se non deve essere
+033900960318     C* ricreata)
+034000960318   3AC           D23CRT    IFEQ ' '
+034100951006     C           KTLT1     SETLLTNTST01L                 30
+034200951030    3C           *IN30     IFEQ *ON
+034300951006     C                     SETON                     90
+034400951006     C                     MOVELMSG,13    V1ZMSG
+034500951006     C                     GOTO ENDCTR
+034600951030    3C                     END
+034700960318   3AC                     END
+034800951030    2C                     END
+034900951030    1C                     END
+035000950922     C**** CONTROLLI TERMINAL DI PARTENZA
+035100950922    1C           V1CTFP    IFNE *ZEROS
+035200950922     C           V1CTFP    CHAINAZORG01L             30
+035300950922     C* Inesistente in organigramma o annullato
+035400950922    2C           *IN30     IFEQ *ON
+035500971203     C           ORGFVA    ORNE *BLANKS
+035600971203     C           ORGFAG    ORNE 'A'
+035700971203     C           ORGFAG    ANDNE'F'
+035800950922     C                     SETON                     0490
+035900950922     C                     MOVELMSG,9     V1ZMSG
+036000950922     C                     GOTO ENDCTR
+036100971203    2C                     ENDIF
+036200000626     C                     MOVELORGDE3    OG143
+036300951009     C*
+036400951009     C                     MOVELORGDES    V1DTFP
+036500000626     C* Controllo se è terminal solo se linea immessa non è p.o. poste
+036600000626   2AC           §OGPT     IFNE 'S'
+036700950922     C* Non è terminal
+036800971203     C                     CLEARDSLV55
+036900971203     C                     MOVEL'P'       D55TPT
+037000971203     C                     MOVELV1CTFP    D55LIN
+037100971203     C                     MOVELPARDTD    D55DRF
+037200971203     C                     CALL 'FNLV55R'
+037300971203     C                     PARM           DSLV55
+037400971203     C*
+037500971203    2C           D55ERR    IFNE ' '
+037600971203     C           D55TFP    ORNE ORGFIL
+037700950922     C                     SETON                     0490
+037800950922     C                     MOVELMSG,10    V1ZMSG
+037900951204     C                     GOTO ENDCTR
+038000950922    2C                     END
+038100000626   2AC                     END
+038200950922    1C                     END
+038300950922     C           ENDCTR    ENDSR
+038400951030     C****************  RICERCA TIPO TRAINO  **************************
+038500951030     C           TPTTR     BEGSR
+038600951030     C                     MOVEL'TV'      KCOD
+038700951030     C                     MOVELTLTTTR    KKEY      P
+038800951122     C                     MOVE 'S'       §TVUTC
+038900951030     C           KTAB      CHAINTABEL00F             31
+039000951030     C           *IN31     IFEQ *OFF
+039100951030     C           TBLFLG    ANDEQ*BLANKS
+039200951030     C                     MOVELTBLUNI    DSTV
+039300951030     C                     END
+039400951030     C           §TVUTC    IFEQ *BLANKS
+039500951030     C                     SETON                     0390
+039600951030     C                     MOVEAMSG,14    SMS
+039700951030     C                     MOVEA§TVDES    SMS,31
+039800951030     C                     MOVEASMS       V1ZMSG
+039900951030     C                     END
+040000951030     C                     ENDSR
+040100950921     C****************  ROUTINE INIZIALE  *****************************
+040200950921     C           *INZSR    BEGSR
+040300950921     C           *ENTRY    PLIST
+040400950921     C                     PARM           KPJBA
+040500960318     C                     MOVELKPJBU     DSTL23
+040600960318     C* IMPOSTO OPZIONE DI RICREAZIONE GRIGLIA SE GIA' ESISTENTE
+040700960318     C                     MOVE 'S'       D23CRT
+040800950921     C*
+040900950921     C                     Z-ADD1         CODUT
+041000950921     C                     CALL 'X§PARUT'
+041100950921     C                     PARM           UT§DSE
+041200950921     C                     MOVELRAGUT     V1CRSU
+041300950922     C*
+041400950922     C           KTLT1     KLIST
+041500950922     C                     KFLD           PARTRN
+041600950922     C                     KFLD           PARDTD
+041700951030     C           KTAB      KLIST
+041800951030     C                     KFLD           CODUT
+041900951030     C                     KFLD           KCOD
+042000951030     C                     KFLD           KKEY
+042100960122     C           KTAB0     KLIST
+042200960122     C                     KFLD           CODUT
+042300960122     C                     KFLD           KCOD
+042400951204     C           KCLN      KLIST
+042500951204     C                     KFLD           KTFP
+042600951204     C                     KFLD           KTFA
+042700951204     C                     KFLD           KANN
+042800951204     C                     KFLD           KMES
+042900960112     C                     Z-ADD68        KTFP
+043000951204     C                     CLEARKTFA
+043100950921     C*
+043200950921     C           *LIKE     DEFN G08TGI    TGIDTD
+043300951030     C           *LIKE     DEFN TBLCOD    KCOD
+043400951030     C           *LIKE     DEFN TBLKEY    KKEY
+043500951204     C           *LIKE     DEFN PARDTD    COMDTD
+043600951204     C           *LIKE     DEFN CLNANN    KANN
+043700951204     C           *LIKE     DEFN CLNMES    KMES
+043800951204     C           *LIKE     DEFN CLNTFP    KTFP
+043900951204     C           *LIKE     DEFN CLNTFA    KTFA
+044000960122     C* CARICAMENTO TABELLA 1Y - SIMBOLI CALENDARIO BARTOLINI
+044100960122     C* (CARICAMENTO DEI SIMBOLI FESTIVI PER PROCDEURA TRAINI)
+044200960122     C                     MOVE *ZEROS    II      20
+044300960122     C                     MOVEL'1Y'      KCOD
+044400960122     C           KTAB0     SETLLTABEL00F
+044500960122     C           KTAB0     READETABEL00F                 30
+044600960122     C           *IN30     DOWEQ*OFF
+044700960122     C           TBLFLG    IFEQ *BLANKS
+044800960122     C                     MOVELTBLUNI    DS1Y
+044900960122     C           §1YFET    IFNE *BLANKS
+045000960122     C                     ADD  1         II
+045100960122     C                     MOVELTBLKEY    S1Y,II
+045200960122     C                     MOVE §1YFET    FET,II
+045300960122     C                     END
+045400960122     C                     END
+045500960122     C           KTAB0     READETABEL00F                 30
+045600960122     C                     ENDDO
+045700951204     C* SPENGO INDICATORE PER RICORDARMI CHE IN QUESTO PGM *IN11 DEVE
+045800951204     C* SEMPRE ESSERE = OFF
+045900951204     C                     SETOF                     11
+046000950921     C                     ENDSR
+046100950921** MSG
+046200950921"Data traino dal"  OBBLIGATORIA                                                1
+046300950921"Data traino dal"  ERRATA                                                      2
+046400950921"Data traino al"   ERRATA                                                      3
+046500950921"Data traino dal" > di "Data traino al"                                        4
+046600950922Periodo massimo di richiesta: 31 giorni                                        5
+046700951025Numero traino inesistente o annullato o non decorrente per la data richiesta   6
+046800950922Traino scaduto rispetto alla data richiesta                                    7
+046900950922Traino non previsto nel giorno richiesto                                       8
+047000950922Terminal di partenza inesistente o annullato                                   9
+047100971203La filiale specificata non è un Terminal di partenza                          10
+047200950922Immettere il numero traino OPPURE il terminal di partenza                     11
+047300950922Numero traino errato                                                          12
+047400960206Griglia già esistente o annullata                                             13
+047500951030Il traino richiesto è di tipo XXXXXXXXXXXXXXXXXXXXXXXXX -GRIGLIA NON CREABILE-14
+047600951030Numero traino inesistente o annullato                                         15
+047700951206Attenzione: richiesta creazione griglia di un giorno festivo. F6 per forzare. 16
+047800951204** TAB/TABDAY
+0479009512041LUNEDI
+0480009512042MARTEDI
+0481009512043MERCOLEDI
+0482009512044GIOVEDI
+0483009512045VENERDI
+0484009512046SABATO
+0485009512047DOMENICA

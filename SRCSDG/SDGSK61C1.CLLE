@@ -1,0 +1,57 @@
+000100150203/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER )                                   */
+000200150203/*-------------------------------------------------------------------*/
+000300150203/* Certificazione unica                                              */
+000400150203/*-------------------------------------------------------------------*/
+000500150203             PGM        PARM(&FILE &LIBRF &TPDIS &DATADIS &DESFILEI +
+000600150203                          &DESFILEO &ERR)
+000700150203
+000800150203/* Parametri passati                                          */
+000900150203/* Libreria/file  da creare                                   */
+001000150203             DCL        VAR(&FILE)     TYPE(*CHAR) LEN(10)
+001100150203             DCL        VAR(&LIBRF)    TYPE(*CHAR) LEN(10)
+001200150203             DCL        VAR(&TPDIS)    TYPE(*CHAR) LEN(2)
+001300150203             DCL        VAR(&DATADIS)  TYPE(*CHAR) LEN(10)
+001400150203             DCL        VAR(&DESFILEI) TYPE(*CHAR) LEN(8)
+001500150203             DCL        VAR(&DESFILEO) TYPE(*CHAR) LEN(50)
+001600150203             DCL        VAR(&ERR)      TYPE(*CHAR) LEN(1)
+001700150203/* Libreria file                                              */
+001800150203             DCL        VAR(&LIBRIMW)  TYPE(*CHAR) LEN(10)
+001900150203
+002000150203             DCL        VAR(&DDTR)     TYPE(*CHAR) LEN(10)
+002100150203
+002200150203             CVTDAT     DATE(&DATADIS) TOVAR(&DDTR) FROMFMT(*YYMD) +
+002300150203                          TOFMT(*DMYY) TOSEP(/)
+002400150203
+002500150203             DLTOVR     FILE(SDGCUW00F)
+002600150203             MONMSG     MSGID(CPF0000)
+002700150203
+002800150203/*- Cerco file per scarico                                           */
+002900150203             CHKOBJ     OBJ(&LIBRF/&FILE) OBJTYPE(*FILE)
+003000150203             MONMSG     MSGID(CPF0000)
+003100150203
+003200150203             DLTF       FILE(&LIBRF/&FILE)
+003300150203             MONMSG     MSGID(CPF0000)
+003400150203
+003500150203
+003600150203/*- Se il file non esiste  lo creo a immagine di                     */
+003700150203             RTVMBRD    FILE(SDGCUW00F) RTNLIB(&LIBRIMW)
+003800150203             CRTDUPOBJ  OBJ(SDGCUW00F) FROMLIB(&LIBRIMW) +
+003900150203                          OBJTYPE(*FILE) TOLIB(&LIBRF) +
+004000150203                          NEWOBJ(&FILE) DATA(*NO)
+004100150203/*- Se  errore  vado a fine                                    */
+004200150203             MONMSG     MSGID(CPF0000) EXEC(DO)
+004300150203             CHGVAR     VAR(&ERR) VALUE('1')
+004400150203             GOTO       CMDLBL(FINE)
+004500150203             ENDDO
+004600150203
+004700150203/*- Modifica descrizione file                                        */
+004800150203             CHGOBJD    OBJ(&LIBRF/&FILE) OBJTYPE(*FILE) +
+004900150203                          TEXT(&DESFILEO)
+005000150203             MONMSG     MSGID(CPF0000)
+005100150203
+005200150203
+005300150203/*- Ovr per file scarico                                            */
+005400150210             OVRDBF     FILE(SDGCUW00F) TOFILE(&LIBRF/&FILE) +
+005500150210                          OVRSCOPE(*JOB)
+005600150203
+005700150203 FINE:       ENDPGM

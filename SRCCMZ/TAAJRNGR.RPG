@@ -1,0 +1,554 @@
+000001920527     F*----------------------------------------------------
+000002920527     F*  MODIFICATO
+000003920527     F*  LE MODIFICHE SONO CONTRADDISTINTE DA 'MM'
+000004920527     F*----------------------------------------------------
+000100000000     F* TAAJRNGR - Apply User Change - Called by TAAJRNGC
+000200920527     FDSPJRNF IP  F    3125            DISK
+000300920527     FAPYTO   UF  F    3125            DISK                      A    UC
+000400000000     F                                              KINFDS FDBCK
+000401920527MM   FCMINV02LIF  E           K        DISK
+000500000000     F* The APYPX file is used in addition to APYTO to handle the PX
+000600000000     F*   entry. This is a write direct and requires the RECNO field.
+000700000000     F*   This file is only opened if a PX entry exists.
+000800920527     FAPYPX   O   F    3125            DISK                           UC
+000900000000     F                                              KRECNO PUTNBR
+001000000000     FQPRINT  O   F     132     OF     PRINTER
+001100000000     E                    OVR    75  75  1               Ovr cmd area
+001200000000     E                    OVX    75  75  1               Ovr cmd area
+001300000000     E                    ERR     1  30  2   ETX    40   Error messages
+001301920527     E                    CHK    75  75  1               CHKOBJ
+001302920527     E                    CRT    75  75  1               CRTFIL
+001400000000     I* The DSPJRNF file is program described because the actual
+001500000000     I*    data field is variable length. The field names are given
+001600000000     I*    the same names as the DSPJRN outfile
+001700000000     IDSPJRNF AA  01
+001800000000     I                                        1   50JOENTL
+001900000000     I                                        6  150JOSEQN
+002000000000     I                                       16  16 JOCODE
+002100000000     I                                       17  18 JOENTT
+002200000000     I                                       19  24 JODATE
+002300000000     I                                       25  30 JOTIME
+002400000000     I                                       31  40 JOJOB
+002500000000     I                                       41  50 JOUSER
+002600000000     I                                       51  56 JONBR
+002700000000     I                                       57  66 JOPGM
+002800000000     I                                       67  76 JOOBJ L2
+002900000000     I                                       77  86 JOLIB L2
+003000000000     I                                       87  96 JOMBR L2
+003100000000     I                                       97 1060JOCTRRL1
+003200000000     I                                      107 107 JOFLAG
+003300000000     I                                      108 1080JOCCID
+003400000000     I                                      118 125 JORES
+003500920527     I                                      1263125 JOESD
+003600000000     I* The APYTO file is required for input since it is an update
+003700000000     I*   file, but the input data is not used. The entire record
+003800000000     I*   image is rewritten.
+003900000000     IAPYTO   AB  02
+004000000000     I                                        1   1 DUMMY1
+004100000000     I* The feedback is used to ensure a valid record length
+004200000000     IFDBCK       DS
+004300000000     I                                    B 125 1260UPDLEN
+004400000000     I                                    B 397 4000UPDREL
+004500000000     I* The maximum record size
+004600920527     IJOESD       DS                           3000
+004700000000     I                                        1   1 DUMMY2
+004800000000     C           *ENTRY    PLIST                           Parm list
+004900000000     C                     PARM           SYSNAM  8        System name
+005000000000     C                     PARM           SORTED  4        Sorted file
+005100000000     C                     PARM           JRNFIL 10        DSPJRN file
+005200000000     C                     PARM           JRNLIB 10        DSPJRN lib
+005300000000     C                     PARM           FILE   10        Jrnld file
+005400000000     C                     PARM           LIB    10        Jrnld lib
+005500000000     C                     PARM           MBR    10        Jrnld mbr
+005600000000     C                     PARM           TOFILE 10        Cmd To file
+005700000000     C                     PARM           TOLIB  10        Cmd To lib
+005800000000     C                     PARM           TOMBR  10        Cmd to mbr
+005900000000     C                     PARM           RTNCDE  8        Return code
+006000000000     C* To gain performance, the data is sorted in Rel Rcd sequence
+006100000000     C*  within each library-file-member.
+006200000000     C*   A Primary file is used to allow RPG to handle the control
+006300000000     C*     breaks.
+006400000000     C*       - L1 is on the relative record number. This will cause
+006500000000     C*           the last journal entry (if it was an update) to be
+006600000000     C*           updated. Additions and Deletes are handled immed.
+006700000000     C*       - L2 is on a member/file/library change. This will cause
+006800000000     C*           a total line to print. A new file is opened on the
+006900000000     C*           the first record read for a new L2 group.
+007000000000     C*
+007100000000     C* Check first time switch for heading print and inlz
+007200000000     C           FSTTIM    IFEQ *BLANK                     If 1st time
+007300000000     C                     EXSR INLZ                       Inlz subr
+007400000000     C                     END                             If 1st time
+007500000000     C* If file is *ALL, branch to process
+007600000000     C           FILE      CABEQ'*ALL'    PROCES           Process
+007700000000     C           FILE      IFEQ JOOBJ                      Same obj
+007800000000     C           LIB       ANDEQJOLIB                        Same lib
+007900000000     C*   If all members, branch to process
+008000000000     C           MBR       CABEQ'*ALL'    PROCES           Branch ahead
+008100000000     C*   If same member, branch to process
+008200000000     C           MBR       CABEQJOMBR     PROCES           Same mbr
+008300000000     C                     END                             Same obj
+008400000000     C* What is left over is not to be processed
+008500000000     C                     ADD  1         BYPCNT           Bypass count
+008600000000     C                     SETOF                     72    L2 prt sw
+008700000000     C                     GOTO ENDDTL                     End Dtl calc
+008800000000     C           PROCES    TAG                             Process
+008900000000     C* For first record of a new member, override and open the file
+009000000000     C   L2                EXSR FSTL2                      First L2 rcd
+009100000000     C* If member has already had an error, bypass
+009200000000     C   76                GOTO ENDDTL                     End Dtl calc
+009300000000     C* Ensure length of journal entry for update matches file length
+009400000000     C*   There are 125 bytes of fixed length info in JOENTL
+009500000000     C*   Deletes do not have data. Only check entries with data
+009600000000     C           JOENTT    IFEQ 'PT'                       Put or updt
+009700000000     C           JOENTT    OREQ 'UP'                         or
+009800000000     C           JOENTT    OREQ 'UR'                         or
+009900000000     C           JOENTT    OREQ 'PX'                         or
+010000000000     C           JOENTL    SUB  125       TSTLEN  50       Test length
+010100000000     C           TSTLEN    IFNE UPDLEN                     Diff len
+010200000000     C                     MOVE '1 '      EFLD    2        Set error
+010300000000     C                     EXSR ERRSUB                     Error subr
+010400000000     C* Seton indicator to allow ERRFLD to print
+010500000000     C                     SETON                     82    Err text
+010600000000     C                     SETOF                     81    Err text
+010700000000     C                     GOTO ENDDTL                     End Dtl calc
+010800000000     C                     END                             Diff len
+010900000000     C* Ensure not greater than program record length
+011000920527     C           TSTLEN    IFGT 3000                       GT max len
+011100000000     C                     MOVE '6 '      EFLD    2        Set error
+011200000000     C                     EXSR ERRSUB                     Error subr
+011300000000     C* Seton indicator to allow ERRFLD to print
+011400000000     C                     SETON                     82    Err text
+011500000000     C                     SETOF                     81    Err text
+011600000000     C                     GOTO ENDDTL                     End Dtl calc
+011700000000     C                     END                             GT max len
+011800000000     C                     END                             Put or updt
+011900000000     C* If UP entry, fields contain last update. Just count
+012000000000     C*   UR entry is 'Update Rollback'. An update occurred and then
+012100000000     C*     was rolled back. Treat like an update for counting
+012200000000     C*     purposes. If the record exists, treat like an update.
+012300000000     C*     If the record does not exist, treat like a PX entry.
+012400000000     C           JOENTT    IFEQ 'UP'                       If update
+012500000000     C           JOENTT    OREQ 'UR'                       If update
+012600000000     C                     ADD  1         UPD     70       Count updts
+012700000000     C                     ADD  1         TOTUPD  90       Total updts
+012800000000     C           JOENTT    IFEQ 'UR'                       Updt rollbk
+012900000000     C           JOCTRR    CHAINAPYTO                20    Chain
+013000000000     C* If not found, treat like a PX
+013100000000     C   20                GOTO PCSPX                      Not found
+013200000000     C                     END                             Updt rollbk
+013300000000     C* If UP or UR and record exists, set update switch
+013400000000     C                     MOVE 'X'       UPDSW   1        Update sw
+013500000000     C                     GOTO ENDDTL                     End Dtl calc
+013600000000     C                     END                             If update
+013700000000     C* If delete entry, delete if it exists
+013800000000     C*   The DR entry is for 'Delete Rollback'. A record was added
+013900000000     C*     and then a rollback occurred
+014000000000     C           JOENTT    IFEQ 'DL'                       If delete
+014100000000     C           JOENTT    OREQ 'DR'                       If delete
+014200000000     C           JOCTRR    CHAINAPYTO                35    Chain
+014300000000     C* If record does not exist, it is an error
+014400000000     C   35                DO                              Not found
+014500000000     C                     MOVE '2 '      EFLD    2        Set error
+014600000000     C                     EXSR ERRSUB                     Error subr
+014700000000     C                     GOTO ENDDTL                     End Dtl calc
+014800000000     C                     END                             Not found
+014900000000     C* Delete the record
+015000000000     C                     DELETAPYTO                      Delete
+015100000000     C                     ADD  1         RCDCHG  70       Rcds changed
+015200000000     C                     ADD  1         TOTCHG  90       Rcds changed
+015300000000     C                     ADD  1         DLT     70       Count dlts
+015400000000     C                     ADD  1         TOTDLT  90       Total dlts
+015500000000     C                     MOVE *BLANK    UPDSW   1        Update sw
+015600000000     C                     GOTO ENDDTL                     End Dtl calc
+015700000000     C                     END                             If delete
+015800000000     C* Put entry
+015900000000     C           JOENTT    IFEQ 'PT'                       If put
+016000000000     C           JOENTT    OREQ 'PX'                       If put
+016100000000     C* PX is the 'Write direct' entry meaning the record was added
+016200000000     C*   not at the end of the file, but by using the relative
+016300000000     C*   record number. Treat as special form of PT
+016400000000     C           JOCTRR    CHAINAPYTO                35    Chain
+016500000000     C* If record exists, it is an error
+016600000000     C  N35                DO                              Exists
+016700000000     C                     SETON                     7677  Error sws
+016800000000     C                     MOVE '3 '      EFLD    2        Set error
+016900000000     C                     EXSR ERRSUB                     Error sub
+017000000000     C                     GOTO ENDDTL                     End Dtl calc
+017100000000     C                     END                             Exists
+017200000000     C* Put (add) the record for PT type
+017300000000     C           JOENTT    IFEQ 'PT'                       If PT
+017400000000     C                     EXCPTPUTRCD                     Put
+017500000000     C                     END                             If PT
+017600000000     C* Put (add) the record for PX type
+017700000000     C           JOENTT    IFEQ 'PX'                       If PX
+017800000000     C           PCSPX     TAG                             Process PX
+017900000000     C* If file has not been opened, do so
+018000000000     C           APY2SW    IFEQ *BLANK                     Not open
+018100000000     C                     EXSR OPENPX                     Open subr
+018200000000     C                     END                             Not open
+018300000000     C* If error occurred, bypass
+018400000000     C   76                GOTO ENDDTL                     End Dtl calc
+018500000000     C* Set the RECNO for the RR to be added and add
+018600000000     C                     Z-ADDJOCTRR    PUTNBR           Set RR numbr
+018700000000     C                     EXCPTPUTPX                      Put
+018800000000     C                     END                             If PX
+018900000000     C* Add put counts
+019000000000     C                     ADD  1         RCDCHG  70       Rcds changed
+019100000000     C                     ADD  1         TOTCHG  90       Rcds changed
+019200000000     C                     ADD  1         ADD     70       Count adds
+019300000000     C                     ADD  1         TOTADD  90       Total adds
+019400000000     C* Ensure that RR number of the add is the same as the journal ent
+019500000000     C*   Adds always go to the end of the file. It is possible for
+019600000000     C*    the add to go into a different slot. Do only for PT entries.
+019700000000     C           JOENTT    IFEQ 'PT'                       If PT
+019800000000     C           JOCTRR    IFNE UPDREL                     Diff number
+019900000000     C                     MOVE '4 '      EFLD    2        Set error
+020000000000     C                     EXSR ERRSUB                     Error subr
+020100000000     C                     GOTO ENDDTL                     End Dtl calc
+020200000000     C                     END                             Diff number
+020300000000     C                     END                             If PT
+020400000000     C                     GOTO ENDDTL                     End Dtl calc
+020500000000     C                     END                             If put
+020600000000     C* A journal entry exists, but is not UP, DL, PT, DR, PX or UR.
+020700000000     C*    Just fall thru
+020800000000     C           ENDDTL    TAG                             End Dtl calc
+020900000000     CL1                   EXSR L1SUBR                     At L1 time
+021000000000     CL2                   EXSR L2SUBR                     At L2 time
+021100000000     CLR                   EXSR LRSUBR                     At LR time
+021200000000     C* FSTL2 subroutine - Issue OVR and open the file
+021300000000     C           FSTL2     BEGSR                           First L2 rcd
+021400000000     C                     ADD  1         MBRTOT  50       Member total
+021500000000     C                     SETOF                     76    Mbr error
+021600000000     C                     SETOF                     8182  Err txt sws
+021700000000     C                     MOVE *BLANK    APY2SW  1        Apy RR file
+021800000000     C* Set switch to allow L2 to print
+021900000000     C                     SETON                     72    L2 print sw
+021901920527MM   C*
+021902920527mm   c* controlla se il file deve essere ricreato
+021903920527MM   C* deve essere ricreato se esiste su CMINV00F e non in GAICMZ
+021904920527MM   C*
+021905920527MM   C                     EXSR CRTFIL
+021906920527MM   C           CRTERR    IFNE *BLANK
+021907920527MM   C                     SETON                     76
+021908920527     C                     MOVE CRTERR    EFLD    2        Set error
+021909920527     C                     EXSR ERRSUB                     Error subr
+021910920527     C                     SETON                     82
+021911920527     C                     SETOF                     81
+021912920527MM   C                     GOTO ENDL2
+021913920527MM   C                     END
+021914920527MM   C                     EXSR GETFIL
+024700000000     C* Modify array with specific override info
+024800000000     C                     MOVEAQLFNAM    OVR,27           Qlfd name
+024900000000     C                     MOVEAQMBR      OVR,54           Member name
+025200000000     C* Execute OVR using QCMDEXC
+025300000000     C                     CALL 'QCMDEXC'                  Call
+025400000000     C                     PARM           OVR              OVR command
+025500000000     C                     PARM           CMDLEN           Cmd length
+025600000000     C* Open the file to be applied to
+025700000000     C                     OPEN APYTO                  20  Open
+025800000000     C* If open fails, print a message
+025900000000     C   20                DO                              Bad open
+026000000000     C                     MOVE '7 '      EFLD    2        Set error
+026100000000     C                     EXSR ERRSUB                     Error sub
+026200000000     C* Seton indicator to allow ERRFLD to print
+026300000000     C                     SETON                     82    Err text
+026400000000     C                     SETOF                     81    Err text
+026500000000     C                     END                             Bad open
+026600920527MM   C*                    ENDSR                           First L2 rcd
+026601920527MM   C           ENDL2     ENDSR                           First L2 rcd
+026700000000     C* L1 subroutine
+026800000000     C           L1SUBR    BEGSR                           L1 subr
+026900000000     C* If update switch is not set, bypass
+027000000000     C*   Set by an update and reset by a delete
+027100000000     C           UPDSW     IFEQ 'X'                        Do update
+027200000000     C                     SETON                     72    L2 prt sw
+027300000000     C                     EXSR UPDATE                     Update subr
+027400000000     C                     END                             Do update
+027500000000     C                     MOVE *BLANK    UPDSW   1        Update sw
+027600000000     C                     ENDSR                           L1 subr
+027700000000     C* L2 subroutine
+027800000000     C           L2SUBR    BEGSR                           L2 subr
+027900000000     C                     CLOSEAPYTO                      Close file
+028000000000     C           APY2SW    IFEQ 'X'                        If opened
+028100000000     C                     CLOSEAPYPX                      Close file
+028200000000     C                     END                             If opened
+028300000000     C                     ENDSR                           L2 subr
+028301920527     C/EJECT
+028302920527MM   C*.--------------------
+028303920527MM   C* GETFIL    COMPONE IL NOME DEL FILE DA CREARE
+028304920527MM   C*----------------------------------
+028305920527MM   C           GETFIL    BEGSR
+028306920527     C* Determine which file should be opened as user could be
+028307920527     C*   applying to a duplicate
+028308920527     C                     MOVELTOFILE    TSTFIL  8        Test file
+028309920527     C* If *JRNLDFILE, use the file in the journal entry
+028310920527     C           TSTFIL    IFEQ '*JRNLDFI'                 Jrnld file
+028311920527     C                     MOVE JOOBJ     QFILE  10        File name
+028312920527     C                     MOVE JOLIB     QLIB   10        Library
+028313920527     C                     MOVE JOMBR     QMBR   10        Member
+028314920527     C                     END                             Jrnld file
+028315920527     C* If not *JRNLDFILE, use the file from the command
+028316920527     C           TSTFIL    IFNE '*JRNLDFI'                 Duplict file
+028317920527     C                     MOVE TOFILE    QFILE            File name
+028318920527     C                     MOVE TOLIB     QLIB             Library
+028319920527     C* If the TOMBR is specific, use it
+028320920527     C           TOMBR     IFNE '*ALL'                     Not *ALL
+028321920527     C                     MOVE TOMBR     QMBR             Member
+028322920527     C                     END                             Not *ALL
+028323920527     C* If the TOMBR is *ALL, use the JOMBR
+028324920527     C           TOMBR     IFEQ '*ALL'                     *ALL
+028325920527     C                     MOVE JOMBR     QMBR             Member
+028326920527     C                     END                             *ALL
+028327920527     C                     END                             Duplict file
+028328920527     C* BLDQLF TAA tool to build qualified name
+028329920527     C                     CALL 'TAABLDBC'                 Call
+028330920527     C                     PARM           QFILE            File
+028331920527     C                     PARM           QLIB             Library
+028332920527     C                     PARM           QLFNAM 21        Qlfd name
+028333920527     C                     ENDSR                           L2 subr
+028334920527MM   C*.--------------------
+028335920527MM   C* CRTFIL    CREA FILE DA RIAPPLICARE
+028336920527MM   C*----------------------------------
+028337920527MM   C           CRTFIL    BEGSR
+028338920527     C*
+028339920527     C                     MOVE '  '      CRTERR  2
+028340920527     c* cerca il record su CMINV02L
+028341920527     C           KINV      KLIST
+028342920527     C                     KFLD           INVTRA
+028343920527     C*
+028344920527     C                     MOVELJOOBJ     INVTRA
+028345920527     C           KINV      CHAINCMINV000             21
+028346920527     C      21             MOVE '8 '      CRTERR
+028347920527     C      21             GOTO ENDCRT
+028348920527     C*
+028349920527MM   C                     EXSR GETFIL
+028359920527     C* Modify array with specific override info
+028360920527     C                     MOVEAQLFNAM    CRT,27           Qlfd name
+028361920527     C                     MOVEAQMBR      CRT,54           Member name
+028362920527     C                     MOVEAQLFNAM    CHK,27           Qlfd name
+028363920527     C                     MOVEAQMBR      CHK,54           Member name
+028364920527     C           JOENTL    SUB  125       W005    50
+028365920527     C                     MOVE W005      LL      5
+028366920527     C                     MOVEALL        CRT,14
+028367920527     C* Execute CHKOBJ using QCMDEXC
+028368920527     C                     CALL 'QCMDEXC'              21  Call
+028369920527     C                     PARM           CHK              CHKOBJ
+028370920527     C                     PARM 75        CMDLEN           Cmd length
+028371920527     C     N21             MOVE '9 '      CRTERR
+028372920527     C     N21             GOTO ENDCRT
+028373920527     C*
+028374920527     C* Crea il file
+028375920527     C                     CALL 'QCMDEXC'              21  Call
+028376920527     C                     PARM           CRT              CRTPF
+028377920527     C                     PARM 75        CMDLEN           Cmd length
+028378920527     c*
+028379920527MM   C           ENDCRT    ENDSR
+028400000000     C* LR subroutine
+028500000000     C           LRSUBR    BEGSR                           LR subr
+028600000000     C* Set return code. Indicator 77 is some error has occurred
+028700000000     C   77                MOVE 'BAD     'RTNCDE           Bad return
+028800000000     C  N77                MOVE 'GOOD    'RTNCDE           Good return
+028900000000     C                     Z-ADDBYPCNT    BYPCNT  50 71    Print sw
+029000000000     C* Check for no updates
+029100000000     C           TOTUPD    ADD  TOTDLT    ALLCHG 110       All chgs
+029200000000     C                     ADD  TOTADD    ALLCHG           All chgs
+029300000000     C           ALLCHG    IFEQ 0                          If zero
+029400000000     C                     MOVE 'NOCHG   'RTNCDE           Set return
+029500000000     C                     SETON                     79    Prt switch
+029600000000     C                     END                             If zero
+029700000000     C                     ENDSR                           LR subr
+029800000000     C* Update the -apply to- file with the full journal entry
+029900000000     C           UPDATE    BEGSR                           Update file
+030000000000     C           JOCTRR    CHAINAPYTO                35    Chain
+030100000000     C* If record does not exist, it is an error
+030200000000     C   35                DO                              Not found
+030300000000     C                     MOVE '5 '      EFLD    2        Set error
+030400000000     C                     EXSR ERRSUB                     Error subr
+030500000000     C                     GOTO ENDUPD                     End update
+030600000000     C                     END                             Not found
+030700000000     C* Update the record
+030800000000     C                     EXCPTUPDRCD                     Update
+030900000000     C                     ADD  1         RCDCHG  70       Rcds changed
+031000000000     C                     ADD  1         TOTCHG  90       Rcds changed
+031100000000     C           ENDUPD    ENDSR                           Update file
+031200000000     C* ERRSUB for printing error info on L2 line
+031300000000     C           ERRSUB    BEGSR                           Error subr
+031400000000     C                     Z-ADD1         EX      30       Inlz
+031500000000     C           EFLD      LOKUPERR,EX                   20 Lookup equl
+031600000000     C  N20                MOVEL'No text' ERRTXT 25        Not found
+031700000000     C   20                MOVELETX,EX    ERRTXT           Error text
+031800000000     C   20                MOVELETX,EX    ERRFLD 40        Error text
+031900000000     C                     Z-ADDJOSEQN    ERRRCD 150       Bad jrn seq
+032000000000     C* On any error, set 76 for this member is bad and 77 to allow
+032100000000     C*   escape at completion of command
+032200000000     C* 81 should be on to print the jrnl seq nbr with the text
+032300000000     C                     SETON                     767781 Set sws
+032400000000     C                     ENDSR                           Error subr
+032500000000     C* Initialize routine
+032600000000     C           INLZ      BEGSR                           Inlz subr
+032700000000     C                     TIME           FULTIM 120       Full time
+032800000000     C                     MOVELFULTIM    PRTTIM  60       Time
+032900000000     C                     MOVE FULTIM    TDATE   60       Todays date
+033000000000     C           TOFILE    COMP '*ALL'                   32 Prt switch
+033100000000     C                     SETON                     75    Set prt sw
+033200000000     C                     EXCPTHDG                        Prt heading
+033300000000     C                     SETOF                     75    Set prt sw
+033400000000     C                     MOVE 'X'       FSTTIM  1        First time
+033500000000     C                     Z-ADD75        CMDLEN 155       Command len
+033600000000     C                     Z-ADD0         PUTNBR  90       RR for PX
+033700000000     C                     ENDSR                           Inlz subr
+033800000000     C* The OPENPX subroutine is used to open the special file so
+033900000000     C*   that records may be added for the PX entry type. The file
+034000000000     C*   is only opened if a PX entry exists.
+034100000000     C           OPENPX    BEGSR                           Open PX
+034200000000     C                     CALL 'QCMDEXC'                  Call
+034300000000     C                     PARM           OVX              OVR command
+034400000000     C                     PARM           CMDLEN           Cmd length
+034500000000     C* Open the file to be applied to (PX file)
+034600000000     C                     OPEN APYPX                  20  Open
+034700000000     C  N20                MOVE 'X'       APY2SW           Apply 2 sw
+034800000000     C* If open fails, print a message
+034900000000     C   20                DO                              Bad open
+035000000000     C                     MOVE '7 '      EFLD    2        Set error
+035100000000     C                     EXSR ERRSUB                     Error sub
+035200000000     C* Seton indicator to allow ERRFLD to print
+035300000000     C                     SETON                     82    Err text
+035400000000     C                     SETOF                     81    Err text
+035500000000     C                     END                             Bad open
+035600000000     C                     ENDSR                           Open PX
+035700000000     OAPYTO   EADD             PUTRCD
+035800920527     O                         JOESD   3000
+035900000000     O        E                UPDRCD
+036000920527     O                         JOESD   3000
+036100000000     OAPYPX   E                PUTPX
+036200920527     O                         JOESD   3000
+036300000000     OQPRINT  E  106           HDG
+036400000000     O       OR        OF
+036500000000     O                         TDATE Y   10
+036600000000     O                         PRTTIM    20 '0 :  :  '
+036700000000     O                         SYSNAM    30
+036800000000     O                                 +  8 'Apply User Change'
+036900000000     O                                  120 'Page'
+037000000000     O                         PAGE
+037100000000     O        E  1     75      HDG
+037200000000     O                                 +  5 'Display journal outfile-'
+037300000000     O                         JRNFIL
+037400000000     O                                 +  1 ' in '
+037500000000     O                         JRNLIB
+037600000000     O                                 +  5 'Sorted-'
+037700000000     O                         SORTED
+037800000000     O        E 11     75      HDG
+037900000000     O                                 +  5 'Journaled file-'
+038000000000     O                         FILE
+038100000000     O                N32              +  1 ' in '
+038200000000     O                         LIB
+038300000000     O                                 +  5 'Journaled member-'
+038400000000     O                         MBR
+038500000000     O        E  2     75      HDG
+038600000000     O                                 +  5 'To file-'
+038700000000     O                         TOFILE
+038800000000     O                N32              +  1 ' in '
+038900000000     O                         TOLIB
+039000000000     O                                 +  5 'To member-'
+039100000000     O                         TOMBR
+039200000000     O        E  1             HDG
+039300000000     O       OR        OF
+039400000000     O                                   65 '- - - Journal entries '
+039500000000     O                                      '- - -'
+039600000000     O                                   82 'Records'
+039700000000     O        E  2             HDG
+039800000000     O       OR        OF
+039900000000     O                                    7 'Library'
+040000000000     O                                   16 'File'
+040100000000     O                                   30 'Member'
+040200000000     O                                   46 'Add'
+040300000000     O                                   58 'Update'
+040400000000     O                                   70 'Delete'
+040500000000     O                                   82 'updated'
+040600000000     O                                   99 'Errors'
+040700000000     O        T  1     L2 72
+040800000000     O                         JOLIB     10
+040900000000     O                         JOOBJ     22
+041000000000     O                         JOMBR     34
+041100000000     O                         ADD   1B  46
+041200000000     O                         UPD   1B  58
+041300000000     O                         DLT   1B  70
+041400000000     O                         RCDCHG1B  82
+041500000000     O                 82      ERRFLD B 132
+041600000000     O                 81      ERRRCDZB 104
+041700000000     O                 81      ERRTXT B 132
+041800000000     O        T 11     LR
+041900000000     O                                 +  5 'Member total-'
+042000000000     O                         MBRTOT1
+042100000000     O                         TOTADD1   46
+042200000000     O                         TOTUPD1   58
+042300000000     O                         TOTDLT1   70
+042400000000     O                         TOTCHG1   82
+042500000000     O        T  1     LR
+042600000000     O                                      'The -Records updated- '
+042700000000     O                                      'column may be less '
+042800000000     O                                      'than the total of '
+042900000000     O                                      'journal entries '
+043000000000     O                                      'because only a single '
+043100000000     O                                      'update occurs for '
+043200000000     O                                      'UP entries.'
+043300000000     O        T  1     LR 71
+043400000000     O                                 +  5 'Records bypassed '
+043500000000     O                                      'because a specific '
+043600000000     O                                      'file was requested-'
+043700000000     O                         BYPCNT1
+043800000000     O        T  1     LRN77N79
+043900000000     O                                      'No errors occurred.'
+044000000000     O        T  1     LRN77 79
+044100000000     O                                      'No changes occurred. '
+044200000000     O                                      'Either no journal '
+044300000000     O                                      'entries exist to be '
+044400000000     O                                      'updated or a specific '
+044500000000     O                                      'file was named and '
+044600000000     O                                      'no entries exist.'
+044700000000     O        T  1     LR 77
+044800000000     O                                      'One or more members had '
+044900000000     O                                      'logical errors in '
+045000000000     O                                      'applying changes.'
+045100000000     O        T  1     LR 77
+045200000000     O                                 +  5 'For example a PT (write '
+045300000000     O                                      'a new record) cannot '
+045400000000     O                                      'occur if the record '
+045500000000     O                                      'exists.'
+045600000000     O        T  1     LR 77
+045700000000     O                                 +  5 'If the error occurred '
+045800000000     O                                      'on a specific entry, '
+045900000000     O                                      'the journal sequence '
+046000000000     O                                      'number is described.'
+046100000000     O        T  1     LR 77
+046200000000     O                                 +  5 'Only the first error '
+046300000000     O                                      'is described.'
+046400000000     O        T  1     LR 77
+046500000000     O                                 +  5 'For detail information, '
+046600000000     O                                      'reset the file (eg '
+046700000000     O                                      'RSTOBJ) '
+046800000000     O                                      'and specify the '
+046900000000     O                                      'library/file '
+047000000000     O        T  1     LR 77
+047100000000     O                                 + 10 'and member on the '
+047200000000     O                                      'command and '
+047300000000     O                                      'DETAIL(*YES).'
+047400000000** OVR
+047500000000OVRDBF FILE(APYTO) TOFILE(                     ) MBR(          )
+047600000000** OVX
+047700000000OVRDBF FILE(APYPX) TOFILE(                     ) MBR(          )
+047800000000** ERR and ETX
+0479000000001 Length of file differs from JOENTL
+0480000000002 DL/DR for non-existent RR
+0481000000003 PT/PX for existing RR
+0482000000004 RR of add differs
+0483000000005 UP/UR for non-existent RR
+0484000000006 Exceeded max record length
+0485000000007 The file/member could not be opened
+0485019205278 Non trovato record su CMINV00F
+0485029205279 File già presente in libreria
+048600920527**
+048700920527CHKOBJ OBJTYPE(*FILE) OBJ(L123456789/F123456789) MBR(          )
+048800920527**
+048900920527CRTPF RCDLEN(12345)  FILE(L123456789/F123456789) MBR(          )

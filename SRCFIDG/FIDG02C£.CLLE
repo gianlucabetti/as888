@@ -1,0 +1,60 @@
+000100950524             PGM        PARM(&KPJBA)
+000200950524             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000201060929             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+000202070124             DCL        VAR(&SIF) TYPE(*CHAR) LEN(10)
+000203070320             DCL        VAR(&strcmt)   TYPE(*CHAR) LEN(1)
+000204070124             DCL        VAR(&DSBS55) TYPE(*CHAR) LEN(214)
+000205070124             DCL        VAR(&O50ALa) TYPE(*CHAR) LEN(10)
+000206070320/* reperisco il sistema informativo perchè se sono in GAITRA devo */
+000207070124/* fare OVRDBF sul file distinte FIDST */
+000208070124             CHGVAR     VAR(&SIF) VALUE(%SST(&KPJBA 92 10))
+000209070124
+000210070124             IF         COND(%SST(&SIF 1 6) *EQ 'GAITRA') THEN(DO)
+000211070124             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+000212070124             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('001')
+000213070124             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('001')
+000214070124             CALL       PGM(TIBS55R) PARM(&DSBS55)
+000215070124             CHGVAR     VAR(&O50ALa) VALUE(%SST(&DSBS55 126 10))
+000216070124
+000217070124             OVRDBF     FILE(FIDST04L) TOFILE(&O50ALa/FIDST04L)
+000218070124             ENDDO
+000219070124
+000220060929             RTVJOBA    JOB(&DSP)
+003500950524
+003600030722/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003700030722/* procedura/programma fosse finita in maniera anomala occorre */
+003800030722/* parare il colpo riducendo il male al male minore ossia      */
+003900030722/* con un rollback chiudere le precedenti transazioni fatte a  */
+004000030722/* metà piuttosto che confermarle. E ripartendo da una         */
+004100030722/* situazione pulita.                                          */
+004101070320             CHGVAR     VAR(&strcmt) VALUE(%SST(&KPJBA 295 1))
+004102070320/* visto che può essere richiamato anche da menù testo <> 'N' */
+004103070320             IF         COND(&strcmt *ne 'N') THEN(DO)
+004200030708             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004300030722             MONMSG     MSGID(CPF8351) EXEC(DO)
+004400030722             ENDCMTCTL
+004500030722             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004600030722             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004700030722             ENDDO
+004701070115             ENDDO
+004800030708
+004900060929        /*   Eseguo CALL Gestione estensione anagrafica autotras.*/
+005000061213             CALL       PGM(FIDG02R) PARM(&KPJBA)
+005100030708             MONMSG     MSGID(CPF0000) EXEC(DO)
+005101070320/* visto che può essere richiamato anche da menù testo <> 'N' */
+005102070320             IF         COND(&strcmt *ne 'N') THEN(DO)
+005200030708             ROLLBACK
+005300060929             SNDBRKMSG  MSG('ERRORE La Gestione estensione anagrafica +
+005400060929                          autotrasp. è terminata in modo anomalo. +
+005500030722                          Segnalare il +
+005600030722                          problema alla persona responsabile della +
+005700030722                          manutenzione del programma.') TOMSGQ(&DSP)
+005800030728             RCLRSC     LVL(*CALLER)
+005900030708             ENDDO
+006000030722
+006100030722             ENDCMTCTL
+006101070115             ENDDO
+006200030708
+006300950524             DLTOVR     FILE(*ALL)
+006900950911
+007000950524             ENDPGM

@@ -1,0 +1,254 @@
+000100000000     H              J
+000200900601     H*---------*----------------------------------------------------*
+000300941215     H* FNLVCNR *                                                    *
+000400911216     H*  CREO NUMERATORI PER ANNO NUOVO                              *
+000500000000     H*--------------------------------------------------------------*
+000600931227     FFLNUF01LUF  E           K        DISK                      A
+000700911216     FTABEL00FIF  E           K        DISK
+000800911216     FQSYSPRT O   F     132     OF     PRINTER
+000900911216     E                    SK      1   8 66               RIGHE STAMPA
+001000911216     I            DS
+001100000113     I                                        1   80DATE
+001200911216     I                                        3   40UDAMM
+001300000113     I                                        5   80UDAAA
+001400911216     I            DS
+001500911216     I                                        1   20NEWAAS
+001600911216     I                                        3   60NEWMG
+001700911216     I                                        1   60NEWDAT
+001800991221     IWLBDAT     IDS
+001900991221     I                                        1   80G02DAT
+002000991221     I                                        9  160G02INV
+002100991221     I                                       17  17 G02ERR
+002200991221     I                                       18  220G02TGI
+002300951228     IPARAM       DS
+002400951228     I                                        1   30CODNUM
+002500911216     IDS1C      E DS
+002600911216     ICNCR80    E DS
+002700911216     IUT§DSE    E DSUT§DSE0F
+002800911216     C*--------------------------------------------------------------*
+002900951228     C           *ENTRY    PLIST
+003000951228     C                     PARM           PARAM
+003100951228     C*
+003200911216     C                     Z-ADD1         CODUT
+003300911216     C                     CALL 'X§PARUT'
+003400911216     C                     PARM           UT§DSE
+003500911216     C                     MOVELRAGUT     RSUT   20
+003600911216     C                     MOVELREC80     CNCR80
+003700951228     C*
+003800960930     C* LA DATA DEL GIORNO LA PRENDO DA TIME
+003900960930     C                     TIME           W0140  140
+004000960930     C                     MOVE W0140     UDATE8  80
+004100960930     C*
+004200951228     C           CODNUM    IFGT 0
+004300951228     C                     SETON                     01
+004400951228     C                     ENDIF
+004500951228     C*
+004600911216     C* ACCESSO   FILE TABELLE
+004700911216     C           KTAB      KLIST
+004800911216     C                     KFLD           CODUT   10
+004900911216     C                     KFLD           COD     2
+005000911216     C                     KFLD           KEY     8
+005100920320     C           KNUF      KLIST
+005200920320     C                     KFLD           NEWAAS
+005300920320     C                     KFLD           NUFCNU
+005400920320     C                     KFLD           NUFFIL
+005500931227     C                     KFLD           NUFFL2
+005600920320     C           KNUF2     KLIST
+005700920320     C                     KFLD           OLDAAS
+005800920320     C                     KFLD           NUFCNU
+005900931227     C                     KFLD           NUFFIL
+006000931227     C                     KFLD           NUFFL2
+006100951228     C           KNUF3     KLIST
+006200951228     C                     KFLD           OLDAAS
+006300951228     C                     KFLD           CODNUM
+006400951229     C* DEFINIZIONE CAMPI
+006500951229     C           *LIKE     DEFN NUFAAA    WAAA
+006600931227     C*--------------------------------------------------------------*
+006700901219     C*
+006800000113     C                     Z-ADDUDATE8    DATE
+006900000704     C           UDAMM     IFLE 7
+007000000113     C           UDAAA     SUB  1         OLDAA4  40
+007100000113     C                     Z-ADDUDAAA     NEWAA4  40
+007200000113     C           UDAAA     SUB  2         DELAA4  40
+007300911216     C                     ELSE
+007400000113     C                     Z-ADDUDAAA     OLDAA4
+007500000113     C           UDAAA     ADD  1         NEWAA4
+007600000113     C           UDAAA     SUB  1         DELAA4
+007700911216     C                     END
+007800000113     C*
+007900000113     C                     MOVE OLDAA4    OLDAAS  20
+008000000113     C                     MOVE NEWAA4    NEWAAS  20
+008100000113     C                     MOVE DELAA4    DELAAS  20
+008200911216     C*
+008300911216     C                     Z-ADD0101      NEWMG
+008400911216     C                     MOVEL'1C'      COD
+008500911216     C                     SETON                     OF
+008600951229     C* CANCELLO NUMERATORI VECCHI (TRANNE QUELLI CON ANNO = 0)
+008700000113     C           *LOVAL    SETLLFLNUF
+008800941215     C                     READ FLNUF                    31
+008900911216     C*
+009000941215    1C           *IN31     DOWEQ*OFF
+009100941215     C           NUFAAA    ANDLEDELAAS
+009200000113     C* CAMBIATO CODICE NUM.: PRENDO NUOVA TABELLA
+009300000113    2C           NUFCNU    IFNE SAVCNU
+009400000113     C                     MOVEL*BLANKS   KEY
+009500000113     C                     MOVELNUFCNU    KEY
+009600000113     C           KTAB      CHAINTABEL                30
+009700000113     C         30          CLEARDS1C
+009800000113     C        N30          MOVELTBLUNI    DS1C
+009900000113     C        N30          MOVELNUFCNU    SAVCNU  30
+010000000113    2C                     END
+010100000113     C**
+010200000113     C* SE HA L'ANNO IN CHIAVE, CANCELL0
+010300000704    2C           §1CFAA    IFEQ 'S'
+010400000704     C* IMPOSTO IL SECOLO
+010500000704    3C           NUFAAA    IFLE 60
+010600000704     C                     Z-ADD2000      WNUFAA  40
+010700000704     C                     ADD  NUFAAA    WNUFAA
+010800000704     C                     ELSE
+010900000704     C                     Z-ADD1900      WNUFAA
+011000000704     C                     ADD  NUFAAA    WNUFAA
+011100000704    3C                     ENDIF
+011200000704     C*
+011300000704    3C           WNUFAA    IFLE DELAA4
+011400911216     C                     DELETFLNUF
+011500000704    3C                     ENDIF
+011600000704    2C                     ENDIF
+011700941215     C*
+011800941215     C                     READ FLNUF                    31
+011900941215    1C                     ENDDO
+012000911216     C*
+012100911216     C* CREO NUMERATORI BOLLE NUOVO ANNO
+012200951228     C  N01      OLDAAS    SETLLFLNUF
+012300951228     C  N01      OLDAAS    READEFLNUF                    31
+012400951228     C*
+012500951228     C   01      KNUF3     SETLLFLNUF
+012600951228     C   01      KNUF3     READEFLNUF                    31
+012700911216     C*
+012800931227    1C           *IN31     DOWEQ*OFF
+012900931227     C* CAMBIATO CODICE NUM.: PRENDO NUOVA TABELLA
+013000931227    2C           NUFCNU    IFNE SAVCNU
+013100911216     C                     MOVEL*BLANKS   KEY
+013200911216     C                     MOVELNUFCNU    KEY
+013300911216     C           KTAB      CHAINTABEL                30
+013400911216     C         30          EXSR STAMPA
+013500911216     C        N30          MOVELTBLUNI    DS1C
+013600911216     C        N30          MOVELNUFCNU    SAVCNU  30
+013700931227    2C                     END
+013800931227     C*
+013900931227     C* D A   R I C R E A R E
+014000931227    2C        N30§1CNCR    IFNE 'S'
+014100991202     C* SOLO SE PREVEDE L'ANNO CORRENTE (CI SAREBBE IL PROBLEMA PER
+014200991202     C* L'ANNO 2000 NEL 2001, DOVE QUELLI SENZA ANNO(00) SONO UGUALI A
+014300991202     C*  QUELLI CON L'ANNO(00) ESSENDO L'ANNO A 2 FIFRE
+014400951228     C* DA RICREARE SE GIA' PRESENTE
+014500991202     C           §1CFAA    ANDEQ'S'
+014600931227     C           KNUF      CHAINFLNUF                32
+014700951228     C*
+014800951228    3C           *IN32     IFEQ *OFF
+014900951228     C           §1CPRE    ANDEQ'S'
+015000951228     C                     DELETFLNUF
+015100931227     C* RIAGGANCIO RECORD LETTO
+015200951228     C           KNUF2     CHAINFLNUF                32
+015300951228    3C                     ENDIF
+015400931227     C*
+015500951228     C*
+015600951228   2AC           §1CPRE    IFNE 'S'
+015700951228     C           *IN32     ANDEQ*ON
+015800951228     C           §1CPRE    OREQ 'S'
+015900931227     C* P R E S E N T I   R A N G E
+016000931227    3C           §1CFG3    IFEQ 'S'
+016100931227     C                     Z-ADD§1CRIN    NUFRIN
+016200931227     C                     Z-ADD§1CRFI    NUFRFI
+016300931227     C* NUMERATORE DA AZZERARE
+016400931227     C           §1CFG4    IFEQ 'S'
+016500931228     C           NUFRIN    IFGT 0
+016600931228     C           NUFRIN    SUB  1         NUFNUM
+016700931228     C                     ELSE
+016800931228     C                     Z-ADDNUFRIN    NUFNUM
+016900931227     C                     ENDIF
+017000931228     C                     ENDIF
+017100931227     C*
+017200931227    3C                     ELSE
+017300931227     C* N O N   P R E S E N T I   R A N G E
+017400931227     C                     CLEARNUFRIN
+017500931227     C                     CLEARNUFRFI
+017600931227     C* NUMERATORE DA AZZERARE
+017700941215    4C           §1CFG4    IFEQ 'S'
+017800941215     C*
+017900941215     C* SE §1CCTN=S METTO IL NUOVO NUMERATORE SOLO SE IL VECCHIO NON
+018000941215     C*  LO SUPERA
+018100941215    5C           §1CCTN    IFNE 'S'
+018200931227     C                     Z-ADD§1CNIN    NUFNUM
+018300941215     C                     ELSE
+018400941215    6C           NUFNUM    IFLT §1CNIN
+018500941215     C                     Z-ADD§1CNIN    NUFNUM
+018600941215    6C                     END
+018700941215    5C                     END
+018800941215    4C                     END
+018900931227    3C                     ENDIF
+019000931227     C*
+019100931227     C                     Z-ADDNEWDAT    NUFDAT            DATA
+019200931227     C                     Z-ADDNEWAAS    NUFAAA            ANNO NUOVO
+019300931227     C                     WRITEFLNUF                       SCRIVO
+019400951228     C                     ELSE
+019500951228     C* RIAGGANCIO RECORD LETTO
+019600951228     C           KNUF2     CHAINFLNUF                32
+019700951228   2AC                     ENDIF
+019800951228    2C                     END
+019900911216     C*
+020000951228     C  N01      OLDAAS    READEFLNUF                    31
+020100951228     C   01      KNUF3     READEFLNUF                    31
+020200931227    1C                     END
+020300901219     C*
+020400911216     C         10          EXCPTPIEDI
+020500901219     C                     SETON                     LR
+020600911216     C*
+020700911216     C*--- STAMPO ERRORE MANCA NUMERATORE IN TABELLA -----------------*
+020800911216     C           STAMPA    BEGSR
+020900911216     C                     SETON                     10
+021000911216     C* GIRO DATA STAMPA
+021100991221     C                     Z-ADDNUFDAT    G02INV
+021200911216     C                     MOVE *ZEROS    G02DAT
+021300911216     C                     MOVEL3         G02ERR
+021400991221     C                     CALL 'XSRDA8'
+021500911216     C                     PARM           WLBDAT
+021600991221     C                     Z-ADDG02DAT    STADAT  80
+021700911216     C*
+021800911216     C         OF          EXCPTTES
+021900911216     C         OF          SETOF                     OF
+022000911216     C*
+022100911216     C                     EXCPTDET
+022200911216     C                     ENDSR
+022300911216     OQSYSPRT E   02           TES
+022400911216     O                         SK,1      66
+022500911216     O                         SK,2     132
+022600960930     O                         SIMFEL    20
+022700960930     O                         UDATE8   120 '  /  /    '
+022800911216     O        E   04           TES
+022900911216     O                         SK,3      66
+023000911216     O                         SK,5     132
+023100911216     O        E 1              DET
+023200911216     O                         NUFAAA     3
+023300911216     O                         NUFCNU    16
+023400911216     O                         NUFFIL    29
+023500911216     O                         NUFNUMZ   43
+023600991221     O                         STADAT    56 '  /  /    '
+023700911216     O                         NUFRINZ   64
+023800911216     O                                   66 '/'
+023900911216     O                         NUFRFIZ   74
+024000911216     O        E   64           PIEDI
+024100911216     O                         SK,7      66
+024200911216     O                         SK,8     132
+024300911216     O        E 00             PIEDI
+024400911216     O                         SK,7      66
+024500911216     O                         SK,8     132
+024600911216**
+024700960930PUNTO OPERATIVO: XXX   *** STAMPA NUMERATORI ERRATI DI CUI NON TRO
+024800911216VATA LA TABELLA ***
+024900960930ANNO   COD.NUMERATORE     P.O.     NUMERATORE    DATA    RANGE DA
+025000991221 XX          XXX          XXX       XXXXXXX   XX/XX/XXXX XXXXXXX /
+025100911216 RANGE AL
+025200911216 XXXXXXX
+025300911216           ***  SPEDIRE  CON  URGENZA  QUESTA  STAMPA  ALL'UFFICIO
+025400911216  C.E.D.  IN  SEDE  ***

@@ -1,0 +1,354 @@
+000100920316     H
+000200920316      *---------------------------------------------------------------*
+000300920316      *  Nuova versione pgm manutenzione causali operative            *
+000400920316      *                                                               *
+000500920316      *  Daniele Greggio  -  Gruppo Pro Milano  -  03/03/92           *
+000600920316      *---------------------------------------------------------------*
+000700920316      *                                                               *
+000800920316      *  FUNZIONI.  Dipendentemente dai parametri impostati sulla     *
+000900920316      *  mappa gestita da questo programma (CNC032R) vengono attivati *
+001000920316      *  diversi pgm di gestione delle causali operative.             *
+001100920316      *  Mentre in passato il pgm di manutenzione gestiva le causali  *
+001200920316      *  come stringhe di 10 crt proposte a video tutte insieme, ora  *
+001300920316      *  il vecchio pgm, che rimane per CED, viene sostituito da      *
+001400920316      *  questo e altri pgm che propongono a video per la manutenzione*
+001500920316      *  le causali suddivise carattere per carattere con la spiega-  *
+001600920316      *  zione dell'utilizzo che le procedure ne fanno, e non tutte   *
+001700920316      *  insieme ma suddivise per tipologia.                          *
+001800920316      *  L'operatore con questo programma indica su quale tipologia   *
+001900920316      *  vuole operare e su quale codice causale sia in immisione     *
+002000920316      *  che in revisione (in caso di immissione e' obbligatoria la   *
+002100920316      *  descrizione). Sulla base di questi dati vengono richiamati : *
+002200920316      *     - se tipologia 0 (primanota generica) --> CNC032R0        *
+002300920316      *     - se tipologia 1 (primanota fattura)  --> CNC032R1        *
+002400920316      *     - se tipologia 2 (dettaglio IVA)      --> CNC032R2        *
+002500920316      *                                                               *
+002600920316      *  Se l'operatore vuole operare come nel passato con tutte le   *
+002700920316      *  causali operative di quel codice viene richiamato il vecchio *
+002800920316      *  pgm CNC030R leggermente modificato per passaggio parametri.  *
+002900920316      *
+003000920316      *  Il programma consente anche la modifica tramite il tasto     *
+003100920316      *  CMD 18 dei flag personalizzabili, attivando il pgm CNC033R.  *
+003200920316      *  Altra funzione nuova e' la copia di un codice.               *
+003300920316      *  E' stato anche modificato il pgm di ricerca alfabetica delle *
+003400920316      *  causali (CNC031R) per consentire il 5 di visualizzazione su  *
+003500920316      *  un codice scelto dall'utente. In questo caso, dipendentemen- *
+003600920316      *  te dalla tipologia della causale viene richiamato uno dei pgm*
+003700920317      *  CNC032Rx in modo solo visualizzazione.                       *
+003800920316      *---------------------------------------------------------------*
+003900920318     FCNOPE01LUF  E           K        DISK                      A
+004000920317     FCNC032D CF  E                    WORKSTN
+004100920316     I* DS PER PGM XPARUT                                              TO
+004200920316     IPARUT     E DSUTEDSE0F
+004300920316     IKPJBA     E DS
+004400920317      *-- ds per passaggio parametri
+004500920317     ICNC034    E DS
+004600920316      *-- DS x Nome programma
+004700920316     I           SDS
+004800920316     I                                        1   8 NOMPG
+004900920316     I            DS
+005000920316     I                                        1  11 NOMPGM
+005100920316     I I            '*'                       1   1 AST1
+005200920316     I                                        3  10 NOMPG1
+005300920316     I I            '*'                      11  11 AST2
+005400920316      *-- Definizione costanti
+005500920316     I              '1'                   C         $ON
+005600920316     I              '0'                   C         $OFF
+005700920413      *-- DS Passaggio parametri
+005800920413     IDSPARM      DS
+005900920413     I                                        1   1 W1TIPO
+006000920413     I                                        2   5 W1CODI
+006100920413     I                                        6   9 W1CODF
+006200920316      *--------------------------------------------------------*
+006300920316      *-- Impostazioni iniziali
+006400920316     C                     EXSR DEFCAM
+006500920316      *-- Gestione Video
+006600920316     C           $FINE     DOWNE'1'
+006700920316     C                     EXSR GESD1
+006800920316     C                     END
+006900920316      *-- Fine Programma
+007000920316     C                     SETON                     LR
+007100920819      *------------------------------------------------------*
+007200920819      /EJECT
+007300920819      *======================================================*
+007400920316      *-- Gestione Exfmt e relativi CMD
+007500920819      *======================================================*
+007600920316     C           GESD1     BEGSR
+007700920316     C                     EXFMTC032D1
+007800920317      *-- Fine
+007900920317     C           *INKC     IFEQ $ON
+008000920316     C                     MOVEL'1'       $FINE
+008100920316     C                     GOTO ENDGES
+008200920316     C                     END
+008300920316      *-- Decodifica
+008400920316     C           *INKD     IFEQ $ON
+008500920316     C                     EXSR CTRD1
+008600920316     C                     GOTO ENDGES
+008700920316     C                     END
+008800920413      *-- Stampo causale indicata in P34COD
+008900920413     C           *INKH     IFEQ $ON
+009000920413     C           P34COD    IFNE *BLANKS
+009100920413     C                     EXSR STAMPA
+009200920413     C                     MOVEL*BLANKS   P34COD
+009300920413     C                     GOTO ENDGES
+009400920413     C                     ELSE
+009500920413     C                     SETON                     71
+009600920413     C                     GOTO ENDGES
+009700920413     C                     END
+009800920413     C                     END
+009900920819      *-- Copia causali (non concessa in sola visual.)
+010000920819     C           *INKK     IFEQ $ON
+010100920319     C           *IN77     ANDNE$ON
+010200920316     C                     EXSR CPYD1
+010300920316     C                     END
+010400920320      *-- Personalizzazioni flag
+010500920316     C           *INKS     IFEQ $ON
+010600920320      *-- Controllo esistenza codice causale
+010700920320     C           P34COD    CHAINCNOPE01L             21
+010800920320     C           *IN21     IFEQ $ON
+010900920320     C           P34COD    OREQ *BLANKS
+011000920320     C                     SETON                     79
+011100920323     C                     GOTO ENDGES
+011200920320     C                     END
+011300920323     C                     MOVELOPEP0     P34TIP
+011400920323     C                     MOVELOPEDES    P34DES
+011500920320     C                     MOVEL*LOVAL    WCOD    4
+011600920320     C           WCOD      SETLLCNOPE01L                    Unlock
+011700920320     C                     MOVELCNC034    KPJBU
+011800920320     C                     CALL 'CNC033R'
+011900920320     C                     PARM           KPJBA
+012000920320     C                     GOTO ENDGES
+012100920316     C                     END
+012200920316     C                     EXSR CTRD1
+012300920316     C  N90                EXSR OPERAZ
+012400920316     C           ENDGES    ENDSR
+012500920819      *------------------------------------------------------*
+012600920819      /SPACE 3
+012700920819      *======================================================*
+012800920316      *-- Controlli video e messaggi errore
+012900920819      *======================================================*
+013000920316     C           CTRD1     BEGSR
+013100920318      *-- Ricerca alfabetica per il codice causale
+013200920317     C           P34COD    IFEQ '?   '
+013300920317     C           P34COD    OREQ '   ?'
+013400920318     C                     EXSR RICER
+013500920318     C                     MOVE COD       P34COD
+013600920320     C                     GOTO ENDC1
+013700920317     C                     END
+013800920318      *-- Ricerca alfabetica per la copia
+013900920318     C           P34CPY    IFEQ '?   '
+014000920318     C           P34CPY    OREQ '   ?'
+014100920318     C                     EXSR RICER
+014200920318     C                     MOVE COD       P34CPY
+014300920320     C                     GOTO ENDC1
+014400920318     C                     END
+014500920316      *-- Controllo codice causale
+014600920316     C           P34COD    IFEQ *BLANKS
+014700920316     C                     SETON                     7190
+014800920319     C                     GOTO ENDC1
+014900920320     C                     END
+015000920320      *-- Controllo codice causale
+015100920320     C           P34COD    CHAINCNOPE01L             21
+015200920316      *-- Se trovato decodifico altrimenti segnalo mancanza descrizione
+015300920317     C           *IN21     IFEQ $OFF
+015400920316     C                     MOVELOPEDES    P34DES
+015500920317     C                     MOVELOPEP0     OP1     1
+015600920318      *-- Se tipologia registrata sul record e' blank muovo zero
+015700920318     C           OP1       IFEQ *BLANK
+015800920318     C                     MOVEL'0'       OP1
+015900920317     C                     END
+016000920320     C                     END
+016100920317     C           *IN21     IFEQ $ON
+016200920320     C           *IN77     ANDEQ$OFF
+016300920317     C           P34DES    ANDEQ*BLANKS
+016400920317     C                     SETON                     7390
+016500920319     C                     GOTO ENDC1
+016600920320     C                     END
+016700920320     C           *IN21     IFEQ $ON
+016800920320     C           *IN77     ANDEQ$ON
+016900920319     C                     SETON                     7890
+017000920319     C                     GOTO ENDC1
+017100920317     C                     END
+017200920317      *-- Se tipologia non immessa la prendo dal codice
+017300920317     C           P34TIP    IFEQ *BLANKS
+017400920317     C  N21                MOVELOP1       P34TIP
+017500920317     C   21                SETON                     7090
+017600920319     C                     GOTO ENDC1
+017700920317     C                     END
+017800920317     C  N21      P34TIP    IFNE OP1
+017900920317     C                     SETON                     7490
+018000920319     C                     GOTO ENDC1
+018100920317     C                     END
+018200920317      *-- Controllo tipologia
+018300920317     C           P34TIP    IFGT '2'
+018400920317     C           P34TIP    ORLT '0'
+018500920317     C                     SETON                     7090
+018600920319     C                     GOTO ENDC1
+018700920317     C                     END
+018800920319     C           ENDC1     ENDSR
+018900920819      *------------------------------------------------------*
+019000920819      /SPACE 3
+019100920819      *======================================================*
+019200920317      *-- Call a vari pgm dipendentemente dai parametri impostati
+019300920819      *======================================================*
+019400920317     C           OPERAZ    BEGSR
+019500920318      *-- Sblocco eventuali lock prima delle chiamate ai sottopgm
+019600920318     C                     MOVEL*LOVAL    WCOD    4
+019700920318     C           WCOD      SETLLCNOPE01L
+019800920330      *-- Imposto CD1 dipendentemente dalla tipologia
+019900920330     C           P34TIP    IFEQ '0'
+020000920330     C                     MOVEL'PG'      P34CD1
+020100920330     C                     ELSE
+020200920330     C                     MOVEL'PF'      P34CD1
+020300920330     C                     END
+020400920317     C                     MOVELCNC034    KPJBU
+020500920317      *-- Primanota generica
+020600920317     C           P34TIP    IFEQ '0'
+020700920317     C           P34FRE    ANDEQ*BLANKS
+020800920317     C                     CALL 'CNC032R0'
+020900920317     C                     PARM           KPJBA
+021000920317     C                     END
+021100920317      *-- Primanota fatture
+021200920317     C           P34TIP    IFEQ '1'
+021300920317     C           P34FRE    ANDEQ*BLANKS
+021400920317     C                     CALL 'CNC032R1'
+021500920317     C                     PARM           KPJBA
+021600920317     C                     END
+021700920317      *-- Dettaglio IVA
+021800920317     C           P34TIP    IFEQ '2'
+021900920317     C           P34FRE    ANDEQ*BLANKS
+022000920317     C                     CALL 'CNC032R2'
+022100920317     C                     PARM           KPJBA
+022200920317     C                     END
+022300920317      *-- Formato libero
+022400920317     C           P34FRE    IFNE *BLANKS
+022500920317     C                     CALL 'CNC030R'
+022600920317     C                     PARM           KPJBA
+022700920317     C                     END
+022800920330     C                     MOVEL*BLANKS   P34TIP
+022900920330     C                     MOVEL*BLANKS   P34DES
+023000920330     C                     MOVEL*BLANKS   P34COD
+023100920317     C                     ENDSR
+023200920819      *------------------------------------------------------*
+023300920819      /SPACE 3
+023400920819      *======================================================*
+023500920317      *-- Gestione Copie Causali
+023600920819      *======================================================*
+023700920317     C           CPYD1     BEGSR
+023800920318      *-- Controllo codice causale
+023900920318     C           P34COD    IFEQ *BLANKS
+024000920318     C                     SETON                     7590
+024100920318     C                     GOTO ENDCPY
+024200920318     C                     END
+024300920318      *-- Testo inesistenza codice causale a cui copiare
+024400920318     C           P34COD    CHAINCNOPE01L             21
+024500920318      *--
+024600920318     C           *IN21     IFEQ $OFF
+024700920318     C                     SETON                     7690
+024800920318     C                     GOTO ENDCPY
+024900920318     C                     END
+025000920819      *-- Testo eSistenza codice causale da cui copiare
+025100920317     C           P34CPY    CHAINCNOPE01L             21
+025200920318      *--
+025300920318     C           *IN21     IFEQ $ON
+025400920318     C                     SETON                     7290
+025500920318     C                     GOTO ENDCPY
+025600920318     C                     END
+025700920819      *-- Deve avere tipologia congruente con quella a video
+025800920819     C                     MOVELOPEP0     OPW     1      22
+025900920819     C   22                MOVE '0'       OPW
+026000920819     C           P34TIP    IFNE *BLANK
+026100920819     C           OPW       COMP P34TIP               8181
+026200920819     C   81                SETON                     90
+026300920819     C                     END
+026400920318      *--
+026500920320     C                     MOVELOPEDES    D1DES
+026600920318     C           P34DES    IFEQ *BLANKS
+026700920318     C                     MOVELOPEDES    P34DES
+026800920318     C                     END
+026900920819     C                     MOVELOPEP0     OP2     1
+027000920318     C           OP2       IFEQ ' '
+027100920318     C                     MOVEL'0'       OP2
+027200920318     C                     MOVEL'0'       OPEP0
+027300920318     C                     END
+027400920318     C                     MOVELOP2       P34TIP
+027500920318     C           OP2       IFEQ '0'
+027600920318     C                     MOVEL'PG'      OPECD1
+027700920318     C                     ELSE
+027800920318     C                     MOVEL'PF'      OPECD1
+027900920318     C                     END
+028000920318     C                     Z-ADDKNRAZ     OPENRJ
+028100920318     C                     MOVELP34COD    OPECOD
+028200920323     C                     MOVELP34DES    OPEDES
+028300920318     C                     MOVELCODUT     OPEKUT
+028400920318     C                     MOVEL*BLANK    OPEFLG
+028500920318     C                     MOVEL*BLANK    OPETRB
+028600920318     C                     MOVEL*BLANK    OPEATB
+028700920318     C                     WRITECNOPE000
+028800920318     C                     MOVEL*BLANKS   P34CPY
+028900920323     C                     MOVEL*BLANKS   D1DES
+029000920323     C                     SETON                     80
+029100920318      *--
+029200920318     C           ENDCPY    ENDSR
+029300920819      *------------------------------------------------------*
+029400920819      /SPACE 3
+029500920819      *======================================================*
+029600920413      *-- Lancio stampa causale
+029700920819      *======================================================*
+029800920413     C           STAMPA    BEGSR
+029900920413     C                     MOVEL*BLANKS   W1TIPO
+030000920413     C                     MOVELP34COD    W1CODI
+030100920413     C                     MOVELP34COD    W1CODF
+030200920413     C                     MOVELDSPARM    KPJBU
+030300920413     C                     CALL 'CNC035R'
+030400920413     C                     PARM           KPJBA
+030500920413     C                     ENDSR
+030600920819      *------------------------------------------------------*
+030700920819      /SPACE 3
+030800920819      *======================================================*
+030900920318      *-- Ricerca alfabetica
+031000920819      *======================================================*
+031100920318     C           RICER     BEGSR
+031200920819     C                     MOVE *BLANK    COD     4
+031300920330      *-- Se tipologia diversa da blank seleziono la ricerca (PF/PG)
+031400920330     C           P34TIP    IFEQ *BLANKS
+031500920318     C                     MOVEL*BLANKS   CD1     2
+031600920330     C                     END
+031700920330     C           P34TIP    IFEQ '0'
+031800920330     C                     MOVEL'PG'      CD1
+031900920330     C                     END
+032000920330     C           P34TIP    IFEQ '1'
+032100920330     C           P34TIP    OREQ '2'
+032200920330     C                     MOVEL'PF'      CD1
+032300920819     C                     MOVELP34TIP    COD
+032400920330     C                     END
+032500920318     C                     CALL 'CNC031R'
+032600920318     C                     PARM           CD1
+032700920318     C                     PARM           COD
+032800920318     C                     SETON                     90
+032900920318     C                     ENDSR
+033000920819      *------------------------------------------------------*
+033100920819      /SPACE 3
+033200920819      *======================================================*
+033300920316      *-- Impostazioni iniziali; klist variabili e altro
+033400920819      *======================================================*
+033500920316     C           DEFCAM    BEGSR
+033600920316     C           *ENTRY    PLIST
+033700920316     C                     PARM           KPJBA
+033800920319      *-- Testo se permessa sola visualizzazione. Se solo vis. accendo
+033900920319      *-- l'indicatore per la protezione del campo visualizzazione.
+034000920319     C                     MOVELKPJBU     P34VIS
+034100920319     C           P34VIS    IFEQ 'S'
+034200920319     C                     SETON                     77    Protect Vis.
+034300920319     C                     END
+034400920316     C                     MOVELNOMPG     NOMPG1           Nome Pgm
+034500920316     C                     MOVEL'0'       $FINE   1
+034600920316      *-- Controllo su xparut per autorizzazione e per estrarre rag soc
+034700920316     C                     Z-ADD1         CODUT   10
+034800920316     C                     CALL 'XPARUT'
+034900920316     C                     PARM           PARUT
+035000920316     C           CODUT     IFEQ -1
+035100920316     C                     MOVEL'1'       $FINE
+035200920316     C                     END
+035300920316     C                     MOVELRAGUT     RSUT
+035400920316     C                     ENDSR

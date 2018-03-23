@@ -1,0 +1,62 @@
+000100110420             PGM        PARM(&KPJBA)
+000200110420             DCL        VAR(&kpjba) tyPE(*CHAR) LEN(502)
+000300110420
+000400110420             DCL        VAR(&LIbout) TYPE(*CHAR) LEN(10)
+000500110404             DCL        VAR(&LIbIN) TYPE(*CHAR) LEN(10)
+000600110420             DCL        VAR(&LIb) TYPE(*CHAR) LEN(10)
+000700110420             DCL        VAR(&ctr) TYPE(*CHAR) LEN(1)
+000800110511             DCL        VAR(&job) TYPE(*CHAR) LEN(10)
+000900110511             DCL        VAR(&KTPAZ) TYPE(*CHAR) LEN(1)
+001000110511             DCL        VAR(&msg) TYPE(*CHAR) LEN(65) +
+001100110511                                  VALUE('Il file ECEVD00F non è +
+001200110511                          stato trovato nella libreria ')
+001300110511             RTVJOBA    JOB(&JOB)
+001400031024
+001500110420             CHGVAR     VAR(&LIBOUT) VALUE(%SST(&KPJBA 247 10))
+001600110420             CHGVAR     VAR(&LIBIN) VALUE(%SST(&KPJBA 257 10))
+001700110420             CHGVAR     VAR(&LIB) VALUE(%SST(&KPJBA 267 10))
+001800110420             CHGVAR     VAR(&ctr) VALUE(%SST(&KPJBA 285 1))
+001900110511             CHGVAR     VAR(&KTPAZ) VALUE(%SST(&KPJBA 64 1))
+002000110420
+002100110420  /* libreria nella quale creare le nuove tariffe */
+002200110511             CHGVAR     VAR(%SST(&msg 53 10)) value(&libout)
+002300110511             CHKOBJ     OBJ(&libout/ECEVD00f) OBJTYPE(*FILE)
+002400110511             MONMSG     MSGID(CPF0000) EXEC(do)
+002500110511             IF         COND(&KTPAZ *EQ ' ') THEN(DO)
+002600110511             SNDBRKMSG  MSG(&msg) TOMSGQ(&JOB)
+002700110511             ENDDO
+002800110511             GOTO       CMDLBL(FINE)
+002900110511             ENDDO
+003000110404             OVRDBF     FILE(ECEVDOUT) TOFILE(&LIBOUT/ECEVD00F) +
+003100110404                          OVRSCOPE(*JOB)
+003200110420  /* CE2013 */
+003300110511             CHGVAR     VAR(%SST(&msg 53 10)) value(&libin)
+003400110511             CHKOBJ     OBJ(&libin/ECEVD00f) OBJTYPE(*FILE)
+003500110511             MONMSG     MSGID(CPF0000) EXEC(do)
+003600110511             IF         COND(&KTPAZ *EQ ' ') THEN(DO)
+003700110511             SNDBRKMSG  MSG(&msg) TOMSGQ(&JOB)
+003800110511             ENDDO
+003900110511             GOTO       CMDLBL(FINE)
+004000110511             ENDDO
+004100110404             OVRDBF     FILE(ECEVDIN) TOFILE(&LIBIN/ECEVD00F) +
+004200110404                          OVRSCOPE(*JOB)
+004300110420  /* CE201 */
+004400110511             CHGVAR     VAR(%SST(&msg 53 10)) value(&lib)
+004500110511             CHKOBJ     OBJ(&lib/ECEVD00f) OBJTYPE(*FILE)
+004600110511             MONMSG     MSGID(CPF0000) EXEC(do)
+004700110511             IF         COND(&KTPAZ *EQ ' ') THEN(DO)
+004800110511             SNDBRKMSG  MSG(&msg) TOMSGQ(&JOB)
+004900110511             ENDDO
+005000110511             GOTO       CMDLBL(FINE)
+005100110511             ENDDO
+005200131128             OVRDBF     FILE(ECEVD06l) TOFILE(&LIB/ECEVD06L) +
+005300110404                          OVRSCOPE(*JOB)
+005400110420             CALL       PGM(TRECIMP0R) PARM(&KPJBA)
+005500110420 /* richiesto il controllo del file */
+005600110420             IF         COND(&CTR *EQ 'S') THEN(DO)
+005700110420             DLTOVR     FILE(*ALL) LVL(*JOB)
+005800110506             CALL       PGM(TRECCTR1C) PARM(&KPJBA)
+005900110420             enddo
+006000110420             DLTOVR     FILE(*ALL) LVL(*JOB)
+006100031024
+006200110511fine:        ENDPGM

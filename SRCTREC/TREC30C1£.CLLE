@@ -1,0 +1,61 @@
+000400161220             PGM        PARM(&file &prtf &JOB &USR &NBR &CODA +
+000401161125                          &APLKEY &SUBFLDR)
+000600160203             DCL        VAR(&prtf) TYPE(*CHAR) LEN(10)
+000700160203             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+000800160203             DCL        VAR(&job) TYPE(*CHAR) LEN(10)
+000900160203             DCL        VAR(&usr) TYPE(*CHAR) LEN(10)
+000901160203             DCL        VAR(&nbr) TYPE(*CHAR) LEN(6)
+000902161125             DCL        VAR(&CODA) TYPE(*CHAR) LEN(10)
+001500090514
+001501160203    /* Valori possibili per valori tabella 'AOA'                            */
+001502160203    /*      1° byte => pilota popolamento ambiente Archidoc                 */
+001503160203    /*                 valori possibili 'N' = NO                            */
+001504160203    /*                         diversamente = SI                            */
+001505160203    /*      2° byte => pilota popolamento ambiente DocFlow                  */
+001506160203    /*                 valori possibili 'T' = TEST                          */
+001507160203    /*                                  'P' = PROD                          */
+001508160203    /*                         diversamente = NESSUNO                       */
+001509160203    /*      3° byte => pilota popolamento ambiente DocFlow Storico          */
+001510160203    /*                 valori possibili 'S' = SI                            */
+001511160203    /*                         diversamente = NO                            */
+001518160203
+001600161125             DCL        VAR(&APLKEY) TYPE(*CHAR) LEN(15)
+001700160203             DCL        VAR(&IFSNAM) TYPE(*CHAR) LEN(10)
+001800161125             DCL        VAR(&SUBFLDR)    TYPE(*CHAR) LEN(50)
+001900160203             DCL        VAR(&FLGDATAORA) TYPE(*CHAR) LEN(1) VALUE('N')
+002000160203             DCL        VAR(&FILEOUTPUT) TYPE(*CHAR) LEN(255) +
+002001160203                          VALUE(' ')
+002100160203             DCL        VAR(&FLGSUBFLDR) TYPE(*CHAR) LEN(1) VALUE('S')
+002200160203             DCL        VAR(&FLGREPLACE) TYPE(*CHAR) LEN(1) VALUE('S')
+002300160203             DCL        VAR(&FLGLOG)     TYPE(*CHAR) LEN(1) VALUE('S')
+002400160203             DCL        VAR(&ESITO)      TYPE(*CHAR) LEN(1) VALUE(' ')
+002500150618
+002600040225
+002601160203     /* CREO WF X RICAVARE IL NUMERO DELLO SPOOL */
+002700040225             DCLF       FILE(GAITRAAZM/WFOUTQ0F)
+005300040225             CALL       PGM(TRUL84C) PARM(&CODA '*LIBL     ' +
+005400040225                          'QTEMP     ' 'S' ' ')
+005500960514             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDF))
+005700040225             OVRDBF     FILE(WFOUTQ0F) TOFILE(QTEMP/WFOUTQW) +
+005800040225                          LVLCHK(*NO)
+005900960315READ:
+005901160203     /* LEGGO IL RECORD DEL JOB */
+006000960315             RCVF
+006100960315             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDF))
+006200160203             IF         COND(&WFFILE *EQ &PRTF *AND &WFJNBR *EQ &NBR +
+006900160203                          *AND &WFUSER *EQ &USR *AND &WFJNAM *EQ +
+006901160203                          &JOB) THEN(DO)
+007100090514
+007300090514/* "COPIO" LO SPOOL CORRENTE ANCHE NEL IFS */
+007302160203             CHGVAR     VAR(&IFSNAM) VALUE(%SST(&FILE 1 8))
+007303160203             CHGVAR     VAR(%SST(&IFSNAM 9 1)) VALUE('_')
+007304160203             CHGVAR     VAR(&SUBFLDR) VALUE(%SST(&FILE 1 4))
+009500160129             CALL       PGM(TRBMAF05R) PARM(&APLKEY &IFSNAM &WFFILE &WFJNAM +
+009600160115                            &WFUSER &WFJNBR &WFFNBR &FLGDATAORA &FILEOUTPUT +
+009700160127                            &SUBFLDR &FLGSUBFLDR &FLGREPLACE &FLGLOG &ESITO)
+009800090514             MONMSG     MSGID(CPF0000)
+011000090706             ENDDO
+011001160203
+012200960315             GOTO       CMDLBL(READ)
+012300960315 ENDF:
+012400000000             ENDPGM

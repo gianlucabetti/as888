@@ -1,0 +1,670 @@
+000100100426      *PARMS DEVTYPE(*AFPDS) PAGESIZE(66 132 *ROWCOL) LPI(8) CPI(15)
+000200110517      *PARMS OVRFLW(66) PRTQLTY(*STD) DRAWER(*FORMDF) PAGRTT(90)
+000300080725      *PARMS UOM(*INCH) FORMTYPE(*LDVPDA) SAVE(*NO) USRDTA('LDV_PDA')
+000400110517     /*PRM devtype(*afpds) pagesize(66 132 *rowcol) lpi(8) cpi(15)
+000500110517     /*PRM ovrflw(66) prtqlty(*std) drawer(*formdf) pagrtt(90)
+000600100422     /*PRM uom(*inch) formtype(*LDVPDA) save(*no) usrdta('LdV_PDA')
+000700100422     /*END
+000800030515      *---------------------------------------------------------------*
+000900100422      *?Stampa LDV con HP laser fincato da AS - foglio x PDA         ?*
+001000030515      *---------------------------------------------------------------*
+001100030515     A                                      REF(CNDIZION)
+001200030515
+001300060921      *---------------------------------------------------------------*
+001400060921      *?PARTE SUPERIORE: Logo / "Cornice" / Barcode / ...            ?*
+001500060921      *---------------------------------------------------------------*
+001600030515
+001700081024     A          R SP30BOX1
+001800080725      *
+001900080725      *-------------------------------------*
+002000080725      *
+002100080725      * » PAGSEG([library-name/]page-segment-name
+002200080725      *          position-down position-across
+002300080725      *          (*SIZE width|&width-field height|&height-field)
+002400080725      *          (*ROTATION rotation|&rotation))
+002500080725      *   1 - Nome dell'oggetto contenente l'immagine (con eventuale libreria)
+002600080725      *   2 - Distanza dell'immagine dal lato superiore del foglio
+002700080725      *   3 - Distanza dell'immagine dal lato sinistro  del foglio
+002800080725      *   Parametri facoltativi:
+002900080725      *   4 - Dimensione .........: altezza + lunghezza
+003000080725      *   5 - Rotazione (in gradi): 0, 90, 180, 270.
+003100080725      *   N.B.: dai test eseguiti su AS888, la richiesta di rotazione
+003200080725      *   ¯¯¯¯¯ del logo di 90°, ha come unico effetto la NON stampa
+003300080725      *         del logo stesso.
+003400080725      *         Per questo motivo conviene creare un nuovo oggetto:
+003500080725      *           come il "vecchio" logo, ma già girato di 90°.
+003600120124     A                                      PAGSEG(GAITRAOBJ/LOGOBRT2 -
+003700120124     A                                             7.800  7.330)
+003800080725      *
+003900080725      *-------------------------------------*
+004000030515      *
+004100030515      * » BOX(first-corner-down first-corner-across
+004200030515      *       diagonal-corner-down diagonal-corner-across line-width)
+004300030515      *   1 - Distanza del 1° bordo orizzontale (dal lato superiore del foglio)
+004400030515      *   2 - Distanza del 1° bordo verticale   (dal lato sinistro  del foglio)
+004500030515      *   3 - Distanza del 2° bordo orizzontale (dal lato superiore del foglio)
+004600030515      *   4 - Distanza del 2° bordo verticale   (dal lato sinistro  del foglio)
+004700030515      *   5 - Spessore della riga: in inches - da .001 a 22.750,
+004800030515      *                            *NARROW   - .008 in.,
+004900030515      *                            *MEDIUM   - .017 in.,
+005000030515      *                            *WIDE     - .025 in.
+005100030515      *
+005200071017      * Area superiore (Bartolini)
+005300071017      *      > superiore (mittente)
+005400100430     A                                      BOX(0.20  0.25  +
+005500130125     A                                          0.958 3.908 *NARROW)
+005600071017      *      > generale
+005700100426     A                                      BOX(0.95  0.25  +
+005800100426     A                                          3.75  8.30  *NARROW)
+005900071017      *      > contrassegno
+006000110516     A     20                               BOX(2.10  6.45  +
+006100110516     A                                          2.58  8.30  *WIDE)
+006200071017      *      > totale da esigere al ritiro o alla consegna
+006300110516     A     21                               BOX(2.555 6.45  +
+006400100426     A                                          3.08  8.30  *WIDE)
+006500030515      *
+006600030515      *-------------------------------------*
+006700030515      *
+006800030515      * » LINE(position-down position-across line-lenght line-direction
+006900030515      *        line-width)
+007000030515      *   1 - Distanza della linea dal lato superiore del foglio
+007100030515      *   2 - Distanza della linea dal lato sinistro  del foglio
+007200030515      *   3 - Lunghezza della riga
+007300030515      *   4 - Tipo riga (*HRZ = orizzontale, *VRT = verticale)
+007400030515      *   5 - Spessore della riga: in inches - da .001 a 22.750,
+007500030515      *                            *NARROW   - .008 in.,
+007600030515      *                            *MEDIUM   - .017 in.,
+007700030515      *                            *WIDE     - .025 in.
+007800030515      *
+007900030515      * Linee orizzontali per la parte superiore
+008000030515      *                                     » Mittente
+008100030515      *                                     » Destinatario
+008200130125     A                                      LINE(1.75 0.25 3.65 +
+008300100429     A                                           *HRZ *NARROW)
+008400030515      *                                     » Colli / Peso / Volume / Natura
+008500100429     A                                      LINE(2.45 0.25 1.90 +
+008600100429     A                                           *HRZ *NARROW)
+008700030515      *                                     » Zona / "*" / F.Dep.
+008800100929     A                                      LINE(2.73 0.25 1.90 +
+008900100429     A                                           *HRZ *NARROW)
+009000030515      *                                     » Segnacolli
+009100100429     A                                      LINE(3.20 0.25 1.90 +
+009200100429     A                                           *HRZ *NARROW)
+009300030515      *                                     » Consegne particolari
+009400030515      * . . . . . . . . . . . . . . . . . . *
+009500030515      *                                     ». Mittente
+009600030515      *                                     ». Destinatario
+009700030515      *                                     ». Servizio
+009800130125     A                                      LINE(2.35 2.15 1.75 +
+009900100429     A                                           *HRZ *NARROW)
+010000030515      *                                     ». Data e ora consegna richiesta
+010100130125     A                                      LINE(2.73 2.15 1.75 +
+010200100429     A                                           *HRZ *NARROW)
+010300030515      *                                     ». Turni di chiusura
+010400130125     A                                      LINE(3.072 2.15 1.75 +
+010500100429     A                                           *HRZ *NARROW)
+010600030515      * - - - - - - - - - - - - - - - - - - *
+010700030515      *                                     »» Riferimento mittente
+010800130125     A                                      LINE(1.32 3.90 2.55 +
+010900100429     A                                           *HRZ *NARROW)
+011000030515      *                                     »» Nominativo e telefono
+011100130125     A                                      LINE(1.75 3.90 2.55 +
+011200100429     A                                           *HRZ *NARROW)
+011300030515      *                                     »» Note e Particolarità
+011400130125     A                                      LINE(3.072 3.90 2.55 +
+011500100429     A                                           *HRZ *NARROW)
+011600030515      *                                     »» Nome e cognome / Firma / Data
+011700030515      * - - - - - - - - - - - - - - - - - - *
+011800030515      *                                     »»» Spedizione
+011900100429     A                                      LINE(1.32 6.45 1.85 +
+012000100429     A                                           *HRZ *NARROW)
+012100030515      *                                     »»» Imponibile / IVA / Totale
+012200030515      *                                     »»» Fattura n° / del
+012300030515      *                                     »»» Contrassegno
+012400030515      *                                     »»» Totale da esigere
+012500100429     A       N21                            LINE(3.072 6.45 1.85 +
+012600100429     A                                           *HRZ *NARROW)
+012700030515      *                                     »» Nome e cognome / Firma / Data
+012800030515      *-------------------------------------*
+012900031031      * Linee verticali per la parte superiore
+013000100929     A                                      LINE(1.75 2.15 2.00 +
+013100100429     A                                           *VRT *NARROW)
+013200130125     A                                      LINE(0.95 3.90 2.122 +
+013300100429     A                                           *VRT *NARROW)
+013400110516     A                                      LINE(0.95 6.45 1.15 +
+013500100429     A                                           *VRT *NARROW)
+013600110516     A       N21                            LINE(2.10 6.45 0.98 +
+013700100429     A                                           *VRT *NARROW)
+013800030515      *-------------------------------------*
+013900030515      * Richieste: nome, firma, data e ora
+014000100429     A  35                                  LINE(3.55 2.20 2.20 +
+014100100429     A                                           *HRZ *NARROW)
+014200100427     A     72
+014300100429     AO 35                                  LINE(3.55 4.45 2.00 +
+014400100429     A                                           *HRZ *NARROW)
+014500100429     A  35                                  LINE(3.55 6.50 1.70 +
+014600100429     A                                           *HRZ *NARROW)
+014700030515      *-------------------------------------*
+014800030515      *
+014900030515      * Diciture / Dati
+015000030515      *
+015100110516      * - Dati "BRT S.p.A."
+015200030515     A            TBAR          50A
+015300110516     A*//                                   TEXT('"Bartolini S.p.A."')
+015400110516     A                                      TEXT('"BRT S.p.A."')
+015500030515     A                                      FONT(02305 (*POINTSIZE 6))
+015600110516     A*// x BARTOLINI S.p.A.                POSITION(0.32 5.95)
+015700110516     A*// x BRT S.p.A.                      POSITION(0.32 6.22)
+015800120124     A                                      POSITION(0.32 7.22)
+015900060503     A            TBA1          50A
+016000060503     A                                      TEXT('"Sede Operativa ed -
+016100060503     A                                      Amministrativa:"')
+016200060504     A                                      FONT(02305 (*POINTSIZE 5))
+016300120124     A                                      POSITION(0.40 6.525)
+016400060503     A            TBA2          50A
+016500060503     A                                      TEXT('Indirizzo')
+016600060504     A                                      FONT(02305 (*POINTSIZE 5))
+016700120124     A                                      POSITION(0.48 6.440)
+016800060504     A            TBA3          50A
+016900060504     A                                      TEXT('Sede Legale')
+017000060504     A                                      FONT(02304 (*POINTSIZE 4))
+017100120124     A                                      POSITION(0.55 6.495)
+017200060504     A            TBA4          50A
+017300060504     A                                      TEXT('Partita IVA')
+017400060504     A                                      FONT(02304 (*POINTSIZE 5))
+017500120124     A                                      POSITION(0.64 6.730)
+017600060504     A            TBA5          50A
+017700060504     A                                      TEXT('Capitale sociale')
+017800060504     A                                      FONT(02304 (*POINTSIZE 4))
+017900120124     A                                      POSITION(0.71 6.490)
+018000060504     A            TBA6          50A
+018100071017     A                                      TEXT('"info on-line" - VUO-
+018200071017     A                                      TO')
+018300060504     A                                      FONT(02304 (*POINTSIZE 6))
+018400120124     A                                      POSITION(0.80 6.405)
+018500060504     A            TBA7          50A
+018600100427     A                                      TEXT('Sito internet')
+018700060504     A                                      FONT(02305 (*POINTSIZE 7))
+018800120124     A                                      POSITION(0.80 7.125)
+018900100427      *
+019000100427      * - Intestazione areee
+019100100929     A            *NONE                     'MITTENTE'
+019200100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+019300100430     A                                      POSITION(0.300  0.300)
+019400100427      *
+019500100929     A            *NONE                     'DESTINATARIO'
+019600100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+019700100427     A                                      POSITION(1.050  0.300)
+019800100929     A            *NONE                     'FILIALE DI ARRIVO'
+019900100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+020000100430     A                                      POSITION(1.050  2.750)
+020100100929     A            *NONE                     'RIF. MITTENTE'
+020200100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+020300130125     A                                      POSITION(1.050  3.950)
+020400100929     A            *NONE                     'SPEDIZIONE'
+020500100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+020600100429     A                                      POSITION(1.050  6.500)
+020700100427      *
+020800100929     A            *NONE                     'TELEFONO E NOMINATIVO'
+020900100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+021000130125     A                                      POSITION(1.420  3.950)
+021100100427      *
+021200100929     A            *NONE                     'COLLI'
+021300100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+021400100929     A                                      POSITION(1.850  0.400)
+021500100929     A            *NONE                     'PESO'
+021600100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+021700100929     A                                      POSITION(1.850  1.150)
+021800100929     A            *NONE                     'VOLUME'
+021900100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+022000100929     A                                      POSITION(1.850  1.750)
+022100100929     A            *NONE                     'SERVIZIO'
+022200100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+022300100929     A                                      POSITION(1.850  2.200)
+022400100929     A            *NONE                     'NOTE E PARTICOLARITÀ'
+022500100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+022600130125     A                                      POSITION(1.850  3.950)
+022700100427      *
+022800100929     A            *NONE                     'NATURA DELLA MERCE'
+022900100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+023000100429     A                                      POSITION(2.250  0.300)
+023100110516      *
+023200110516     A  20        *NONE                     'CONTRASSEGNO'
+023300110516     A                                      FONT(02304 (*POINTSIZE 5.0))
+023400110516     A                                      HIGHLIGHT
+023500110516     A*//                                   POSITION(2.100  6.500)
+023600110516     A                                      POSITION(2.250  6.500)
+023700100427      *
+023800100929     A            *NONE                     'DATA E ORA CONSEGNA +
+023900100929     A                                       RICHIESTA'
+024000100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+024100100429     A                                      POSITION(2.450  2.200)
+024200100427      *
+024300100929     A            *NONE                     'ZONA'
+024400100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+024500100427     A                                      POSITION(2.550  0.300)
+024600110516      *
+024700110516     A     21     *NONE                     'TOTALE DA ESIGERE +
+024800110516     A                                       ALLA CONSEGNA'
+024900110516     A                                      FONT(02304 (*POINTSIZE 5.0))
+025000110516     A                                      HIGHLIGHT
+025100110516     A                                      POSITION(2.680  6.500)
+025200100427      *
+025300100929     A            *NONE                     'SEGNACOLLI'
+025400100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+025500100929     A                                      POSITION(2.830  0.300)
+025600100929     A            *NONE                     'TURNO DI CHIUSURA'
+025700100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+025800100929     A                                      POSITION(2.830  2.200)
+025900100427      *
+026000100929     A            *NONE                     'CONSEGNE PARTICOLARI'
+026100100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+026200100427     A                                      POSITION(3.310  0.300)
+026300100427      *
+026400100929     A  35        *NONE                     '(nome e cognome in +
+026500100929     A                                        stampatello)'
+026600100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+026700100427     A                                      POSITION(3.650  2.200)
+026800100929     A     72
+026900100929     AO 35        *NONE                     '(firma)'
+027000100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+027100100429     A                                      POSITION(3.650  4.450)
+027200100427      *
+027300100929     A  35        *NONE                     '(data e ora)'
+027400100929     A                                      FONT(02304 (*POINTSIZE 5.0))
+027500100429     A                                      POSITION(3.650  6.500)
+027600100427      *
+027700030515
+027800030515      *---------------------------------------------------------------*
+027900100427      *?Lettera di Vettura (posizionamento immagine x PDA)           ?*
+028000030515      *---------------------------------------------------------------*
+028100030515
+028200081024     A          R SP30LDV1
+028300071017     A                                      TEXT('Parte della LdV da -
+028400071017     A                                      ritornare in "BARTOLINI"')
+028500030515      *
+028600030515      * » FONT(font-identifier point-size)
+028700030515      *
+028800030515      * - Courier CPI(17.5) ..............: FONT(00248)
+028900030515      * - Courier CPI(15) ................: FONT(00222)
+029000030515      * - Courier CPI(13.3) ..............: FONT(00204)
+029100030515      * - Courier CPI(12) ................: FONT(00085)
+029200030515      * - Courier CPI(10) ................: FONT(00011)
+029300030515      * - Gothic  CPI(17.5) ..............: FONT(00400)
+029400040426      * - Gothic  CPI(15) ................: FONT(00230)
+029500030515      * - Gothic  CPI(12) ................: FONT(00066)
+029600030515      * - Gothic  CPI(10) ................: FONT(00040)
+029700030515      *
+029800100423     A                                      FONT(02304 (*POINTSIZE 4.0))
+029900030515     A                                      SKIPB(0002)
+030000030515      *
+030100030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+030200100422  3  A                                     5' '
+030300030515     A                                      SPACEB(001)
+030400030515      * > Mittente: codice cliente  /  Tariffa  /
+030500030515      *   /  Sigla operatore video  /  "DDT"
+030600100427     A*//                                  6'MITTENTE'
+030700030515      * > >
+030800030515      * > > >
+030900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+031000100422  4  A                                     5' '
+031100030515     A                                      SPACEB(001)
+031200030515      * > Mittente: ragione sociale
+031300030515      * > >
+031400030515      * > > >
+031500030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+031600100422  5  A                                     5' '
+031700030515     A                                      SPACEB(001)
+031800030515      * > Mittente: indirizzo
+031900030515      * > >
+032000030515      * > > >
+032100030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+032200100422  6  A                                     5' '
+032300030515     A                                      SPACEB(001)
+032400030515      * > Mittente: cap/località/provincia/nazione
+032500030515      * > >
+032600030515      * > > >
+032700030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+032800100422  7  A                                     5' '
+032900030515     A                                      SPACEB(001)
+033000030515      * > Mittente: originale
+033100030515      * > >
+033200030515      * > > >
+033300030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+033400100422  8  A                                     5' '
+033500030515     A                                      SPACEB(001)
+033600030515      * >
+033700030515      * > >
+033800030515      * > > >
+033900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+034000100422  9  A                                     5' '
+034100030515     A                                      SPACEB(001)
+034200070308      * > Destinatario: codice cliente  /  Tariffa  /  Filiale Arrivo
+034300100427     A*//                                  6'DESTINATARIO'
+034400100427     A*//                                 44'FILIALE DI ARRIVO:'
+034500030515      * > > Rif. Mittente numerico
+034600100427     A*//                                 60'RIF. MITTENTE'
+034700030515      * > > >
+034800100427     A*//                                 99'SPEDIZIONE'
+034900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+035000100422 10  A                                     5' '
+035100030515     A                                      SPACEB(001)
+035200030515      * > Destinatario: ragione sociale
+035300030515      * > > Rif. Mittente alfanumerico
+035400030515      * > > > Spedizione
+035500030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+035600030515      *
+035700100422 11  A                                     5' '
+035800030515     A                                      SPACEB(001)
+035900030515      * > Destinatario: estensione ragione sociale
+036000030515      * > >
+036100030515      * > > >
+036200030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+036300100422 12  A                                     5' '
+036400030515     A                                      SPACEB(001)
+036500030515      * > Destinatario: indirizzo
+036600030515      * > >
+036700100427     A*//                                 60'TELEFONO  E  NOMINATIVO'
+036800030515      * > > > Importi: imponibile IVA
+036900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+037000100422 13  A                                     5' '
+037100030515     A                                      SPACEB(001)
+037200030515      * > Destinatario: cap/località/provincia/nazione
+037300030515      * > > Nominativo (e telefono)
+037400030515      * > > > Importi: iva-esenzione
+037500030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+037600100422 14  A                                     5' '
+037700030515     A                                      SPACEB(001)
+037800030515      * >
+037900030515      * > >
+038000030515      * > > > Importi: totale fattura
+038100030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+038200100422 15  A                                     5' '
+038300030515     A                                      SPACEB(001)
+038400030515      * >
+038500100427     A*//                                  8' COLLI'
+038600100427     A*//                                + 5'  PESO'
+038700100427     A*//                                + 3' VOLUME'
+038800030515      * >+ Servizio
+038900100427     A*//                                 34'SERVIZIO'
+039000030716      * > > Note e particolarità
+039100100427     A*//                                 60'NOTE  E  PARTICOLARITÀ'
+039200030716      * > > > Importi: divisa fattura
+039300030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+039400100422 16  A                                     5' '
+039500030515     A                                      SPACEB(001)
+039600030515      * > Colli: numero / peso / volume
+039700030515      * >+ Servizio (1)
+039800030515      * > > Note e particolarità (1)
+039900030515      * > > > Fattura
+040000030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+040100100422 17  A                                     5' '
+040200030515     A                                      SPACEB(001)
+040300030515      * >
+040400030515      * >+ Servizio (2)
+040500030515      * > > Note e particolarità (2)
+040600030515      * > > >
+040700100427     A*//  20                             99'CONTRASSEGNO'
+040800100427     A*//                                   HIGHLIGHT
+040900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+041000100422 18  A                                     5' '
+041100030515     A                                      SPACEB(001)
+041200100426      * >
+041300100427     A*//                                  6'NATURA DELLA MERCE'
+041400030515      * > > Note e particolarità (3)
+041500030515      * > > >
+041600030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+041700100422 19  A                                     5' '
+041800030515     A                                      SPACEB(001)
+041900100426      * > Colli: natura merce
+042000030515      * >+
+042100030515      * > > Note e particolarità (4)
+042200100427      * > > >
+042300100427     A*//  20                             95'CONTRASSEGNO'
+042400100427     A*//                                   FONT(02304 (*POINTSIZE 4.0))
+042500100427     A*//                                   HIGHLIGHT
+042600030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+042700100422 20  A                                     5' '
+042800030515     A                                      SPACEB(001)
+042900100426      * >
+043000100426      * >+
+043100100427     A*//                                 34'DATA E ORA CONSEGNA RICHI-
+043200100427     A*//                                   ESTA'
+043300030515      * > > Note e particolarità (5)
+043400030515      * > > > Contrassegno
+043500030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+043600100422 21  A                                     5' '
+043700030515     A                                      SPACEB(001)
+043800100426      * > Zona / "*" / Codice Giro o Numero Distinta
+043900100427     A*//                                  6'ZONA'
+044000100426      * >+ Data e ora consegna richieste
+044100030515      * > > Note e particolarità (6)
+044200100427      * > > > Contrassegno
+044300030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+044400100422 22  A                                     5' '
+044500030515     A                                      SPACEB(001)
+044600100426      * >
+044700100426      * >+
+044800030515      * > >
+044900100427      * > > >
+045000030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+045100100422 23  A                                     5' '
+045200030515     A                                      SPACEB(001)
+045300100426      * > Segnacolli / "Colli di valore"
+045400100427     A*//                                  6'SEGNACOLLI'
+045500100426      * >+
+045600100427     A*//                                 34'TURNO DI CHIUSURA'
+045700030515      * > > Privato / Appuntamento
+045800030515      * > > > Importo totale da esigere al ritiro o alla consegna
+045900100427     A*//  21 35                          99'TOTALE DA ESIGERE +
+046000100427     A*//                                    ALLA CONSEGNA'
+046100100427     A*//                                   HIGHLIGHT
+046200100427     A*//  21 36                          99'TOTALE DA ESIGERE +
+046300100427     A*//                                    AL RITIRO'
+046400100427     A*//                                   HIGHLIGHT
+046500030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+046600100422 24  A                                     5' '
+046700030515     A                                      SPACEB(001)
+046800030515      * > Segnacolli
+046900100426      * >+ "Fermo Deposito" (in alternativa ai turni chiusura)
+047000100426      * >+ Turno chiusura (1)
+047100030515      * > >
+047200030515      * > > >
+047300030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+047400100422 25  A                                     5' '
+047500030515     A                                      SPACEB(001)
+047600030515      * >
+047700100426      * >+ Turno chiusura (2)
+047800100426      * > >  /  > > >
+047900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+048000100422 26  A                                     5' '
+048100030515     A                                      SPACEB(001)
+048200030515      * >
+048300030515      * >+  /  > >  /  > > >
+048400030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+048500100422 27  A                                     5' '
+048600030515     A                                      SPACEB(001)
+048700100426      * >
+048800100427     A*//                                  6'CONSEGNE PARTICOLARI'
+048900030515      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+049000100422 28  A                                     5' '
+049100030515     A                                      SPACEB(001)
+049200100426      * > Consegna particolare 1
+049300100426      * >+  /  > >  /  > > > Eventuale testo "NON UTILIZZARE PER ..."
+049400100426      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+049500100426 28  A                                     5' '
+049600100426     A                                      SPACEB(001)
+049700100426      * > Consegna particolare 2
+049800100426      * >+  /  > >  /  > > >
+049900100427     A*//  35                             34'(nome e cognome in stampa-
+050000100427     A*//                                   tello)'
+050100100427     A*//     72
+050200100427     A*//O 35                             68'(firma)'
+050300100427     A*//  35                             99'(data e ora)'
+050400030515
+050500030515      *---------------------------------------------------------------*
+050600060921      *?Salto di una riga (vuota)                                    ?*
+050700030515      *---------------------------------------------------------------*
+050800030515
+050900081024     A          R SP30NUL
+051000080725     A                                      SPACEB(0001)
+051100080725     A                                     5' '
+051200081024
+051300081024      *---------------------------------------------------------------*
+051400081024      *?"Separazione" delle 2 parti della bolla                      ?*
+051500081024      *---------------------------------------------------------------*
+051600081024
+051700081024     A          R SP30SEP
+051800081024     A                                      TEXT('Separazione "box"')
+051900081024     A                                     5' '
+052000100429     A                                      SKIPB(0032)
+052100080725
+052200080725      *---------------------------------------------------------------*
+052300080725      *?BOX PER PROMEMORIA PER AUTOTRASPORTATORE                     ?*
+052400080725      *---------------------------------------------------------------*
+052500080725
+052600081024     A          R SP30AR53
+052700080725     A                                      TEXT('"Bancali da Rendere"-
+052800080725     A                                      , "Supermercato", -
+052900080725     A                                      "Promemoria": box')
+053000080725      *
+053100100430     A                                      BOX(3.80  0.25  +
+053200100429     A                                          5.20  8.30  *NARROW)
+053300081023
+053400081023      *---------------------------------------------------------------*
+053500081023      *?Dati "DPD"                                                   ?*
+053600081023      *---------------------------------------------------------------*
+053700081023
+053800081024     A          R SP30DPD
+053900081023     A                                      TEXT('Intestazione "DPD" --
+054000100429     A                                       Logo')
+054100081023      *
+054200081023      * Logo
+054300081023      *
+054400081023      * » PAGSEG([library-name/]page-segment-name
+054500081023      *          position-down position-across
+054600081023      *          (*SIZE width|&width-field height|&height-field)
+054700081023      *          (*ROTATION rotation|&rotation))
+054800081023      *   1 - Nome dell'oggetto contenente l'immagine
+054900081023      *       (con eventuale libreria)
+055000081023      *   2 - Distanza dell'immagine dal lato superiore del foglio
+055100081023      *   3 - Distanza dell'immagine dal lato sinistro  del foglio
+055200081023      *   Parametri facoltativi:
+055300081023      *   4 - Dimensione .........: altezza + lunghezza
+055400081023      *   5 - Rotazione (in gradi): 0, 90, 180, 270.
+055500081023      *   N.B.1: per mantenere il logo anche DOPO aver trasferito una
+055600081023      *          stampa di codesto prtf in altro AS/400
+055700081023      *          - vedi OUTQ(EDP888) da AS888 o OUTQ(SETRAS) da fil. -
+055800081023      *          pare NECESSARIO aver specificato il nome della
+055900081023      *          libreria relativa al logo. Incredibile ma vero !!!
+056000081023      *   N.B.2: il nome del logo sarebbe "parametrizzabile", ma tale
+056100081023      *          parametro va definito lungo 8 char: non sarebbe quindi
+056200081023      *          possibile specificare, in tale parametro, anche il
+056300081023      *          il nome della libreria e il "/" separatore (comunque
+056400081024      *          specificabili separatamente).
+056500110516     A                                      PAGSEG(GAITRAOBJ/LOGODPD0 +
+056600110516     A                                             6.550 6.450)
+056700081023
+056800081023      *---------------------------------------------------------------*
+056900081023      *?Dati "FEDEX"                                                 ?*
+057000081023      *---------------------------------------------------------------*
+057100081023
+057200100429     A          R SP30FED
+057300081023     A                                      TEXT('Intestazione "FedEx"-
+057400081023     A                                       - Box')
+057500100429     A                                      FONT(02304 (*POINTSIZE 5.0))
+057600100429      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+057700100429      * Box generale:
+057800100430     A                                      BOX(3.98  0.25  +
+057900100430     A                                          5.20  8.30  *NARROW)
+058000100429      * Unica linea separatrice orizzontale:
+058100100430     A                                      LINE(4.09  0.25  8.05 +
+058200100429     A                                           *HRZ  *NARROW)
+058300100429      * Linee verticali nel box:
+058400100429     A                                      LINE(4.040 0.250 1.16 +
+058500100429     A                                           *VRT  *NARROW)
+058600081023      *                                     » Signature
+058700100430     A                                      LINE(4.040 1.480 1.16 +
+058800100429     A                                           *VRT  *NARROW)
+058900081023      *                                     » Print Name
+059000100430     A                                      LINE(4.040 3.000 1.16 +
+059100100429     A                                           *VRT  *NARROW)
+059200081023      *                                     » Sender's Account Number
+059300100430     A                                      LINE(4.040 3.900 1.16 +
+059400100429     A                                           *VRT  *NARROW)
+059500100429      *                                     » Package Tracking Number
+059600100430     A                                      LINE(4.040 5.300 1.16 +
+059700100429     A                                           *VRT  *NARROW)
+059800081023      *                                     » Recipient Address
+059900100430     A                                      LINE(4.040 6.250 1.16 +
+060000100429     A                                           *VRT  *NARROW)
+060100081023      *                                     » Pcs.
+060200100430     A                                      LINE(4.040 6.450 1.16 +
+060300100429     A                                           *VRT  *NARROW)
+060400081023      *                                     » Serv.
+060500100430     A                                      LINE(4.040 6.650 1.16 +
+060600100429     A                                           *VRT  *NARROW)
+060700081023      *                                     » Time
+060800100430     A                                      LINE(4.040 7.900 1.16 +
+060900100429     A                                           *VRT  *NARROW)
+061000081023      *                                     » Status
+061100100929      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+061200100929      * Simil-Logo FedEx
+061300100929     A            *NONE                     'FedEx'
+061400100929     A                                      POSITION(3.960  0.250)
+061500100929     A                                      FONT(34123 (*POINTSIZE 20))
+061600100929      * > > Richieste: nome, firma
+061700100929     A            *NONE                     'Employee Signature'
+061800100929     A                                      POSITION(3.960  2.200)
+061900100929     A            *NONE                     'Employee Number'
+062000100929     A                                      POSITION(3.960  4.700)
+062100100929      * > > >
+062200100929     A            *NONE                     'DELIVERY RECORD'
+062300100929     A                                      POSITION(3.920  7.020)
+062400100929     A                                      FONT(02305)
+062500100929      *- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*
+062600100929     A            *NONE                     'Signature'
+062700100929     A                                      POSITION(4.060  0.700)
+062800100929     A            *NONE                     'Print Name'
+062900100929     A                                      POSITION(4.060  2.100)
+063000100929     A            *NONE                     'Sender''s Account Number'
+063100100929     A                                      POSITION(4.060  3.030)
+063200100929     A            *NONE                     'Package Tracking Number'
+063300100929     A                                      POSITION(4.060  4.170)
+063400100929     A            *NONE                     'Recipient Address'
+063500100929     A                                      POSITION(4.060  5.520)
+063600100929     A            *NONE                     'Pcs.'
+063700100929     A                                      POSITION(4.060  6.290)
+063800100929     A            *NONE                     'Serv.'
+063900100929     A                                      POSITION(4.060  6.470)
+064000100929     A            *NONE                     'Time'
+064100100929     A                                      POSITION(4.060  7.200)
+064200100929     A            *NONE                     'Status'
+064300100929     A                                      POSITION(4.060  8.000)
+064400100423
+064500100423      *---------------------------------------------------------------*
+064600100423
+064700100423     A          R SP30ROW
+064800100423     A                                      TEXT('Riga di dettaglio')
+064900100423     A*//                                   FONT(00211)
+065000100423      *
+065100100423     A            PTXT         125A
+065200100423     A                                      TEXT('Riga di dettaglio')
+065300100426     A                                      POSITION(&§ROW   0.30)
+065400100423      *
+065500100423      * Parametri
+065600100423     A            §ROW           5S 3P
+065700100427
+065800100427      *---------------------------------------------------------------*
+065900100427
+066000100427     A          R SP30R30
+066100100427     A                                      TEXT('"Per ricevuta della -
+066200100427     A                                      merce senza riserve"')
+066300100427      *
+066400100427     A            PTXT         125A
+066500100427     A                                      TEXT('Riga di dettaglio')
+066600100427     A                                      POSITION(&§ROW   2.20)
+066700100430     A                                      FONT(00281)
+066800100427      *
+066900100427      * Parametri
+067000100427     A            §ROW           5S 3P

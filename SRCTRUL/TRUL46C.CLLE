@@ -1,0 +1,30 @@
+000100050405/*-------------------------------------------------------------------*/
+000200050405/*?Cancellazione singolo spool file                                 ?*/
+000300050405/*-------------------------------------------------------------------*/
+000400050405             pgm        parm(&FILE &JOBNBR &USER &JOB &FILNBR)
+000500050405
+000600050405             dcl        var(&FILE)   type(*char) len(10)
+000700050405             dcl        var(&USER)   type(*char) len(10)
+000800050405             dcl        var(&JOB)    type(*char) len(10)
+000900050405             dcl        var(&JOBNBR) type(*char) len(6)
+001000050405             dcl        var(&FILNBR) type(*char) len(6)
+001100050405             dcl        var(&OS400V) type(*char) len(2)
+001200050405
+001300050405             rtvdtaara  dtaara(QSS1MRI (1 2)) rtnvar(&OS400V)
+001400030826
+001500050405    /* Nella versione 4 il numero di spool arriva a 9999,            */
+001600050405    /* mentre nella versione 5 arriva a 999999.                      */
+001700050405             if         cond(&OS400V *eq 'V4') then(do)
+001800050405               dltsplf    file(&FILE) +
+001900050405                          job(&JOBNBR/&USER/&JOB) +
+002000050405                          splnbr(%sst(&FILNBR 3 4))
+002100050913               monmsg     msgid(CPF0000)
+002200050405               enddo
+002300050405             else       cmd(do)
+002400050405               dltsplf    file(&FILE) +
+002500050405                          job(&JOBNBR/&USER/&JOB) +
+002600050405                          splnbr(&FILNBR)
+002700050913               monmsg     msgid(CPF0000)
+002800050405               enddo
+002900030826
+003000050405             endpgm

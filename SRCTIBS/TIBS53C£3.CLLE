@@ -1,0 +1,277 @@
+000100981020             PGM        PARM(&I52LCL &CMZDST &CMZFLD &CMZMBD &CMZLBD +
+000200981020                          &CMZFLA &CMZMBA &CMZLBA &CMZORI &CMZDTI +
+000300981020                          &CMZURG &CMZADD &CMZCLR &CMZFTR &CMZERR +
+000400981022                          &CMZAZN &CMZSYF &CMZNRR &CMZPRR &PAR236)
+000500000925             DCL        VAR(&FINE) TYPE(*CHAR) LEN(3)
+000600000925             DCL        VAR(&NOMELA) TYPE(*CHAR) LEN(10)
+000700981022             DCL        VAR(&NUMLAV) TYPE(*CHAR) LEN(10)
+000800981022             DCL        VAR(&NOMEUT) TYPE(*CHAR) LEN(10)
+000900981022             DCL        VAR(&JOBQ36) TYPE(*CHAR) LEN(10)
+001000981022             DCL        VAR(&DS036) TYPE(*CHAR) LEN(47)
+001100981022
+001200971103             DCL        VAR(&I52LCL) TYPE(*CHAR) LEN(1)
+001300971103             DCL        VAR(&LOGICO) TYPE(*CHAR) LEN(10)
+001400971103             DCL        VAR(&LOGMBR) TYPE(*CHAR) LEN(10)
+001500971103             DCL        VAR(&FLG) TYPE(*CHAR) LEN(1)
+001600971103             DCL        VAR(&TESTA) TYPE(*CHAR) LEN(43) +
+001700971103                          VALUE(':ERRORE ALLOCAZIONE FILE')
+001800971104             DCL        VAR(&TEST1) TYPE(*CHAR) LEN(42) +
+001900971104                          VALUE(':ERRORE TRASMISSIONE FILE')
+002000040924             DCL        VAR(&TEST2) TYPE(*CHAR) LEN(42) +
+002100040924                          VALUE(':ERRORE CPYF da "T" a "R"')
+002200041105             DCL        VAR(&TESTAA) TYPE(*CHAR) LEN(43) +
+002300041105                          VALUE(':ERRORE ALLOCAZIONE membro RICEZIONE')
+002400041105             DCL        VAR(&TESTAD) TYPE(*CHAR) LEN(43) +
+002500041105                          VALUE(':ERRORE ALLOCAZIONE membro TRASMISSIONE')
+002600111026             DCL        VAR(&MSGTES) TYPE(*CHAR) LEN(44)
+002700111026             DCL        VAR(&MSGDET) TYPE(*CHAR) LEN(5000)
+002800111026             DCL        VAR(&MSGMAIL) TYPE(*CHAR) LEN(253) +
+002900120302                          VALUE('elisa.sanfelici@brt.it')
+003000111026
+003100971104             DCL        VAR(&DAY) TYPE(*CHAR) LEN(2)
+003200971104             DCL        VAR(&MONTH) TYPE(*CHAR) LEN(2)
+003300971104             DCL        VAR(&HOUR) TYPE(*CHAR) LEN(2)
+003400971104             DCL        VAR(&MINUTE) TYPE(*CHAR) LEN(2)
+003500971106
+003600971106             DCL        VAR(&FMS) TYPE(*CHAR) LEN(1)
+003700981022             DCL        VAR(&EBI) TYPE(*CHAR) LEN(10)
+003800971106             DCL        VAR(&KPJBA)  TYPE(*CHAR) LEN(502)
+003900971106             DCL        VAR(&par236)  TYPE(*CHAR) LEN(236)
+004000020716             DCL        VAR(&o53dst)  TYPE(*CHAR) LEN(3)
+004100021007             DCL        VAR(&PROFILO) TYPE(*CHAR) LEN(10) +
+004200040924                          VALUE('EDPCED    ')
+004300040924
+004400040924             DCL        VAR(&invmsg) TYPE(*CHAR) LEN(1)
+004500040924             DCL        VAR(&CONTA) TYPE(*dec) LEN(1 0)
+004600971106
+004700971106             DCLF       FILE(DSCMZ) RCDFMT(DSCMZ)
+004800981020
+004900971211             CHGVAR     VAR(&CMZERR) VALUE(' ')
+005000971104
+005100971104             RTVSYSVAL  SYSVAL(QDAY) RTNVAR(&DAY)
+005200971104             RTVSYSVAL  SYSVAL(QMONTH) RTNVAR(&MONTH)
+005300971104             RTVSYSVAL  SYSVAL(QHOUR) RTNVAR(&HOUR)
+005400971104             RTVSYSVAL  SYSVAL(QMINUTE) RTNVAR(&MINUTE)
+005500020716
+005600020716 /* reperisco destinatario del p.o. a cui trasmettere   */
+005700020716             CALL       PGM(TIBS53R) PARM(&CMZDST &O53DST)
+005800020716             CHGVAR     VAR(&CMZDST) VALUE(&O53DST)
+005900971103
+006000971103/**************************************************/
+006100971103/* P.O. NON LOCALE: RICHIAMO PGM DI TRASMISSIONE  */
+006200971103/**************************************************/
+006300971104             IF         COND(&I52LCL *EQ ' ') THEN(DO)
+006400971104             CALL       PGM(CMZ002R) PARM(&CMZDST &CMZFLD &CMZMBD +
+006500971104                          &CMZLBD &CMZFLA &CMZMBA &CMZLBA &CMZORI +
+006600971104                          &CMZDTI &CMZURG &CMZADD &CMZCLR &CMZFTR +
+006700971104                          &CMZERR &CMZAZN &CMZSYF &CMZNRR &CMZPRR)
+006800971104             IF         COND(&CMZERR = '1') THEN(DO)
+006900971104             CHGVAR     VAR(&MSGTES) VALUE(&DAY *CAT '/' *CAT &MONTH +
+007000971104                          *BCAT &HOUR *CAT ':' *CAT &MINUTE *CAT +
+007100971104                          &TEST1)
+007200971121             CHGVAR     VAR(&MSGDET) VALUE('Provenienza: ' *CAT +
+007300971121                          'Libreria-' *CAT &CMZLBD *CAT ',' *BCAT +
+007400971121                          'File-' *CAT &CMZFLD *CAT ',' *BCAT +
+007500971121                          'Membro-' *CAT &CMZMBD *BCAT ' +
+007600971121                          Destinazione: ' *CAT 'Libreria-' *CAT +
+007700971121                          &CMZLBA *CAT ',' *BCAT 'File-' *CAT +
+007800971121                          &CMZFLA *CAT ',' *BCAT 'Membro-' *CAT +
+007900971121                          &CMZMBA *BCAT 'AS' *CAT &CMZDST)
+008000111026             CALL       PGM(TIS701C) PARM(&MSGmail &MSGtes &MSGdet)
+008100971104             ENDDO
+008200971104             GOTO       CMDLBL(FINE)
+008300971104             ENDDO
+008400971103
+008500971103/**************************************************/
+008600040924/* P.O. as unico: COPIO DATI DA 00T A 00R */
+008700971103/**************************************************/
+008800000920             OVRDBF     FILE(INPUT) TOFILE(&CMZLBD/&CMZFLD) +
+008900000920                          MBR(&CMZMBD) SECURE(*YES) OVRSCOPE(*CALLLVL)
+009000971103/* RICHIAMO PGM DI ESECUZ. CHKOBJ+ADDPFM */
+009100971103             CALL       PGM(TRUL50C) PARM(&CMZFLA &CMZMBA &CMZLBA +
+009200971103                          &LOGICO &LOGMBR &FLG)
+009300000915/* ALLOCO IL MEMBRO sempre e non solo in replace*/
+009400000915/*           IF         COND(&CMZADD *EQ 'R') THEN(DO)         */
+009500000915
+009600000926             CHGVAR     VAR(&FINE) VALUE(%sst(&cmzfla 8 3))
+009700000925
+009800040924/* alloco solo se e' in replace   */
+009900040924/*           IF         COND(&FINE *NE 'F  ' *OR &CMZADD *EQ 'R') + */
+010000040924/*                        THEN(DO)                                  */
+010100040924             IF         COND(&CMZADD *EQ 'R') THEN(DO)
+010200000925
+010300000925             ALCOBJ     OBJ((&CMZLBA/&CMZFLA *FILE *EXCL &CMZMBA))
+010400000915
+010500000920/* SE ALLOCAZIONE NON RIUSCITA Ritento per  240 secondi            */
+010600000920             MONMSG     MSGID(CPF0000) EXEC(do)
+010700000920             ALCOBJ     OBJ((&CMZLBA/&CMZFLA *FILE *EXCL &CMZMBA)) +
+010800000920                          WAIT(240)
+010900000915             MONMSG     MSGID(CPF0000) EXEC(DO)
+011000000915
+011100971103/* SE ALLOCAZIONE NON RIUSCITA RICHIAMO PGM PER INVIO MSG A SEDE*/
+011200971222/* E RITORNO L'ERRORE AL CHIAMANTE (CMZERR='1')                */
+011300971222             CHGVAR     VAR(&CMZERR) VALUE('1')
+011400971104             CHGVAR     VAR(&MSGTES) VALUE(&DAY *CAT '/' *CAT &MONTH +
+011500971104                          *BCAT &HOUR *CAT ':' *CAT &MINUTE *CAT +
+011600041105                          &TESTAA)
+011700971121             CHGVAR     VAR(&MSGDET) VALUE('Provenienza: ' *CAT +
+011800971121                          'Libreria-' *CAT &CMZLBD *CAT ',' *BCAT +
+011900971121                          'File-' *CAT &CMZFLD *CAT ',' *BCAT +
+012000971121                          'Membro-' *CAT &CMZMBD *BCAT ' +
+012100971121                          Destinazione: ' *CAT 'Libreria-' *CAT +
+012200971121                          &CMZLBA *CAT ',' *BCAT 'File-' *CAT +
+012300971121                          &CMZFLA *CAT ',' *BCAT 'Membro-' *CAT +
+012400971121                          &CMZMBA *BCAT 'AS' *CAT &CMZDST)
+012500111026             CALL       PGM(TIS701C) PARM(&MSGmail &MSGtes &MSGdet)
+012600971103             GOTO       CMDLBL(FINE)
+012700990107             ENDDO
+012800000925             ENDDO
+012900000915             ENDDO
+013000041105
+013100041105 /* Alloco membro DA potrei infatti perdere dei dati se */
+013200041105 /* avviene una scrittura tra la cpyf e la delet nel pgm tibs52r  */
+013300041105             ALCOBJ     OBJ((&CMZLBD/&CMZFLD *FILE *EXCL &CMZMBD))
+013400041105
+013500041105/* SE ALLOCAZIONE NON RIUSCITA Ritento per  240 secondi            */
+013600041105             MONMSG     MSGID(CPF0000) EXEC(do)
+013700041105             ALCOBJ     OBJ((&CMZLBD/&CMZFLD *FILE *EXCL &CMZMBD)) +
+013800041105                          WAIT(240)
+013900041105             MONMSG     MSGID(CPF0000) EXEC(DO)
+014000041105
+014100041105/* SE ALLOCAZIONE NON RIUSCITA RICHIAMO PGM PER INVIO MSG A SEDE*/
+014200041105/* E RITORNO L'ERRORE AL CHIAMANTE (CMZERR='1')                */
+014300041105             CHGVAR     VAR(&CMZERR) VALUE('1')
+014400041105             CHGVAR     VAR(&MSGTES) VALUE(&DAY *CAT '/' *CAT &MONTH +
+014500041105                          *BCAT &HOUR *CAT ':' *CAT &MINUTE *CAT +
+014600041105                          &TESTAD)
+014700041105             CHGVAR     VAR(&MSGDET) VALUE('Provenienza: ' *CAT +
+014800041105                          'Libreria-' *CAT &CMZLBD *CAT ',' *BCAT +
+014900041105                          'File-' *CAT &CMZFLD *CAT ',' *BCAT +
+015000041105                          'Membro-' *CAT &CMZMBD *BCAT ' +
+015100041105                          Destinazione: ' *CAT 'Libreria-' *CAT +
+015200041105                          &CMZLBA *CAT ',' *BCAT 'File-' *CAT +
+015300041105                          &CMZFLA *CAT ',' *BCAT 'Membro-' *CAT +
+015400041105                          &CMZMBA *BCAT 'AS' *CAT &CMZDST)
+015500111026             CALL       PGM(TIS701C) PARM(&MSGmail &MSGtes &MSGdet)
+015600041105             GOTO       CMDLBL(FINE)
+015700041105             ENDDO
+015800041105             ENDDO
+015900041105
+016000041105             CHGVAR     VAR(&INVMSG) VALUE('N')
+016100971103
+016200040924             IF         COND(&CMZADD *EQ 'R') THEN(do)
+016300040924             CPYF       FROMFILE(&CMZLBD/INPUT) +
+016400040924                          TOFILE(&CMZLBA/&CMZFLA) FROMMBR(&CMZMBD) +
+016500040924                          TOMBR(&CMZMBA) MBROPT(*REPLACE)
+016600040924             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&invmsg) +
+016700040924                          VALUE('S'))
+016800040924             enddo
+016900040924
+017000040924             ELSE       CMD(do)
+017100040924
+017200040924             CHGVAR     VAR(&CONTA) VALUE(1)
+017300040924  tenta:
+017400040924             CPYF       FROMFILE(&CMZLBD/INPUT) +
+017500040924                          TOFILE(&CMZLBA/&CMZFLA) FROMMBR(&CMZMBD) +
+017600040924                          TOMBR(&CMZMBA) MBROPT(*ADD)
+017700040924             MONMSG     MSGID(CPF0000) EXEC(do)
+017800040924
+017900040924             DLYJOB     DLY(20)
+018000040924             CHGVAR     VAR(&CONTA) VALUE(&CONTA + 1)
+018100040924             IF         COND(&CONTA *LE 7) THEN(GOTO CMDLBL(TENTA))
+018200040924             else
+018300040924
+018400040924             CHGVAR     VAR(&INVMSG) VALUE('S')
+018500040924             enddo
+018600040924             enddo
+018700040924
+018800040924/* Invio msg di errore ed esco   */
+018900040924             if (&invmsg ='S') then(do)
+019000040924             CHGVAR     VAR(&CMZERR) VALUE('1')
+019100040924             CHGVAR     VAR(&MSGTES) VALUE(&DAY *CAT '/' *CAT &MONTH +
+019200040924                          *BCAT &HOUR *CAT ':' *CAT &MINUTE *CAT +
+019300040924                          &TEST2)
+019400040924             CHGVAR     VAR(&MSGDET) VALUE('Provenienza: ' *CAT +
+019500040924                          'Libreria-' *CAT &CMZLBD *CAT ',' *BCAT +
+019600040924                          'File-' *CAT &CMZFLD *CAT ',' *BCAT +
+019700040924                          'Membro-' *CAT &CMZMBD *BCAT ' +
+019800040924                          Destinazione: ' *CAT 'Libreria-' *CAT +
+019900040924                          &CMZLBA *CAT ',' *BCAT 'File-' *CAT +
+020000040924                          &CMZFLA *CAT ',' *BCAT 'Membro-' *CAT +
+020100040924                          &CMZMBA *BCAT 'AS' *CAT &CMZDST)
+020200111026             CALL       PGM(TIS701C) PARM(&MSGmail &MSGtes &MSGdet)
+020300040924             GOTO       CMDLBL(FINE)
+020400040924             ENDDO
+020500971124
+020600000920             DLTOVR     FILE(INPUT) LVL(*)
+020700971103
+020800971103/* SE RICHIESTO FACCIO LA CLEAR DEL FILE DI TRASMISSIONE */
+020900971110/* in realta' deleto i record anziche' fare clrpfm per mantenere la */
+021000971110/*possibilità di applicare le variaz. di giornale quando necessario */
+021100971110             IF         COND(&CMZCLR *EQ 'S' *AND &CMZFTR *EQ 'S') +
+021200971110                          THEN(DO)
+021300000920             OVRDBF     FILE(INPUT) TOFILE(&CMZLBD/&CMZFLD) +
+021400000920                          MBR(&CMZMBD) SECURE(*YES) OVRSCOPE(*CALLLVL)
+021500971110                          CALL PGM(TIBS52R)
+021600000920             DLTOVR     FILE(INPUT) LVL(*)
+021700971110             ENDDO
+021800041105/* disalloco membri di trasmissione e  ricezione */
+021900971104             dlCOBJ     OBJ((&CMZLBA/&CMZFLA *FILE *EXCL &CMZMBA))
+022000041105             dlCOBJ     OBJ((&CMZLBd/&CMZFLd *FILE *EXCL &CMZMBd))
+022100041105
+022200971106/* sottometto azione di trasmissione               */
+022300981020             IF         COND(&CMZAZN *NE '    ') THEN(DO)
+022400981020             RTVDTAARA  DTAARA(CMZ001 (13 1)) RTNVAR(&FMS)
+022500981022
+022600981022             RTVJOBA    JOB(&NOMELA) USER(&NOMEUT) NBR(&NUMLAV)
+022700981022             CHGVAR     VAR(%SST(&DS036 1 10)) VALUE(&NOMELA)
+022800981022             CHGVAR     VAR(%SST(&DS036 11 10)) VALUE(&NOMEUT)
+022900981022             CHGVAR     VAR(%SST(&DS036 21 10)) VALUE(&NUMLAV)
+023000981022
+023100981022             CALL       PGM(BAK036R) PARM(&DS036)
+023200981022             CHGVAR     VAR(&ebi) VALUE(%SST(&DS036 27 10))
+023300021007 /* Reperisco nome del profilo per azione di ricezione            */
+023400021007             CALL       PGM(TIBS57C) PARM(&CMZSYF &CMZMBA &profilo)
+023500971106
+023600021007    CHGVAR VAR(%SST(&KPJBA  1 10)) VALUE(&profilo)           /*KNMUS*/
+023700971106    CHGVAR VAR(%SST(&KPJBA 11  9)) VALUE(0)                   /*KNRAZ*/
+023800021107    CHGVAR VAR(%SST(&KPJBA 20 10)) VALUE(&profilo)           /*KNMTD*/
+023900971106    CHGVAR VAR(%SST(&KPJBA 31  9)) VALUE(0)                   /*KNRVJ*/
+024000971106    CHGVAR VAR(%SST(&KPJBA 47  6)) VALUE(0)                   /*KNRJO*/
+024100971106    CHGVAR VAR(%SST(&KPJBA 53  1)) VALUE('N')                 /*KSTJO*/
+024200971106    CHGVAR VAR(%SST(&KPJBA 54  6)) VALUE(0)                   /*KTMIN*/
+024300971106    CHGVAR VAR(%SST(&KPJBA 64  1)) VALUE('B')                 /*KTPAZ*/
+024400971106    CHGVAR VAR(%SST(&KPJBA 87  3)) VALUE(0)                   /*KNMSB*/
+024500971106    CHGVAR VAR(%SST(&KPJBA 124 5)) VALUE(0)                   /*KKEYF*/
+024600971106    CHGVAR VAR(%SST(&KPJBA 129 5)) VALUE(0)                   /*KRCDS*/
+024700971106    CHGVAR VAR(%SST(&KPJBA 134 1)) VALUE('J')                 /*KEXCN*/
+024800021014/*  CHGVAR VAR(%SST(&KPJBA 154 2)) VALUE('P5')                  KCOJB*/
+024900021014/*  CHGVAR VAR(%SST(&KPJBA 156 10)) VALUE(&ebi)                KQEBI*/
+025000971106    CHGVAR VAR(%SST(&KPJBA 176 1)) VALUE('N')               /*KCANC*/
+025100971103
+025200971106/*---------------------------------------------------*/
+025300971106/* IN FILIALE FORZO LE STAMPE IN PRT01               */
+025400971106/*---------------------------------------------------*/
+025500971106             IF         COND(&FMS *EQ 'N') THEN(CHGVAR +
+025600971106                          VAR(%SST(&KPJBA 114 10)) VALUE('PRT01     +
+025700971106                          ')) /*KQOFR*/
+025800971106             IF         COND(&FMS *EQ 'S') THEN(CHGVAR +
+025900971106                          VAR(%SST(&KPJBA 114 10)) VALUE('QPRINT    +
+026000971106                          ')) /*KQOFR*/
+026100971106    CHGVAR VAR(%SST(&KPJBA 92 10)) VALUE(&cmzSYF)             /*KNSIF*/
+026200971106    CHGVAR VAR(%SST(&KPJBA 493 10)) VALUE(&cmzmba)           /*MEMBRO*/
+026300971106
+026400971106    /* il campo sottostante non mi serve se non ho scritto cmric    */
+026500971106    /* posso quindi impostarlo come voglio l'importante che la chain*/
+026600971106    /* non vada a buon fine                                         */
+026700971106
+026800971106    CHGVAR VAR(%SST(&KPJBA 483 10)) VALUE('Fxxx999999')     /*TRA   */
+026900971106    CHGVAR VAR(%SST(&KPJBA 135 4)) VALUE(&cmzAZN)          /*KCOAZ*/
+027000971106
+027100971106             CHGVAR     VAR(%SST(&KPJBA 247 236)) VALUE(&PAR236)
+027200971106
+027300971106             CALL       PGM(BCH10) PARM(&KPJBA)
+027400971106             MONMSG     MSGID(CPF0000)
+027500971124             ENDDO
+027600971106
+027700981022 fine:       ENDPGM

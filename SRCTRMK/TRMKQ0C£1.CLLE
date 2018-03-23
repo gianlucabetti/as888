@@ -1,0 +1,44 @@
+000100101110             PGM        PARM(&KPJBA)
+000200101110
+000300101110             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400110429
+000500110429/* Variabili per invio e-mail */
+000600120911             DCL        VAR(&EMLTO) TYPE(*CHAR) LEN(253) +
+000700130320                          VALUE('vendite@brt.it')
+000800130320             DCL        VAR(&EMLCC) TYPE(*CHAR) LEN(253)
+000900110429             DCL        VAR(&EMOGG) TYPE(*CHAR) LEN(44) +
+001000110429                          VALUE('Elaborazione dati per SIC')
+001100110429             DCL        VAR(&EMMSG) TYPE(*CHAR) LEN(5000) +
+001200110429                          VALUE('L''estrazione giornaliera dei +
+001300110429                          dati per il SIC è stata eseguita +
+001400110429                          correttamente.')
+001500110429             DCL        VAR(&EMESITO) TYPE(*CHAR) LEN(1)
+001600091218
+001700101110/* Pulisco file in movimento */
+001800101110             CLRPFM     FILE(TIATCI0F)
+001900101111             CLRPFM     FILE(TIVISI0F)
+002000101111             CLRPFM     FILE(TIVOFI0F)
+002100101111             CLRPFM     FILE(TIVIII0F)
+002200091218
+002300101110/* Richiamo programmi */
+002400110418
+002500110418/* Aggiorna categoria potenziale su file potenziali e attività da eseguire o eseguite */
+002600110418/* dal 11/04/2011 */
+002700110418
+002800110418             CALL       PGM(TRMK06R) PARM(&KPJBA)
+002900110418
+003000101110             CALL       PGM(TRMKQ1R) PARM(&KPJBA)
+003100101111
+003200101111             CALL       PGM(TRMKQ2R) PARM(&KPJBA)
+003300110427
+003400110427/* Crea attività 60 su potenziali mai codificati */
+003500110427             CALL       PGM(TRMK37R) PARM(&KPJBA)
+003600110429
+003700110429/* Invio mail di elaborazione eseguita */
+003800110429             CALL       PGM(TIS701C1) PARM(&EMLTO &EMLCC &EMOGG &EMMSG &EMESITO)
+003900130718
+004000130718/* Scrivo file spia                    */
+004100130722             CHGVAR     VAR(%SST(&KPJBA 247 10)) VALUE('SICGIORNO ')
+004200130718             CALL       PGM(TRULQLKR) PARM(&KPJBA)
+004300091218
+004400091218             ENDPGM

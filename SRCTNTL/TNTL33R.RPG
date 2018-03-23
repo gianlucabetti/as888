@@ -1,0 +1,202 @@
+000100950925     H*------------------------------------------------------------------------*
+000200960321     H* AGGIORNAMENTO METRI CUBI REALI                                 NO      *
+000300950925     H*------------------------------------------------------------------------*
+000400950925     H              J
+000500950925     F*------------------------------------------------------------------------*
+000600951117     FTNFVS01LIF  E           K        DISK
+000700000504     FTNFWS01LIF  E           K        DISK
+000800960321     FTNTSM03LUF  E           K        DISK                      A
+000900960321     FFNFVD01LIF  E           K        DISK
+001000960321     FTNTSR04LIF  E           K        DISK
+001100000504     E                    FFV       300  3               FIL.F.V.
+001200000504     E                    FSC       300  3               FIL.SCAR.
+001300960321     E                    FVD         6  9 4             CAMPI TOT.VOL.L
+001400980820     E                    TRM       200  3 0             TER.ARR. FV
+001500951030     IUT§DSE    E DSUT§DSE0F
+001600960321     IDSTL33    E DSTNTL33DS
+001700971118     IDSLV55    E DSFNLV55DS
+001800951002     IKPJBA     E DS
+001900960321     I            DS
+002000960321     I                                        1   94FVDVL1
+002100960321     I                                       10  184FVDVL2
+002200960321     I                                       19  274FVDVL3
+002300960321     I                                       28  364FVDVL4
+002400960321     I                                       37  454FVDVL5
+002500960321     I                                       46  544FVDVL6
+002600960321     I                                        1  54 FVD
+002700951009     C****************************************************************
+002800951009     C*  RIEPILOGO INDICATORI
+002900951009     C***************************************************************
+003000951117     C* 30    - COMODO
+003100951009     C* 31    - COMODO
+003200951009     C***************************************************************
+003300960321     C           *ENTRY    PLIST
+003400960321     C                     PARM           KPJBA
+003500960321     C                     MOVELKPJBU     DSTL33
+003600960321     C*
+003700960321    1C           D33TLA    IFNE 'C'
+003800960321     C* SE DATA TRAINO = 0 LA DETERMINO CHAINANDO LA GRIGLIA
+003900960321    2C           D33DTN    IFEQ *ZEROS
+004000960321     C           KFVS      CHAINTNTSR04L             30
+004100960321     C   30                GOTO FINE
+004200960321     C  N30                MOVE TSRDTN    D33DTN
+004300960321    2C                     END
+004400960321     C*
+004500960321     C                     CLEARTRM
+004600960321     C                     MOVE *ZEROS    II      30
+004700960321     C                     CLEARWTARS
+004800960321     C*
+004900960321     C           KFVS      CHAINTNFVS01L             30
+005000960321    2C           *IN30     IFEQ *OFF
+005100000504     C*
+005200000504     C           KFVS      CHAINTNFWS01L             39
+005300000504     C           *IN39     IFEQ *ON
+005400000504     C           FWSATB    ORNE ' '
+005500000504     C                     CLEARFWSFF3
+005600000504     C                     CLEARFWSFF4
+005700000504     C                     CLEARFWSFL3
+005800000504     C                     CLEARFWSFL4
+005900000504     C                     ENDIF
+006000000504     C*
+006100960322     C* CARICO SCHIERA FIL.DEL FV E QUELLA DELLE FIL.DI SCARICO
+006200960322     C* METTO DAVANTI LA FILIALE FINALE DI ARRIVO
+006300960322     C                     MOVE FVSLNA    FFV,1
+006400960322     C                     MOVE FVSLNA    FSC,1
+006500960322     C                     MOVEAFVSFFV    FFV,2
+006600960322     C                     MOVEAFVSFF2    FFV,82
+006700000504     C                     Z-ADD151       X
+006800000504     C                     MOVEAFWSFF3    FFV,X
+006900000504     C                     Z-ADD231       X
+007000000504     C                     MOVEAFWSFF4    FFV,X
+007100960322     C                     MOVEAFVSFLP    FSC,2
+007200960322     C                     MOVEAFVSFL2    FSC,82
+007300000504     C                     Z-ADD151       X
+007400000504     C                     MOVEAFWSFL3    FSC,X
+007500000504     C                     Z-ADD231       X
+007600000504     C                     MOVEAFWSFL4    FSC,X
+007700960321     C* PER OGNI FILIALE DEL FOGLIO VIAGGIO LEGGO RECORD IN FNFVD00F
+007800960321     C* ESCLUDENDO I TIPI RECORD TRANSITI
+007900971118     C                     Z-ADD1         X       30
+008000000504     C           X         DOWLE300
+008100990706    3C           FFV,X     ANDNE*BLANKS
+008200960321     C*
+008300960321     C                     MOVE FFV,X     WFVG
+008400960321     C           KFVD      CHAINFNFVD01L             30
+008500960321    4C           *IN30     IFEQ *OFF
+008600960321     C* DETERMINO TERMINAL DI ARRIVO DELLA FILIALE DEL FOGLIO VIAGGIO
+008700960321     C                     EXSR SRTAR
+008800960321     C* A ROTTURA DI TERMINAL DI ARRIVO AGGIORNO METRI CUBI
+008900960321    5C           WTAR      IFNE WTARS
+009000960321    6C           WTARS     IFGT *ZEROS
+009100960321     C                     EXSR BRKTAR
+009200960321    6C                     END
+009300960321     C                     MOVE WTAR      WTARS
+009400960321     C                     MOVE FSC,X     WFSC
+009500960321     C                     CLEARWMCR
+009600960321    5C                     END
+009700960321     C* TOTALIZZO METRI CUBI PER TERMINAL DI ARRIVO
+009800960321     C                     XFOOTFVD       W0104  104H
+009900960321     C                     ADD  W0104     WMCR   104
+010000960321    4C                     END
+010100960321     C*
+010200960321     C                     ADD  1         X
+010300960321    3C                     ENDDO
+010400960325     C           WTARS     IFGT *ZEROS
+010500960321     C                     EXSR BRKTAR
+010600960325     C                     END
+010700960321    2C                     END
+010800960321    1C                     END
+010900950926     C*
+011000960321     C           FINE      TAG
+011100960321    1C           D33TLA    IFEQ ' '
+011200960321     C                     RETRN
+011300960321     C                     ELSE
+011400971118     C**
+011500971118     C                     CLEARDSLV55
+011600971118     C                     MOVEL'C'       D55TLA
+011700971118     C                     CALL 'FNLV55R'
+011800971118     C                     PARM           DSLV55
+011900971118     C**
+012000960321     C                     SETON                     LR
+012100960321    1C                     END
+012200960321     C*
+012300960321     C***************  DETERMINA TERMINAL DI ARRIVO  ******************
+012400960321     C           SRTAR     BEGSR
+012500960321     C                     CLEARWTAR
+012600960904     C* SE FIL.FV=FIL.DI SCARICO --> TER-ARR=FIL.FV
+012700960904   1AC           FFV,X     IFEQ FSC,X
+012800960904     C                     MOVE FFV,X     WTAR
+012900960904  X1AC                     ELSE
+013000971118     C                     CLEARDSLV55
+013100971118     C                     MOVEL'A'       D55TPT
+013200971118     C                     MOVELFVSLNP    D55LNP
+013300971118     C                     MOVELWFVG      D55LIN
+013400971118     C                     MOVELD33DTN    D55DRF
+013500971118     C                     CALL 'FNLV55R'
+013600971118     C                     PARM           DSLV55
+013700971118     C           D55ERR    IFEQ ' '
+013800971118     C                     MOVELD55LIN    D55TFA
+013900971118     C                     ENDIF
+014000971118     C                     MOVE D55TFA    WTAR
+014100960904   1AC                     END
+014200960321     C                     ENDSR
+014300960321     C***************  SCRITTURA METRI CUBI          ******************
+014400960321     C           BRKTAR    BEGSR
+014500960321     C           KTSM      CHAINTNTSM03L             30
+014600960321    7C           *IN30     IFEQ *OFF
+014700960321     C           WTARS     LOKUPTRM                      31
+014800960321    8C           *IN31     IFEQ *ON
+014900960322     C                     ADD  WMCR      TSMMCR    H
+015000960321   X8C                     ELSE
+015100960322     C                     Z-ADDWMCR      TSMMCR    H
+015200960321     C                     ADD  1         II
+015300960321     C                     MOVE WTARS     TRM,II
+015400960321    8C                     END
+015500960321     C                     UPDATTNTSM000
+015600960321   X7C                     ELSE
+015700960321     C                     CLEARTNTSM000
+015800960322     C                     MOVE FVSTRS    TSMTRN
+015900960321     C                     MOVE D33DTN    TSMDTN
+016000960321     C                     MOVE FVSLNP    TSMTFP
+016100960321     C                     MOVE WTARS     TSMTFF
+016200960321     C                     MOVE WFSC      TSMTFA
+016300960322     C                     Z-ADDWMCR      TSMMCR    H
+016400960321     C                     WRITETNTSM000
+016500960321     C                     ADD  1         II
+016600960321     C                     MOVE WTARS     TRM,II
+016700960321    7C                     END
+016800960321     C                     ENDSR
+016900951117     C****************  OPERAZIONI INIZIALI   *************************
+017000950926     C           *INZSR    BEGSR
+017100951030     C*
+017200951030     C                     Z-ADD1         CODUT
+017300951030     C                     CALL 'X§PARUT'
+017400951030     C                     PARM           UT§DSE
+017500951114     C* Rilevo la data del giorno
+017600951107     C                     TIME           WTIME  140       ORA E DATA
+017700951107     C                     MOVE WTIME     WDATE   80       GG/MM/AAAA
+017800951107     C                     MOVELWTIME     WORA    60
+017900951002     C*
+018000951117     C           KFVS      KLIST
+018100960321     C                     KFLD           D33LNP
+018200960321     C                     KFLD           D33NFV
+018300960321     C           KFVD      KLIST
+018400960321     C                     KFLD           FVSLNP
+018500960321     C                     KFLD           FVSNFV
+018600960321     C                     KFLD           WFVG
+018700960321     C                     KFLD           WTRC
+018800960321     C           KTSM      KLIST
+018900960322     C                     KFLD           FVSTRS
+019000960321     C                     KFLD           D33DTN
+019100960321     C                     KFLD           FVSLNP
+019200960321     C                     KFLD           WTARS
+019300950928     C*
+019400960321     C           *LIKE     DEFN FVDTRC    WTRC
+019500960321     C           *LIKE     DEFN TSMTFA    WFSC
+019600960321     C           *LIKE     DEFN FVSLNP    WLNP
+019700971118     C           *LIKE     DEFN D55TFA    WFVG
+019800971118     C           *LIKE     DEFN D55TFA    WTAR
+019900971118     C           *LIKE     DEFN D55TFA    WTARS
+020000951117     C*
+020100960321     C                     MOVEL'1'       WTRC
+020200971118     C                     ENDSR

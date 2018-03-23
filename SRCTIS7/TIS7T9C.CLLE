@@ -1,0 +1,112 @@
+000100140730/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                                        */
+000200140730/*PARMS                                                                       */
+000300140730/*PARMS                                                                       */
+000400140730/*PARMS                                                                       */
+000500140730/*PARMS                                                                       */
+000600140730
+000700120105             PGM        PARM(&SRC &KSC &TIP &DTI &FID &MBD &FIS &MBS &FIT +
+000800111230                             &MBT &PGT &PPT &ESITO)
+000900991027
+001000120105             DCL        VAR(&SRC) TYPE(*CHAR) LEN(1)    /* Flag "provenienza" */
+001100111230             DCL        VAR(&KSC) TYPE(*CHAR) LEN(8)    /* Cliente */
+001200111230             DCL        VAR(&TIP) TYPE(*CHAR) LEN(2)    /* Tipo file */
+001300111230             DCL        VAR(&DTI) TYPE(*DEC)  LEN(8 0)  /* Tipo file */
+001400111230
+001500111230             DCL        VAR(&FID) TYPE(*CHAR) LEN(10)   /* File da tradurre */
+001600111230             DCL        VAR(&MBD) TYPE(*CHAR) LEN(10)   /* Membro da tradurre */
+001700111230             DCL        VAR(&FIS) TYPE(*CHAR) LEN(10)   /* File storico */
+001800111230             DCL        VAR(&MBS) TYPE(*CHAR) LEN(10)   /* Membro storico */
+001900111230             DCL        VAR(&FIT) TYPE(*CHAR) LEN(10)   /* File tradotto */
+002000111230             DCL        VAR(&MBT) TYPE(*CHAR) LEN(10)   /* Membro tradotto */
+002100111230             DCL        VAR(&PGT) TYPE(*CHAR) LEN(10)   /* Programma traduttore */
+002200111230             DCL        VAR(&PPT) TYPE(*CHAR) LEN(50)   /* Parametri Programma traduttore */
+002300111230
+002400991027             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+002500050414             DCL        VAR(&GIRIS) TYPE(*DEC) LEN(1 0) VALUE(1)
+002600050414             DCL        VAR(&GIRIT) TYPE(*DEC) LEN(1 0) VALUE(1)
+002700050414             DCL        VAR(&GIRID) TYPE(*DEC) LEN(1 0) VALUE(1)
+002800991026
+002900050414
+003000050414 RIPROVAS:   ADDPFM     FILE(&FIS) MBR(&MBS) TEXT(&MBD)
+003100000330             MONMSG     MSGID(CPF5812 CPF7306)
+003200050414
+003300050414             ALCOBJ     OBJ((&FIS *FILE *EXCL &MBS))
+003400050414             MONMSG     MSGID(CPF0000) EXEC(DO)
+003500050414             DLYJOB     DLY(30)
+003600050414             IF         COND(&GIRIS *LT 3)  THEN(DO)
+003700050414             CHGVAR     VAR(&GIRIS) VALUE(&GIRIS + 1)
+003800050414             GOTO       CMDLBL(RIPROVAS)
+003900050414             ENDDO
+004000050414             ALCOBJ     OBJ((&FIS *FILE *EXCL &MBS))
+004100050414             ENDDO
+004200050414
+004300000330
+004400050414 RIPROVAT:   ADDPFM     FILE(&FIT) MBR(&MBT) TEXT(&MBD)
+004500000330             MONMSG     MSGID(CPF5812 CPF7306)
+004600050414
+004700050414             ALCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+004800050414             MONMSG     MSGID(CPF0000) EXEC(DO)
+004900050414             DLYJOB     DLY(30)
+005000050414             IF         COND(&GIRIT *LT 3)  THEN(DO)
+005100050414             CHGVAR     VAR(&GIRIT) VALUE(&GIRIT + 1)
+005200050414             GOTO       CMDLBL(RIPROVAT)
+005300050414             ENDDO
+005400050414             ALCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+005500050414             ENDDO
+005600050414
+005700991027
+005800050414 RIPROVAD:   ALCOBJ     OBJ((&FID *FILE *EXCL &MBD))
+005900050414             MONMSG     MSGID(CPF0000) EXEC(DO)
+006000050414             DLYJOB     DLY(30)
+006100050414             IF         COND(&GIRID *LT 3)  THEN(DO)
+006200050414             CHGVAR     VAR(&GIRID) VALUE(&GIRID + 1)
+006300050414             GOTO       CMDLBL(RIPROVAD)
+006400050414             ENDDO
+006500050414             ALCOBJ     OBJ((&FID *FILE *EXCL &MBD))
+006600050414             ENDDO
+006700050414
+006800050414
+006900001214             OVRDBF     FILE(&FID) TOFILE(&FID) MBR(&MBD) +
+007000071205                          OVRSCOPE(*JOB)
+007100111230     /*      OVRDBF     FILE(&FIS) TOFILE(&FIS) MBR(&MBS) +    */
+007200111230     /*                   FRCRATIO(1) OVRSCOPE(*JOB)           */
+007300111230     /*      OVRDBF     FILE(&FIT) TOFILE(&FIT) MBR(&MBT) +    */
+007400111230     /*                   FRCRATIO(1) OVRSCOPE(*JOB)           */
+007500111230             OVRDBF     FILE(&FIS) TOFILE(&FIS) MBR(&MBS) +
+007600111230                                      OVRSCOPE(*JOB)
+007700111230             OVRDBF     FILE(&FIT) TOFILE(&FIT) MBR(&MBT) +
+007800111230                                      OVRSCOPE(*JOB)
+007900120105
+008000120105
+008100120105             IF         COND(&SRC *EQ ' ')  THEN(DO)
+008200120105             CALL       PGM(TIS7T01R) PARM(&KSC &TIP &DTI &ESITO)
+008300120105             MONMSG     MSGID(CPF0000) EXEC(DO)
+008400120105             CHGVAR     VAR(&ESITO) VALUE('1')
+008500120105             ENDDO
+008600120105             ENDDO
+008700991027
+008800120105
+008900000711             IF         COND(&PGT *NE '          ')  THEN(DO)
+009000991027             CALL       PGM(&PGT) PARM(&PPT &ESITO)
+009100000330             MONMSG     MSGID(CPF0000) EXEC(DO)
+009200000330             CHGVAR     VAR(&ESITO) VALUE('1')
+009300000330             ENDDO
+009400000711             ENDDO
+009500111230
+009600041005
+009700071205             DLTOVR     FILE(&FID &FIS &FIT) LVL(*JOB)
+009800071205             MONMSG     MSGID(CPF9841)
+009900041005
+010000040817
+010100040817 /* TEMPORANEO: DUPLICAZIONE D MASSA DATI DOWNLOAD X TEST NUOVA PROCEDURA SCAMBIO DATI FTP/EMAIL */
+010200041014 /*          CPYF       FROMFILE(GAITRAGRU/&FIT) +                                               */
+010300041014 /*                       TOFILE(EDPFGVASMI/&FIT) FROMMBR(&MBT) +                                */
+010400041014 /*                       TOMBR(&MBT) MBROPT(*ADD)                                               */
+010500041014 /*          MONMSG     MSGID(CPF0000)                                                           */
+010600041014 /* FINE TEMPORANEO                                                                              */
+010700991027
+010800991027             DLCOBJ     OBJ((&FID *FILE *EXCL &MBD))
+010900991027             DLCOBJ     OBJ((&FIS *FILE *EXCL &MBS))
+011000991027             DLCOBJ     OBJ((&FIT *FILE *EXCL &MBT))
+011100991026
+011200990907             ENDPGM

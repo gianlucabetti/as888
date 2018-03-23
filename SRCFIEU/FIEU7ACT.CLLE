@@ -1,0 +1,54 @@
+000100061222/*?***********************************************************************/
+000200130719/*?  RICEVE da DUCROS i dati di Fatturazione x il controllo Fatture      */
+000300061222/*?   attenzione alle colonne di Excel x impostare in questo pgm le      */
+000400061222/*?  relative posizioni che verranno passate al pgm chiamto come parm.   */
+000500061222/*?***********************************************************************/
+000600060613
+000700130724             PGM
+000800130719
+000900130719             DCL        VAR(&TIVLRDS) TYPE(*CHAR) LEN(339)
+001000130719             DCL        VAR(&PRMLIT) TYPE(*CHAR) LEN(10)
+001100130719             DCL        VAR(&PRMFIR) TYPE(*CHAR) LEN(10)
+001200061222
+001300061222             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1)
+001400060620             DCL        VAR(&TEST) TYPE(*CHAR) LEN(1)
+001500061222
+001600061222/* ?- Parametri di passaggio al pgm chiamato  (Variabili x traduttore) */
+001700130718
+001800130718/* ? Questi sono i campi fondamentali da caricare sul  TNEFR00F        */
+001900130718/* ?                                                                   */
+002000130718/* ?  x SERNAM con sequenza dati nelle relative colonne  Excel :       */
+002100130718/* ?    colonna   (40): Importo  riga documento              Colonna1  */
+002200130718/* ?    colonna F (06): Num.Sped.Bartolini                   Colonna2  */
+002300130718/* ?    colonna G (07): Riferimento alternativo              Colonna3  */
+002400130718/* ?    colonna E (04): Data Documento                       Colonna4  */
+002500130718/* ?    colonna D (03): Num. Doc.                            Colonna5  */
+002600130718/* ?    colonna   (25): Peso                                 Colonna6  */
+002700130718/* ?    colonna   (27): volume                               Colonna7  */
+002800130718/* ?                                                                   */
+002900130718/* ?-----------------------------------------------------------------  */
+003000061222             DCL        VAR(&PARTNER) TYPE(*CHAR) LEN(3) VALUE('330')
+003100130718             DCL        VAR(&COLONNA1) TYPE(*DEC) LEN(3 0) VALUE(40)
+003200130718             DCL        VAR(&COLONNA2) TYPE(*DEC) LEN(3 0) VALUE(06)
+003300130718             DCL        VAR(&COLONNA3) TYPE(*DEC) LEN(3 0) VALUE(07)
+003400130718             DCL        VAR(&COLONNA4) TYPE(*DEC) LEN(3 0) VALUE(04)
+003500130718             DCL        VAR(&COLONNA5) TYPE(*DEC) LEN(3 0) VALUE(03)
+003600130718             DCL        VAR(&COLONNA6) TYPE(*DEC) LEN(3 0) VALUE(25)
+003700130718             DCL        VAR(&COLONNA7) TYPE(*DEC) LEN(3 0) VALUE(27)
+003800060613
+003900061222    /*       CHGVAR     VAR(&TEST) VALUE(%SST(&TIVLRDS 160 1))      */
+004000061222/* ?-----------------------------------------------------------------  */
+004100070228
+004200130724             OVRDBF     FILE(TITA432C) TOFILE(GAITRAGRPS/TITA432C)
+004300130724
+004400130719             CALL       PGM(FIEU7AR) PARM(&PARTNER &COLONNA1 +
+004500130719                          &COLONNA2 &COLONNA3 &COLONNA4 &COLONNA5 +
+004600130719                          &COLONNA6 &COLONNA7 &ESITO)
+004700060710             MONMSG     MSGID(CPF0000) EXEC(DO)
+004800060710    /*       CHGVAR     VAR(&ESITO) VALUE('2')        */
+004900060710             ENDDO
+005000060614
+005100130724             DLTOVR     FILE(*ALL)
+005200050413/* ?-----------------------------------------------------------------  */
+005300050413FINE:
+005400020911             ENDPGM

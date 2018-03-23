@@ -1,0 +1,37 @@
+000100140116             PGM        PARM(&KPJBA)
+000200980326
+000300140116             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400941110
+000500140819/* Cancello eventuale file con lista pgm in QTEMP (non dovrebbe esserci)*/
+000600140819             DLTF       FILE(QTEMP/WFLPGMTMP)
+000700140116             MONMSG     MSGID(CPF0000)
+000800140819/* Creo copia in QTEMP del file con lista pgm */
+000900140819             CRTDUPOBJ  OBJ(QADSPOBJ) FROMLIB(QSYS) OBJTYPE(*FILE) +
+001000140819                          TOLIB(QTEMP) NEWOBJ(WFLPGMTMP)
+001100140116             MONMSG     MSGID(CPF0000) EXEC(DO)
+001200140116             GOTO       CMDLBL(FINE)
+001300140116             ENDDO
+001400140116
+001500140819             OVRDBF     FILE(WFLPGMTMP) TOFILE(QTEMP/WFLPGMTMP) +
+001600140116                          OVRSCOPE(*JOB)
+001700141111
+001800141111/* Cancello eventuale file dei risultati diagnostica in QTEMP (non dovrebbe esserci)*/
+001900141111             DLTF       FILE(QTEMP/WFTIDTMP)
+002000141111             MONMSG     MSGID(CPF0000)
+002100141111/* Creo copia in QTEMP del file dei risultati diagnostica */
+002200141111             CRTDUPOBJ  OBJ(WFTIDTMP) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+002300141111                          TOLIB(QTEMP)
+002400141111             MONMSG     MSGID(CPF0000) EXEC(DO)
+002500141111             GOTO       CMDLBL(FINE)
+002600141111             ENDDO
+002700141111
+002800141111             OVRDBF     FILE(WFTIDTMP) TOFILE(QTEMP/WFTIDTMP) +
+002900141111                          OVRSCOPE(*JOB)
+003000140116
+003100140116/* Richiamo programma lancio diagnostica */
+003200140819             CALL       PGM(UBDSPPGMR1) PARM(&KPJBA)
+003300140116
+003400140819/* Elimino le sostituzioni file attive e il membro dal file in QTEMP */
+003500140116             DLTOVR     FILE(*ALL) LVL(*JOB)
+003600980325
+003700140116 FINE:       ENDPGM

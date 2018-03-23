@@ -1,0 +1,87 @@
+000100130109/*PARMS DFTACTGRP(*NO) ACTGRP(*CALLER)                              */
+000200130410/*?******************************************************************/
+000300130909/*?            ELABORA          O.R.M. VAO                          */
+000400130909/*?      Trasmisisone  tramite server FTP x cliente   PIC2013090101 */
+000500130909/*?            Formato NETEXPRESS                per DWNLOAD        */
+000600130410/*?******************************************************************/
+000700090225
+000800130419             PGM        PARM(&KPJBA)
+000900130419             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001000130520             DCL        VAR(&NOME) TYPE(*CHAR) LEN(10)
+001100130430             DCL        VAR(&FUNZIONE) TYPE(*CHAR) LEN(5)
+001200130523             DCL        VAR(&TOGLILIB) TYPE(*CHAR) LEN(1) VALUE('S')
+001300130430             CHGVAR     VAR(&FUNZIONE) VALUE(%SST(&KPJBA 257 5)) /* +
+001400130430                          Tipo Operazione x come viene richiamato */
+001500090216
+001600130520             RTVNETA    SYSNAME(&NOME)
+001700130520
+001800130520
+001900130520             IF         COND(&NOME *EQ 'AS888') THEN(DO)
+002000130520             ADDLIBLE   LIB(GAITRAGRPS)
+002100130523             MONMSG     MSGID(CPF2103) EXEC(DO) /* E' GIA IN LISTA +
+002200130523                          LIBRERIE */
+002300130523             CHGVAR     VAR(&TOGLILIB) VALUE('N')
+002400130523             enddo
+002500130520             enddo
+002600130520
+002700130520
+002800130520             IF         COND(&NOME *NE 'AS888') THEN(DO)
+002900130520             ADDLIBLE   LIB(GAITRAGRU)
+003000130523             MONMSG     MSGID(CPF2103) EXEC(DO) /* E' GIA IN LISTA +
+003100130523                          LIBRERIE */
+003200130523             CHGVAR     VAR(&TOGLILIB) VALUE('N')
+003300130523             enddo
+003400130520             enddo
+003500130520
+003600130520
+003700130430             IF         COND(&FUNZIONE *EQ 'OPEN') THEN(DO)
+003800130430
+003900090213/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+004000090213/* procedura/programma fosse finita in maniera anomala occorre */
+004100090213/* parare il colpo riducendo il male al male minore ossia      */
+004200090213/* con un rollback chiudere le precedenti transazioni fatte a  */
+004300090213/* metà piuttosto che confermarle. E ripartendo da una         */
+004400090213/* situazione pulita.                                          */
+004500090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+004600090213             MONMSG     MSGID(CPF8351) EXEC(DO)
+004700090213             ENDCMTCTL
+004800090213             MONMSG     MSGID(CPF0000) EXEC(ROLLBACK)
+004900090213             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+005000090213             ENDDO
+005100090212
+005200130430             ENDDO
+005300130430
+005400130429             CALL       PGM(TRTCT97R) PARM(&KPJBA)
+005500090213             MONMSG     MSGID(CPF0000) EXEC(DO)
+005600090213             ROLLBACK
+005700090213             ENDDO
+005800090212
+005900130430
+006000130430             IF         COND(&FUNZIONE *EQ 'CLOSE') THEN(DO)
+006100130430
+006200090213 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006300090213 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006400090213 /* in modo pulito senza lasciare transazioni a metà.            */
+006500090213             ENDCMTCTL
+006600090216
+006700130430             ENDDO
+006800130430
+006900130520
+007000130520             IF         COND(&NOME *EQ 'AS888') THEN(DO)
+007100130523             IF         COND(&TOGLILIB *EQ 'S') THEN(DO)
+007200130520             RMVLIBLE   LIB(GAITRAGRPS)
+007300130520             MONMSG     MSGID(CPF2104) /* E' GIA IN LISTA LIBRERIE */
+007400130523             enddo
+007500130520             enddo
+007600130520
+007700130520
+007800130520             IF         COND(&NOME *NE 'AS888') THEN(DO)
+007900130523             IF         COND(&TOGLILIB *EQ 'S') THEN(DO)
+008000130520             RMVLIBLE   LIB(GAITRAGRU)
+008100130520             MONMSG     MSGID(CPF2104) /* E' GIA IN LISTA LIBRERIE */
+008200130523             enddo
+008300130520             enddo
+008400130520
+008500130520
+008600090216
+008700090212             ENDPGM

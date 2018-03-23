@@ -1,0 +1,72 @@
+000100020322             PGM        PARM(&KPJBA)
+000200000000
+000300020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400030429             DCL        VAR(&SPJBA) TYPE(*CHAR) LEN(502)
+000401180216             DCL        VAR(&PULBA) TYPE(*CHAR) LEN(502)
+000500030529             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+000600030429             CHGVAR     VAR(&SPJBA) VALUE(&KPJBA)
+000700100909
+000701180216/*parametro specifico per chiamata BI          */
+000702180216             CHGVAR     VAR(&PULBA) VALUE(&KPJBA)
+000703180216
+000800100909/*-------------------------------------------------------------------------*/
+000900100909/* Spostato come primo step scrittura del record di semaforo               */
+001000100909/*-------------------------------------------------------------------------*/
+001100161121
+001200100909             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+001300100909
+001400100909/* Alloca la trasmissione scrivendo un record nel file da semaforo        */
+001500100909             CALL       PGM(FICN43R0) PARM(&KPJBA)
+001600100909
+001700060209
+001800030429/*-------------------------------------------------------------------------*/
+001900030429/* Pgm di controllo x attivare trasmissioni in sede                        */
+002000030429/*  Se qualcuno stesse utilizzando il pgm di Conferma Conteggi o Rettifiche*/
+002100030429/*   si aspettano 2 minuti poi riprova a trasmettere mandando un msg di    */
+002200030429/*    avviso agli utenti che stanno allocando la procedura.                */
+002300030429RIPROVA:
+002400030429             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+002500030429                          VALUE('FICN43R   ')
+002600030429             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 1)) VALUE(' ')
+002700030429             CALL       PGM(FICNB8R) PARM(&KPJBA)
+002800030429             IF         COND(%SUBSTRING(&KPJBA 257 1) = 'T') THEN(DO)
+002900030513  /* avviso a QSYSOPR  */
+003000030513
+003100030513
+003200030529             SNDUSRMSG  MSG('<<  ATTENZIONE Le Trasmissioni conteggi +
+003300030529                          Autotrasportatori non possono essere +
+003400030529                          attivate poichè un utente sta utilizzando +
+003500030529                          la - Conferma o la Rettifica ai Conteggi +
+003600030529                          Autotrasportatori -  Verificare che tutti +
+003700030529                          gli utenti siano fuori o avvisare la +
+003800030529                          sede. Rispondere OK per Presa visione di +
+003900030529                          questo messaggio >>') VALUES(OK) +
+004000030529                          TOMSGQ(*SYSOPR) MSGRPY(&RISP)
+004100130903             DLYJOB     DLY(90)
+004200030429             GOTO       CMDLBL(RIPROVA)
+004300030429             ENDDO
+004400030429/*-------------------------------------------------------------------------*/
+004500030429             CHGVAR     VAR(&KPJBA) VALUE(&SPJBA)
+004600060209
+004700050713
+004800161013 /* scrittura righe per BON bonus imp. fisso               */
+004900160128             CALL       PGM(FICN44R) PARM(&KPJBA)
+005000161013 /* scrittura righe per MGA minimo garantito               */
+005100161010             CALL       PGM(FICNA44R) PARM(&KPJBA)
+005200161013 /* scrittura righe per BOI importo bonus                  */
+005300161017             CALL       PGM(FICN39R) PARM(&KPJBA)
+005400161114
+005500050713/* Allinea FIFCE con FIFTT se ci sono delle divergenze  */
+005600161114/*  imposta i parametri per chiamare il >> FICN43R2 <<  */
+005700161114             CALL       PGM(FICN43R1)
+005800030429
+005900170329
+006000170329/* Scrittura file BI              */
+006100180216             CALL       PGM(TRBI03C) PARM(&PULBA)
+006200020322/* richiamo programma di stampa                    */
+006300020402             CALL       PGM(FICN43R) PARM(&KPJBA)
+006400020116
+006500020322             ENDCMTCTL
+006600030505             MONMSG     MSGID(CPF8350)
+006700020116
+006800000000             ENDPGM

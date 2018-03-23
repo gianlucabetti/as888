@@ -1,0 +1,93 @@
+000100110912/* --------------------------------------------------- */
+000200110912/* APPROVVIGIONAMENTO MATERIALI  - MAGAZZINO X FILIALI */
+000300110912/*                                                     */
+000400110912/*  aggiunge le librerie necessarie in ambiente di     */
+000500110912/*  filiale x utilizzare corretamente il programma.    */
+000600110912/* --------------------------------------------------- */
+000700020322             PGM        PARM(&KPJBA)
+000800000000
+000900020329             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+001000110830             DCL        VAR(&SYSTEMA) TYPE(*CHAR) LEN(10)
+001100110830             DCL        VAR(&DSP) TYPE(*CHAR) LEN(10)
+001200110905             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(1)
+001300110905             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(1)
+001400110905             DCL        VAR(&LIB3) TYPE(*CHAR) LEN(1)
+001500071008
+001600110830             RTVNETA    SYSNAME(&SYSTEMA)
+001700110830             RTVJOBA    JOB(&DSP)
+001800110831
+001900110830             IF         COND(&SYSTEMA *EQ 'AS888') THEN(DO)
+002000110831             ADDLIBLE   LIB(GAIWEPPRV) POSITION(*LAST)
+002100110905             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&LIB1) +
+002200110905                          VALUE('S'))
+002300110831             ADDLIBLE   LIB(GAIWEPOBJ) POSITION(*LAST)
+002400110905             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&LIB2) +
+002500110905                          VALUE('S'))
+002600110830             ENDDO
+002700020118
+002800110830             IF         COND(&SYSTEMA *NE 'AS888') THEN(DO)
+002900110831             ADDLIBLE   LIB(GAIWEP201) POSITION(*LAST)
+003000110905             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&LIB1) +
+003100110905                          VALUE('S'))
+003200110831             ADDLIBLE   LIB(GAIWEPOBJ) POSITION(*LAST)
+003300110905             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&LIB2) +
+003400110905                          VALUE('S'))
+003500110830             ENDDO
+003600110830
+003700020408/* attiva lo STRCMTCTL ma se per qualche motivo qualche altra  */
+003800020408/* procedura/programma fosse finita in maniera anomala occorre */
+003900020408/* parare il colpo riducendo il male al male minore ossia      */
+004000020408/* con un rollback chiudere le precedenti transazioni fatte a  */
+004100020408/* metà piuttosto che confermarle. E ripartendo da una         */
+004200020408/* situazione pulita.                                          */
+004300071008             STRCMTCTL  LCKLVL(*CHG)
+004400020409             MONMSG     MSGID(CPF8351) EXEC(DO)
+004500071008             ROLLBACK
+004600020409             ENDCMTCTL
+004700071008             STRCMTCTL  LCKLVL(*CHG)
+004800020409             ENDDO
+004900070517
+005000020116
+005100070316/* richiamo programma                              */
+005200110830             CALL       PGM(TII500R) PARM(&KPJBA)
+005300020417             MONMSG     MSGID(CPF0000) EXEC(DO)
+005400020417             ROLLBACK
+005500110831             SNDBRKMSG  MSG('ERRORE durante la Conferma del riappro+
+005600110831                          vigionamento degli Ordini in Filiale. Ve+
+005700110830                          rificare l''ordine immesso.') TOMSGQ(&DSP)
+005800071008             RCLRSC     LVL(*CALLER)
+005900020417             ENDDO
+006000070316
+006100020408 /* se per qualsiasi motivo il programma si è interrotto in modo */
+006200020408 /* anomalo, occorre comunque eseguire il rollback e ripartire   */
+006300020408 /* in modo pulito senza lasciare transazioni a metà.            */
+006400020322             ENDCMTCTL
+006500110901
+006600110901             IF         COND(%SST(&KPJBA 247 1) *NE 'S') THEN(DO)
+006700110901
+006800110831             IF         COND(&SYSTEMA *EQ 'AS888') THEN(DO)
+006900110921             IF         COND(&LIB1 *NE 'S') THEN(DO)
+007000110831             RMVLIBLE   LIB(GAIWEPPRV)
+007100110831             MONMSG     MSGID(CPF0000)
+007200110905             enddo
+007300110921             IF         COND(&LIB2 *NE 'S') THEN(DO)
+007400110831             RMVLIBLE   LIB(GAIWEPOBJ)
+007500110831             MONMSG     MSGID(CPF0000)
+007600110905             enddo
+007700110831             ENDDO
+007800110831
+007900110831             IF         COND(&SYSTEMA *NE 'AS888') THEN(DO)
+008000110921             IF         COND(&LIB1 *NE 'S') THEN(DO)
+008100110831             RMVLIBLE   LIB(GAIWEP201)
+008200110831             MONMSG     MSGID(CPF0000)
+008300110905             enddo
+008400110921             IF         COND(&LIB2 *NE 'S') THEN(DO)
+008500110831             RMVLIBLE   LIB(GAIWEPOBJ)
+008600110831             MONMSG     MSGID(CPF0000)
+008700110905             enddo
+008800110831             ENDDO
+008900110901
+009000110901             ENDDO
+009100110901FINE:
+009200051108
+009300000000             ENDPGM

@@ -1,0 +1,73 @@
+000100990916/*PARMS DFTACTGRP(*YES)                                                       */
+000200990916/*PARMS                                                                       */
+000300990916/*PARMS                                                                       */
+000400990916/*PARMS                                                                       */
+000500990916/*PARMS                                                                       */
+000600051110/* ATTENZIONE i pgm FNLG95* devono girare in commit *all*/
+000700990916             PGM        PARM(&KPJBA)
+000800990916             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000900050926             DCL        VAR(&ERR) TYPE(*CHAR) LEN(1) VALUE(' ')
+001000051109             DCL        VAR(&DSBS55)    TYPE(*CHAR)  LEN(214)
+001100051109             DCL        VAR(&DSPSI55) TYPE(*CHAR) LEN(10)
+001200051109             DCL        VAR(&ESITO) TYPE(*CHAR) LEN(1) VALUE(' ')
+001300051109             DCL        VAR(&LLIST) TYPE(*CHAR) LEN(275)
+001400051109             DCL        VAR(&CMD) TYPE(*CHAR) LEN(300)
+001500051109             DCL        VAR(&NN) TYPE(*DEC) LEN(15 5) VALUE(300)
+001600051109
+001700051109 /* Come primissima cosa salvo la lista librerie iniziale */
+001800051109 /* perchè questo pgm mi viene chiamato da un autostrjob */
+001900051109 /* che ha una sua lista di librerie. io devo girare con s.i. FILTRA */
+002000051109             RTVJOBA    USRLIBL(&LLIST)
+002100051109             MONMSG     MSGID(CPF0000)
+002200050322
+002300051109 /* ricavo il sistema informativo di filiale */
+002400051109             CHGVAR     VAR(%SST(&DSBS55 1 1)) VALUE('L')
+002500051109             CHGVAR     VAR(%SST(&DSBS55 12 3)) VALUE('001')
+002600051109             CHGVAR     VAR(%SST(&DSBS55 25 3)) VALUE('001')
+002700051109             CALL       PGM(TIBS55R) PARM(&DSBS55)
+002800051109             CHGVAR     VAR(&DSPSI55) VALUE(%SST(&DSBS55 86 10))
+002900051109 /* imposto la lista di librerie di filiale */
+003000051109             CALL       PGM(XCHGLIBL) PARM(&DSPSI55 &ESITO)
+003100051109
+003200051108             STRCMTCTL  LCKLVL(*ALL)
+003300050322             MONMSG     MSGID(CPF8351)
+003400050322
+003500050926             CALL       PGM(FNLG95R2) PARM(&KPJBA)
+003600050926             MONMSG     MSGID(CPF0000) EXEC(DO)
+003700050926             CHGVAR     VAR(&ERR) VALUE('1')
+003800050926             GOTO       CMDLBL(FINE)
+003900050926             ENDDO
+004000051108/* se esco dal pgm con errore vado a fine 1= errore sql 2= rec.alloc.*/
+004100051108             CHGVAR     VAR(&ERR) VALUE(%SST(&KPJBA 247 1))
+004200051108             IF         COND(&ERR *NE ' ') THEN(DO)
+004300051108             GOTO       CMDLBL(FINE)
+004400051108             ENDDO
+004500050926
+004600050926             CALL       PGM(FNLG95R1) PARM(&KPJBA)
+004700050926             MONMSG     MSGID(CPF0000) EXEC(DO)
+004800050926             CHGVAR     VAR(&ERR) VALUE('1')
+004900050926             GOTO       CMDLBL(FINE)
+005000050926             ENDDO
+005100051108             CHGVAR     VAR(&ERR) VALUE(%SST(&KPJBA 247 1))
+005200050926
+005300050926 FINE:       IF         COND(&ERR *EQ '1') THEN(DO)
+005400050401             ROLLBACK
+005500050930             SNDMSG     MSG('ERRORE il programma è terminato in modo +
+005600050930                          anomalo. Segnalare il problema alla +
+005700050930                          persona responsabile della manutenzione +
+005800050930                          del programma.') TOUSR(QSYSOPR)
+005900050401             RCLRSC     LVL(*CALLER)
+006000050926             ENDDO
+006100050322
+006200051110/* ho tolto il commit perchè ora vengo chiamato in interattivo */
+006300051110/* se si rimette la sottomissione bisogna rimetterlo*/
+006400051110/*           ENDCMTCTL                           */
+006500051110/*           MONMSG     MSGID(CPF8356)           */
+006600910206
+006700051109/* re-imposto la lista di libreie in entrata */
+006800051109             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT &LLIST +
+006900051109                          *CAT ')')
+007000051109             CALL       PGM(QCMDEXC) PARM(&CMD &NN)
+007100051109             MONMSG     MSGID(CPF0000)
+007200051109
+007300000000             ENDPGM

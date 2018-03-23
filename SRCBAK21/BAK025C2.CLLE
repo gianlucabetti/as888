@@ -1,0 +1,40 @@
+000100000529/*PARMS DFTACTGRP(*YES) USRPRF(*USER)                                */
+000200930713/*-------------------------------------------------------------------*/
+000300000529/* BAK025C2                                                          */
+000400930713/*                                                                   */
+000500000529/* Richiamato da BAK025C nel caso in cui l'azione abbia il flag      */
+000600000529/*  KAZAU = 'U' (autorità utente)                                    */
+000700000529/*                                                                   */
+000800000529/* Questo pgm deve essere compilato con il parametro USRPRF(*USER)   */
+000900000529/*  (a parte questo è identico al pgm BAK025C1)                      */
+001000000529/*                                                                   */
+001100000529/* Dato che il pgm chiamato eredita le autorizzazioni di questo pgm, */
+001200000529/*  ne risulta che il pgm chiamato (BAK025C3) userà quelle del       */
+001300000529/*  profilo utente di esecuzione                                     */
+001400960305/*                                                                   */
+001500930713/*-------------------------------------------------------------------*/
+001600960722             PGM        PARM(&KPJBA1 &KFAZN &ERR025)
+001700930707
+001800931130             DCL        VAR(&KPJBA1) TYPE(*CHAR) LEN(503)
+001900960719             DCL        VAR(&KFAZN) TYPE(*CHAR) LEN(689)
+002000960723             DCL        VAR(&ERR025) TYPE(*CHAR) LEN(1)
+002100000529
+002200000529/* Richiamo pgm esecuzione azione (vero e proprio)                   */
+002300000529             CALL       PGM(BAK025C3) PARM(&KPJBA1 &KFAZN &ERR025)
+002400001108
+002500001108/* Se errore di "conflitto" o di "esecuzione azione" lo monitorizzo  */
+002600001108/*  e lo rimando al chiamante ...                                    */
+002700001108             MONMSG     MSGID(CPF9898) CMPDTA('*ERRORE*CONFLITTO*') +
+002800001108                          EXEC(DO)
+002900001108             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+003000001108                          MSGDTA('*ERRORE*CONFLITTO*') TOPGMQ(*PRV) +
+003100001108                          MSGTYPE(*ESCAPE)
+003200001108             ENDDO
+003300001108             MONMSG     MSGID(CPF9898) CMPDTA('*ERRORE*ESECUZIONE*') +
+003400001108                          EXEC(DO)
+003500001108             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+003600001108                          MSGDTA('*ERRORE*ESECUZIONE*') TOPGMQ(*PRV) +
+003700001108                          MSGTYPE(*ESCAPE)
+003800001108             ENDDO
+003900960719
+004000000529             ENDPGM

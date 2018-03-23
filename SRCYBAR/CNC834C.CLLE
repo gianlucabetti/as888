@@ -1,0 +1,123 @@
+000100000000             PGM        PARM(&KPJBA)
+000200950515
+000300890914             DCL        VAR(&KPJBA) TYPE(*CHAR) LEN(502)
+000400900529             DCL        VAR(&RISP) TYPE(*CHAR) LEN(1)
+000500950515             DCL        VAR(&LIBCON) TYPE(*CHAR) LEN(10)
+000600030910             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+000700130530             DCL        VAR(&NBRCURRCD1) TYPE(*DEC) LEN(10 0)
+000800130530             DCL        VAR(&NBRCURRCD2) TYPE(*DEC) LEN(10 0)
+000900900529
+001000030910             SNDUSRMSG  MSG('Scaricare dal sito FTP.BPER.IT +
+001100030910                          l''anagrafico sportelli bancari e +
+001200030910                          copiarlo in ANAB900F su SETRAS? (S N)') +
+001300030910                          VALUES(S N) DFT(S) MSGRPY(&RISP)
+001400030910
+001500030910             IF         COND(&RISP *EQ 'S' *OR &RISP *EQ 's') THEN(DO)
+001600030911             CLRPFM     FILE(ANAB900F)
+001700030910             STRPCO
+001800030910             MONMSG     MSGID(IWS4010)
+001900091016             STRPCCMD   PCCMD('g:\abibper\abibper.bat') PAUSE(*NO)
+002000130530
+002100130530  /* attendo qualche secondo prima di continuare                     */
+002200130715 WAIT:       DLYJOB     DLY(90)
+002300130530  /* se numero record = 0 --> messaggio */
+002400130530             RTVMBRD    FILE(ANAB900F) NBRCURRCD(&NBRCURRCD1)
+002500130530             IF         COND(&NBRCURRCD1 *EQ 0) THEN(DO)
+002600130530             SNDUSRMSG  MSG('''Download dal sito FTP.BPER.IT non +
+002700130530                          iniziato, vuoi attendere ?') VALUES(S N) +
+002800130530                          DFT(S) MSGRPY(&RISP)
+002900130530             IF         COND(&RISP *EQ 'S' *OR &RISP *EQ 's') +
+003000130530                          THEN(GOTO CMDLBL(WAIT))
+003100130530             ELSE       CMD(GOTO CMDLBL(ENDPGM))
+003200130530             ENDDO
+003300130530
+003400130530  /* se "numerorecord2" diverso da "numerorecord1" --> messaggio */
+003500130530             RTVMBRD    FILE(ANAB900F) NBRCURRCD(&NBRCURRCD2)
+003600130530             IF         COND(&NBRCURRCD2 *NE &NBRCURRCD1) THEN(DO)
+003700130530             SNDUSRMSG  MSG('''Download dal sito FTP.BPER.IT in +
+003800130530                          corso, vuoi attendere ?') VALUES(S N) +
+003900130530                          DFT(S) MSGRPY(&RISP)
+004000130530             IF         COND(&RISP *EQ 'S' *OR &RISP *EQ 's') +
+004100130530                          THEN(GOTO CMDLBL(WAIT))
+004200130530             ELSE       CMD(GOTO CMDLBL(ENDPGM))
+004300130530             ENDDO
+004400030910             ENDDO
+004500030910
+004600030910             RTVMBRD    FILE(ANAB900F) NBRCURRCD(&NBRCURRCD)
+004700030910             IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
+004800030910             SNDUSRMSG  MSG('Il file ANAB900F è vuoto. +
+004900030910                          L''elaborazione verrà arrestata.')
+005000030910             GOTO       CMDLBL(ENDPGM)
+005100030910             ENDDO
+005200030203
+005300030203             RTVOBJD    OBJ(CNABI00F) OBJTYPE(*FILE) RTNLIB(&LIBCON)
+005400900529
+005500971111             /* SALVO         CNABI00F/GAITRAGRU        */
+005600110909
+005700030807             DLTF       FILE(&LIBCON/CPYCNABI0F)
+005800030807             MONMSG     MSGID(CPF2105)
+005900110909
+006000110909             CRTDUPOBJ  OBJ(CNABI00F) FROMLIB(&LIBCON) OBJTYPE(*FILE) +
+006100110909                          NEWOBJ(CPYCNABI0F)
+006200110909
+006300110909             CPYF       FROMFILE(&LIBCON/CNABI00F) TOFILE(&LIBCON/CPYCNABI0F) +
+006400110909                          MBROPT(*REPLACE)
+006500110909
+006600080319/* Cancello in CNABI00F ANACR00F i records annullati -------------------------*/
+006700110727/*           SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA('Cancellazione sportelli +  */
+006800110727/*                        annullati ...') TOPGMQ(*EXT) MSGTYPE(*STATUS)                 */
+006900110727/*           CALL       PGM(CNC8352R)                                                   */
+007000080319
+007100030911/* Aggiornamento CNABI00F da file ANAB900F con stampa ---------------*/
+007200031114             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) +
+007300031114                          MSGDTA('Aggiornamento CNABI00F ...') +
+007400031114                          TOPGMQ(*EXT) MSGTYPE(*STATUS)
+007500030806             CALL       PGM(CNC8351R) PARM('1')
+007600030203
+007700900529             /* CREAZ. CNABI00W CON DATI BANCA          */
+007800030203             CHKOBJ     OBJ(&LIBCON/CNABI00W) OBJTYPE(*FILE)
+007900900529             MONMSG     MSGID(CPF9801) EXEC(DO)
+008000030203             CRTDUPOBJ  OBJ(CNABI00F) FROMLIB(&LIBCON) +
+008100030203                          OBJTYPE(*FILE) NEWOBJ(CNABI00W)
+008200900529             GOTO       CMDLBL(SOTTO)
+008300900529             ENDDO
+008400030203
+008500030203             CLRPFM     FILE(CNABI00W)
+008600030203
+008700030203 SOTTO:      OVRDBF     FILE(CNABI00F) TOFILE(&LIBCON/CNABI00W)
+008800030806             CALL       PGM(CNC8351R) PARM('0')
+008900900529             DLTOVR     FILE(*ALL)
+009000900529
+009100900529             /* ANNULLO I CODICI CHE NON TROVO IN CNABI00W */
+009200080326             SNDPGMMSG  MSGID(CPF9897) MSGF(QCPFMSG) MSGDTA('Annullamento sportelli +
+009300080326                          cessati ...') TOPGMQ(*EXT) MSGTYPE(*STATUS)
+009400080319             OVRDBF     FILE(CNABI00F) TOFILE(&LIBCON/CNABI00W)
+009500080319             CALL       PGM(CNC836R) PARM(&KPJBA)
+009600080319             DLTOVR     FILE(*ALL)
+009700950516
+009800110526/*---------- Creo file per Zucchetti HR. -------------------------------------*/
+009900110526             CALL       PGM(YZ0100000) PARM(&KPJBA)
+010000950516
+010100030911/* Sottometto la lista dei soggetti con ABICAB inesistente. ---------*/
+010200030911/* Lo schedulo alle 23.59 in modo che venga eseguito dopo la         */
+010300030911/* trasmissione ai PO di CNABI00F e l'allineamento dell'anagrafico   */
+010400030911/* di Proj.                                                          */
+010500030808             CHGVAR     VAR(%SST(&KPJBA 135 4)) VALUE('Y837')
+010600030808             CHGVAR     VAR(%SST(&KPJBA 209 10)) VALUE('0000002359')
+010700030808             CALL       PGM(BCH10) PARM(&KPJBA)
+010800030808             CHGVAR     VAR(%SST(&KPJBA 135 4)) VALUE(' ')
+010900030808             CHGVAR     VAR(%SST(&KPJBA 209 10)) VALUE(' ')
+011000950516
+011100000314             DLTOVR     FILE(*ALL) LVL(*JOB)
+011200030911
+011300950515
+011400030911 FINE1:      SNDUSRMSG  MSG('Aggiornamento anagrafico ABI: dopo aver +
+011500030911                          verificato che tutto sia stato aggiornato +
+011600030911                          correttamente, cancellare il file +
+011700030911                          CPYCNABI0F.') MSGTYPE(*INFO)
+011800030203
+011900030911             DLTF       FILE(&LIBCON/CNABI00W)
+012000030910             CLRPFM     FILE(ANAB900F)
+012100000000             RCLRSC     LVL(*CALLER)
+012200950515
+012300900529ENDPGM:      ENDPGM

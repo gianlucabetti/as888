@@ -1,0 +1,34 @@
+000100040520 FNLRS5C:    PGM        PARM(&KPJBA)
+000200030612
+000300891006             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000400030612             DCL        VAR(&KPJBU)    TYPE(*CHAR)  LEN(256)
+000500040520             DCL        VAR(&PRTETI)   TYPE(*CHAR)  LEN(10)
+000600040520             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+000700920220
+000800030612             CHGVAR     VAR(&KPJBU)  VALUE(%SST(&KPJBA 247 256))
+000900030612
+001000040521             CHGVAR     VAR(&PRTETI) VALUE(%SST(&KPJBU 42 10))
+001100910305
+001200030612   /* prtf segnacolli */
+001300040520             OVRPRTF    FILE(FNLV22P) OUTQ(&PRTETI) +
+001400040520                          FORMTYPE(DpdLarge) USRDTA('SegnacArr') +
+001500040520                          SHARE(*YES)
+001600040520/* Creo il file di lavoro in qtemp */
+001700040520             DLTF       FILE(QTEMP/FNWLR73*)
+001800040520             MONMSG     MSGID(CPF0000)
+001900040520             RTVMBRD    FILE(FNWLR73F) RTNLIB(&LIB)
+002000040520             MONMSG     MSGID(CPF0000)
+002100040520             IF         COND(&LIB = '          ') THEN(GOTO +
+002200040520                          CMDLBL(FINE))
+002300040520             CRTDUPOBJ  OBJ(FNWLR73*) FROMLIB(&LIB) OBJTYPE(*FILE) +
+002400040520                          TOLIB(QTEMP)
+002500970715
+002600910305
+002700030612/* Richiamo pgm di stampa -------------------------------------------*/
+002800040520             CALL       PGM(FNLRS5R) PARM(&KPJBA)
+002900030612
+003000030612/* Fine -------------------------------------------------------------*/
+003100040520FINE:        RCLRSC     LVL(*CALLER)
+003200900925             DLTOVR     FILE(*ALL)
+003300030612
+003400911209             ENDPGM

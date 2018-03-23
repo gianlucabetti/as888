@@ -1,0 +1,451 @@
+000100951109     H*------------------------------------------------------------------------*
+000200951109     H* SBINAMENTO FOGLIO VIAGGIO DA GRIGLIA TRAINI                    NO      *
+000300951109     H*------------------------------------------------------------------------*
+000400951114     H* PARAMETRI RICEVUTI DAL PGM:
+000500951114     H* INPUT   PARTLA - TIPO LANCIO
+000600951114     H*                  EQ 'C' - NON ELABORO E CHIUDO CON LR
+000700951114     H*                  EQ 'L' -     ELABORO E CHIUDO CON LR
+000800951114     H*                  EQ ' ' -     ELABORO E CHIUDO IN RETRN
+000900951114     H* INPUT   PARLNP - DEVE CONTENERE LA LNP DEL F.V. DA SBINARE
+001000951114     H* INPUT   PARNFV - DEVE CONTENERE IL NUMERO F.V. DA SBINARE
+001100951114     H* INPUT   PARDPD - DEVE CONTENERE LA DESCRIZIONE DEL TRAZIONISTA
+001200951114     H*                  DEL F.V.
+001300951114     H* INPUT   PARPRT - DEVE ESSERE EQ 'S' SE SI VUOLE LA STAMPA DELLO
+001400951109     H*                  SBINAMENTO EFFETTUATO
+001500951109     H*                  DEVE ESSERE EQ ' ' SE NON SI VUOLE LA STAMPA
+001600951114     H* OUTPUT  PARERR - EQ ' ' SE SBINAMENTO RIUSCITO
+001700951114     H*                  EQ 'E' SE SBINAMENTO NON RIUSCITO
+001800960108     H* OUTPUT  PARTRN - CONTERRA' IL NUMERO TRAINO DEL F.V. SBINATO
+001900960108     H* OUTPUT  PARDTN - CONTERRA' LA DATA TRAINO DEL F.V. SBINATO
+002000951109     H*------------------------------------------------------------------------*
+002100951109     H              J
+002200951109     F*------------------------------------------------------------------------*
+002300951109     FTNTST01LUF  E           K        DISK
+002400951109     FTNTSR04LUF  E           K        DISK
+002500960205     FTNTSR01LUF  E           K        DISK
+002600960205     F            TNTSR000                          KRENAMETNTSR1
+002700960325     FTNTSM03LUF  E           K        DISK
+002800951109     FFNFV201LUF  E           K        DISK
+002900951114     FTNTLZ01LIF  E           K        DISK
+003000951114     FTABEL00FIF  E           K        DISK
+003100960325     FTNTLT01LIF  E           K        DISK
+003200960325     FTNTLM01LIF  E           K        DISK
+003300951123     F*TNTLL01LIF  E           K        DISK
+003400010823     FPRTF198 O   F     198     OF     PRINTER                        UC
+003500951114     E                    PRT     1   9 66               PER STAMPA
+003600010823     E                    CMD    67  67  1
+003700960205     ITNTSR1
+003800960205     I              TSRATB                          SRATB1
+003900960205     I              TSRTRN                          SRTRN1
+004000960205     I              TSRDTN                          SRDTN1
+004100960205     I              TSRDTT                          SRDTT1
+004200960301     I              TSRTFM                          SRTFM1
+004300960205     I              TSRNFP                          SRNFP1
+004400960205     I              TSRFFP                          SRFFP1
+004500960205     I              TSRNFA                          SRNFA1
+004600960205     I              TSRFFA                          SRFFA1
+004700960205     I              TSRDTP                          SRDTP1
+004800960205     I              TSRHTP                          SRHTP1
+004900960205     I              TSRDRP                          SRDRP1
+005000960205     I              TSRHRP                          SRHRP1
+005100960320     I              TSRRTP                          SRRTP1
+005200960205     I              TSRDTA                          SRDTA1
+005300960205     I              TSRHTA                          SRHTA1
+005400960205     I              TSRDRA                          SRDRA1
+005500960205     I              TSRHRA                          SRHRA1
+005600960205     I              TSRRTA                          SRRTA1
+005700960205     I              TSRDKP                          SRDKP1
+005800960301     I              TSRFKP                          SRFKP1
+005900960205     I              TSRDKA                          SRDKA1
+006000960301     I              TSRFKA                          SRFKA1
+006100960205     I              TSRDKI                          SRDKI1
+006200960301     I              TSRFKI                          SRFKI1
+006300960205     I              TSRLNP                          SRLNP1
+006400960205     I              TSRNFV                          SRNFV1
+006500960205     I              TSRDFV                          SRDFV1
+006600951114     IKPJBA     E DS
+006700951120     ITNTL30    E DSTNTL30DS
+006800951109     IPARAM       DS
+006900951114     I                                        1   1 PARTLA
+007000951114     I                                        2   40PARLNP
+007100951114     I                                        5   90PARNFV
+007200951114     I                                       10  19 PARDPD
+007300951114     I                                       20  20 PARPRT
+007400951114     I                                       21  21 PARERR
+007500951120     I                                       22  280PARTRN
+007600951120     I                                       29  360PARDTN
+007700951114     IWLBDA8      DS
+007800951114     I                                        1   80G08DAT
+007900951114     I                                        9  160G08INV
+008000951114     I                                       17  17 G08ERR
+008100951114     I                                       18  220G08TGI
+008200951114     IUT§DSE    E DSUT§DSE0F
+008300951109     C****************************************************************
+008400951109     C*  RIEPILOGO INDICATORI
+008500951109     C***************************************************************
+008600951121     c* 01    - ON=TESTATA GRIGLIA DA SBINARE
+008700951213     c* 02    - ON=TRAZIONISTA DIVERSO DA 0
+008800951124     c* 03    - ON=TESTATA GRIGLIA DA SBINARE MA GIA' FATTURATA
+008900951213     C* 04    - ON=SCONFERMATO IMPORTO
+009000951109     C* 30    - COMODO
+009100951109     C* 31    - COMODO
+009200951109     C***************************************************************
+009300951109     C*
+009400951114     C           *ENTRY    PLIST
+009500951114     C                     PARM           KPJBA
+009600951114     C                     MOVELKPJBU     PARAM
+009700951120     C* PULISCO PARAMETRI DI OUTPUT
+009800951109     C                     CLEARPARERR
+009900951120     C                     CLEARPARTRN
+010000951120     C                     CLEARPARDTN
+010100951114     C*
+010200951114    1C           PARTLA    IFNE 'C'
+010300951114     C* LA PRIMA VOLTA, SE RICHIESTA LA STAMPA, APRO FILE PRINTER
+010400951114    2C           PARPRT    IFEQ 'S'
+010500951114     C           WPRT      ANDEQ' '
+010600960326     C* DETERMINO CODA PER INDIRIZZAMENTO STAMPE
+010700960326     C                     MOVE KNSIF     W004A   4
+010800971217     C                     MOVELW004A     W001A   1
+010900971217     C           W001A     IFEQ 'P'
+011000960326     C                     MOVEL'QPRINTS' WOUTQ   7
+011100960326     C                     ELSE
+011200960326     C                     MOVEL'PCCENP1' WOUTQ
+011300960326     C                     END
+011400960213     C                     CLEARCOMMAN
+011500010823     C                     MOVEAWOUTQ     CMD,28
+011600960326     C                     MOVEACMD       COMMAN 80
+011700011010     C                     Z-ADD67        LUNG   155
+011800960213     C                     CALL 'QCMDEXC'                              A
+011900960213     C                     PARM           COMMAN
+012000960213     C                     PARM           LUNG
+012100010823     C                     OPEN PRTF198
+012200951114     C                     SETON                     OF
+012300951114     C                     MOVE '1'       WPRT    1
+012400951114    2C                     END
+012500951121     C* Leggo data ultimo controllo trazioni
+012600951121     C                     IN   TNTL30
+012700951109     C*
+012800951109     C           KTSR4     SETLLTNTSR04L
+012900951122     C           KTSR4     READETNTSR04L                 30
+013000951122    2C           *IN30     IFEQ *OFF
+013100951120     C                     MOVE TSRTRN    PARTRN
+013200951120     C                     MOVE TSRDTN    PARDTN
+013300951109     C* VERIFICO SE DEVO SBINARE ANCHE LA TESTATA
+013400951120     C                     EXSR AGGTES
+013500951109     C* SE TESTATA DA SBINARE MA GIA' FATTURATA VADO A FINE PGM
+013600951124    3C           *IN03     IFEQ *ON
+013700951109     C                     MOVE 'E'       PARERR
+013800951109     C                     GOTO FINE
+013900951122    3C                     END
+014000951120     C* SE RICHIESTO, STAMPO FOGLIO VIAGGIO SBINATO
+014100951114     C* (SOLO SE NON L'HO GIA' STAMPATO NELLA ROUTINE DI SBINAMENTO
+014200010823     C*  TESTATA E SE RECORD GIA' CONTROLLATO DA TNTL41R EX TNTL31R)
+014300951213    3C  N01N04   PARPRT    IFEQ 'S'
+014400951120     C           TSRDTT    ANDLED30DAT
+014500951114     C                     EXSR PRTSBI
+014600951122    3C                     END
+014700951122     C                     SETOF                     30
+014800951122    2C                     END
+014900951122    2C           *IN30     DOWEQ*OFF
+015000951109     C                     MOVE *ZEROS    TSRDRP
+015100951109     C                     MOVE *ZEROS    TSRHRP
+015200960209     C                     MOVE *BLANKS   TSRRTP
+015300951109     C                     MOVE *ZEROS    TSRDRA
+015400951109     C                     MOVE *ZEROS    TSRHRA
+015500960209     C                     MOVE *BLANKS   TSRRTA
+015600951109     C                     MOVE *ZEROS    TSRLNP
+015700951109     C                     MOVE *ZEROS    TSRNFV
+015800951109     C                     MOVE *ZEROS    TSRDFV
+015900960205     C                     MOVE *ZEROS    TSRDKP
+016000960205     C                     MOVE *ZEROS    TSRDKA
+016100960205     C                     MOVE *ZEROS    TSRDKI
+016200951109     C                     UPDATTNTSR000
+016300951122     C           KTSR4     READETNTSR04L                 30
+016400951114    2C                     ENDDO
+016500951109     C*
+016600960325     C* AZZERO ANCHE I METRI CUBI REALI (SE SI TRATTA DI UN RECORD
+016700960325     C* AGGIUNTO RISPETTO ALL'ANAGRAFICA, LO CANCELLO)
+016800960325     C*
+016900960325     C* Calcolo data decorrenza traino per poter leggere il file dei
+017000960325     C* Metri cubi
+017100960325     C                     CLEARWDDE
+017200960325     C           PARTRN    SETLLTNTLT01L
+017300960325     C           PARTRN    READETNTLT01L                 31
+017400960325    2C           *IN31     DOWEQ*OFF
+017500960325    3C           TLTATB    IFEQ ' '
+017600960325     C           PARDTN    ANDGETLTDDE
+017700960325     C           PARDTN    ANDLETLTDSC
+017800960325     C                     MOVELTLTDDE    WDDE
+017900960325     C                     SETON                     31
+018000960325     C                     ELSE
+018100960325     C           TSTTRN    READETNTLT01L                 31
+018200960325    3C                     ENDIF
+018300960325    2C                     ENDDO
+018400960325     C*
+018500960325     C           KTSM      SETLLTNTSM03L
+018600960325     C           KTSM      READETNTSM03L                 30
+018700960325    2C           *IN30     DOWEQ*OFF
+018800960325     C           KTLM      SETLLTNTLM01L                 30
+018900960325    3C           *IN30     IFEQ *ON
+019000960325     C* Non deleto record se non sono riuscita a calcolare la data
+019100960325     C* decorrenza
+019200960325     C           WDDE      OREQ *ZEROS
+019300960325     C                     CLEARTSMMCR
+019400960325     C                     UPDATTNTSM000
+019500960325   X3C                     ELSE
+019600960325     C                     DELETTNTSM000
+019700960325    3C                     END
+019800960325     C           KTSM      READETNTSM03L                 30
+019900960325    2C                     ENDDO
+020000951109     C* SFLAGGO ANCHE DATE/ORE REALI DA ESTENSIONE FOGLIO VIAGGIO
+020100951109     C           KFV2      SETLLFNFV201L
+020200951109     C           KFV2      READEFNFV201L                 30
+020300951114    2C           *IN30     DOWEQ*OFF
+020400951109     C                     MOVE *BLANKS   FV2ABN
+020500951109     C                     UPDATFNFV2000
+020600951109     C           KFV2      READEFNFV201L                 30
+020700951114    2C                     ENDDO
+020800951109     C           FINE      TAG
+020900951114    1C                     END
+021000951114     C*
+021100951113     C                     MOVELPARAM     KPJBU
+021200951113     C*
+021300951114     C           PARTLA    IFEQ ' '
+021400951114     C                     RETRN
+021500951114     C                     ELSE
+021600951114     C                     SETON                     LR
+021700951114     C                     END
+021800951114     C*************  AGGIORNAMENTO TESTATA GRIGLIA  *******************
+021900951109     C           AGGTES    BEGSR
+022000951213     C                     SETOF                     010304
+022100951109     C           KTST1     CHAINTNTST01L             31
+022200951109     C* DEVO AGGIORNARE LA TESTATA SE IL F.V. CHE STO SBINANDO E'
+022300951124     C* RELATIVO ALLA FERMATA PARTENZA CHE ESPONE L'IMPORTO.
+022400951109    1C           *IN31     IFEQ *OFF
+022500951124     C           TSRNFP    ANDEQTSTNFE
+022600951121     C* Memorizzo testata da sbinare
+022700951121     C                     SETON                     01
+022800951124     C* Controllo se già fatturata
+022900951124     C           TSTNFT    COMP *ZEROS               03
+023000951124     C   03                UNLCKTNTST01L
+023100951121     C* eseguo, se richiesto, la stampa della testata da sbinare
+023200010823     C* (solo se gia' controllata da TNTL41R EX TNTL31R)
+023300951124    2C           PARPRT    IFEQ 'S'
+023400951121     C           TSRDTT    ANDLED30DAT
+023500960213     C                     SETON                     04
+023600951121     C                     EXSR PRTSBI
+023700951124    2C                     END
+023800951124     C* SBINO LA TESTATA GRIGLIA SE NON FATTURATA
+023900951124    2C           *IN03     IFEQ *OFF
+024000951123     C                     CLEARTSTIPT
+024100951109     C                     CLEARTSTPDR
+024200951109     C                     CLEARTSTTMZ
+024300951109     C                     CLEARTSTIES
+024400951109     C                     CLEARTSTILI
+024500951123     C                     CLEARTSTICO
+024600951122     C                     CLEARTSTCAU
+024700951109     C                     CLEARTSTCNF
+024800951122     C* i dati del primo listino li scrivo nella griglia sbinata
+024900951123    3C*          WDDE      IFGT *ZEROS
+025000951123     C*          KTLL      CHAINTNTLL01L             31
+025100951123    4C*          *IN31     IFEQ *OFF
+025200951123     C*                    MOVELTLLTMZ    TSTTMZ
+025300951123     C*                    MOVE TLLILI    TSTILI
+025400951123     C*                    MOVE TLLPDR    TSTPDR
+025500951123     C*                    MOVE TLLIES    TSTIES
+025600951123     C*                    MOVELTLLCAU    TSTCAU
+025700951123    4C*                    END
+025800951123    3C*                    END
+025900951109     C                     UPDATTNTST000
+026000951121    2C                     END
+026100951124   X1C                     ELSE
+026200951213     C* Foglio viaggio che non espone importo ma testata traino già
+026300951213     C* confermata in automatico e non ancora fatturata: sconfermo
+026400951213    2C           *IN31     IFEQ *OFF
+026500951213    3C           TSTCNF    IFEQ '1'
+026600951213     C           TSTNFT    ANDEQ*ZEROS
+026700960213    4C           PARPRT    IFEQ 'S'
+026800960213     C                     SETON                     04
+026900960213     C                     EXSR PRTSBI
+027000960213    4C                     END
+027100951213     C                     CLEARTSTICO
+027200951213     C                     CLEARTSTCNF
+027300951213     C                     UPDATTNTST000
+027400960206     C* AZZERO TSRDKI SUL FV TEORICO CHE ESPONE IMPORTO (SOLO SUL
+027500960205     C* PRIMO RECORD)
+027600960205     C           KTSR1     CHAINTNTSR01L             30
+027700960205     C                     MOVE *ZEROS    SRDKI1
+027800960205     C                     UPDATTNTSR1
+027900951213   x3C                     ELSE
+028000960213     C* Testata da non aggiornare: non è il FV che espone importo e la
+028100960213     C*                            testata non è confermata
+028200951124     C                     UNLCKTNTST01L
+028300951213    3C                     END
+028400951213    2C                     END
+028500951121    1C                     END
+028600951109     C                     ENDSR
+028700951114     C****************  STAMPA SBINAMENTO  ****************************
+028800951114     C           PRTSBI    BEGSR
+028900951114     C                     CLEARPRTDFV
+029000951114     C                     CLEARPRTDTN
+029100011011      * Pulisco i campi di stampa
+029200011011     C                     CLEARPRTDIV
+029300011011     C                     CLEARPRTIPT
+029400011011     C                     CLEARPRTILI
+029500011011     C                     CLEARPRTICO
+029600011011      *
+029700951114     C* ROVESCIO DATA FOGLIO VIAGGIO
+029800951114     C                     CLEARWLBDA8
+029900951114     C                     MOVE TSRDFV    G08INV
+030000951114     C                     MOVEL'3'       G08ERR
+030100951114     C                     CALL 'XSRDA8'
+030200951114     C                     PARM           WLBDA8
+030300951114     C                     MOVE G08DAT    PRTDFV
+030400951114     C* ROVESCIO DATA TRAINO
+030500951114     C                     CLEARWLBDA8
+030600951114     C                     MOVE TSRDTN    G08INV
+030700951114     C                     MOVEL'3'       G08ERR
+030800951114     C                     CALL 'XSRDA8'
+030900951114     C                     PARM           WLBDA8
+031000951114     C                     MOVE G08DAT    PRTDTN
+031100951114     C* STAMPO ANCHE CAMPI TESTATA SE DA SBINARE
+031200951114    1C           *IN01     IFEQ *ON
+031300951114     C* TRAZIONISTA
+031400951114     C                     CLEARPRTDPD
+031500951114     C           TSTPDR    COMP *ZEROS               0202
+031600951114    2C           TSTPDR    IFNE *ZEROS
+031700951114     C* se codice diverso da 0 prendo decodifica da anagrafica trazion.
+031800000807     C           KTNTLZ    CHAINTNTLZ01L             30
+031900951114    3C           *IN30     IFEQ *OFF
+032000951114     C           TLZATB    ANDEQ*BLANKS
+032100951114     C                     MOVELTLZRSC    PRTDPD
+032200951114    3C                     END
+032300951114     C                     ELSE
+032400951114     C* se cod.trazionista = 0 prendo la decodifica dal foglio viaggio
+032500951114     C                     MOVELPARDPD    PRTDPD 10
+032600951114    2C                     END
+032700951114     C* DECODIFICO TIPO AUTOMEZZO
+032800951114    2C           TSTTMZ    IFNE *BLANKS
+032900951114     C                     MOVEL'TU'      KCOD
+033000951114     C                     MOVELTSTTMZ    KKEY      P
+033100951114     C           KTAB      CHAINTABEL00F             30
+033200951114     C  N30                MOVELTBLUNI    PRTTMZ 10
+033300951114     C   30                MOVE *BLANKS   PRTTMZ
+033400951114    2C                     END
+033500951114     C*
+033600951114    1C                     END
+033700011011      * Sposto i campi dal file ai campi di stampa
+033800011011     C           TSTIPT    IFNE *ZEROS
+033900011011     C           TSTILI    ORNE *ZEROS
+034000011011     C           TSTICO    ORNE *ZEROS
+034100011011     C                     MOVELTSTDIV    PRTDIV  3
+034200011011     C                     ENDIF
+034300011011     C                     Z-ADDTSTIPT    PRTIPT 112
+034400011011     C                     Z-ADDTSTILI    PRTILI 112
+034500011011     C                     Z-ADDTSTICO    PRTICO 112
+034600011011      *
+034700951114     C   OF                EXCPTTESTA
+034800951114     C   OF                SETOF                     OF
+034900951114     C                     EXCPTRIGSBI
+035000951114     C                     ENDSR
+035100951110     C**************  OPERAZIONI INIZIALI  ****************************
+035200951110     C           *INZSR    BEGSR
+035300951114     C*
+035400951114     C                     Z-ADD1         CODUT
+035500951114     C                     CALL 'X§PARUT'
+035600951114     C                     PARM           UT§DSE
+035700951114     C*
+035800000807     C           KTNTLZ    KLIST
+035900000807     C                     KFLD           KTLTIP  2
+036000000807     C                     KFLD           TSTPDR
+036100000807     C                     MOVEL'T '      KTLTIP
+036200000807     C           KTSR4     KLIST
+036300000807     C                     KFLD           PARLNP
+036400000807     C                     KFLD           PARNFV
+036500960205     C           KTSR1     KLIST
+036600960205     C                     KFLD           TSTTRN
+036700960205     C                     KFLD           TSTDTN
+036800960205     C                     KFLD           TSTNFE
+036900951110     C           KTST1     KLIST
+037000951110     C                     KFLD           TSRTRN
+037100951110     C                     KFLD           TSRDTN
+037200951110     C           KFV2      KLIST
+037300951110     C                     KFLD           PARLNP
+037400951110     C                     KFLD           PARNFV
+037500951114     C           KTAB      KLIST
+037600951114     C                     KFLD           CODUT
+037700951114     C                     KFLD           KCOD
+037800951114     C                     KFLD           KKEY
+037900960325     C           KTSM      KLIST
+038000960325     C                     KFLD           PARTRN
+038100960325     C                     KFLD           PARDTN
+038200960325     C                     KFLD           PARLNP
+038300960325     C           KTLM      KLIST
+038400960325     C                     KFLD           TSMTRN
+038500960325     C                     KFLD           WDDE
+038600960325     C                     KFLD           TSMTFP
+038700960325     C                     KFLD           TSMTFA
+038800960325     C                     KFLD           TSMTFF
+038900951123     C*          KTLL      KLIST
+039000951123     C*                    KFLD           TLTTRN
+039100951123     C*                    KFLD           TLTDDE
+039200951123     C*                    KFLD           TLTTMZ
+039300951114     C* Rilevo la data del giorno + ora
+039400951114     C                     TIME           WTIME  140       ORA E DATA
+039500951114     C                     MOVE WTIME     WDATE   80       GG/MM/AAAA
+039600951114     C                     MOVELWTIME     WORA    60
+039700951121     C*
+039800951120     C           *NAMVAR   DEFN           TNTL30
+039900951114     C*
+040000951114     C           *LIKE     DEFN TSRDFV    PRTDFV
+040100951114     C           *LIKE     DEFN TSRDFV    PRTDTN
+040200951114     C           *LIKE     DEFN TBLCOD    KCOD
+040300951114     C           *LIKE     DEFN TBLKEY    KKEY
+040400960325     C           *LIKE     DEFN TLTDDE    WDDE
+040500951110     C                     ENDSR
+040600010823     OPRTF198 E  1 1           TESTA
+040700010823     O                         PRT,1    132
+040800010823     O                         PRT,2    198
+040900010823     O                         WDATE 8  185
+041000010823     O                         PAGE  Z  198
+041100951114     O        E  2             TESTA
+041200951114     O                         KNSIF     10
+041300951114     O                         KNMUS     21
+041400010823     O                         WORA     185 '  :  :  '
+041500951114     O        E  1             TESTA
+041600951114     O                         PRT,7    132
+041700951114     O        E  2             TESTA
+041800951114     O                         PRT,5     66
+041900951114     O                         PRT,8    132
+042000951114     O        E  1             RIGSBI
+042100951114     O                         PARLNP     3
+042200951114     O                                    4 '/'
+042300951114     O                         PARNFVZ    9
+042400951114     O                         PRTDFV8   20
+042500951114     O                         TSRTRNZ   29
+042600951114     O                         PRTDTN8   40
+042700951114     O                 01 02   TSTPDR    49
+042800951114     O                 01      PRTDPD    60
+042900951114     O                 01      TSTTMZ    64
+043000951114     O                 01      PRTTMZ    75
+043100011011     O                 01      PRTDIV    80
+043200011011     O                 01      PRTIPT2   96
+043300011011     O                 01      PRTILI2  112
+043400011011     O                 01      PRTICO2  128
+043500011011     O                 04N01   PRTDIV    80
+043600011011     O                 04N01   PRTICO2  128
+043700010823     O                 01      TSTCAU   132
+043800010823     O                 03               150 'NO SBINAM/FATTUR'
+043900010823     O                 04N03            150 'SCONFERM.IMPORTO'
+044000951109** PRT
+044100010823        ** ELENCO FOGLI VIAGGIO SBINATI E GIA' CONTROLLATI **        1
+044200010823                               TNTL29R     XX/XX/XXXX    PAG. XXXX   2
+044300951110XXXXXXXXXX XXXXXXXXXX                                                3
+044400951110                                             XX:XX:XX                4
+044500951207-- FOGLIO VIAGGIO --  ----- TRAINO -----  -- TRAZIONISTA --- TIPO    5
+044600951114XXX/XXXXX XX/XX/XXXX  XXXXXXX XX/XX/XXXX  1234567 1234567890  XX 1   6
+044700010823           ----------------- I M P O R T I -------------------       7
+044800011016AUTOMEZZO  DIV  FOGLIO VIAGGIO         LISTINO      CONFERMATO CAU   8
+044900011016234567890  XXX  XXX.XXX.XXX,XX  XXX.XXX.XXX,XX  XXX.XXX.XXX,XX  X    9
+045000960213**
+045100010823OVRPRTF FILE(PRTF198) OUTQ(       ) SAVE(*YES) USRDTA('Ric.Variaz')

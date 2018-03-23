@@ -1,0 +1,142 @@
+000100050225             PGM        PARM(&LIB &LIBGRU &LIBUNI)
+000200040910             DCL        VAR(&LIB)    TYPE(*CHAR)  LEN(10)
+000300040910             DCL        VAR(&LIBGRU)    TYPE(*CHAR)  LEN(10)
+000400040910             DCL        VAR(&LIBUNI)    TYPE(*CHAR)  LEN(10)
+000500050315             DCL        VAR(&KPJBA)    TYPE(*CHAR)  LEN(502)
+000600110215             DCL        VAR(&inizioric) TYPE(*CHAR)  LEN(4)
+000700050315             DCL        VAR(&nuovoric) TYPE(*CHAR)  LEN(10)
+000800040920
+000900050225/* 1)  Collegarsi nel S.i. GAIZCAMBIO                              */
+001000050315
+001100150316/* 2)  Verificare il lavoro con utente EDPDSG che deve esseree "tirato giù" */
+001200050225
+001300050315/* 3)  Chiudo sottosistemi che allocano  file delle librerie       */
+001400080208             ENDSBS     SBS(GAICMZ) DELAY(30)
+001500050225             MONMSG     MSGID(CPF0000)
+001600080208             ENDSBS     SBS(QBATCH) DELAY(30)
+001700050225             MONMSG     MSGID(CPF0000)
+001800080219             ENDSBS     SBS(WIFIBAR) DELAY(30)
+001900080208             MONMSG     MSGID(CPF0000)
+002000080219             ENDSBS     SBS(WIFIBARCON) DELAY(30)
+002100080219             MONMSG     MSGID(CPF0000)
+002200080219             ENDSBS     SBS(WIFIBARRIT) DELAY(30)
+002300080219             MONMSG     MSGID(CPF0000)
+002400100215             ENDSBS     SBS(VDLBAR) DELAY(30)
+002500100215             MONMSG     MSGID(CPF0000)
+002600140320             ENDSBS     SBS(PDFSERVER) DELAY(30)
+002700140320             MONMSG     MSGID(CPF0000)
+002800170313             ENDSBS     SBS(QUSRWRK) DELAY(30)
+002900170313             MONMSG     MSGID(CPF0000)
+003000050225
+003100050225/* 4)  endjrnpf delle 3 librerie con tnsy83c                       */
+003200050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+003300050315                          VALUE('UNITRAGRP ')
+003400050315             CALL       PGM(TNSY83C) PARM(&KPJBA)
+003500050315
+003600050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+003700050315                          VALUE('FILTRAGRPF')
+003800050315             CALL       PGM(TNSY83C) PARM(&KPJBA)
+003900050315
+004000050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+004100050315                          VALUE('FILTRAPRD ')
+004200050315             CALL       PGM(TNSY83C) PARM(&KPJBA)
+004300050225
+004400050225/* 5)  cancellazione jrn da prd e fpf                              */
+004500050315             DLTJRN     JRN(FILTRAPRD/JRSFRD)
+004600050315             DLTJRN     JRN(FILTRAgrpf/JRSFPF)
+004700050315
+004800050225/* 6)  ridenomino librerie in OLD                                  */
+004900050315             RNMOBJ     OBJ(FILTRAPRD) OBJTYPE(*LIB) NEWOBJ(OLDPRD)
+005000050315             RNMOBJ     OBJ(FILTRAgrpf) OBJTYPE(*LIB) NEWOBJ(OLDgrpf)
+005100050315             RNMOBJ     OBJ(unitragrp) OBJTYPE(*LIB) NEWOBJ(OLDuni)
+005200050225
+005300050225/* 7)  ridenomino librerie ZTRA e ZUNI in FILTRA UNITRA            */
+005400050315             RNMOBJ     OBJ(&LIBUNI) OBJTYPE(*LIB) NEWOBJ(UNITRAGRP)
+005500050315             RNMOBJ     OBJ(&LIBgru) OBJTYPE(*LIB) NEWOBJ(filtragrpf)
+005600050315             RNMOBJ     OBJ(&LIB)    OBJTYPE(*LIB) NEWOBJ(filtraprd)
+005700050225
+005800050225/* 8)  sposta AZUTE*di OLDGRPF in FILTRAGRPF                       */
+005900060210             CRTDUPOBJ  OBJ(AZUTE*) FROMLIB(OLDGRPF) OBJTYPE(*FILE) +
+006000060210                          TOLIB(FILTRAGRPF) DATA(*YES)
+006100050225
+006200050315/* 9)  sposto code msg del journal e creo ricevitore jrn         */
+006300050315             MOVOBJ     OBJ(OLDGRPF/JRSFPF) OBJTYPE(*MSGQ) +
+006400050315                          TOLIB(FILTRAGRPF)
+006500050315             MOVOBJ     OBJ(OLDprd/JRSfrd) OBJTYPE(*MSGQ) +
+006600050315                          TOLIB(FILTRAprd)
+006700050315
+006800110215             CHGVAR     VAR(&INIZIORIC) VALUE('RFPF')
+006900050315             CALL       PGM(FITS50C1) PARM(&INIZIORIC &NUOVORIC)
+007000050315
+007100050315             CRTJRNRCV  JRNRCV(RCVLIB/&NUOVORIC) THRESHOLD(512000) +
+007200050315                          TEXT('Ricevitore libreria FILTRAGRPF')
+007300050315/*     creo jrn                                                    */
+007400050315             CRTJRN     JRN(FILTRAGRPF/JRSFPF) +
+007500050315                          JRNRCV(RCVLIB/&NUOVORIC) +
+007600050315                          MSGQ(FILTRAGRPF/JRSFPF)
+007700050315
+007800110215             CHGVAR     VAR(&INIZIORIC) VALUE('RFRD')
+007900050315             CALL       PGM(FITS50C1) PARM(&INIZIORIC &NUOVORIC)
+008000050315
+008100050315             CRTJRNRCV  JRNRCV(RCVLIB/&NUOVORIC) THRESHOLD(512000) +
+008200050315                          TEXT('Ricevitore libreria FILTRAPRD')
+008300050315/*     creo jrn                                                    */
+008400050315             CRTJRN     JRN(FILTRAPRD/JRSFRD) +
+008500050315                          JRNRCV(RCVLIB/&NUOVORIC) +
+008600050315                          MSGQ(FILTRAPRD/JRSFRD)
+008700050315
+008800050225/*11)  attacco tutti i file al jrn con TNSY82C                     */
+008900050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+009000050315                          VALUE('UNITRAGRP ')
+009100050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 3)) +
+009200050315                          VALUE('GRP')
+009300050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 260 10)) +
+009400050315                          VALUE('GAITRAGRPS')
+009500050315             CALL       PGM(TNSY82C) PARM(&KPJBA)
+009600050315
+009700050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+009800050315                          VALUE('FILTRAGRPF')
+009900050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 3)) +
+010000050315                          VALUE('FPF')
+010100050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 260 10)) +
+010200050315                          VALUE('FILTRAGRPF')
+010300050315             CALL       PGM(TNSY82C) PARM(&KPJBA)
+010400050315
+010500050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 247 10)) +
+010600050315                          VALUE('FILTRAPRD ')
+010700050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 257 3)) +
+010800050315                          VALUE('FRD')
+010900050315             CHGVAR     VAR(%SUBSTRING(&KPJBA 260 10)) +
+011000050315                          VALUE('FILTRAPRD ')
+011100050315             CALL       PGM(TNSY82C) PARM(&KPJBA)
+011200050315
+011300120418/*12)  copia file tabelle di sede in GAITRAGRPS                 */
+011400120418             CPYF       FROMFILE(FILTRAGRPF/TABEL_SE) +
+011500120418                          TOFILE(GAITRAGRPS/TABEL00F) MBROPT(*REPLACE)
+011600120418
+011700120418             CPYF       FROMFILE(FILTRAGRPF/TNTBE_SE) +
+011800120418                          TOFILE(GAITRAGRPS/TNTBE00F) +
+011900120418                          MBROPT(*REPLACE) INCREL((*IF TBECOD *NE +
+012000120418                          'CUR'))
+012100120418
+012200130222             DLTF       FILE(FILTRAGRPF/TABEL_SE)
+012300120418
+012400130222             DLTF       FILE(FILTRAGRPF/TNTBE_SE)
+012500120418
+012600120418/*12)  copia i files delle librerie OLD* che si devono mantenere*/
+012700050316             CALL       PGM(FITS51C)
+012800100215
+012900100215/*13)  riattivo sottosistemi                                       */
+013000100215             STRSBS     SBSD(QBATCH)
+013100060208
+013200150316/*14)  copia i files di TITAS in GAITRAGRPS e poi li cancello */
+013300060208             CALL       PGM(FITS52C)
+013400100215/*15)  riattivo sottosistemi                                       */
+013500120309             STRSBS     SBSD(GAICMZ)
+013600100215             STRSBS     SBSD(WIFIBAR)
+013700100215             STRSBS     SBSD(WIFIBARCON)
+013800100215             STRSBS     SBSD(WIFIBARRIT)
+013900100215             STRSBS     SBSD(VDLBAR)
+014000170313             STRSBS     SBSD(QUSRWRK)
+014100050225
+014200040920fine:        ENDPGM

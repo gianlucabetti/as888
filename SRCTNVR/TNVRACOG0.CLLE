@@ -1,0 +1,41 @@
+000100020514             PGM
+000200020516
+000300020516             DCL        VAR(&LIB101) TYPE(*CHAR) LEN(10) +
+000400020516                          VALUE('SDITRA101')
+000500020516             DCL        VAR(&FLGSDITRA) TYPE(*CHAR) LEN(1) VALUE('1')
+000600020517             DCL        VAR(&SYSNAME) TYPE(*CHAR) LEN(8)
+000700020516
+000800020516             MONMSG     MSGID(CPF0000)
+000900020517
+001000020517             RTVNETA    SYSNAME(&SYSNAME)
+001100020516
+001200020516/* Determino esistenza libreria 101. --------------------------------*/
+001300020516             CHKOBJ     OBJ(QSYS/&LIB101) OBJTYPE(*LIB)
+001400020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+001500020516             CHGVAR     VAR(&FLGSDITRA) VALUE('0')
+001600020516             ENDDO
+001700020515
+001800020515/* Spostamento files ------------------------------------------------*/
+001900020516             CALL       PGM(TNVRACOG1)
+002000020515
+002100020515/* Copia in add da SDITRA101 ----------------------------------------*/
+002200020516             IF         COND(&FLGSDITRA *EQ '1') THEN(DO)
+002300020516             CALL       PGM(TNVRACOG2)
+002400020516             ENDDO
+002500020515
+002600020515/* Cancellazione records orfani -------------------------------------*/
+002700020516             CALL       PGM(TNVRACOG3)
+002800020516
+002900020516/* Tolgo flag di trasmissione dai clienti 8888 e 9999 ---------------*/
+003000020517             IF         COND(&SYSNAME *NE 'SETRAS') THEN(DO)
+003100020516             CALL       PGM(TNVRACOG6)
+003200020517             ENDDO
+003300020515
+003400020516/* Fusione dei 00R e 00T --------------------------------------------*/
+003500020516             CALL       PGM(TNVRACOG5)
+003600020516             CALL       PGM(TNVRACOG7)
+003700020516
+003800020516/* Controllo fine anomala. ------------------------------------------*/
+003900020516             CALL       PGM(TNVRACOG9)
+004000020515
+004100020514 ENDPGM:     ENDPGM

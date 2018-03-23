@@ -1,0 +1,59 @@
+000100020515/*********************************************************************/
+000200020515/*                                                                   */
+000300020515/* Questo programma cancella i LF del PF ricevuto                    */
+000400020515/* e rinomina i PF cambiano 00F in 101                               */
+000500020515/* nella libreria SDIDTA101.                                         */
+000600020515/*                                                                   */
+000700020515/*********************************************************************/
+000800020515
+000900020515             PGM        PARM(&FILE)
+001000020514
+001100020514             DCLF       FILE(QADSPDBR)
+001200020515             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+001300020515             DCL        VAR(&FILE101) TYPE(*CHAR) LEN(10)
+001400020516             DCL        VAR(&LIB101) TYPE(*CHAR) LEN(10) +
+001500020516                          VALUE('SDITRA101')
+001600020516             DCL        VAR(&FLGSDITRA) TYPE(*CHAR) LEN(1) VALUE('1')
+001700020516
+001800020516/*-------------------------------------------------------------------*/
+001900020516/* Controllo esistenza libreria SDITRA101.                           */
+002000020516/*                                                                   */
+002100020516             CHKOBJ     OBJ(QSYS/&LIB101) OBJTYPE(*LIB)
+002200020516             MONMSG     MSGID(CPF9801) EXEC(DO)
+002300020516             CHGVAR     VAR(&FLGSDITRA) VALUE('0')
+002400020516             ENDDO
+002500020516/*                                                                   */
+002600020516/*-------------------------------------------------------------------*/
+002700020516
+002800020516/*-------------------------------------------------------------------*/
+002900020516/* Solo se la libreria SDITRA101 esiste.                             */
+003000020516/*                                                                   */
+003100020516             IF         COND(&FLGSDITRA *EQ '1') THEN(DO)
+003200020514
+003300020515             DSPDBR     FILE(&LIB101/&FILE) OUTPUT(*OUTFILE) +
+003400020515                          OUTFILE(QTEMP/QADSPDBR)
+003500020514             MONMSG     MSGID(CPF3012)
+003600020514
+003700020514             OVRDBF     FILE(QADSPDBR) TOFILE(QTEMP/QADSPDBR)
+003800020514
+003900020514 RCVF:       RCVF
+004000020514             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDRCVF))
+004100020514
+004200020515             DLTF       FILE(&WHRELI/&WHREFI)
+004300020514             MONMSG     MSGID(CPF2105)
+004400020514
+004500020514             GOTO       CMDLBL(RCVF)
+004600020514
+004700020514 ENDRCVF:
+004800020514
+004900020515             CHGVAR     VAR(&FILE101) VALUE(&FILE)
+005000020515             CHGVAR     VAR(%SST(&FILE101 6 3)) VALUE('101')
+005100020515             RNMOBJ     OBJ(&LIB101/&FILE) OBJTYPE(*FILE) +
+005200020515                          NEWOBJ(&FILE101)
+005300020514             MONMSG     MSGID(CPF2105)
+005400020516
+005500020516             ENDDO
+005600020516/*                                                                   */
+005700020516/*-------------------------------------------------------------------*/
+005800020514
+005900020514 ENDPGM:     ENDPGM
